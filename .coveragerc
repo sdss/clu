@@ -1,0 +1,8 @@
+[run]
+branch = true
+
+[report]
+omit =
+    python/asyncioActor/etc/*
+    python/asyncioActor/misc/*
+    python/asyncioActor/tests/*
