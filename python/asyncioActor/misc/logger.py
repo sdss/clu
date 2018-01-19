@@ -8,7 +8,6 @@
 
 # Adapted from astropy's logging system.
 
-
 from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
@@ -32,7 +31,6 @@ from pygments.lexers import get_lexer_by_name
 from pygments.formatters import TerminalFormatter
 
 from .color_print import color_text
-
 
 # Adds custom log level for print and twisted messages
 PRINT = 15
@@ -58,11 +56,13 @@ def print_exception_formatted(type, value, tb):
 def colored_formatter(record):
     """Prints log messages with colours."""
 
-    colours = {'info': ('blue', 'normal'),
-               'debug': ('magenta', 'normal'),
-               'warning': ('yellow', 'normal'),
-               'print': ('green', 'normal'),
-               'error': ('red', 'bold')}
+    colours = {
+        'info': ('blue', 'normal'),
+        'debug': ('magenta', 'normal'),
+        'warning': ('yellow', 'normal'),
+        'print': ('green', 'normal'),
+        'error': ('red', 'bold')
+    }
 
     levelname = record.levelname.lower()
 
@@ -71,19 +71,23 @@ def colored_formatter(record):
 
     if levelname.lower() in colours:
         levelname_color = colours[levelname][0]
-        header = color_text('[{}]: '.format(levelname.upper()), levelname_color)
+        header = color_text('[{}]: '.format(levelname.upper()),
+                            levelname_color)
 
     message = '{0}'.format(record.msg)
 
     warning_category = re.match('^(\w+Warning\:).*', message)
     if warning_category is not None:
-        warning_category_colour = color_text(warning_category.groups()[0], 'cyan')
-        message = message.replace(warning_category.groups()[0], warning_category_colour)
+        warning_category_colour = color_text(warning_category.groups()[0],
+                                             'cyan')
+        message = message.replace(warning_category.groups()[0],
+                                  warning_category_colour)
 
     sub_level = re.match('(\[.+\]:)(.*)', message)
     if sub_level is not None:
         sub_level_name = color_text(sub_level.groups()[0], 'red')
-        message = '{}{}'.format(sub_level_name, ''.join(sub_level.groups()[1:]))
+        message = '{}{}'.format(sub_level_name, ''.join(
+            sub_level.groups()[1:]))
 
     # if len(message) > 79:
     #     tw = TextWrapper()
@@ -246,12 +250,13 @@ class MyLogger(Logger):
             if not os.path.exists(logdir):
                 os.mkdir(logdir)
 
-            # If the log file exists, backs it up before creating a new file handler
             if os.path.exists(log_file_path):
-                strtime = datetime.datetime.utcnow().strftime('%Y-%m-%d_%H:%M:%S')
+                strtime = datetime.datetime.utcnow().strftime(
+                    '%Y-%m-%d_%H:%M:%S')
                 shutil.move(log_file_path, log_file_path + '.' + strtime)
 
-            self.fh = TimedRotatingFileHandler(str(log_file_path), when='midnight', utc=True)
+            self.fh = TimedRotatingFileHandler(
+                str(log_file_path), when='midnight', utc=True)
             self.fh.suffix = '%Y-%m-%d_%H:%M:%S'
         except (IOError, OSError) as ee:
             warnings.warn('log file {0!r} could not be opened for writing: '
