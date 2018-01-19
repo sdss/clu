@@ -1,4 +1,4 @@
-# !usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
 # Licensed under a 3-clause BSD license.
@@ -11,18 +11,18 @@
 from __future__ import print_function, division, absolute_import
 
 
-class AsyncioactorError(Exception):
-    """A custom core Asyncioactor exception"""
+class AsyncioActorError(Exception):
+    """A custom core AsyncioActor exception"""
 
     def __init__(self, message=None):
 
         message = 'There has been an error' \
             if not message else message
 
-        super(AsyncioactorError, self).__init__(message)
+        super(AsyncioActorError, self).__init__(message)
 
 
-class AsyncioactorNotImplemented(AsyncioactorError):
+class AsyncioActorNotImplemented(AsyncioActorError):
     """A custom exception for not yet implemented features."""
 
     def __init__(self, message=None):
@@ -30,47 +30,52 @@ class AsyncioactorNotImplemented(AsyncioactorError):
         message = 'This feature is not implemented yet.' \
             if not message else message
 
-        super(AsyncioactorNotImplemented, self).__init__(message)
+        super(AsyncioActorNotImplemented, self).__init__(message)
 
 
-class AsyncioactorApiError(AsyncioactorError):
+class CommandError(AsyncioActorError):
+    """An error raised when a `Command` fails."""
+
+    pass
+
+
+class AsyncioActorAPIError(AsyncioActorError):
     """A custom exception for API errors"""
 
     def __init__(self, message=None):
         if not message:
-            message = 'Error with Http Response from Asyncioactor API'
+            message = 'Error with Http Response from AsyncioActor API'
         else:
-            message = 'Http response error from Asyncioactor API. {0}'.format(message)
+            message = 'Http response error from AsyncioActor API. {0}'.format(message)
 
-        super(AsyncioactorAPIError, self).__init__(message)
+        super(AsyncioActorAPIError, self).__init__(message)
 
 
-class AsyncioactorApiAuthError(AsyncioactorAPIError):
+class AsyncioActorApiAuthError(AsyncioActorAPIError):
     """A custom exception for API authentication errors"""
     pass
 
 
-class AsyncioactorMissingDependency(AsyncioactorError):
+class AsyncioActorMissingDependency(AsyncioActorError):
     """A custom exception for missing dependencies."""
     pass
 
 
-class AsyncioactorWarning(Warning):
-    """Base warning for Asyncioactor."""
+class AsyncioActorWarning(Warning):
+    """Base warning for AsyncioActor."""
     pass
 
 
-class AsyncioactorUserWarning(UserWarning, AsyncioactorWarning):
+class AsyncioActorUserWarning(UserWarning, AsyncioActorWarning):
     """The primary warning class."""
     pass
 
 
-class AsyncioactorSkippedTestWarning(AsyncioactorUserWarning):
+class AsyncioActorSkippedTestWarning(AsyncioActorUserWarning):
     """A warning for when a test is skipped."""
     pass
 
 
-class AsyncioactorDeprecationWarning(AsyncioactorUserWarning):
+class AsyncioActorDeprecationWarning(AsyncioActorUserWarning):
     """A warning for deprecated features."""
     pass
-
