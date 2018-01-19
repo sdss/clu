@@ -33,10 +33,11 @@ def build_docs(ctx):
     ctx.run("make html")
 
 
-@task(build_docs)
+@task
 def show_docs(ctx):
     """Shows the Sphinx docs"""
     print('Showing the docs')
+    os.chdir('docs/sphinx')
     os.chdir('_build/html')
     ctx.run('open ./index.html')
 

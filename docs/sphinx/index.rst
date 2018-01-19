@@ -5,29 +5,16 @@
 
 :tocdepth: 2
 
-.. rubric:: :header_no_toc:`Welcome to asyncioActor's documentation!`
+.. rubric:: :header_no_toc:`asyncioActor: an actor framework for the 21st century`
 
 This is the Sphinx documentation for the SDSS Python product asyncioActor
 
-Introduction
-------------
-
-A description of the package can go here.
-
-* :ref:`What's new in asyncioActor? <changelog>`
-* :ref:`Introduction to asyncioActor <intro>`
-
-Reference
----------
+Documentation
+-------------
 
 .. toctree::
    :maxdepth: 1
 
+   intro
+   changelog
    api
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`

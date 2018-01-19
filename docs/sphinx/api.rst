@@ -1,15 +1,14 @@
 
 .. _api:
 
-asyncioActor Reference
-=========================
+API Reference
+=============
 
-.. _api-main:
+.. automodapi:: asyncioActor.actor
+   :no-inheritance-diagram:
 
-Main
-----
+   :skip: UserCommand
 
-.. automodule:: asyncioActor.main
-   :members:
-   :undoc-members:
-   :show-inheritance:
+
+.. automodapi:: asyncioActor.command
+   :no-inheritance-diagram:
