@@ -1,23 +1,30 @@
+#!/usr/bin/env python
 # encoding: utf-8
 #
-# main.py
+# @Author: José Sánchez-Gallego
+# @Date: Jan 16, 2018
+# @Filename: test_actor.py
+# @License: BSD 3-Clause
+# @Copyright: José Sánchez-Gallego
 
 
 from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
-from __future__ import unicode_literals
 
-from pytest import mark
+import asyncio
 
-from asyncioActor.main import math
+from asyncioActor.actor import Actor
 
 
-class TestMath(object):
-    """Tests for the ``math`` function in main.py."""
+class TestActor(Actor):
+    pass
 
-    @mark.parametrize(('arg1', 'arg2', 'operator', 'result'),
-                      [(1, 2, '+', 3), (2, 2, '-', 0), (3, 5, '*', 15), (10, 2, '/', 5)])
-    def test_math(self, arg1, arg2, operator, result):
 
-        assert math(arg1, arg2, arith_operator=operator) == result
+actor = TestActor('asyncio_test_actor')
+
+try:
+    loop = asyncio.get_event_loop()
+    loop.run_forever()
+except KeyboardInterrupt:
+    pass
