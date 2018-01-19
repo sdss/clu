@@ -23,6 +23,7 @@ import traceback
 import sys
 import warnings
 
+from logging import PercentStyle
 from logging.handlers import TimedRotatingFileHandler
 # from textwrap import TextWrapper
 
@@ -105,39 +106,36 @@ class MyFormatter(logging.Formatter):
 
     ansi_escape = re.compile(r'\x1b[^m]*m')
 
-    def __init__(self, fmt='%(levelname)s - %(message)s [%(funcName)s @ ' +
-                 '%(filename)s]'):
-        logging.Formatter.__init__(self, fmt, datefmt='%Y-%m-%d %H:%M:%S')
-
     def format(self, record):
 
         # Save the original format configured by the user
         # when the logger formatter was instantiated
-        format_orig = self._fmt
+        # format_orig = self._fmt
 
         # Replace the original format with one customized by logging level
+
         if record.levelno == logging.DEBUG:
-            self._fmt = MyFormatter.info_fmt
+            self._style = PercentStyle(MyFormatter.info_fmt)
 
         elif record.levelno == logging.getLevelName('PRINT'):
-            self._fmt = MyFormatter.info_fmt
+            self._style = PercentStyle(MyFormatter.info_fmt)
 
         elif record.levelno == logging.INFO:
-            self._fmt = MyFormatter.info_fmt
+            self._style = PercentStyle(MyFormatter.info_fmt)
 
         elif record.levelno == logging.ERROR:
-            self._fmt = MyFormatter.info_fmt
+            self._style = PercentStyle(MyFormatter.info_fmt)
 
         elif record.levelno == logging.WARNING:
-            self._fmt = MyFormatter.warning_fmp
+            self._style = PercentStyle(MyFormatter.warning_fmt)
 
-        record.msg = self.ansi_escape.sub('', record.msg)
+        # record.msg = self.ansi_escape.sub('', record.msg)
 
         # Call the original formatter class to do the grunt work
         result = logging.Formatter.format(self, record)
 
         # Restore the original format configured by the user
-        self._fmt = format_orig
+        # self._fmt = format_orig
 
         return result
 
@@ -263,7 +261,7 @@ class MyLogger(Logger):
             self.addHandler(self.fh)
             self.fh.setLevel(log_file_level)
 
-        self.log_filename = log_file_path
+            self.log_filename = log_file_path
 
 
 logging.setLoggerClass(MyLogger)
