@@ -13,13 +13,15 @@
 # serve to show the default.
 
 import sphinx_bootstrap_theme
+from pkg_resources import parse_version
+
+from asyncioActor import __version__
+
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 
-from asyncioActor import __version__
-from pkg_resources import parse_version
 
 
 # -- General configuration ------------------------------------------------
@@ -33,7 +35,8 @@ from pkg_resources import parse_version
 # ones.
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'sphinx.ext.autosummary',
               'sphinx.ext.todo', 'sphinx.ext.viewcode', 'sphinx.ext.mathjax',
-              'sphinx.ext.intersphinx', 'sphinx_automodapi.automodapi', 'sphinx_automodapi.smart_resolver']
+              'sphinx.ext.intersphinx', 'sphinx_automodapi.automodapi',
+              'sphinx_automodapi.smart_resolver']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
