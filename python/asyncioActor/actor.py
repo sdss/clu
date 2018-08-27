@@ -1,26 +1,46 @@
 #!/usr/bin/env python
-# encoding: utf-8
+# -*- coding: utf-8 -*-
 #
-# @Author: José Sánchez-Gallego
-# @Date: Jan 16, 2018
-# @Filename: actor.py
-# @License: BSD 3-Clause
-# @Copyright: José Sánchez-Gallego
+# @Author: José Sánchez-Gallego (gallegoj@uw.edu)
+# @Date: 2018-01-16
+# @Filename: command.py
+# @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
+#
+# @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
+# @Last modified time: 2018-08-27 10:36:14
 
 
-from __future__ import division
-from __future__ import print_function
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function
 
 import asyncio
 import functools
 import pathlib
+
 import yaml
 
 from . import log
-from .core import exceptions
 from .command import UserCommand
-from .protocol import TCPServerClientProtocol
+from .core import exceptions
+from .protocol import TCPClientProtocol, TCPServerClientProtocol
+
+
+class TronConnection(object):
+
+    def __init__(self, host, port, connect_now=True):
+
+        self.host = host
+        self.port = port
+
+        self.loop = asyncio.get_event_loop()
+        self._conn = self.loop.create_connection(lambda: TCPClientProtocol(self.loop), host, port)
+
+        if connect_now:
+            self.connect()
+
+    def connect(self):
+        """Initiates the connection."""
+
+        self.transport, self.client_protocol = self.loop.run_until_complete(self._conn)
 
 
 class Actor(object):
@@ -38,14 +58,16 @@ class Actor(object):
 
         self.user_dict = dict()
 
-        partial_server = functools.partial(TCPServerClientProtocol,
-                                           conn_cb=self.new_user,
-                                           read_cb=self.new_command)
-        factory = self.loop.create_server(partial_server, '127.0.0.1',
-                                          port=self.config['port'])
-        self.server = self.loop.run_until_complete(factory)
+        partial_factory = functools.partial(TCPServerClientProtocol,
+                                            conn_cb=self.new_user,
+                                            read_cb=self.new_command)
+        factory = self.loop.create_server(partial_factory, '127.0.0.1', port=self.config['port'])
+        self.tcp_server = self.loop.run_until_complete(factory)
 
-        self.log.info('TCP server running on {}'.format(self.server.sockets[0].getsockname()))
+        self.tron = TronConnection(self.config['tron']['tronHost'],
+                                   self.config['tron']['tronCmdrPort'])
+
+        self.log.info('TCP server running on {}'.format(self.tcp_server.sockets[0].getsockname()))
 
     def __str__(self):
 

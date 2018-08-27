@@ -1,19 +1,21 @@
 #!/usr/bin/env python
-# encoding: utf-8
+# -*- coding: utf-8 -*-
 #
-# @Author: José Sánchez-Gallego
-# @Date: Jan 19, 2018
-# @Filename: protocol.py
-# @License: BSD 3-Clause
-# @Copyright: José Sánchez-Gallego
+# @Author: José Sánchez-Gallego (gallegoj@uw.edu)
+# @Date: 2018-01-19
+# @Filename: command.py
+# @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
+#
+# @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
+# @Last modified time: 2018-08-27 10:35:49
 
 
-from __future__ import division
-from __future__ import print_function
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function
+
+import asyncio
 
 
-__all__ = ['TCPServerClientProtocol']
+__all__ = ['TCPServerClientProtocol', 'TCPClientProtocol']
 
 
 class TCPServerClientProtocol(asyncio.Protocol):
@@ -43,3 +45,21 @@ class TCPServerClientProtocol(asyncio.Protocol):
         """Sets the callback for `data_received`."""
 
         self._read_callback = cb
+
+
+class TCPClientProtocol(asyncio.Protocol):
+
+    def __init__(self, loop):
+
+        self.loop = loop
+        self.transport = None
+
+    def connection_made(self, transport):
+
+        self.transport = transport
+
+    def data_received(self, data):
+        print('Data received from Tron: {!r}'.format(data.decode()))
+
+    def connection_lost(self, exc):
+        self.loop.stop()

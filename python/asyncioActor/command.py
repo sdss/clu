@@ -1,16 +1,16 @@
 #!/usr/bin/env python
-# encoding: utf-8
+# -*- coding: utf-8 -*-
 #
-# @Author: José Sánchez-Gallego
-# @Date: Jan 17, 2018
+# @Author: José Sánchez-Gallego (gallegoj@uw.edu)
+# @Date: 2018-01-17
 # @Filename: command.py
-# @License: BSD 3-Clause
-# @Copyright: José Sánchez-Gallego
+# @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
+#
+# @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
+# @Last modified time: 2018-08-27 10:35:33
 
 
-from __future__ import division
-from __future__ import print_function
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function
 
 import re
 
@@ -21,7 +21,18 @@ __all__ = ['Command', 'UserCommand']
 
 
 class Command(object):
-    """Base class for commands of all types (user and device)."""
+    """Base class for commands of all types (user and device).
+
+    Parameters
+    ----------
+    cmd_str : str
+        The command string to be parsed.
+    user_id : int
+        The ID of the user issuing this command.
+    cmd_id : int
+        The ID associated to this command.
+
+    """
 
     DONE = 'done'
     CANCELLED = 'cancelled'
@@ -49,7 +60,6 @@ class Command(object):
     _INV_MSG_CODE_DICT = dict((val, key) for key, val in _MSG_CODE_DICT.items())
 
     def __init__(self, cmd_str, user_id=0, cmd_id=0):
-        """Constructs a BaseCmd."""
 
         self._cmd_str = cmd_str
         self.user_id = int(user_id)
@@ -71,7 +81,7 @@ class Command(object):
 
     @property
     def is_active(self):
-        """Command is running, canceling or failing."""
+        """Command is running, cancelling or failing."""
 
         return self._state in self.ACTIVE_STATES
 
@@ -128,9 +138,9 @@ class UserCommand(Command):
     def __init__(self, user_id=0, cmd_str=''):
 
         Command.__init__(self, cmd_str=cmd_str, user_id=user_id)
-        self.parseCmdStr(cmd_str)
+        self.parse_cmd_str(cmd_str)
 
-    def parseCmdStr(self, cmd_str):
+    def parse_cmd_str(self, cmd_str):
         """Parse command."""
 
         cmd_match = self._HEADER_BODY_RE.match(cmd_str)
