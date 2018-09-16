@@ -7,20 +7,21 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2018-08-27 10:35:33
+# @Last modified time: 2018-09-09 19:56:18
 
 
 from __future__ import absolute_import, division, print_function
 
 import re
 
+from .base import CallbackMixIn, StatusFlags
 from .core import exceptions
 
 
 __all__ = ['Command', 'UserCommand']
 
 
-class Command(object):
+class Command(CallbackMixIn):
     """Base class for commands of all types (user and device).
 
     Parameters
@@ -34,85 +35,94 @@ class Command(object):
 
     """
 
-    DONE = 'done'
-    CANCELLED = 'cancelled'
-    FAILED = 'failed'
-    READY = 'ready'
-    RUNNING = 'running'
-    CANCELLING = 'cancelling'
-    FAILING = 'failing'
-    ACTIVE_STATES = frozenset((RUNNING, CANCELLING, FAILING))
-    FAILED_STATES = frozenset((CANCELLED, FAILED))
-    FAILING_STATES = frozenset((CANCELLING, FAILING))
-    DONE_STATES = frozenset((DONE,)) | FAILED_STATES
-    ALL_STATES = frozenset((READY,)) | ACTIVE_STATES | DONE_STATES
-
-    _MSG_CODE_DICT = dict(
-        ready='i',
-        running='i',
-        cancelling='w',
-        failing='w',
-        cancelled='f',
-        failed='f',
-        debug='d',
-        done=':')
-
-    _INV_MSG_CODE_DICT = dict((val, key) for key, val in _MSG_CODE_DICT.items())
-
-    def __init__(self, cmd_str, user_id=0, cmd_id=0):
+    def __init__(self, cmd_str, user_id=0, cmd_id=0, callback=None, call_now=False):
 
         self._cmd_str = cmd_str
         self.user_id = int(user_id)
         self.cmd_id = int(cmd_id)
-        self._state = self.READY
+        self._status = StatusFlags.READY
 
         self._write_to_users = None  # Set by the actor.
         self.user_commanded = False
+
+        CallbackMixIn.__init__(callback=callback, call_now=call_now)
 
     @property
     def cmd_str(self):
         return self._cmd_str
 
     @property
-    def did_fail(self):
-        """Command failed or was cancelled."""
+    def status(self):
+        """The status of the command."""
 
-        return self._state in self.FAILED_STATES
+        return self._status
 
-    @property
-    def is_active(self):
-        """Command is running, cancelling or failing."""
+    def setState(self, newState, textMsg=None, hubMsg=None):
+        """Set the state of the command and call callbacks.
 
-        return self._state in self.ACTIVE_STATES
+        If new state is done then remove all callbacks (after calling them).
 
-    @property
-    def is_done(self):
-        """Command is done (whether successfully or not)."""
+        @param[in] newState  new state of command
+        @param[in] textMsg  a message to be printed using the Text keyword; if None then not changed
+        @param[in] hubMsg  a message in keyword=value format (without a header); if None then not changed
 
-        return self._state in self.DONE_STATES
+        You can set both textMsg and hubMsg, but typically only one or the other will be displayed
+        (depending on the situation).
 
-    @property
-    def is_failing(self):
-        """Command is being cancelled or is failing."""
+        If the new state is Failed then please supply a textMsg and/or hubMsg.
 
-        return self._state in self.FAILED_STATES
-
-    @property
-    def msg_code(self):
-        """The hub message code appropriate to the current state."""
-
-        return self._MSG_CODE_DICT[self._state]
-
-    @property
-    def state(self):
-        """The state of the command.
-
-        Must be a string which is one of the state constants,
-        e.g. ``self.DONE``.
-
+        Error conditions:
+        - Raise RuntimeError if this command is finished.
         """
 
-        return self._state
+
+        if textMsg is not None:
+            self._textMsg = str(textMsg)
+        if hubMsg is not None:
+            self._hubMsg = str(hubMsg)
+        log.info(str(self))
+        self._basicDoCallbacks(self)
+        if self.isDone:
+            self._timeoutTimer.cancel()
+            self._removeAllCallbacks()
+            self.untrackCmd()
+
+    @status.setter
+    def status(self, value):
+
+        if self.is_done:
+            raise RuntimeError(f'Command {self!s} is done; cannot change state')
+
+        if isinstance(value, str):
+            flag = getattr(StatusFlags, value.upper())
+
+        assert flag.is_combination is False, 'cannot set a combination flag.'
+        assert flag in StatusFlags.ALL_STATES, 'invalid flag'
+
+        self._status = flag
+
+        self.do_callbacks()
+
+    def get_key_val_msg(self):
+        """Get full message data as (msg_code, msg_str).
+
+        Return:
+            msg_code : str
+                Message code (e.g. 'W').
+            msg_str : str
+                Message string: a combination of _textMsg and _hubMsg in keyword-value format.
+            Warning: he "Text" keyword will be repeated if _textMsg is non-empty and _hubMsg contains "Text="
+        """
+
+        msg_code = self.state.msg_code
+
+        msgInfo = []
+        if self._hubMsg:
+            msgInfo.append(self._hubMsg)
+        if self._textMsg or textPrefix:
+            msgInfo.append("text=%s" % (quoteStr(textPrefix + self._textMsg),))
+        msgStr = "; ".join(msgInfo)
+        return (msgCode, msgStr)
 
     def set_write_to_users(self, write_to_users_func):
         """Sets the function to call when writing to users."""
@@ -135,9 +145,9 @@ class UserCommand(Command):
 
     _HEADER_BODY_RE = re.compile(r'((?P<cmd_id>\d+)(?:\s+\d+)?\s+)?((?P<cmd_body>[A-Za-z_].*))?$')
 
-    def __init__(self, user_id=0, cmd_str=''):
+    def __init__(self, user_id=0, cmd_str='', **kwargs):
 
-        Command.__init__(self, cmd_str=cmd_str, user_id=user_id)
+        Command.__init__(self, cmd_str=cmd_str, user_id=user_id, **kwargs)
         self.parse_cmd_str(cmd_str)
 
     def parse_cmd_str(self, cmd_str):

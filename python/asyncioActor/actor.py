@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2018-08-27 10:36:14
+# @Last modified time: 2018-09-07 13:05:12
 
 
 from __future__ import absolute_import, division, print_function
@@ -15,32 +15,14 @@ from __future__ import absolute_import, division, print_function
 import asyncio
 import functools
 import pathlib
+import sys
 
-import yaml
+from ruamel.yaml import YAML
 
 from . import log
 from .command import UserCommand
 from .core import exceptions
-from .protocol import TCPClientProtocol, TCPServerClientProtocol
-
-
-class TronConnection(object):
-
-    def __init__(self, host, port, connect_now=True):
-
-        self.host = host
-        self.port = port
-
-        self.loop = asyncio.get_event_loop()
-        self._conn = self.loop.create_connection(lambda: TCPClientProtocol(self.loop), host, port)
-
-        if connect_now:
-            self.connect()
-
-    def connect(self):
-        """Initiates the connection."""
-
-        self.transport, self.client_protocol = self.loop.run_until_complete(self._conn)
+from .protocol import TCPServerClientProtocol, TronConnection
 
 
 class Actor(object):
@@ -61,11 +43,11 @@ class Actor(object):
         partial_factory = functools.partial(TCPServerClientProtocol,
                                             conn_cb=self.new_user,
                                             read_cb=self.new_command)
-        factory = self.loop.create_server(partial_factory, '127.0.0.1', port=self.config['port'])
+        factory = self.loop.create_server(partial_factory, '127.0.0.1',
+                                          port=self.config['port'] if port is None else port)
         self.tcp_server = self.loop.run_until_complete(factory)
 
-        self.tron = TronConnection(self.config['tron']['tronHost'],
-                                   self.config['tron']['tronCmdrPort'])
+        self.tron = None
 
         self.log.info('TCP server running on {}'.format(self.tcp_server.sockets[0].getsockname()))
 
@@ -77,9 +59,12 @@ class Actor(object):
         """Returns a dictionary with the configuration options."""
 
         if config_path is None:
-            config_path = pathlib.Path(__file__).parent / f'etc/{self.name}.yml'
+            fn = sys.modules[self.__module__].__file__
+            config_path = pathlib.Path(fn).parent / f'etc/{self.name}.yml'
 
-        return yaml.load(open(str(config_path)))
+        yaml = YAML(typ='safe')
+
+        return yaml.load(open(str(config_path)))['actor']
 
     def _setup_logger(self):
         """Starts file logging."""
@@ -91,14 +76,23 @@ class Actor(object):
 
         config_log = self.config['logging']
 
-        file_level = 10 if 'fileLevel' not in config_log else config_log['fileLevel']
-        sh_level = 20 if 'shellLevel' not in config_log else config_log['shellLevel']
+        file_level = 10 if 'file_level' not in config_log else config_log['file_level']
+        sh_level = 20 if 'shell_level' not in config_log else config_log['shell_level']
 
-        self.log.start_file_logger(config_log['logDir'] + '/' + f'{self.name}.log', file_level)
+        self.log.start_file_logger(config_log['log_dir'] + '/' + f'{self.name}.log', file_level)
 
         self.log.sh.setLevel(sh_level)
 
-        self.log.debug('Starting file logging.')
+        self.log.debug('starting file logging.')
+
+    def tron_connect(self):
+        """Creates a connection to the Tron commander."""
+
+        host, port = self.config['tron']['host'], self.config['tron']['port']
+
+        log.debug(f'creating connection to Tron on ({host}, {port})')
+
+        self.tron = TronConnection(host, port)
 
     def new_user(self, transport):
         """Assigns userID to new client connection."""
@@ -115,10 +109,41 @@ class Actor(object):
         self.show_new_user_info(fake_cmd)
         return fake_cmd
 
-    def new_command(self, cmd):
+    def new_command(self, transport, cmd_str):
         """Handles a new command received by the actor."""
 
+        cmd_str = cmd_str.strip()
+        log.info(f'{self}.new_command({cmd_str!r})')
+
+        if not cmd_str:
+            return
+
+        user_id = transport._user_id
+
+        try:
+            cmd = UserCommand(user_id, cmd_str, self.command_callback)
+        except Exception as e:
+            self.writeToUsers("f", "Could not parse the following as a command: %r"%cmd_str)
+            return
+        try:
+            cmd = expandCommand(cmd) # gives write to users
+            cmd.userCommanded = True # this command was generated from a socket read.
+            self.parseAndDispatchCmd(cmd)
+        except Exception as e:
+            cmd.setState(cmd.Failed, "Command %r failed: %s" % (cmd.cmdBody, strFromException(e)))
+
         pass
+
+    def command_callback(self, cmd):
+        """Called when a user command changes status."""
+
+        if not cmd.is_done:
+            return
+
+        log.info(f'{self} {cmd}')
+
+        msg_code, msg_str = cmd.get_key_val_msg()
+        self.write_to_users(msg_code, msg_str, cmd=cmd)
 
     def show_new_user_info(self, cmd):
         """Shows information for new users. Called when a new user connects."""
