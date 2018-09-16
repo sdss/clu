@@ -1,6 +1,6 @@
 
 # numpy
 # astropy
-pyyaml
-pygments
-click
+numpy>=1.15.1
+ruamel.yaml>=0.15.61
+pygments>=2.2.0
