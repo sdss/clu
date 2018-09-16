@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2018-08-27 10:35:49
+# @Last modified time: 2018-09-06 16:56:06
 
 
 from __future__ import absolute_import, division, print_function
@@ -15,7 +15,7 @@ from __future__ import absolute_import, division, print_function
 import asyncio
 
 
-__all__ = ['TCPServerClientProtocol', 'TCPClientProtocol']
+__all__ = ['TCPServerClientProtocol', 'TCPClientProtocol', 'TronConnection']
 
 
 class TCPServerClientProtocol(asyncio.Protocol):
@@ -63,3 +63,22 @@ class TCPClientProtocol(asyncio.Protocol):
 
     def connection_lost(self, exc):
         self.loop.stop()
+
+
+class TronConnection(object):
+
+    def __init__(self, host, port, connect_now=True):
+
+        self.host = host
+        self.port = port
+
+        self.loop = asyncio.get_event_loop()
+        self._conn = self.loop.create_connection(lambda: TCPClientProtocol(self.loop), host, port)
+
+        if connect_now:
+            self.connect()
+
+    def connect(self):
+        """Initiates the connection."""
+
+        self.transport, self.client_protocol = self.loop.run_until_complete(self._conn)
