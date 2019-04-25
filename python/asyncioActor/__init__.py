@@ -1,14 +1,18 @@
-# encoding: utf-8
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+# @Author: José Sánchez-Gallego (gallegoj@uw.edu)
+# @Date: 2019-04-22
+# @Filename: __init__.py
+# @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
+#
+# @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
+# @Last modified time: 2019-04-24 16:07:42
 
-from __future__ import division
-from __future__ import print_function
-from __future__ import absolute_import
-from __future__ import unicode_literals
+# flake8: noqa
 
-
-# Inits the logging system. Only shell logging, and exception and warning catching.
-# File logging can be started by calling log.start_file_logger(name).
-from .misc import log
+from .actor import *
+from .command import *
 
 
 NAME = 'asyncioActor'

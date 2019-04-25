@@ -4,11 +4,29 @@
 API Reference
 =============
 
-.. automodapi:: asyncioActor.actor
-   :no-inheritance-diagram:
+Actor
+-----
 
-   :skip: UserCommand
+.. automodule:: asyncioActor.actor
 
 
-.. automodapi:: asyncioActor.command
-   :no-inheritance-diagram:
+Command
+-------
+
+.. automodule:: asyncioActor.command
+
+
+Maskbits
+--------
+
+.. autoclass:: asyncioActor.base.Maskbit
+
+.. autoclass:: asyncioActor.base.CommandStatus
+    :undoc-members:
+    :member-order: bysource
+
+
+MixIns
+------
+
+.. autoclass:: asyncioActor.base.StatusMixIn

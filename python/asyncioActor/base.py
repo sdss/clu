@@ -7,43 +7,61 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2018-09-07 13:03:34
+# @Last modified time: 2019-04-23 15:13:25
 
 
-from enum import Flag, auto
+import asyncio
+import enum
 
 
-__ALL__ = ['StatusFlags', 'CallbackMixIn']
+__ALL__ = ['CommandStatus', 'StatusMixIn']
 
 
-_MSG_CODE_DICT = dict(
-    ready='i',
-    running='i',
-    cancelling='w',
-    failing='w',
-    cancelled='f',
-    failed='f',
-    debug='d',
-    done=':')
+class Maskbit(enum.Flag):
+    """A maskbit enumeration. Intended for subclassing."""
 
-_INV_MSG_CODE_DICT = dict((val, key) for key, val in _MSG_CODE_DICT.items())
+    @property
+    def active_bits(self):
+        """Returns a list of flags that match the value."""
+
+        return [bit for bit in self.__class__ if bit.value & self.value]
 
 
-class StatusFlags(Flag):
+COMMAND_STATUS_TO_CODE = {
+    'DONE': ':',
+    'CANCELLED': 'f',
+    'FAILED': 'f',
+    'READY': 'i',
+    'RUNNING': 'i',
+    'CANCELLING': 'w',
+    'FAILING': 'w',
+    'DEBUG': 'd',
+}
 
-    DONE = auto()
-    CANCELLED = auto()
-    FAILED = auto()
-    READY = auto()
-    RUNNING = auto()
-    CANCELLING = auto()
-    FAILING = auto()
+
+class CommandStatus(Maskbit):
+
+    DONE = enum.auto()
+    CANCELLED = enum.auto()
+    FAILED = enum.auto()
+    READY = enum.auto()
+    RUNNING = enum.auto()
+    CANCELLING = enum.auto()
+    FAILING = enum.auto()
+    DEBUG = enum.auto()
 
     ACTIVE_STATES = RUNNING | CANCELLING | FAILING
     FAILED_STATES = CANCELLED | FAILED
     FAILING_STATES = CANCELLING | FAILING
     DONE_STATES = DONE | FAILED_STATES
     ALL_STATES = READY | ACTIVE_STATES | DONE_STATES
+
+    def __init__(self, *args):
+
+        if self.name.upper() in COMMAND_STATUS_TO_CODE:
+            self.code = COMMAND_STATUS_TO_CODE[self.name.upper()]
+        else:
+            self.code = None
 
     @property
     def is_combination(self):
@@ -52,14 +70,6 @@ class StatusFlags(Flag):
         if bin(self).count('1') > 1:
             return True
         return False
-
-    @property
-    def msg_code(self):
-        """Returns the message code associated to this status."""
-
-        name = self.name.lower()
-
-        return _MSG_CODE_DICT[name]
 
     @property
     def did_fail(self):
@@ -83,38 +93,94 @@ class StatusFlags(Flag):
     def is_failing(self):
         """Command is being cancelled or is failing."""
 
-        return self in self.FAILED_STATES
+        return self in self.FAILING_STATES
 
 
-class CallbackMixIn(object):
+class StatusMixIn(object):
+    """A mixin that provides status tracking with callbacks.
 
-    _callbacks = []
+    Provides a status property that executes a list of callbacks when
+    the status changes.
 
-    def __init__(self, callback=None, call_now=False):
+    Parameters
+    ----------
+    maskbit_flags : class
+        A class containing the available statuses as a series of maskbit
+        flags. Usually as subclass of `enum.Flag`.
+    initial_status : str
+        The initial status.
+    callback_func : function
+        The function to call if the status changes.
+    call_now : bool
+        Whether the callback function should be called when initialising.
 
-        if callback is not None:
-            if isinstance(callback, (tuple, list)):
-                for cb in callback:
-                    self.add_callback(cb)
+    Attributes
+    ----------
+    callbacks : list
+        A list of the callback functions to call.
+
+    """
+
+    def __init__(self, maskbit_flags, initial_status=None,
+                 callback_func=None, call_now=False):
+
+        self.flags = maskbit_flags
+        self.callbacks = []
+        self._status = initial_status
+        self.watcher = None
+
+        if callback_func is not None:
+            if isinstance(callback_func, (list, tuple)):
+                self.callbacks = callback_func
             else:
-                self.add_callback(callback)
+                self.callbacks.append(callback_func)
 
-        if call_now:
+        if call_now is True:
             self.do_callbacks()
 
-    def add_callback(self, cb):
-
-        assert callable(cb), 'callback is not a callable'
-        self._callbacks.append(cb)
-
-    def remove_callback(self, cb):
-
-        if cb not in self._callbacks:
-            raise ValueError(f'function {cb} not in the list of callbacks.')
-
-        self._callbacks.remove(cb)
-
     def do_callbacks(self):
+        """Calls functions in ``callbacks``."""
 
-        for cb in self._callbacks:
-            cb(self)
+        assert hasattr(self, 'callbacks'), 'missing callbacks attribute.'
+
+        loop = self.loop if hasattr(self, 'loop') else asyncio.get_event_loop()
+
+        for func in self.callbacks:
+            loop.call_soon(func)
+
+    @property
+    def status(self):
+        """Returns the status."""
+
+        return self._status
+
+    @status.setter
+    def status(self, value):
+        """Sets the status."""
+
+        if value != self._status:
+            self._status = self.flags(value)
+            self.do_callbacks()
+            if self.watcher is not None:
+                self.watcher.set()
+
+    async def wait_for_status(self, value, loop=None):
+        """Awaits until the status matches ``value``."""
+
+        if self.status == value:
+            return
+
+        if loop is None:
+            if hasattr(self, 'loop') and self.loop is not None:
+                loop = self.loop
+            else:
+                loop = asyncio.get_event_loop()
+
+        self.watcher = asyncio.Event(loop=loop)
+
+        while self.status != value:
+            await self.watcher.wait()
+            if self.watcher is not None:
+                self.watcher.clear()
+
+        self.watcher = None

@@ -1,20 +1,25 @@
-.. role:: header_no_toc
-  :class: class_header_no_toc
 
-.. title:: Welcome to asyncioActor's documentation!
+asyncioActor's documentation
+============================
 
-:tocdepth: 2
+This is the Sphinx documentation for the SDSS Python product asyncioActor.
 
-.. rubric:: :header_no_toc:`asyncioActor: an actor framework for the 21st century`
-
-This is the Sphinx documentation for the SDSS Python product asyncioActor
-
-Documentation
--------------
+Contents
+--------
 
 .. toctree::
-   :maxdepth: 1
+  :maxdepth: 2
 
-   intro
-   changelog
-   api
+  intro
+
+  api
+
+  changelog
+
+
+
+Indices and tables
+------------------
+
+* :ref:`genindex`
+* :ref:`modindex`

@@ -8,9 +8,6 @@
 # @License: BSD 3-Clause
 # @Copyright: Brian Cherinka
 
-
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import os
 
 from invoke import Collection, task
@@ -19,7 +16,6 @@ from invoke import Collection, task
 # This file contains tasks that can be easily run from the shell terminal using the Invoke
 # python package. If you do not have invoke, install it with pip install
 # To list the tasks available, type invoke --list from the top-level repo directory
-
 
 @task
 def clean_docs(ctx):
@@ -38,7 +34,7 @@ def build_docs(ctx, clean=False):
 
     print('Building the docs')
     os.chdir('docs/sphinx')
-    ctx.run("make html")
+    ctx.run("make html", pty=True)
 
 
 @task
@@ -50,7 +46,7 @@ def show_docs(ctx):
 
 
 @task
-def clean(ctx, full=False):
+def clean(ctx):
     """Cleans up the crap before a Pip build"""
 
     print('Cleaning')
@@ -58,11 +54,7 @@ def clean(ctx, full=False):
     ctx.run('rm -rf build')
     ctx.run('rm -rf dist')
     ctx.run('rm -rf *.egg-info')
-
-    if full:
-        ctx.run('rm -rf seiya/**/*.so')
-        ctx.run('rm -rf seiya/**/*.c')
-        ctx.run('rm -rf seiya/cube/*.html')
+    ctx.run('rm -rf python/*.egg-info')
 
 
 @task(clean)

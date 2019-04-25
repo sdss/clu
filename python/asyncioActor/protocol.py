@@ -7,78 +7,304 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2018-09-06 16:56:06
-
-
-from __future__ import absolute_import, division, print_function
+# @Last modified time: 2019-04-24 19:35:40
 
 import asyncio
 
 
-__all__ = ['TCPServerClientProtocol', 'TCPClientProtocol', 'TronConnection']
+__all__ = ['TCPProtocol', 'PeriodicTCPServer',
+           'PeriodicTCPServer', 'TCPStreamPeriodicServer']
 
 
-class TCPServerClientProtocol(asyncio.Protocol):
+class TCPProtocol(asyncio.Protocol):
+    """A TCP server/client based on asyncio protocols.
 
-    def __init__(self, conn_cb=None, read_cb=None):
+    This is a high-level implementation of the client and server asyncio
+    protocols. See `https://docs.python.org/3/library/asyncio-protocol.html`__
+    for details.
 
-        self.conn_cb = conn_cb
-        self.transport = None
+    Parameters
+    ----------
+    loop
+        The event loop. The current event loop is used by default.
+    connection_callback
+        Callback to call when a new client connects.
+    data_received_callback
+        Callback to call when a new data is received.
+    max_connections : int
+        How many clients the server accepts. If `None`, unlimited connections
+        are allowed.
 
-        self._read_callback = read_cb
+    """
+
+    def __init__(self, loop=None, connection_callback=None,
+                 data_received_callback=None, max_connections=None):
+
+        self.connection_callback = connection_callback
+        self.data_received_callback = data_received_callback
+
+        self.transports = []
+        self.max_connections = max_connections
+
+        self.loop = loop or asyncio.get_event_loop()
+
+    @classmethod
+    async def create_server(cls, host, port, **kwargs):
+        """Returns a `~asyncio.Server` connection."""
+
+        loop = kwargs.get('loop', asyncio.get_event_loop())
+
+        new_tcp = cls(**kwargs)
+
+        server = await loop.create_server(lambda: new_tcp, host, port)
+
+        await server.start_serving()
+
+        return server
+
+    @classmethod
+    async def create_client(cls, host, port, **kwargs):
+        """Returns a `~asyncio.Transport` and `~asyncio.Protocol`."""
+
+        if 'connection_callback' in kwargs:
+            raise KeyError('connection_callback not allowed when creating a client.')
+
+        loop = kwargs.get('loop', asyncio.get_event_loop())
+
+        new_tcp = cls.__new__(cls, **kwargs)
+        transport, protocol = await loop.create_connection(lambda: new_tcp, host, port)
+
+        return transport, protocol
 
     def connection_made(self, transport):
-        """Receives a connection and sends the transport to ``conn_cb``."""
+        """Receives a connection and calls the connection callback."""
 
-        self.transport = transport
-        self.transport._user_id = 0
+        if self.max_connections is None or (len(self.transports) < self.max_connections):
+            self.transports.append(transport)
+        else:
+            transport.write('Maximum number of connections reached.')
+            transport.close()
 
-        if self.conn_cb:
-            self.conn_cb(transport)
-
-    def data_received(self, data):
-
-        if self._read_callback:
-            self._read_callback(self.transport, data.decode())
-
-    def set_read_callback(self, cb):
-        """Sets the callback for `data_received`."""
-
-        self._read_callback = cb
-
-
-class TCPClientProtocol(asyncio.Protocol):
-
-    def __init__(self, loop):
-
-        self.loop = loop
-        self.transport = None
-
-    def connection_made(self, transport):
-
-        self.transport = transport
+        if self.connection_callback:
+            self.connection_callback(transport)
 
     def data_received(self, data):
-        print('Data received from Tron: {!r}'.format(data.decode()))
+        """Decodes the received data."""
+
+        if self.data_received_callback:
+            self.data_received_callback(data.decode())
 
     def connection_lost(self, exc):
-        self.loop.stop()
+        """Called when connection is lost."""
+
+        pass
 
 
-class TronConnection(object):
+class PeriodicTCPServer(TCPProtocol):
+    """A TCP server that runs a callback periodically.
 
-    def __init__(self, host, port, connect_now=True):
+    Parameters
+    ----------
+    period_callback
+        Callback to run every iteration.
+    sleep_time : float
+        The delay between two calls to ``periodic_callback``.
+    kwargs : dict
+        Parameters to pass to `TCPProtocol`
 
-        self.host = host
-        self.port = port
+    """
 
-        self.loop = asyncio.get_event_loop()
-        self._conn = self.loop.create_connection(lambda: TCPClientProtocol(self.loop), host, port)
+    def __init__(self, periodic_callback=None, sleep_time=1, **kwargs):
 
-        if connect_now:
-            self.connect()
+        self._periodic_callback = periodic_callback
+        self.sleep_time = sleep_time
 
-    def connect(self):
-        """Initiates the connection."""
+        self.periodic_task = None
 
-        self.transport, self.client_protocol = self.loop.run_until_complete(self._conn)
+        super().__init__(**kwargs)
+
+    @classmethod
+    async def create_client(cls, *args, **kwargs):
+
+        raise NotImplementedError('create_client is not implemented for PeriodicTCPServer.')
+
+    @classmethod
+    async def create_server(cls, host, port, *args, **kwargs):
+        """Returns a `~asyncio.Server` connection."""
+
+        loop = kwargs.get('loop', asyncio.get_event_loop())
+
+        new_tcp = cls(*args, **kwargs)
+
+        server = await loop.create_server(lambda: new_tcp, host, port)
+
+        await server.start_serving()
+
+        if new_tcp.periodic_callback:
+            new_tcp.periodic_task = asyncio.create_task(new_tcp._emit_periodic())
+
+        return server
+
+    @property
+    def periodic_callback(self):
+        """Returns the periodic callback."""
+
+        return self._periodic_callback
+
+    @periodic_callback.setter
+    def periodic_callback(self, func):
+        """Sets the periodic callback."""
+
+        self._periodic_callback = func
+
+    async def _emit_periodic(self):
+
+        while True:
+
+            for transport in self.transports:
+                if self.periodic_callback is not None:
+                    if asyncio.iscoroutinefunction(self.periodic_callback):
+                        await self.periodic_callback(transport)
+                    else:
+                        self.periodic_callback(transport)
+
+            await asyncio.sleep(self.sleep_time)
+
+
+class TCPStreamServer(object):
+    """A TCP server based on asyncio streams.
+
+    This is a high-level implementation of the asyncio server using
+    streams. See `https://docs.python.org/3/library/asyncio-stream.html`__
+    for details.
+
+    Parameters
+    ----------
+    host : str
+        The server host.
+    port : int
+        The server port.
+    connection_callback
+        Callback to call when a new client connects.
+    data_received_callback
+        Callback to call when a new data is received.
+    loop
+        The event loop. The current event loop is used by default.
+
+    """
+
+    def __init__(self, host, port, connection_callback=None,
+                 data_received_callback=None, loop=None):
+
+        self._host = host
+        self._port = port
+
+        self.transports = {}
+        self.loop = loop or asyncio.get_event_loop()
+
+        self.connection_callback = connection_callback
+        self.data_received_callback = data_received_callback
+
+        #: The `asyncio.Server`. Created when `.start_server` is run.
+        self.server = None
+
+    async def start_server(self, host=None, port=None):
+        """Returns a `~asyncio.Server` connection."""
+
+        self.server = await asyncio.start_server(self.connection_made,
+                                                 host or self._host,
+                                                 port or self._port)
+
+        return self.server
+
+    async def _do_callback(self, cb, *args, **kwargs):
+        """Calls a function or coroutine callback."""
+
+        if asyncio.iscoroutinefunction(cb):
+            await asyncio.create_task(cb(*args, **kwargs))
+        else:
+            cb(*args, **kwargs)
+
+    async def connection_made(self, reader, writer):
+        """Called when a new client connects to the server.
+
+        Stores the writer protocol in ``transports``, calls the connection
+        callback, if any, and starts a loop to read any incoming data.
+
+        """
+
+        self.transports[writer.transport] = writer
+
+        if self.connection_callback:
+            await self._do_callback(self.connection_callback, writer.transport)
+
+        while True:
+
+            try:
+                data = await reader.readuntil()
+            except asyncio.streams.IncompleteReadError:
+                writer.close()
+                break
+
+            if self.data_received_callback:
+                await self._do_callback(self.data_received_callback,
+                                        writer.transport, data)
+
+
+class TCPStreamPeriodicServer(TCPStreamServer):
+    """A TCP server that calls a function periodically.
+
+    host : str
+        The server host.
+    port : int
+        The server port.
+    period_callback
+        Callback to run every iteration.
+    sleep_time : float
+        The delay between two calls to ``periodic_callback``.
+    kwargs : dict
+        Parameters to pass to `TCPStreamServer`
+
+    """
+
+    def __init__(self, host, port, periodic_callback=None,
+                 sleep_time=1, **kwargs):
+
+        self._periodic_callback = periodic_callback
+        self.sleep_time = sleep_time
+
+        self.periodic_task = None
+
+        super().__init__(host, port, **kwargs)
+
+    async def start_server(self, **kwargs):
+        """Returns a `~asyncio.Server` connection."""
+
+        server = await super().start_server(**kwargs)
+
+        if self.periodic_callback:
+            self.periodic_task = asyncio.create_task(self._emit_periodic())
+
+        return server
+
+    @property
+    def periodic_callback(self):
+        """Returns the periodic callback."""
+
+        return self._periodic_callback
+
+    @periodic_callback.setter
+    def periodic_callback(self, func):
+        """Sets the periodic callback."""
+
+        self._periodic_callback = func
+
+    async def _emit_periodic(self):
+
+        while True:
+
+            if self.server:
+                for transport in self.transports:
+                    await self._do_callback(self.periodic_callback, transport)
+
+            await asyncio.sleep(self.sleep_time)

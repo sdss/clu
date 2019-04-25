@@ -1,6 +1,6 @@
 -r requirements.txt
 
-Sphinx>=1.6.5
-sphinx_bootstrap_theme>=0.4.12
-sphinx-automodapi>=0.7
-recommonmark>=0.4.0
+Sphinx>=1.8.0
+releases>=1.6.1
+sphinxcontrib-trio>=1.0.1
+sphinx-click>=1.3.0

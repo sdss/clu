@@ -5,7 +5,7 @@
 #
 # @Author: Brian Cherinka
 # @Date:   2017-12-05 12:01:21
-# @Last modified by:   Brian Cherinka
+# @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
 # @Last Modified time: 2017-12-05 12:19:32
 
 from __future__ import print_function, division, absolute_import
@@ -61,21 +61,21 @@ class AsyncioActorMissingDependency(AsyncioActorError):
     pass
 
 
-class AsyncioActorWarning(Warning):
+class AsyncioActorBaseWarning(Warning):
     """Base warning for AsyncioActor."""
     pass
 
 
-class AsyncioActorUserWarning(UserWarning, AsyncioActorWarning):
+class AsyncioActorWarning(UserWarning, AsyncioActorBaseWarning):
     """The primary warning class."""
     pass
 
 
-class AsyncioActorSkippedTestWarning(AsyncioActorUserWarning):
+class AsyncioActorSkippedTestWarning(AsyncioActorBaseWarning):
     """A warning for when a test is skipped."""
     pass
 
 
-class AsyncioActorDeprecationWarning(AsyncioActorUserWarning):
+class AsyncioActorDeprecationWarning(AsyncioActorBaseWarning):
     """A warning for deprecated features."""
     pass

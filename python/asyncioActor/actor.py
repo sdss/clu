@@ -7,92 +7,201 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2018-09-07 13:05:12
-
-
-from __future__ import absolute_import, division, print_function
+# @Last modified time: 2019-04-24 18:47:38
 
 import asyncio
-import functools
+import collections
+import logging
 import pathlib
-import sys
 
-from ruamel.yaml import YAML
+import ruamel.yaml
 
-from . import log
-from .command import UserCommand
-from .core import exceptions
-from .protocol import TCPServerClientProtocol, TronConnection
+from asyncioActor.command import Command
+from asyncioActor.core import exceptions
+from asyncioActor.misc import logger
+from asyncioActor.protocol import TCPStreamPeriodicServer, TCPStreamServer
+
+
+#: The default status delay.
+DEFAULT_STATUS_DELAY = 1
 
 
 class Actor(object):
+    """An actor based in asyncio.
 
-    def __init__(self, name, port=None, config_path=None, version='?'):
+    This class defines a new actor. Normally a new instance is created by
+    passing a configuration file path which defines how the actor must
+    be started.
 
-        self.name = name
-        self.version = version
+    The TCP servers need to be started by awaiting the coroutine `.run`. The
+    following is an example of a basic actor instantiation: ::
 
-        self.config = self._get_config(config_path)
-        self.loop = asyncio.get_event_loop()
+        loop = asyncio.get_event_loop()
+        my_actor = Actor('my_actor', '127.0.0.1', 9999)
+        loop.run_until_complete(my_actor.run())
 
-        self.log = None
-        self._setup_logger()
+    Parameters
+    ----------
+    name : str
+        The name of the actor.
+    host : str
+        The host where the TCP server will run.
+    port : int
+        The port of the TCP server.
+    version : str
+        The version of the actor.
+    loop
+        The event loop. If `None`, the current event loop will be used.
+    config : dict or str
+        A configuration dictionary or the path to a YAML configuration
+        file that must contain a section ``'actor'`` (if the section is
+        not present, the whole file is assumed to be the actor
+        configuration).
+    status_port : int
+        If defined, the port on which the status server will run.
+    status_callback : function
+        The function to be called by the status server.
+    status_delay : float
+        The delay, in seconds, between successive calls to ``status_callback``.
+        Defaults to `.DEFAULT_STATUS_DELAY`.
+    log_dir : str
+        The directory where to store the logs. Defaults to ``$HOME/.<name>``
+        where ``<name>`` is the name of the actor.
+
+    """
+
+    def __init__(self, name=None, host=None, port=None, version=None,
+                 loop=None, config=None, status_port=None, status_callback=None,
+                 status_delay=None, log_dir=None):
+
+        self.config = self._parse_config(config)
+
+        self.name = name or self.config['name']
+        assert self.name, 'name cannot be empty.'
+
+        self.log = self._setup_logger(log_dir)
+
+        self.loop = loop or asyncio.get_event_loop()
 
         self.user_dict = dict()
 
-        partial_factory = functools.partial(TCPServerClientProtocol,
-                                            conn_cb=self.new_user,
-                                            read_cb=self.new_command)
-        factory = self.loop.create_server(partial_factory, '127.0.0.1',
-                                          port=self.config['port'] if port is None else port)
-        self.tcp_server = self.loop.run_until_complete(factory)
+        self.version = version or self.config['version'] or '?'
 
-        self.tron = None
+        host = host or self.config['host']
+        port = port or self.config['port']
 
-        self.log.info('TCP server running on {}'.format(self.tcp_server.sockets[0].getsockname()))
+        self.server = TCPStreamServer(host, port, loop=self.loop,
+                                      connection_callback=self.new_user,
+                                      data_received_callback=self.new_command)
+
+        self.status_server = None
+
+        status_port = status_port or self.config['status_port']
+        sleep_time = status_delay or self.config['status_delay'] or DEFAULT_STATUS_DELAY
+
+        if status_port:
+            self.status_server = TCPStreamPeriodicServer(
+                host, status_port, loop=self.loop,
+                periodic_callback=status_callback,
+                sleep_time=sleep_time)
+
+    def __repr__(self):
+
+        if self.server and self.server.server:
+            host, port = self.server.server.socket.getsockname()
+        else:
+            host = port = None
+
+        return f'<{str(self)} (name={self.name}, host={host!r}, port={port})>'
 
     def __str__(self):
 
         return self.__class__.__name__
 
-    def _get_config(self, config_path=None):
-        """Returns a dictionary with the configuration options."""
+    async def run(self):
+        """Starts the servers."""
 
-        if config_path is None:
-            fn = sys.modules[self.__module__].__file__
-            config_path = pathlib.Path(fn).parent / f'etc/{self.name}.yml'
+        await self.server.start_server()
 
-        yaml = YAML(typ='safe')
+        socket = self.server.server.sockets[0]
+        host, port = socket.getsockname()
+        self.log.info(f'starting TCP server on {host}:{port}')
 
-        return yaml.load(open(str(config_path)))['actor']
+        if self.status_server:
 
-    def _setup_logger(self):
-        """Starts file logging."""
+            await self.status_server.start_server()
 
-        self.log = log
+            socket_status = self.status_server.server.sockets[0]
+            host, port = socket_status.getsockname()
+            self.log.info(f'starting status server on {host}:{port}')
 
-        if 'logging' not in self.config:
-            raise exceptions.AsyncioActorError('logging section missing from configuration file.')
+        await self.server.server.serve_forever()
 
-        config_log = self.config['logging']
+    async def shutdown(self):
+        """Shuts down all the remaining tasks."""
 
-        file_level = 10 if 'file_level' not in config_log else config_log['file_level']
-        sh_level = 20 if 'shell_level' not in config_log else config_log['shell_level']
+        self.log.info('cancelling all pending tasks and shutting down.')
 
-        self.log.start_file_logger(config_log['log_dir'] + '/' + f'{self.name}.log', file_level)
+        tasks = [task for task in asyncio.Task.all_tasks(loop=self.loop)
+                 if task is not asyncio.tasks.Task.current_task(loop=self.loop)]
+        list(map(lambda task: task.cancel(), tasks))
 
-        self.log.sh.setLevel(sh_level)
+        await asyncio.gather(*tasks, return_exceptions=True)
 
-        self.log.debug('starting file logging.')
+        self.loop.stop()
 
-    def tron_connect(self):
-        """Creates a connection to the Tron commander."""
+    def _parse_config(self, config):
+        """Parses the configuration file."""
 
-        host, port = self.config['tron']['host'], self.config['tron']['port']
+        if config is None:
+            # Returns a defaultdict that returns None if the key is not present.
+            return collections.defaultdict(lambda: None)
 
-        log.debug(f'creating connection to Tron on ({host}, {port})')
+        if not isinstance(config, dict):
 
-        self.tron = TronConnection(host, port)
+            assert config.exists(), 'configuration path does not exist.'
+
+            yaml = ruamel.yaml.add_implicit_resolverYAML(typ='safe')
+            config = yaml.load(open(str(config)))
+
+        if 'actor' in config:
+            config = config['actor']
+
+        return config
+
+    def _setup_logger(self, log_dir, file_level=10, shell_level=20):
+        """Starts the file logger."""
+
+        orig_logger = logging.getLoggerClass()
+        logging.setLoggerClass(logger.MyLogger)
+        log = logging.getLogger(self.name + '_actor')
+        log._set_defaults()  # Inits sh handler
+        logging.setLoggerClass(orig_logger)
+
+        if log_dir is None:
+            if 'logging' in self.config:
+                log_dir = self.config['logging'].get('log_dir', None)
+
+        if log_dir is None:
+            log_dir = pathlib.Path(f'~/.{self.name}/').expanduser()
+        else:
+            log_dir = pathlib.Path(log_dir)
+
+        if not log_dir.exists():
+            log_dir.mkdir(parents=True)
+
+        log.start_file_logger(log_dir / f'{self.name}.log')
+
+        if 'logging' in self.config:
+            file_level = self.config['logging'].get('file_level', None) or file_level
+            shell_level = self.config['logging'].get('shell_level', None) or shell_level
+
+        log.sh.setLevel(shell_level)
+        log.fh.setLevel(file_level)
+
+        log.info('logging system initiated.')
+
+        return log
 
     def new_user(self, transport):
         """Assigns userID to new client connection."""
@@ -100,159 +209,140 @@ class Actor(object):
         curr_ids = set(self.user_dict.keys())
         user_id = 1 if len(curr_ids) == 0 else max(curr_ids) + 1
 
-        transport._user_id = user_id
+        transport.user_id = user_id
 
         self.user_dict[user_id] = transport
 
         # report user information and additional info
-        fake_cmd = UserCommand(user_id=user_id)
-        self.show_new_user_info(fake_cmd)
-        return fake_cmd
+        self.show_new_user_info(user_id)
 
-    def new_command(self, transport, cmd_str):
+        return
+
+    def new_command(self, transport, command_str):
         """Handles a new command received by the actor."""
 
-        cmd_str = cmd_str.strip()
-        log.info(f'{self}.new_command({cmd_str!r})')
+        command_str = command_str.decode().strip()
 
-        if not cmd_str:
+        if not command_str:
             return
 
-        user_id = transport._user_id
+        user_id = transport.user_id
+        print(user_id)
 
         try:
-            cmd = UserCommand(user_id, cmd_str, self.command_callback)
-        except Exception as e:
-            self.writeToUsers("f", "Could not parse the following as a command: %r"%cmd_str)
-            return
-        try:
-            cmd = expandCommand(cmd) # gives write to users
-            cmd.userCommanded = True # this command was generated from a socket read.
-            self.parseAndDispatchCmd(cmd)
-        except Exception as e:
-            cmd.setState(cmd.Failed, "Command %r failed: %s" % (cmd.cmdBody, strFromException(e)))
-
-        pass
-
-    def command_callback(self, cmd):
-        """Called when a user command changes status."""
-
-        if not cmd.is_done:
+            command = Command(command_str, user_id=user_id, actor=self, loop=self.loop)
+        except exceptions.CommandError as ee:
+            self.write('f', f'Could not parse the following as a command: {ee!r}')
             return
 
-        log.info(f'{self} {cmd}')
+        # try:
+        #     self.dispatch(command)
+        # except exceptions.CommandError as ee:
+        #     command.set_status(command.status.Failed,
+        #                        message=f'Command {command.command_body!r} failed: {ee}')
 
-        msg_code, msg_str = cmd.get_key_val_msg()
-        self.write_to_users(msg_code, msg_str, cmd=cmd)
+        return command
 
-    def show_new_user_info(self, cmd):
+    def show_new_user_info(self, user_id):
         """Shows information for new users. Called when a new user connects."""
 
-        self.show_user_info(cmd)
-        self.show_version(cmd, only_one_user=True)
+        self.show_user_info(user_id)
+        self.show_version(user_id=user_id)
 
-    def show_user_info(self, cmd):
+    def show_user_info(self, user_id):
         """Shows user information including your user_id."""
 
         num_users = len(self.user_dict)
         if num_users == 0:
             return
 
-        msg_data = [f'yourUserID={cmd.user_id}', f'num_users={num_users}']
+        msg_data = [f'yourUserID={user_id}', f'num_users={num_users}']
         msg_str = '; '.join(msg_data)
 
-        self.write_to_one_user('i', msg_str, cmd=cmd)
-        self.show_user_list(cmd)
+        self.write('i', msg_str, user_id=user_id)
+        self.show_user_list()
 
-    def show_user_list(self, cmd=None):
-        """Shows a list of connected users."""
+    def show_user_list(self):
+        """Shows a list of connected users. Broadcast to all users."""
 
         user_id_list = sorted(self.user_dict.keys())
         for user_id in user_id_list:
             transport = self.user_dict[user_id]
-            msg_str = 'UserInfo={}, {}'.format(user_id, transport.get_extra_info('peername')[0])
-            self.write_to_users('i', msg_str, cmd=cmd)
+            peername = transport.get_extra_info('peername')[0]
+            msg_str = f'UserInfo={user_id}, {peername}'
+            self.write('i', msg_str)
 
-    def show_version(self, cmd, only_one_user=False):
+    def show_version(self, user_id=None):
         """Shows actor version."""
 
         msg_str = f'version={self.version!r}'
 
-        if only_one_user:
-            self.write_to_one_user('i', msg_str, cmd=cmd)
-        else:
-            self.write_to_users('i', msg_str, cmd=cmd)
+        self.write('i', msg_str, user_id=user_id)
 
     @staticmethod
-    def get_user_cmd_id(msg_code=None, cmd=None, user_id=None, cmd_id=None):
-        """Returns user_id, cmd_id based on user-supplied information.
+    def get_user_command_id(command=None, user_id=None, command_id=None):
+        """Returns user_id, command_id based on user-supplied information.
 
-        Parameters:
-            msg_code (str):
-                Used to determine if ``cmd`` is a valid default. If ``cmd`` is
-                provided and ``cmd.is_done`` and ``msg_code`` is not a done
-                code, then ``cmd`` is ignored (treated as None). This allows
-                you to continue to use a completed command to send
-                informational messages, which can simplify code. Note that it
-                is also possible to send multiple done messages for a command,
-                but that indicates a serious bug in your code.
-            cmd (`Command` object):
-                User command; used as a default for ``user_id`` and ``cmd_id``,
-                but see ``msg_code``.
-            user_id (int):
-                If None then use ``cmd.user_id``, but see ``msg_code``.
-            cmd_id (int):
-                If None then use ``cmd.cmd_id``, but see ``msg_code``.
+        Parameters
+        ----------
+        command : Command
+            User command; used as a default for ``user_id`` and ``command_id``.
+            If the command is done, it is ignored.
+        user_id : int
+            If `None` then use ``command.user_id``.
+        command_id : int
+            If `None` then use ``command.command_id``.
+
         """
 
-        if cmd is not None and msg_code is not None and cmd.is_done:
-            state = cmd.state_from_msg_code(msg_code)
-            if state not in cmd.DONE_STATES:
-                # ignore command
-                cmd = None
+        if command is not None and command.is_done:
+            command = None
 
-        return (user_id if user_id is not None else (cmd.user_id if cmd else 0),
-                cmd_id if cmd_id is not None else (cmd.cmd_id if cmd else 0))
+        user_id = user_id or (command.user_id if command else 0)
+        command_id = command_id or (command.command_id if command else 0)
+
+        return (user_id, command_id)
 
     @staticmethod
-    def format_user_output(msg_code, msg_str, user_id=None, cmd_id=None):
+    def format_user_output(msg_code, msg_str=None, user_id=None, command_id=None):
         """Formats a string to send to users."""
 
-        return f'{cmd_id:d} {user_id:d} {msg_code:s} {msg_str:s}'
+        msg_str = '' if msg_str is None else ' ' + msg_str
 
-    def write_to_users(self, msg_code, msg_str, cmd=None, user_id=None, cmd_id=None):
-        """Writes a message to all users."""
+        return f'{command_id:d} {user_id:d} {msg_code:s}{msg_str:s}'
 
-        user_id, cmd_id = self.get_user_cmd_id(msg_code=msg_code,
-                                               cmd=cmd,
+    def write(self, msg_code, msg_str, command=None, user_id=None, command_id=None):
+        """Writes a message to user(s).
+
+        Parameters
+        ----------
+        msg_code : str
+            The message code (e.g., ``'i'`` or ``':'``).
+        msg_str : str
+            The text to be output. If `None`, only the code will be written.
+        command : Command
+            User command; used as a default for ``user_id`` and ``command_id``.
+            If the command is done, it is ignored.
+        user_id : int
+            If `None` then use ``command.user_id``.
+        command_id : int
+            If `None` then use ``command.command_id``.
+
+        """
+
+        user_id, command_id = self.get_user_command_id(command=command,
+                                                       user_id=user_id,
+                                                       command_id=command_id)
+
+        full_msg_str = self.format_user_output(msg_code, msg_str,
                                                user_id=user_id,
-                                               cmd_id=cmd_id)
+                                               command_id=command_id)
 
-        full_msg_str = self.format_user_output(msg_code,
-                                               msg_str,
-                                               user_id=user_id,
-                                               cmd_id=cmd_id)
+        msg = (full_msg_str + '\n').encode()
 
-        self.log.info(f'{self}.write_to_users({full_msg_str!r})')
-
-        for transport in self.user_dict.values():
-            transport.write((full_msg_str + '\n').encode())
-
-    def write_to_one_user(self, msg_code, msg_str, cmd=None, user_id=None, cmd_id=None):
-        """Writes a message to one user."""
-
-        user_id, cmd_id = self.get_user_cmd_id(msg_code=msg_code,
-                                               cmd=cmd,
-                                               user_id=user_id,
-                                               cmd_id=cmd_id)
-
-        if user_id == 0:
-            raise RuntimeError(
-                f'write_to_one_user(msg_code={msg_code!r}; msg_str={msg_str!r}; '
-                'cmd={cmd!r}; user_id={user_id!r}; cmd_id={cmd_id!r}) cannot write to user 0')
-
-        transport = self.user_dict[user_id]
-        full_msg_str = self.format_user_output(msg_code, msg_str, user_id=user_id, cmd_id=cmd_id)
-
-        self.log.info(f'{self}.write_to_one_user({full_msg_str!r}); user_id={user_id}')
-        transport.write((full_msg_str + '\n').encode())
+        if user_id is None or user_id == 0:
+            for transport in self.user_dict.values():
+                transport.write(msg)
+        else:
+            transport = self.user_dict[user_id]
+            transport.write(msg)

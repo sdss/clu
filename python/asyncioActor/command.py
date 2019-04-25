@@ -7,21 +7,19 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2018-09-09 19:56:18
+# @Last modified time: 2019-04-24 17:07:43
 
-
-from __future__ import absolute_import, division, print_function
-
+import asyncio
 import re
 
-from .base import CallbackMixIn, StatusFlags
-from .core import exceptions
+from asyncioActor.base import CommandStatus, StatusMixIn
+from asyncioActor.core import exceptions
 
 
-__all__ = ['Command', 'UserCommand']
+__all__ = ['BaseCommand', 'Command']
 
 
-class Command(CallbackMixIn):
+class BaseCommand(StatusMixIn):
     """Base class for commands of all types (user and device).
 
     Parameters
@@ -32,137 +30,136 @@ class Command(CallbackMixIn):
         The ID of the user issuing this command.
     cmd_id : int
         The ID associated to this command.
+    status_callback : function
+        A function to call when the status changes.
+    call_now : bool
+        Whether to call ``status_callback`` when initialising the command.
+    loop
+        The event loop.
+    actor : ~asyncioActor.actor.Actor
+        The actor associated with this command.
 
     """
 
-    def __init__(self, cmd_str, user_id=0, cmd_id=0, callback=None, call_now=False):
+    def __init__(self, user_id=0, command_id=0, status_callback=None,
+                 call_now=False, loop=None, actor=None):
 
-        self._cmd_str = cmd_str
         self.user_id = int(user_id)
-        self.cmd_id = int(cmd_id)
-        self._status = StatusFlags.READY
+        self.command_id = int(command_id)
 
-        self._write_to_users = None  # Set by the actor.
-        self.user_commanded = False
+        # Set by the actor.
+        self.actor = actor
 
-        CallbackMixIn.__init__(callback=callback, call_now=call_now)
+        self.loop = loop or asyncio.get_event_loop()
 
-    @property
-    def cmd_str(self):
-        return self._cmd_str
+        StatusMixIn.__init__(self, CommandStatus, initial_status=CommandStatus.READY,
+                             callback_func=status_callback, call_now=call_now)
 
     @property
     def status(self):
-        """The status of the command."""
+        """Returns the status."""
 
         return self._status
 
-    def setState(self, newState, textMsg=None, hubMsg=None):
-        """Set the state of the command and call callbacks.
-
-        If new state is done then remove all callbacks (after calling them).
-
-        @param[in] newState  new state of command
-        @param[in] textMsg  a message to be printed using the Text keyword; if None then not changed
-        @param[in] hubMsg  a message in keyword=value format (without a header); if None then not changed
-
-        You can set both textMsg and hubMsg, but typically only one or the other will be displayed
-        (depending on the situation).
-
-        If the new state is Failed then please supply a textMsg and/or hubMsg.
-
-        Error conditions:
-        - Raise RuntimeError if this command is finished.
-        """
-
-
-        if textMsg is not None:
-            self._textMsg = str(textMsg)
-        if hubMsg is not None:
-            self._hubMsg = str(hubMsg)
-        log.info(str(self))
-        self._basicDoCallbacks(self)
-        if self.isDone:
-            self._timeoutTimer.cancel()
-            self._removeAllCallbacks()
-            self.untrackCmd()
-
     @status.setter
-    def status(self, value):
+    def status(self, status):
+        """Sets the status. A message is output to the users.
 
-        if self.is_done:
-            raise RuntimeError(f'Command {self!s} is done; cannot change state')
+        This setter calls `.set_status` with an empty message to the users.
 
-        if isinstance(value, str):
-            flag = getattr(StatusFlags, value.upper())
+        Parameters
+        ----------
+        status : CommandStatus or int or str
+            The status to set, either as a `CommandStatus` value or the
+            integer associated with the maskbit. If ``value`` is a string,
+            loops over the bits in `CommandStatus` and assigns the one whose
+            name matches.
 
-        assert flag.is_combination is False, 'cannot set a combination flag.'
-        assert flag in StatusFlags.ALL_STATES, 'invalid flag'
-
-        self._status = flag
-
-        self.do_callbacks()
-
-    def get_key_val_msg(self):
-        """Get full message data as (msg_code, msg_str).
-
-        Return:
-            msg_code : str
-                Message code (e.g. 'W').
-            msg_str : str
-                Message string: a combination of _textMsg and _hubMsg in keyword-value format.
-            Warning: he "Text" keyword will be repeated if _textMsg is non-empty and _hubMsg contains "Text="
         """
 
-        msg_code = self.state.msg_code
+        self.set_state(status)
 
-        msgInfo = []
-        if self._hubMsg:
-            msgInfo.append(self._hubMsg)
-        if self._textMsg or textPrefix:
-            msgInfo.append("text=%s" % (quoteStr(textPrefix + self._textMsg),))
-        msgStr = "; ".join(msgInfo)
-        return (msgCode, msgStr)
+    def set_status(self, status, message=None):
+        """Same as `.status` but allows to specify a message to the users."""
 
-    def set_write_to_users(self, write_to_users_func):
-        """Sets the function to call when writing to users."""
+        if self.status.is_done:
+            raise RuntimeError('cannot modify a done command.')
 
-        if self._write_to_users is not None:
-            raise RuntimeError('Write to users is already set')
-        else:
-            self._write_to_users = write_to_users_func
+        if not isinstance(status, self.flags):
+            if isinstance(status, int):
+                status = self.flags(int)
+            elif isinstance(status, str):
+                for bit in self.flags:
+                    if status.lower() == bit.name.lower():
+                        status = bit
+                        break
+            else:
+                raise ValueError('status {status!r} is not a valid command status.')
 
-    def write_to_users(self, msg_code, msg_str, user_id=None, cmd_id=None):
+        if status != self._status:
 
-        if self._write_to_users is None:
-            print(f'{self} writeToUsers not set: ', msg_code, msg_str, user_id, cmd_id, '!!!')
-        else:
-            self._write_to_users(msg_code, msg_str, user_id, cmd_id)
+            status_code = status.code
+            msg_str = None if message is None else f'text="{message}"'
+
+            self.write(status_code, msg_str)
+
+            self._status = status
+
+            self.do_callbacks()
+
+            if self.watcher is not None:
+                self.watcher.set()
+
+    def write(self, msg_code, msg_str=None, user_id=None):
+        """Writes to the user(s).
+
+        Parameters
+        ----------
+        msg_code : str
+            The message code (e.g., ``'i'`` or ``':'``).
+        msg_str : str
+            The text to be output. If `None`, only the code will be written.
+        user_id : int
+            The user to which to send this message. Defaults to the command
+            ``user_id``.
+
+        """
+
+        if not self.actor:
+            raise exceptions.CommandError('An actor has not been defined for '
+                                          'this command. Cannot write to users.')
+
+        self.actor.write(msg_code, msg_str=msg_str, command=self)
 
 
-class UserCommand(Command):
+class Command(BaseCommand):
     """A command from a user (typically the hub)"""
 
-    _HEADER_BODY_RE = re.compile(r'((?P<cmd_id>\d+)(?:\s+\d+)?\s+)?((?P<cmd_body>[A-Za-z_].*))?$')
+    _HEADER_BODY_RE = re.compile(
+        r'((?P<command_id>\d+)(?:\s+\d+)?\s+)?((?P<command_body>[A-Za-z_].*))?$')
 
-    def __init__(self, user_id=0, cmd_str='', **kwargs):
+    def __init__(self, command_string='', **kwargs):
 
-        Command.__init__(self, cmd_str=cmd_str, user_id=user_id, **kwargs)
-        self.parse_cmd_str(cmd_str)
+        BaseCommand.__init__(self, **kwargs)
 
-    def parse_cmd_str(self, cmd_str):
+        self.raw_command_string = command_string
+        self.command_body = None
+
+        self.parse_command_string(command_string)
+
+    def parse_command_string(self, command_string):
         """Parse command."""
 
-        cmd_match = self._HEADER_BODY_RE.match(cmd_str)
-        if not cmd_match:
-            raise exceptions.CommandError(f'Could not parse command {cmd_str!r}')
+        command_match = self._HEADER_BODY_RE.match(command_string)
+        if not command_match:
+            raise exceptions.CommandError(f'Could not parse command {command_string!r}')
 
-        cmd_dict = cmd_match.groupdict('')
-        cmd_id_str = cmd_dict['cmd_id']
+        command_dict = command_match.groupdict('')
+        command_id_str = command_dict['command_id']
 
-        if cmd_id_str:
-            self.cmd_id = int(cmd_id_str)
+        if command_id_str:
+            self.command_id = int(command_id_str)
         else:
-            self.cmd_id = 0
+            self.command_id = 0
 
-        self.cmd_body = cmd_dict.get('cmd_body', '')
+        self.command_body = command_dict.get('command_body', '')
