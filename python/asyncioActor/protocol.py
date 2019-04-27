@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-04-27 12:45:20
+# @Last modified time: 2019-04-27 13:50:05
 
 import asyncio
 
@@ -243,6 +243,7 @@ class TCPStreamServer(object):
                 data = await reader.readuntil()
             except asyncio.streams.IncompleteReadError:
                 writer.close()
+                del self.transports[writer.transport]
                 break
 
             if self.data_received_callback:
