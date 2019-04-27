@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-04-24 19:35:40
+# @Last modified time: 2019-04-27 12:45:20
 
 import asyncio
 
@@ -140,8 +140,7 @@ class PeriodicTCPServer(TCPProtocol):
 
         await server.start_serving()
 
-        if new_tcp.periodic_callback:
-            new_tcp.periodic_task = asyncio.create_task(new_tcp._emit_periodic())
+        new_tcp.periodic_task = asyncio.create_task(new_tcp._emit_periodic())
 
         return server
 
@@ -161,8 +160,8 @@ class PeriodicTCPServer(TCPProtocol):
 
         while True:
 
-            for transport in self.transports:
-                if self.periodic_callback is not None:
+            if self.periodic_callback is not None:
+                for transport in self.transports:
                     if asyncio.iscoroutinefunction(self.periodic_callback):
                         await self.periodic_callback(transport)
                     else:
@@ -221,9 +220,9 @@ class TCPStreamServer(object):
         """Calls a function or coroutine callback."""
 
         if asyncio.iscoroutinefunction(cb):
-            await asyncio.create_task(cb(*args, **kwargs))
+            return await asyncio.create_task(cb(*args, **kwargs))
         else:
-            cb(*args, **kwargs)
+            return cb(*args, **kwargs)
 
     async def connection_made(self, reader, writer):
         """Called when a new client connects to the server.
@@ -282,8 +281,7 @@ class TCPStreamPeriodicServer(TCPStreamServer):
 
         server = await super().start_server(**kwargs)
 
-        if self.periodic_callback:
-            self.periodic_task = asyncio.create_task(self._emit_periodic())
+        self.periodic_task = asyncio.create_task(self._emit_periodic())
 
         return server
 
@@ -303,7 +301,7 @@ class TCPStreamPeriodicServer(TCPStreamServer):
 
         while True:
 
-            if self.server:
+            if self.server and self.periodic_callback:
                 for transport in self.transports:
                     await self._do_callback(self.periodic_callback, transport)
 
