@@ -1,17 +1,24 @@
 asyncioActor
-==============================
+============
 
-A base actor that uses asyncio
+A base actor that uses asyncio.
 
-| |Build Status|
-| |Coverage Status|
+|Build Status| |Coverage Status| |docs|  |py37|
 
-------------
 
-This README describes the asyncioActor Python package. It should include things like a general description, installation instructions, and requirements. It should also include information badges for other services or packages used, e.g., Travis-CI and Coveralls, ReadtheDocs, Astropy, etc.
+.. |Build Status| image:: https://img.shields.io/travis/rtfd/readthedocs.org.svg?style=flat
+    :alt: Build Status
+    :scale: 100%
+    :target: https://travis-ci.org/sdss/jaeger
 
-.. |Build Status| image:: https://travis-ci.org//asyncioActor.svg?branch=master
-   :target: https://travis-ci.org//asyncioActor
+.. |Coverage Status| image:: https://codecov.io/gh/sdss/jaeger/branch/master/graph/badge.svg
+    :alt: Coverage Status
+    :scale: 100%
+    :target: https://codecov.io/gh/sdss/jaeger
 
-.. |Coverage Status| image:: https://coveralls.io/repos/github//asyncioActor/badge.svg?branch=master
-   :target: https://coveralls.io/github//asyncioActor?branch=master
+.. |docs| image:: https://readthedocs.org/projects/sdss-jaeger/badge/?version=latest
+    :alt: Documentation Status
+    :scale: 100%
+    :target: https://sdss-jaeger.readthedocs.io/en/latest/?badge=latest
+
+.. |py37| image:: https://img.shields.io/badge/python-3.7-blue.svg
