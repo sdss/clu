@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-04-27 13:50:05
+# @Last modified time: 2019-04-29 09:17:55
 
 import asyncio
 
@@ -189,17 +189,22 @@ class TCPStreamServer(object):
         Callback to call when a new data is received.
     loop
         The event loop. The current event loop is used by default.
+    max_connections : int
+        How many clients the server accepts. If `None`, unlimited connections
+        are allowed.
 
     """
 
     def __init__(self, host, port, connection_callback=None,
-                 data_received_callback=None, loop=None):
+                 data_received_callback=None, loop=None, max_connections=None):
 
         self._host = host
         self._port = port
 
         self.transports = {}
         self.loop = loop or asyncio.get_event_loop()
+
+        self.max_connections = max_connections
 
         self.connection_callback = connection_callback
         self.data_received_callback = data_received_callback
@@ -231,6 +236,10 @@ class TCPStreamServer(object):
         callback, if any, and starts a loop to read any incoming data.
 
         """
+
+        if self.max_connections and len(self.transports) == self.max_connections:
+            writer.write('Max number of connections reached.\n'.encode())
+            return
 
         self.transports[writer.transport] = writer
 
