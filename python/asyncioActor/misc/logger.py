@@ -41,6 +41,7 @@ def colored_formatter(record):
                'debug': ('magenta', 'normal'),
                'warning': ('yellow', 'normal'),
                'print': ('green', 'normal'),
+               'critical': ('red', 'bold'),
                'error': ('red', 'bold')}
 
     levelname = record.levelname.lower()
@@ -220,48 +221,6 @@ class MyLogger(logging.Logger):
         else:
             self.warning(message)
 
-    # def warning(self, msg, category=None, use_filters=True):
-    #     """Custom ``logging.warning``.
-
-    #     Behaves like the default ``logging.warning`` but accepts ``category``
-    #     and ``use_filters`` as arguments. ``category`` is the type of warning
-    #     we are issuing (defaults to `UserWarning`). If ``use_filters=True``,
-    #     checks whether there are global filters set for the message or the
-    #     warning category and behaves accordingly.
-
-    #     """
-
-    #     if category is None:
-    #         category = UserWarning
-
-    #     n_issued = 0
-    #     if category in self.warning_registry:
-    #         if msg in self.warning_registry[category]:
-    #             n_issued = self.warning_registry[category]
-
-    #     if use_filters:
-
-    #         category_filter = None
-    #         regex_filter = None
-    #         for warnings_filter in warnings.filters:
-    #             if issubclass(category, warnings_filter[2]):
-    #                 category_filter = warnings_filter[0]
-    #                 regex_filter = warnings_filter[1]
-
-    #         if (category_filter == 'ignore') or (category_filter == 'once' and n_issued >= 1):
-    #             if regex_filter is None or regex_filter.search(msg) is not None:
-    #                 return
-
-    #         if category_filter == 'error':
-    #             raise ValueError(msg)
-
-    #     super(MyLogger, self).warning(msg)
-
-    #     if msg in self.warning_registry[category]:
-    #         self.warning_registry[category][msg] += 1
-    #     else:
-    #         self.warning_registry[category][msg] = 1
-
     def warning(self, *args, **kwargs):
 
         super().warning(*args, **kwargs)
@@ -281,8 +240,7 @@ class MyLogger(logging.Logger):
                 os.mkdir(logdir)
 
             if os.path.exists(log_file_path):
-                strtime = datetime.datetime.utcnow().strftime(
-                    '%Y-%m-%d_%H:%M:%S')
+                strtime = datetime.datetime.utcnow().strftime('%Y-%m-%d_%H:%M:%S')
                 shutil.move(log_file_path, log_file_path + '.' + strtime)
 
             self.fh = TimedRotatingFileHandler(
