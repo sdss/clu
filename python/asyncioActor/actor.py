@@ -295,7 +295,7 @@ class Actor(object):
 
         """
 
-        if command is not None and command.is_done:
+        if command is not None and command.status.is_done:
             command = None
 
         user_id = user_id or (command.user_id if command else 0)
