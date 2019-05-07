@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-06 23:34:10
+# @Last modified time: 2019-05-07 10:23:34
 
 import asyncio
 import collections
@@ -32,7 +32,7 @@ DEFAULT_STATUS_DELAY = 1
 
 
 class Actor(object):
-    """An actor based in asyncio.
+    """An actor based on `asyncio <https://docs.python.org/3/library/asyncio.html>`__.
 
     This class defines a new actor. Normally a new instance is created by
     passing a configuration file path which defines how the actor must
