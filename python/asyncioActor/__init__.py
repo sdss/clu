@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-06 23:19:03
+# @Last modified time: 2019-05-07 14:43:57
 
 # flake8: noqa
 
@@ -17,6 +17,6 @@ from .command import *
 from .parser import *
 
 
-NAME = 'asyncioActor'
+NAME = 'clu'
 
 __version__ = '0.1.0dev'

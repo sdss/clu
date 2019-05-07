@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-07 10:23:34
+# @Last modified time: 2019-05-07 14:43:58
 
 import asyncio
 import collections
@@ -19,12 +19,12 @@ import traceback
 import click
 import ruamel.yaml
 
-import asyncioActor
-from asyncioActor.command import Command
-from asyncioActor.core import exceptions
-from asyncioActor.misc import logger
-from asyncioActor.parser import command_parser
-from asyncioActor.protocol import TCPStreamPeriodicServer, TCPStreamServer
+import clu
+from clu.command import Command
+from clu.core import exceptions
+from clu.misc import logger
+from clu.parser import command_parser
+from clu.protocol import TCPStreamPeriodicServer, TCPStreamServer
 
 
 #: The default status delay.
@@ -393,7 +393,7 @@ class Actor(object):
             for keyword in message:
                 value = message[keyword]
                 if escape:
-                    value = asyncioActor.escape(value)
+                    value = clu.escape(value)
                 lines.append(f'{keyword}={value}')
             if concatenate:
                 lines = ['; '.join(lines)]

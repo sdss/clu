@@ -1,8 +1,8 @@
 
-asyncioActor's documentation
-============================
+clu's documentation
+===================
 
-This is the Sphinx documentation for the SDSS Python product asyncioActor.
+This is the Sphinx documentation for the SDSS Python product ``clu``.
 
 Contents
 --------

@@ -7,21 +7,21 @@ API Reference
 Actor
 -----
 
-.. automodule:: asyncioActor.actor
+.. automodule:: clu.actor
 
 
 Command
 -------
 
-.. automodule:: asyncioActor.command
+.. automodule:: clu.command
 
 
 Maskbits
 --------
 
-.. autoclass:: asyncioActor.base.Maskbit
+.. autoclass:: clu.base.Maskbit
 
-.. autoclass:: asyncioActor.base.CommandStatus
+.. autoclass:: clu.base.CommandStatus
     :undoc-members:
     :member-order: bysource
 
@@ -29,16 +29,16 @@ Maskbits
 MixIns
 ------
 
-.. autoclass:: asyncioActor.base.StatusMixIn
+.. autoclass:: clu.base.StatusMixIn
 
 
 Sockets
 -------
 
-.. automodule:: asyncioActor.protocol
+.. automodule:: clu.protocol
 
 
 Tools
 -----
 
-.. autofunction:: asyncioActor.escape
+.. autofunction:: clu.escape

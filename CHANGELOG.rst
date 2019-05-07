@@ -1,4 +1,4 @@
-.. _asyncioActor-changelog:
+.. _clu-changelog:
 
 =========
 Changelog

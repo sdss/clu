@@ -11,71 +11,42 @@
 from __future__ import print_function, division, absolute_import
 
 
-class AsyncioActorError(Exception):
-    """A custom core AsyncioActor exception"""
+class CluError(Exception):
+    """A custom core Clu exception"""
 
     def __init__(self, message=None):
 
         message = 'There has been an error' \
             if not message else message
 
-        super(AsyncioActorError, self).__init__(message)
+        super(CluError, self).__init__(message)
 
 
-class AsyncioActorNotImplemented(AsyncioActorError):
+class CluNotImplemented(CluError):
     """A custom exception for not yet implemented features."""
 
     def __init__(self, message=None):
 
-        message = 'This feature is not implemented yet.' \
-            if not message else message
+        message = 'This feature is not implemented yet.' if not message else message
 
-        super(AsyncioActorNotImplemented, self).__init__(message)
+        super(CluNotImplemented, self).__init__(message)
 
 
-class CommandError(AsyncioActorError):
+class CommandError(CluError):
     """An error raised when a `Command` fails."""
 
     pass
 
 
-class AsyncioActorAPIError(AsyncioActorError):
-    """A custom exception for API errors"""
-
-    def __init__(self, message=None):
-        if not message:
-            message = 'Error with Http Response from AsyncioActor API'
-        else:
-            message = 'Http response error from AsyncioActor API. {0}'.format(message)
-
-        super(AsyncioActorAPIError, self).__init__(message)
-
-
-class AsyncioActorApiAuthError(AsyncioActorAPIError):
-    """A custom exception for API authentication errors"""
+class CluBaseWarning(Warning):
+    """Base warning for Clu."""
     pass
 
 
-class AsyncioActorMissingDependency(AsyncioActorError):
-    """A custom exception for missing dependencies."""
-    pass
-
-
-class AsyncioActorBaseWarning(Warning):
-    """Base warning for AsyncioActor."""
-    pass
-
-
-class AsyncioActorWarning(UserWarning, AsyncioActorBaseWarning):
+class CluWarning(UserWarning, CluBaseWarning):
     """The primary warning class."""
     pass
 
-
-class AsyncioActorSkippedTestWarning(AsyncioActorBaseWarning):
-    """A warning for when a test is skipped."""
-    pass
-
-
-class AsyncioActorDeprecationWarning(AsyncioActorBaseWarning):
+class CluDeprecationWarning(CluBaseWarning):
     """A warning for deprecated features."""
     pass

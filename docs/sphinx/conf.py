@@ -7,14 +7,14 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-04-23 19:59:18
+# @Last modified time: 2019-05-07 14:43:58
 
 import os
 
 # import matplotlib
 from pkg_resources import parse_version
 
-from asyncioActor import __version__
+from clu import __version__
 
 
 # Are we building in RTD?
@@ -45,7 +45,7 @@ source_parsers = {
 master_doc = 'index'
 
 # General information about the project.
-project = project = 'asyncioActor'
+project = project = 'clu'
 copyright = '{0}, {1}'.format('2018', 'José Sánchez-Gallego')
 author = 'José Sánchez-Gallego'
 
@@ -97,7 +97,7 @@ pygments_style = 'sphinx'
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
 
-releases_github_path = 'sdss/asyncioActor'
+releases_github_path = 'sdss/clu'
 releases_document_name = ['changelog']
 releases_unstable_prehistory = True
 
@@ -134,7 +134,7 @@ html_theme = 'alabaster'
 html_theme_options = {
     'logo': 'sdss_logo.png',
     'github_user': 'sdss',
-    'github_repo': 'asyncioActor',
+    'github_repo': 'clu',
     'github_button': True,
     'github_type': 'star',
     'sidebar_collapse': True,

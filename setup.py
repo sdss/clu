@@ -16,9 +16,9 @@ import argparse
 import sys
 
 
-# The NAME variable should be of the format "sdss-asyncioActor".
+# The NAME variable should be of the format "sdss-clu".
 # Please check your NAME adheres to that format.
-NAME = 'asyncioActor'
+NAME = 'clu'
 VERSION = '0.1.0dev'
 RELEASE = 'dev' in VERSION
 
@@ -33,12 +33,12 @@ def run(packages, install_requires):
           author='José Sánchez-Gallego',
           author_email='gallegoj@uw.edu',
           keywords='astronomy software',
-          url='https://github.com/sdss/asyncioActor',
+          url='https://github.com/sdss/clu',
           include_package_data=True,
           packages=packages,
           install_requires=install_requires,
           package_dir={'': 'python'},
-          scripts=['bin/asyncioActor'],
+          scripts=['bin/clu'],
           classifiers=[
               'Development Status :: 4 - Beta',
               'Intended Audience :: Science/Research',

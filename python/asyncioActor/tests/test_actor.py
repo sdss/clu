@@ -14,7 +14,7 @@ from __future__ import absolute_import
 
 import asyncio
 
-from asyncioActor.actor import Actor
+from clu.actor import Actor
 
 
 class TestActor(Actor):

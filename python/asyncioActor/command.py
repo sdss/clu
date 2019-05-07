@@ -7,13 +7,13 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-06 23:27:18
+# @Last modified time: 2019-05-07 14:43:57
 
 import asyncio
 import re
 
-from asyncioActor.base import CommandStatus, StatusMixIn
-from asyncioActor.core import exceptions
+from clu.base import CommandStatus, StatusMixIn
+from clu.core import exceptions
 
 
 __all__ = ['BaseCommand', 'Command']
@@ -36,7 +36,7 @@ class BaseCommand(StatusMixIn):
         Whether to call ``status_callback`` when initialising the command.
     loop
         The event loop.
-    actor : ~asyncioActor.actor.Actor
+    actor : ~clu.actor.Actor
         The actor associated with this command.
 
     """
