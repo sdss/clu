@@ -30,3 +30,9 @@ MixIns
 ------
 
 .. autoclass:: asyncioActor.base.StatusMixIn
+
+
+Tools
+-----
+
+.. autofunction:: asyncioActor.escape
