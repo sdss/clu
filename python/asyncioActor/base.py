@@ -7,14 +7,14 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-04-23 15:13:25
-
+# @Last modified time: 2019-05-06 23:09:15
 
 import asyncio
 import enum
+import json
 
 
-__ALL__ = ['CommandStatus', 'StatusMixIn']
+__ALL__ = ['CommandStatus', 'StatusMixIn', 'escape']
 
 
 class Maskbit(enum.Flag):
@@ -184,3 +184,21 @@ class StatusMixIn(object):
                 self.watcher.clear()
 
         self.watcher = None
+
+
+def escape(text):
+    """Escapes a string using `json.dumps`.
+
+    Parameters
+    ----------
+    text : str
+        The string to be escaped.
+
+    Returns
+    -------
+    escaped_text : `str`
+        The output of ``json.dumps(text)``.
+
+    """
+
+    return json.dumps(text)

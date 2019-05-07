@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-06 22:24:04
+# @Last modified time: 2019-05-06 22:42:28
 
 import json
 
@@ -68,7 +68,7 @@ def help(ctx, actor, command):
     """Shows the help."""
 
     for line in ctx.parent.get_help().splitlines():
-        line = json.dumps(line).replace(';', '')
-        command.write('w', f'text={line}')
+        # line = json.dumps(line).replace(';', '')
+        command.write('w', {'text': line})
 
     return

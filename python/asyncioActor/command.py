@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-06 18:35:15
+# @Last modified time: 2019-05-06 23:04:26
 
 import asyncio
 import re
@@ -99,9 +99,9 @@ class BaseCommand(StatusMixIn):
         if status != self._status:
 
             status_code = status.code
-            msg_str = None if message is None else f'text="{message}"'
+            msg = None if message is None else {'text': message}
 
-            self.write(status_code, msg_str)
+            self.write(status_code, msg)
 
             self._status = status
 
@@ -110,14 +110,14 @@ class BaseCommand(StatusMixIn):
             if self.watcher is not None:
                 self.watcher.set()
 
-    def write(self, msg_code, msg_str=None, user_id=None):
+    def write(self, msg_code, message=None, user_id=None):
         """Writes to the user(s).
 
         Parameters
         ----------
         msg_code : str
             The message code (e.g., ``'i'`` or ``':'``).
-        msg_str : str
+        message : str or dict
             The text to be output. If `None`, only the code will be written.
         user_id : int
             The user to which to send this message. Defaults to the command
@@ -129,7 +129,7 @@ class BaseCommand(StatusMixIn):
             raise exceptions.CommandError('An actor has not been defined for '
                                           'this command. Cannot write to users.')
 
-        self.actor.write(msg_code, msg_str=msg_str, command=self)
+        self.actor.write(msg_code, message=message, command=self)
 
 
 class Command(BaseCommand):

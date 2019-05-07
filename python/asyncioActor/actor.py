@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-06 22:22:39
+# @Last modified time: 2019-05-06 23:19:17
 
 import asyncio
 import collections
@@ -19,6 +19,7 @@ import traceback
 import click
 import ruamel.yaml
 
+import asyncioActor
 from asyncioActor.command import Command
 from asyncioActor.core import exceptions
 from asyncioActor.misc import logger
@@ -235,7 +236,7 @@ class Actor(object):
         try:
             command = Command(command_str, user_id=user_id, actor=self, loop=self.loop)
         except exceptions.CommandError as ee:
-            self.write('f', f'Could not parse the following as a command: {ee!r}')
+            self.write('f', {'text': f'Could not parse the following as a command: {ee!r}'})
             return
 
         try:
@@ -348,15 +349,18 @@ class Actor(object):
 
         return f'{command_id:d} {user_id:d} {msg_code:s}{msg_str:s}'
 
-    def write(self, msg_code, msg_str, command=None, user_id=None, command_id=None):
+    def write(self, msg_code, message=None, command=None, user_id=None,
+              command_id=None, escape=True, concatenate=False):
         """Writes a message to user(s).
 
         Parameters
         ----------
         msg_code : str
             The message code (e.g., ``'i'`` or ``':'``).
-        msg_str : str
-            The text to be output. If `None`, only the code will be written.
+        message : str or dict
+            The text to be output. It can be either a string with the keywords
+            to output or a dictionary of pairs ``{keyword: value}`` where
+            ``value`` must be a string.
         command : Command
             User command; used as a default for ``user_id`` and ``command_id``.
             If the command is done, it is ignored.
@@ -364,6 +368,14 @@ class Actor(object):
             If `None` then use ``command.user_id``.
         command_id : int
             If `None` then use ``command.command_id``.
+        escape : bool
+            Whether to use `json.dumps` to escape the text of the message.
+            This option is ignored unless ``message`` is a dictionary.
+        concatenate : bool
+            If ``message`` is a dictionary with multiple keywords and
+            ``concatenate=True``, all the keywords will be output in a single
+            reply with the keywords joined with semicolons. Otherwise each
+            keyword will be output in multiple lines.
 
         """
 
@@ -371,15 +383,33 @@ class Actor(object):
                                                        user_id=user_id,
                                                        command_id=command_id)
 
-        full_msg_str = self.format_user_output(msg_code, msg_str,
-                                               user_id=user_id,
-                                               command_id=command_id)
-
-        msg = (full_msg_str + '\n').encode()
-
-        if user_id is None or user_id == 0:
-            for transport in self.user_dict.values():
-                transport.write(msg)
+        if message is None:
+            lines = ['']
+        elif isinstance(message, str):
+            lines = [message]
+        elif isinstance(message, dict):
+            lines = []
+            for keyword in message:
+                value = message[keyword]
+                if escape:
+                    value = asyncioActor.escape(value)
+                lines.append(f'{keyword}={value}')
+            if concatenate:
+                lines = ['; '.join(lines)]
         else:
-            transport = self.user_dict[user_id]
-            transport.write(msg)
+            raise TypeError('invalid message type ' + type(message))
+
+        for line in lines:
+
+            full_msg_str = self.format_user_output(msg_code, line,
+                                                   user_id=user_id,
+                                                   command_id=command_id)
+
+            msg = (full_msg_str + '\n').encode()
+
+            if user_id is None or user_id == 0:
+                for transport in self.user_dict.values():
+                    transport.write(msg)
+            else:
+                transport = self.user_dict[user_id]
+                transport.write(msg)
