@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-06 23:56:05
+# @Last modified time: 2019-05-07 15:22:44
 
 import asyncio
 
@@ -263,6 +263,8 @@ class TCPStreamServer(object):
 class TCPStreamPeriodicServer(TCPStreamServer):
     """A TCP server that calls a function periodically.
 
+    Parameters
+    ----------
     host : str
         The server host.
     port : int
