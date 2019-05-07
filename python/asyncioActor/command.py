@@ -94,7 +94,7 @@ class BaseCommand(StatusMixIn):
                         status = bit
                         break
             else:
-                raise ValueError('status {status!r} is not a valid command status.')
+                raise ValueError(f'status {status!r} is not a valid command status.')
 
         if status != self._status:
 
