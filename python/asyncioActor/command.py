@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-04-24 17:07:43
+# @Last modified time: 2019-05-06 18:35:15
 
 import asyncio
 import re
@@ -143,7 +143,7 @@ class Command(BaseCommand):
         BaseCommand.__init__(self, **kwargs)
 
         self.raw_command_string = command_string
-        self.command_body = None
+        self.body = None
 
         self.parse_command_string(command_string)
 
@@ -162,4 +162,4 @@ class Command(BaseCommand):
         else:
             self.command_id = 0
 
-        self.command_body = command_dict.get('command_body', '')
+        self.body = command_dict.get('command_body', '')
