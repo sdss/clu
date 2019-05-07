@@ -7,18 +7,22 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-04-27 12:35:22
+# @Last modified time: 2019-05-06 22:22:39
 
 import asyncio
 import collections
 import logging
 import pathlib
+import sys
+import traceback
 
+import click
 import ruamel.yaml
 
 from asyncioActor.command import Command
 from asyncioActor.core import exceptions
 from asyncioActor.misc import logger
+from asyncioActor.parser import command_parser
 from asyncioActor.protocol import TCPStreamPeriodicServer, TCPStreamServer
 
 
@@ -227,7 +231,6 @@ class Actor(object):
             return
 
         user_id = transport.user_id
-        print(user_id)
 
         try:
             command = Command(command_str, user_id=user_id, actor=self, loop=self.loop)
@@ -235,13 +238,47 @@ class Actor(object):
             self.write('f', f'Could not parse the following as a command: {ee!r}')
             return
 
-        # try:
-        #     self.dispatch(command)
-        # except exceptions.CommandError as ee:
-        #     command.set_status(command.status.Failed,
-        #                        message=f'Command {command.command_body!r} failed: {ee}')
+        try:
+            self.parse(command)
+        except exceptions.CommandError as ee:
+            command.set_status(command.status.FAILED,
+                               message=f'Command {command.body!r} failed: {ee}')
 
         return command
+
+    def parse(self, command):
+        """Parses an user command with the default parser.
+
+        This method can be overridden to use a custom parser.
+
+        """
+
+        # Empty command. Just finish the command.
+        if not command.body:
+            self.write(':', '', command=command)
+            return
+
+        command.set_status(command.status.RUNNING)
+
+        try:
+            # We call the command with a custom context to get around
+            # the default handling of exceptions in Click. This will force
+            # exceptions to be raised instead of redirected to the stdout.
+            # See http://click.palletsprojects.com/en/7.x/exceptions/
+            ctx = command_parser.make_context('command-parser',
+                                              command.body.split(),
+                                              obj=dict(actor=self, command=command))
+            with ctx:
+                command_parser.invoke(ctx)
+        except click.UsageError as ee:
+            # If this is a command that cannot be parsed.
+            raise exceptions.CommandError(ee)
+        except Exception as ee:
+            # If this is a general exception, outputs the traceback to stderr
+            # and replies with the error message.
+            sys.stderr.write(f'command {command.raw_command_string!r} failed\n')
+            traceback.print_exc(file=sys.stderr)
+            raise exceptions.CommandError(ee)
 
     def show_new_user_info(self, user_id):
         """Shows information for new users. Called when a new user connects."""
