@@ -32,6 +32,12 @@ MixIns
 .. autoclass:: asyncioActor.base.StatusMixIn
 
 
+Sockets
+-------
+
+.. automodule:: asyncioActor.protocol
+
+
 Tools
 -----
 

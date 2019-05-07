@@ -7,21 +7,21 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-04-29 09:17:55
+# @Last modified time: 2019-05-06 23:56:05
 
 import asyncio
 
 
 __all__ = ['TCPProtocol', 'PeriodicTCPServer',
-           'PeriodicTCPServer', 'TCPStreamPeriodicServer']
+           'TCPStreamServer', 'TCPStreamPeriodicServer']
 
 
 class TCPProtocol(asyncio.Protocol):
     """A TCP server/client based on asyncio protocols.
 
     This is a high-level implementation of the client and server asyncio
-    protocols. See `https://docs.python.org/3/library/asyncio-protocol.html`__
-    for details.
+    protocols. See `asyncio protocol
+    <https://docs.python.org/3/library/asyncio-protocol.html>`__ for details.
 
     Parameters
     ----------
@@ -174,8 +174,8 @@ class TCPStreamServer(object):
     """A TCP server based on asyncio streams.
 
     This is a high-level implementation of the asyncio server using
-    streams. See `https://docs.python.org/3/library/asyncio-stream.html`__
-    for details.
+    streams. See `asyncio streams
+    <https://docs.python.org/3/library/asyncio-stream.html>`__ for details.
 
     Parameters
     ----------
