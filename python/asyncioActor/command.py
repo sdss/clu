@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-06 23:04:26
+# @Last modified time: 2019-05-06 23:27:18
 
 import asyncio
 import re
@@ -133,7 +133,7 @@ class BaseCommand(StatusMixIn):
 
 
 class Command(BaseCommand):
-    """A command from a user (typically the hub)"""
+    """A command from a user (typically the hub)."""
 
     _HEADER_BODY_RE = re.compile(
         r'((?P<command_id>\d+)(?:\s+\d+)?\s+)?((?P<command_body>[A-Za-z_].*))?$')
@@ -142,8 +142,14 @@ class Command(BaseCommand):
 
         BaseCommand.__init__(self, **kwargs)
 
+        #: The raw command string.
         self.raw_command_string = command_string
+
+        #: The body of the command, after parsing.
         self.body = None
+
+        #: The actor in which this command will run.
+        self.actor = None
 
         self.parse_command_string(command_string)
 

@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-06 23:19:17
+# @Last modified time: 2019-05-06 23:34:10
 
 import asyncio
 import collections
@@ -235,6 +235,7 @@ class Actor(object):
 
         try:
             command = Command(command_str, user_id=user_id, actor=self, loop=self.loop)
+            command.actor = self  # Assign the actor
         except exceptions.CommandError as ee:
             self.write('f', {'text': f'Could not parse the following as a command: {ee!r}'})
             return
@@ -268,7 +269,7 @@ class Actor(object):
             # See http://click.palletsprojects.com/en/7.x/exceptions/
             ctx = command_parser.make_context('command-parser',
                                               command.body.split(),
-                                              obj=dict(actor=self, command=command))
+                                              obj=dict(command=command))
             with ctx:
                 command_parser.invoke(ctx)
         except click.UsageError as ee:

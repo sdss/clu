@@ -7,9 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-06 22:42:28
-
-import json
+# @Last modified time: 2019-05-06 23:27:42
 
 import click
 
@@ -24,7 +22,7 @@ class Command(click.Command):
 
         if self.callback is not None:
             with ctx:
-                ctx.invoke(self.callback, ctx.obj['actor'], ctx.obj['command'], **ctx.params)
+                ctx.invoke(self.callback, ctx.obj['command'], **ctx.params)
             return ctx
 
 
@@ -54,7 +52,7 @@ def command_parser(ctx):
 
 
 @command_parser.command()
-def ping(actor, command):
+def ping(command):
     """Pings the actor."""
 
     command.set_status(command.status.DONE, 'Pong.')
@@ -64,7 +62,7 @@ def ping(actor, command):
 
 @command_parser.command()
 @click.pass_context
-def help(ctx, actor, command):
+def help(ctx, command):
     """Shows the help."""
 
     for line in ctx.parent.get_help().splitlines():
