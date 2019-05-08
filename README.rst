@@ -1,4 +1,4 @@
-`clu <https://tron.fandom.com/wiki/Clu>`__
+`CLU <https://tron.fandom.com/wiki/Clu>`__
 ==========================================
 
 A base actor that uses asyncio.

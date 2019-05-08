@@ -1,8 +1,8 @@
 
-clu's documentation
+CLU's documentation
 ===================
 
-This is the Sphinx documentation for the SDSS Python product ``clu``.
+This is the Sphinx documentation for the SDSS Python product ``CLU``.
 
 Contents
 --------
