@@ -97,7 +97,7 @@ class SDSSLogger(logging.Logger):
 
     """
 
-    def __init__(self, name, log_level=logging.DEBUG, capture_warnings=True):
+    def __init__(self, name, log_level=logging.INFO, capture_warnings=True):
 
         super().__init__(name)
 
