@@ -7,11 +7,9 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-07 14:43:58
+# @Last modified time: 2019-05-08 12:03:22
 
 import asyncio
-import collections
-import logging
 import pathlib
 import sys
 import traceback
@@ -22,13 +20,9 @@ import ruamel.yaml
 import clu
 from clu.command import Command
 from clu.core import exceptions
-from clu.misc import logger
+from clu.misc import get_logger
 from clu.parser import command_parser
-from clu.protocol import TCPStreamPeriodicServer, TCPStreamServer
-
-
-#: The default status delay.
-DEFAULT_STATUS_DELAY = 1
+from clu.protocol import TCPStreamServer
 
 
 class Actor(object):
@@ -57,88 +51,51 @@ class Actor(object):
         The version of the actor.
     loop
         The event loop. If `None`, the current event loop will be used.
-    config : dict or str
-        A configuration dictionary or the path to a YAML configuration
-        file that must contain a section ``'actor'`` (if the section is
-        not present, the whole file is assumed to be the actor
-        configuration).
-    status_port : int
-        If defined, the port on which the status server will run.
-    status_callback : function
-        The function to be called by the status server.
-    status_delay : float
-        The delay, in seconds, between successive calls to ``status_callback``.
-        Defaults to `.DEFAULT_STATUS_DELAY`.
     log_dir : str
-        The directory where to store the logs. Defaults to ``$HOME/.<name>``
-        where ``<name>`` is the name of the actor.
+        The directory where to store the logs. Defaults to
+        ``$HOME/logs/<name>`` where ``<name>`` is the name of the actor.
+    log : logging.Logger
+        A `logging.Logger` instance to be used for logging instead of creating
+        a new one.
 
     """
 
-    def __init__(self, name=None, host=None, port=None, version=None,
-                 loop=None, config=None, status_port=None, status_callback=None,
-                 status_delay=None, log_dir=None):
+    def __init__(self, name, host, port, version=None, loop=None,
+                 log_dir=None, log=None):
 
-        self.config = self._parse_config(config)
-
-        self.name = name or self.config['name']
+        self.name = name
         assert self.name, 'name cannot be empty.'
 
-        self.log = self._setup_logger(log_dir)
+        self.log = log or self.setup_logger(log_dir)
 
         self.loop = loop or asyncio.get_event_loop()
 
         self.user_dict = dict()
 
-        self.version = version or self.config['version'] or '?'
+        self.version = version or '?'
 
-        host = host or self.config['host']
-        port = port or self.config['port']
+        self.host = host
+        self.port = port
 
+        #: TCPStreamServer: The server to talk to this actor.
         self.server = TCPStreamServer(host, port, loop=self.loop,
                                       connection_callback=self.new_user,
                                       data_received_callback=self.new_command)
 
-        self.status_server = None
-
-        status_port = status_port or self.config['status_port']
-        sleep_time = status_delay or self.config['status_delay'] or DEFAULT_STATUS_DELAY
-
-        if status_port:
-            self.status_server = TCPStreamPeriodicServer(
-                host, status_port, loop=self.loop,
-                periodic_callback=status_callback,
-                sleep_time=sleep_time)
-
     def __repr__(self):
 
-        if self.server and self.server.server:
-            host, port = self.server.server.sockets[0].getsockname()
-        else:
-            host = port = None
-
-        return f'<{str(self)} (name={self.name}, host={host!r}, port={port})>'
+        return f'<{str(self)} (name={self.name}, host={self.host!r}, port={self.port})>'
 
     def __str__(self):
 
         return self.__class__.__name__
 
     async def run(self):
-        """Starts the servers."""
+        """Starts the server."""
 
         await self.server.start_server()
 
-        socket = self.server.server.sockets[0]
-        host, port = socket.getsockname()
-        self.log.info(f'starting TCP server on {host}:{port}')
-
-        if self.status_server:
-
-            await self.status_server.start_server()
-
-            socket_status = self.status_server.server.sockets[0]
-            host, port = socket_status.getsockname()
-            self.log.info(f'starting status server on {host}:{port}')
+        self.log.info(f'starting TCP server on {self.host}:{self.port}')
 
         await self.server.server.serve_forever()
 
@@ -155,12 +112,19 @@ class Actor(object):
 
         self.loop.stop()
 
-    def _parse_config(self, config):
-        """Parses the configuration file."""
+    @classmethod
+    def from_config(cls, config, *args, **kwargs):
+        """Parses a configuration file.
 
-        if config is None:
-            # Returns a defaultdict that returns None if the key is not present.
-            return collections.defaultdict(lambda: None)
+        Parameters
+        ----------
+        config : dict or str
+            A configuration dictionary or the path to a YAML configuration
+            file that must contain a section ``'actor'`` (if the section is
+            not present, the whole file is assumed to be the actor
+            configuration).
+
+        """
 
         if not isinstance(config, dict):
 
@@ -172,23 +136,23 @@ class Actor(object):
         if 'actor' in config:
             config = config['actor']
 
-        return config
+        version = config.get('version', '?')
+        log_dir = config.get('log_dir', None)
 
-    def _setup_logger(self, log_dir, file_level=10, shell_level=20):
+        # We also pass *args and **kwargs in case the actor has been subclassed
+        # and the subclass' __init__ accepts different arguments.
+        new_actor = cls(*args, config['name'], config['host'], config['port'],
+                        version=version, log_dir=log_dir, **kwargs)
+
+        return new_actor
+
+    def setup_logger(self, log_dir, file_level=10, shell_level=20):
         """Starts the file logger."""
 
-        orig_logger = logging.getLoggerClass()
-        logging.setLoggerClass(logger.MyLogger)
-        log = logging.getLogger(self.name + '_actor')
-        log._set_defaults()  # Inits sh handler
-        logging.setLoggerClass(orig_logger)
+        log = get_logger('actor:' + self.name)
 
         if log_dir is None:
-            if 'logging' in self.config:
-                log_dir = self.config['logging'].get('log_dir', None)
-
-        if log_dir is None:
-            log_dir = pathlib.Path(f'~/.{self.name}/').expanduser()
+            log_dir = pathlib.Path(f'~/logs/{self.name}/').expanduser()
         else:
             log_dir = pathlib.Path(log_dir)
 
@@ -196,10 +160,6 @@ class Actor(object):
             log_dir.mkdir(parents=True)
 
         log.start_file_logger(log_dir / f'{self.name}.log')
-
-        if 'logging' in self.config:
-            file_level = self.config['logging'].get('file_level', None) or file_level
-            shell_level = self.config['logging'].get('shell_level', None) or shell_level
 
         log.sh.setLevel(shell_level)
         log.fh.setLevel(file_level)
