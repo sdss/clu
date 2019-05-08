@@ -161,7 +161,7 @@ class SDSSLogger(logging.Logger):
         try:
 
             if not os.path.exists(logdir):
-                os.mkdir(logdir)
+                os.makedirs(logdir)
 
             if os.path.exists(log_file_path):
                 strtime = datetime.datetime.utcnow().strftime('%Y-%m-%d_%H:%M:%S')
