@@ -152,7 +152,7 @@ class SDSSLogger(logging.Logger):
     def save_log(self, path):
         shutil.copyfile(self.log_filename, os.path.expanduser(path))
 
-    def start_file_logger(self, path, log_file_level=logging.DEBUG):
+    def start_file_logger(self, path, log_level=logging.DEBUG):
         """Start file logging."""
 
         log_file_path = os.path.expanduser(path)
@@ -182,7 +182,7 @@ class SDSSLogger(logging.Logger):
 
             self.fh.setFormatter(SDSSFormatter())
             self.addHandler(self.fh)
-            self.fh.setLevel(log_file_level)
+            self.fh.setLevel(log_level)
 
             if self.warnings_logger:
                 self.warnings_logger.addHandler(self.fh)
