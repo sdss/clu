@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-07 15:22:44
+# @Last modified time: 2019-05-08 07:51:44
 
 import asyncio
 
@@ -198,8 +198,8 @@ class TCPStreamServer(object):
     def __init__(self, host, port, connection_callback=None,
                  data_received_callback=None, loop=None, max_connections=None):
 
-        self._host = host
-        self._port = port
+        self.host = host
+        self.port = port
 
         self.transports = {}
         self.loop = loop or asyncio.get_event_loop()
@@ -212,12 +212,11 @@ class TCPStreamServer(object):
         #: The `asyncio.Server`. Created when `.start_server` is run.
         self.server = None
 
-    async def start_server(self, host=None, port=None):
-        """Returns a `~asyncio.Server` connection."""
+    async def start_server(self):
+        """Starts the server and returns a `~asyncio.Server` connection."""
 
         self.server = await asyncio.start_server(self.connection_made,
-                                                 host or self._host,
-                                                 port or self._port)
+                                                 self.host, self.port)
 
         return self.server
 
@@ -288,10 +287,10 @@ class TCPStreamPeriodicServer(TCPStreamServer):
 
         super().__init__(host, port, **kwargs)
 
-    async def start_server(self, **kwargs):
-        """Returns a `~asyncio.Server` connection."""
+    async def start_server(self):
+        """Starts the server and returns a `~asyncio.Server` connection."""
 
-        server = await super().start_server(**kwargs)
+        server = await super().start_server()
 
         self.periodic_task = asyncio.create_task(self._emit_periodic())
 
