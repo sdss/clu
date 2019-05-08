@@ -6,8 +6,6 @@
 # @Filename: logger.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
-# Adapted from astropy's logging system.
-
 import datetime
 import logging
 import os
@@ -25,39 +23,38 @@ from pygments.lexers import get_lexer_by_name
 from .color_print import color_text
 
 
-def print_exception_formatted(tp, value, tb):
-    """A custom hook for printing tracebacks with colours."""
+__all__ = ['get_logger']
+
+
+def get_exception_formatted(tp, value, tb):
+    """Adds colours to tracebacks."""
 
     tbtext = ''.join(traceback.format_exception(tp, value, tb))
     lexer = get_lexer_by_name('pytb', stripall=True)
     formatter = TerminalFormatter()
-    sys.stderr.write(highlight(tbtext, lexer, formatter))
+    return highlight(tbtext, lexer, formatter)
 
 
 def colored_formatter(record):
     """Prints log messages with colours."""
 
-    colours = {'info': ('blue', 'normal'),
-               'debug': ('magenta', 'normal'),
-               'warning': ('yellow', 'normal'),
-               'print': ('green', 'normal'),
-               'critical': ('red', 'bold'),
-               'error': ('red', 'bold')}
+    colours = {'info': 'blue',
+               'debug': 'magenta',
+               'warning': 'yellow',
+               'critical': 'red',
+               'error': 'red'}
 
     levelname = record.levelname.lower()
 
-    if levelname == 'error':
-        return
-
     if levelname.lower() in colours:
-        levelname_color = colours[levelname][0]
+        levelname_color = colours[levelname]
         header = color_text('[{}]: '.format(levelname.upper()),
                             levelname_color)
 
     message = record.getMessage()
 
     if levelname == 'warning':
-        warning_category_groups = re.match(r'^\w*?(.+?Warning): (.*)', message)
+        warning_category_groups = re.match(r'^.*?\s*?(\w*?Warning): (.*)', message)
         if warning_category_groups is not None:
             warning_category, warning_text = warning_category_groups.groups()
 
@@ -70,160 +67,87 @@ def colored_formatter(record):
     return
 
 
-class MyFormatter(logging.Formatter):
+class SDSSFormatter(logging.Formatter):
+    """Custom `Formatter <logging.Formatter>`."""
 
-    base_fmt = '%(asctime)s - %(levelname)s - %(message)s [%(funcName)s @ %(filename)s]'
-
+    base_fmt = '%(asctime)s - %(levelname)s - %(message)s'
     ansi_escape = re.compile(r'\x1b[^m]*m')
 
-    def __init__(self, fmt='%(levelname)s - %(message)s [%(funcName)s @ %(filename)s]'):
-        logging.Formatter.__init__(self, fmt, datefmt='%Y-%m-%d %H:%M:%S')
+    def __init__(self, fmt=base_fmt):
+        logging.Formatter.__init__(self, fmt)
 
     def format(self, record):
 
-        # Save the original format configured by the user
-        # when the logger formatter was instantiated
-        format_orig = self._fmt
-
-        # Replace the original format with one customized by logging level
-        if record.levelno == logging.DEBUG:
-            self._fmt = MyFormatter.base_fmt
-
-        elif record.levelno == logging.getLevelName('PRINT'):
-            self._fmt = MyFormatter.base_fmt
-
-        elif record.levelno == logging.INFO:
-            self._fmt = MyFormatter.base_fmt
-
-        elif record.levelno == logging.ERROR:
-            self._fmt = MyFormatter.base_fmt
-
-        elif record.levelno == logging.WARNING:
-            self._fmt = MyFormatter.base_fmt
-
         record.msg = self.ansi_escape.sub('', record.msg)
 
-        # Call the original formatter class to do the grunt work
-        result = logging.Formatter.format(self, record)
-
-        # Restore the original format configured by the user
-        self._fmt = format_orig
-
-        return result
+        return logging.Formatter.format(self, record)
 
 
-my_fmt = MyFormatter()
+class SDSSLogger(logging.Logger):
+    """Custom logging system.
 
-
-class LoggerStdout(object):
-    """A pipe for stdout to a logger."""
-
-    def __init__(self, level):
-        self.level = level
-
-    def write(self, message):
-
-        if message != '\n':
-            self.level(message)
-
-    def flush(self):
-        pass
-
-
-class MyLogger(logging.Logger):
-    """This class is used to set up the logging system.
-
-    The main functionality added by this class over the built-in
-    logging.Logger class is the ability to keep track of the origin of the
-    messages, the ability to enable logging of warnings.warn calls and
-    exceptions, and the addition of colourised output and context managers to
-    easily capture messages to a file or list.
+    Parameters
+    ----------
+    name : str
+        The name of the logger.
+    log_level : int
+        The initial logging level for the console handler.
+    capture_warnings : bool
+        Whether to capture warnings and redirect them to the log.
 
     """
 
-    INFO = 15
-
-    def __init__(self, name):
-
-        self.fh = None
-        self.sh = None
-        self.log_filename = None
+    def __init__(self, name, log_level=logging.DEBUG, capture_warnings=True):
 
         super().__init__(name)
 
-    def _catch_exceptions(self, exctype, value, tb):
-        """Catches all exceptions and logs them."""
-
-        # Now we log it.
-        self.error('Uncaught exception', exc_info=(exctype, value, tb))
-
-        # First, we print to stdout with some colouring.
-        print_exception_formatted(exctype, value, tb)
-
-    def _set_defaults(self, log_level=logging.INFO, redirect_stdout=False):
-        """Reset logger to its initial state."""
-
-        # Disable astropy logging if present because it uses the same override
-        # of showwarning than us and messes up things
-        try:
-            from astropy import log
-            log.disable_warnings_logging()
-            log.disable_exception_logging()
-        except Exception:
-            pass
-
-        # Remove all previous handlers
-        for handler in self.handlers[:]:
-            self.removeHandler(handler)
+        if name == 'py.warnings':
+            return
 
         # Set levels
         self.setLevel(logging.DEBUG)
 
-        # Set up the stdout handler
-        self.fh = None
+        # Sets the console handler
         self.sh = logging.StreamHandler()
         self.sh.emit = colored_formatter
         self.addHandler(self.sh)
-
         self.sh.setLevel(log_level)
 
-        # Redirects all stdout to the logger
-        if redirect_stdout:
-            sys.stdout = LoggerStdout(self._print)
+        # Placeholders for the file handler.
+        self.fh = None
+        self.log_filename = None
 
         # Catches exceptions
         sys.excepthook = self._catch_exceptions
 
-        warnings.showwarning = self._showwarning
+        self.warnings_logger = None
+        self.capture_warnings(capture_warnings)
 
-    def _showwarning(self, *args, **kwargs):
+    def _catch_exceptions(self, exctype, value, tb):
+        """Catches all exceptions and logs them."""
 
-        warning = args[0]
+        self.error(get_exception_formatted(exctype, value, tb))
 
-        message = '{0}: {1}'.format(warning.__class__.__name__, args[0])
+    def capture_warnings(self, action):
+        """Capture warnings.
 
-        mod_path = args[2]
+        If ``action`` is `True`, redirects all the warnings to a logger called
+        ``py.warnings``. Handlers are added to that logger. If ``action=False``
+        disable the warning capture.
 
-        mod_name = None
-        mod_path, ext = os.path.splitext(mod_path)
+        """
 
-        for name, mod in list(sys.modules.items()):
-            try:
-                path = os.path.splitext(getattr(mod, '__file__', ''))[0]
-            except Exception:
-                continue
-            if path == mod_path:
-                mod_name = mod.__name__
-                break
+        if action is False:
+            logging.captureWarnings(action)
+            self.warnings_logger = None
+            return
 
-        if mod_name is not None:
-            self.warning(message, extra={'origin': mod_name})
-        else:
-            self.warning(message)
+        assert self.sh is not None, 'shell handler must'
 
-    def warning(self, *args, **kwargs):
+        logging.captureWarnings(action)
 
-        super().warning(*args, **kwargs)
+        self.warnings_logger = logging.getLogger('py.warnings')
+        self.warnings_logger.addHandler(self.sh)
 
     def save_log(self, path):
         shutil.copyfile(self.log_filename, os.path.expanduser(path))
@@ -245,14 +169,23 @@ class MyLogger(logging.Logger):
 
             self.fh = TimedRotatingFileHandler(
                 str(log_file_path), when='midnight', utc=True)
+
             self.fh.suffix = '%Y-%m-%d_%H:%M:%S'
+
         except (IOError, OSError) as ee:
-            self.warning('log file {0!r} could not be opened for writing: {1}'.format(
-                log_file_path, ee), RuntimeWarning)
+
+            warnings.warn('log file {0!r} could not be opened for '
+                          'writing: {1}'.format(log_file_path, ee),
+                          RuntimeWarning)
+
         else:
-            self.fh.setFormatter(my_fmt)
+
+            self.fh.setFormatter(SDSSFormatter())
             self.addHandler(self.fh)
             self.fh.setLevel(log_file_level)
+
+            if self.warnings_logger:
+                self.warnings_logger.addHandler(self.fh)
 
             self.log_filename = log_file_path
 
@@ -263,3 +196,17 @@ class MyLogger(logging.Logger):
 
         if self.fh:
             self.fh.setLevel(level)
+
+
+def get_logger(name):
+    """Gets a new logger."""
+
+    orig_logger = logging.getLoggerClass()
+
+    logging.setLoggerClass(SDSSLogger)
+
+    log = logging.getLogger(name)
+
+    logging.setLoggerClass(orig_logger)
+
+    return log
