@@ -16,9 +16,9 @@ A base actor that uses asyncio.
     :scale: 100%
     :target: https://codecov.io/gh/sdss/clu
 
-.. |docs| image:: https://readthedocs.org/projects/sdss-clu/badge/?version=latest
+.. |docs| image:: https://readthedocs.org/projects/clu/badge/?version=latest
     :alt: Documentation Status
     :scale: 100%
-    :target: https://sdss-clu.readthedocs.io/en/latest/?badge=latest
+    :target: https://clu.readthedocs.io/en/latest/?badge=latest
 
 .. |py37| image:: https://img.shields.io/badge/python-3.7-blue.svg
