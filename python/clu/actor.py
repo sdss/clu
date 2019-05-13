@@ -426,13 +426,19 @@ class LegacyActor(Actor):
 
         if tron_host and tron_port:
             self.tron = TronConnection(self.name, tron_host, tron_port, tron_models=tron_models)
+        else:
+            self.tron = False
 
     async def run(self, **kwargs):
         """Starts the server and the Tron client connection."""
 
         # Start tron connection
         try:
-            await self.tron.start()
+            if self.tron:
+                await self.tron.start()
+                self.log.info(f'started tron connection at {self.tron.host}:{self.tron.port}')
+            else:
+                warnings.warn('starting LegacyActor without Tron connection.', clu.CluWarning)
         except ConnectionRefusedError as ee:
             raise clu.CluError(f'failed trying to create a connection to tron: {ee}')
 
