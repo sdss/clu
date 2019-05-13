@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-12 18:43:23
+# @Last modified time: 2019-05-12 19:17:40
 
 import asyncio
 import pathlib
@@ -19,7 +19,6 @@ import ruamel.yaml
 
 import clu
 from clu.command import Command
-from clu.core import exceptions
 from clu.legacy import TronConnection
 from clu.misc import get_logger
 from clu.parser import command_parser
@@ -216,13 +215,13 @@ class Actor(object):
         try:
             command = Command(command_str, user_id=user_id, actor=self, loop=self.loop)
             command.actor = self  # Assign the actor
-        except exceptions.CommandError as ee:
+        except clu.CommandError as ee:
             self.write('f', {'text': f'Could not parse the following as a command: {ee!r}'})
             return
 
         try:
             self.parse(command)
-        except exceptions.CommandError as ee:
+        except clu.CommandError as ee:
             command.set_status(command.status.FAILED,
                                message=f'Command {command.body!r} failed: {ee}')
 
@@ -254,13 +253,13 @@ class Actor(object):
                 command_parser.invoke(ctx)
         except click.UsageError as ee:
             # If this is a command that cannot be parsed.
-            raise exceptions.CommandError(ee)
+            raise clu.CommandError(ee)
         except Exception as ee:
             # If this is a general exception, outputs the traceback to stderr
             # and replies with the error message.
             sys.stderr.write(f'command {command.raw_command_string!r} failed\n')
             traceback.print_exc(file=sys.stderr)
-            raise exceptions.CommandError(ee)
+            raise clu.CommandError(ee)
 
     def show_new_user_info(self, user_id):
         """Shows information for new users. Called when a new user connects."""
@@ -426,7 +425,7 @@ class LegacyActor(Actor):
         try:
             await self.tron.start()
         except ConnectionRefusedError as ee:
-            raise exceptions.CluError(f'failed trying to create a connection to tron: {ee}')
+            raise clu.CluError(f'failed trying to create a connection to tron: {ee}')
 
         self.log.info(f'started tron connection at {self.tron.host}:{self.tron.port}')
 

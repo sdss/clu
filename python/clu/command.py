@@ -7,13 +7,13 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-07 14:43:57
+# @Last modified time: 2019-05-12 19:18:30
 
 import asyncio
 import re
 
+import clu
 from clu.base import CommandStatus, StatusMixIn
-from clu.core import exceptions
 
 
 __all__ = ['BaseCommand', 'Command']
@@ -126,8 +126,8 @@ class BaseCommand(StatusMixIn):
         """
 
         if not self.actor:
-            raise exceptions.CommandError('An actor has not been defined for '
-                                          'this command. Cannot write to users.')
+            raise clu.CommandError('An actor has not been defined for '
+                                   'this command. Cannot write to users.')
 
         self.actor.write(msg_code, message=message, command=self)
 
@@ -158,7 +158,7 @@ class Command(BaseCommand):
 
         command_match = self._HEADER_BODY_RE.match(command_string)
         if not command_match:
-            raise exceptions.CommandError(f'Could not parse command {command_string!r}')
+            raise clu.CommandError(f'Could not parse command {command_string!r}')
 
         command_dict = command_match.groupdict('')
         command_id_str = command_dict['command_id']
