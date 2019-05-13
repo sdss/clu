@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-12 18:20:16
+# @Last modified time: 2019-05-13 11:39:24
 
 import asyncio
 import collections
@@ -211,6 +211,8 @@ class TronConnection(object):
         self.log = log
 
         self._mid = 1
+
+        tron_models = tron_models or []
 
         #: dict: The `KeysDictionary` associated with each actor to track.
         self.keyword_dicts = {actor: KeysDictionary.load(actor)
