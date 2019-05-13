@@ -3,5 +3,7 @@
 ignore =
     # H101: Use TODO(NAME)
     H101
+    W504
+    W505
 
 max-line-length = 99
