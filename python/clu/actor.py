@@ -25,7 +25,7 @@ from clu.parser import command_parser
 from clu.protocol import TCPStreamServer
 
 
-__all__ = ['Actor', 'LegacyActor']
+__all__ = ['Actor', 'LegacyActor', 'command_parser']
 
 
 class Actor(object):
@@ -62,6 +62,10 @@ class Actor(object):
         a new one.
 
     """
+
+    #: list: Arguments to be passed to each command in the parser.
+    #: Note that the command is always passed first.
+    parser_args = []
 
     def __init__(self, name, host, port, version=None, loop=None,
                  log_dir=None, log=None):
@@ -234,6 +238,11 @@ class Actor(object):
 
         """
 
+        # This will pass the command as the first argument for each command.
+        # If self.parser_args is defined, those arguments will be passed next.
+        parser_args = [command]
+        parser_args += self.parser_args
+
         # Empty command. Just finish the command.
         if not command.body:
             self.write(':', '', command=command)
@@ -248,7 +257,7 @@ class Actor(object):
             # See http://click.palletsprojects.com/en/7.x/exceptions/
             ctx = command_parser.make_context('command-parser',
                                               command.body.split(),
-                                              obj=dict(command=command))
+                                              obj={'parser_args': parser_args})
             with ctx:
                 command_parser.invoke(ctx)
         except click.UsageError as ee:

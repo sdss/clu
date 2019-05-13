@@ -52,9 +52,10 @@ def command_parser(ctx):
 
 
 @command_parser.command()
-def ping(command):
+def ping(*args):
     """Pings the actor."""
 
+    command = args[0]
     command.set_status(command.status.DONE, 'Pong.')
 
     return
@@ -62,8 +63,10 @@ def ping(command):
 
 @command_parser.command()
 @click.pass_context
-def help(ctx, command):
+def help(ctx, *args):
     """Shows the help."""
+
+    command = args[0]
 
     for line in ctx.parent.get_help().splitlines():
         # line = json.dumps(line).replace(';', '')
