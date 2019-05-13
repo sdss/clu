@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-08 12:03:22
+# @Last modified time: 2019-05-10 18:44:20
 
 import asyncio
 import pathlib
@@ -20,9 +20,13 @@ import ruamel.yaml
 import clu
 from clu.command import Command
 from clu.core import exceptions
+from clu.legacy import TronConnection
 from clu.misc import get_logger
 from clu.parser import command_parser
 from clu.protocol import TCPStreamServer
+
+
+__all__ = ['Actor', 'LegacyActor']
 
 
 class Actor(object):
@@ -90,14 +94,22 @@ class Actor(object):
 
         return self.__class__.__name__
 
-    async def run(self):
-        """Starts the server."""
+    async def run(self, block=True):
+        """Starts the server.
+
+        Parameters
+        ----------
+        block : bool
+            Whether to block the execution by serving forever.
+
+        """
 
         await self.server.start_server()
 
-        self.log.info(f'starting TCP server on {self.host}:{self.port}')
+        self.log.info(f'running TCP server on {self.host}:{self.port}')
 
-        await self.server.server.serve_forever()
+        if block:
+            await self.server.server.serve_forever()
 
     async def shutdown(self):
         """Shuts down all the remaining tasks."""
@@ -111,6 +123,22 @@ class Actor(object):
         await asyncio.gather(*tasks, return_exceptions=True)
 
         self.loop.stop()
+
+    @staticmethod
+    def _parse_config(config):
+
+        if not isinstance(config, dict):
+
+            config = pathlib.Path(config)
+            assert config.exists(), 'configuration path does not exist.'
+
+            yaml = ruamel.yaml.YAML(typ='safe')
+            config = yaml.load(open(str(config)))
+
+        if 'actor' in config:
+            config = config['actor']
+
+        return config
 
     @classmethod
     def from_config(cls, config, *args, **kwargs):
@@ -126,23 +154,15 @@ class Actor(object):
 
         """
 
-        if not isinstance(config, dict):
+        config_dict = cls._parse_config(config)
 
-            assert config.exists(), 'configuration path does not exist.'
-
-            yaml = ruamel.yaml.add_implicit_resolverYAML(typ='safe')
-            config = yaml.load(open(str(config)))
-
-        if 'actor' in config:
-            config = config['actor']
-
-        version = config.get('version', '?')
-        log_dir = config.get('log_dir', None)
+        version = config_dict.get('version', '?')
+        log_dir = config_dict.get('log_dir', None)
 
         # We also pass *args and **kwargs in case the actor has been subclassed
         # and the subclass' __init__ accepts different arguments.
-        new_actor = cls(*args, config['name'], config['host'], config['port'],
-                        version=version, log_dir=log_dir, **kwargs)
+        new_actor = cls(*args, config_dict['name'], config_dict['host'],
+                        config_dict['port'], version=version, log_dir=log_dir, **kwargs)
 
         return new_actor
 
@@ -374,3 +394,51 @@ class Actor(object):
             else:
                 transport = self.user_dict[user_id]
                 transport.write(msg)
+
+
+class LegacyActor(Actor):
+    """An actor that provides compatibility with the SDSS opscore protocol.
+
+    Parameters
+    ----------
+    args, kwargs
+        Arguments to be passed to `Actor`.
+    tron_host : str
+        The host on which Tron is running.
+    tron_port : int
+        The port on which Tron is running.
+    tron_models : list
+        A list of strings with the actors whose models will be tracked.
+
+    """
+
+    def __init__(self, *args, tron_host=None, tron_port=None, tron_models=None, **kwargs):
+
+        super().__init__(*args, **kwargs)
+
+        if tron_host and tron_port:
+            self.tron = TronConnection(self.name, tron_host, tron_port, tron_models=tron_models)
+
+    async def run(self, **kwargs):
+        """Starts the server and the Tron client connection."""
+
+        # Start tron connection
+        try:
+            await self.tron.start()
+        except ConnectionRefusedError as ee:
+            raise exceptions.CluError(f'failed trying to create a connection to tron: {ee}')
+
+        self.log.info(f'started tron connection at {self.tron.host}:{self.tron.port}')
+
+        await super().run(**kwargs)
+
+    @classmethod
+    def from_config(cls, config, *args, **kwargs):
+
+        config_dict = cls._parse_config(config)
+        if 'tron' in config_dict:
+            kwargs.update({'tron_host': config_dict['tron'].get('host', None)})
+            kwargs.update({'tron_port': config_dict['tron'].get('port', None)})
+            kwargs.update({'tron_models': config_dict['tron'].get('models', None)})
+
+        return super().from_config(config_dict, *args, **kwargs)

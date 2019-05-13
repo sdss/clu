@@ -16,6 +16,13 @@ Command
 .. automodule:: clu.command
 
 
+Legacy
+------
+
+.. automodule:: clu.legacy.tron
+    :members: TronCommander, TronModel, TronKey
+
+
 Maskbits
 --------
 
