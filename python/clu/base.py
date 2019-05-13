@@ -7,14 +7,16 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-06 23:09:15
+# @Last modified time: 2019-05-10 16:30:34
 
 import asyncio
+import contextlib
 import enum
+import functools
 import json
 
 
-__ALL__ = ['CommandStatus', 'StatusMixIn', 'escape']
+__ALL__ = ['CommandStatus', 'StatusMixIn', 'escape', 'CallbackScheduler']
 
 
 class Maskbit(enum.Flag):
@@ -184,6 +186,63 @@ class StatusMixIn(object):
                 self.watcher.clear()
 
         self.watcher = None
+
+
+class CallbackScheduler(object):
+    """A queue for executing callbacks."""
+
+    def __init__(self, loop=None):
+
+        self.loop = loop or asyncio.get_event_loop()
+        self.queue = asyncio.Queue()
+
+        self.running = []  # Running callbacks
+        self._task = asyncio.create_task(self._process_queue())
+
+    async def stop(self):
+        """Stops processing callbacks and awaits currently running ones."""
+
+        self._task.cancel()
+
+        for cb in self.running:
+            if not cb.done():
+                cb.cancel()
+
+        with contextlib.suppress(asyncio.CancelledError):
+            await self._task
+            for cb in self.running:
+                await cb
+
+        self.running = []
+
+    def add_callback(self, cb, *args, **kwargs):
+        """Add a callback to the queue.
+
+        The callback will be called as ``cb(*args, **kwargs).
+
+        """
+
+        self.queue.put_nowait((cb, args, kwargs))
+
+    async def _process_queue(self):
+        """Processes new callbacks."""
+
+        while True:
+
+            cb, args, kwargs = await self.queue.get()
+
+            if asyncio.iscoroutinefunction(cb):
+                self.running.append(asyncio.create_task(cb(*args, **kwargs)))
+            else:
+                self.loop.call_soon(functools.partial(cb, *args, **kwargs))
+
+            # Clean already done callbacks
+            done_cb = []
+            for task in self.running:
+                if task.done():
+                    done_cb.append(task)
+
+            self.running = [task for task in self.running if task not in done_cb]
 
 
 def escape(text):
