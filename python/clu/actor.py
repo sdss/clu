@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-10 18:44:20
+# @Last modified time: 2019-05-12 18:43:23
 
 import asyncio
 import pathlib
@@ -172,9 +172,9 @@ class Actor(object):
         log = get_logger('actor:' + self.name)
 
         if log_dir is None:
-            log_dir = pathlib.Path(f'~/logs/{self.name}/').expanduser()
+            log_dir = pathlib.Path(f'/data/logs/actors/{self.name}/').expanduser()
         else:
-            log_dir = pathlib.Path(log_dir)
+            log_dir = pathlib.Path(log_dir).expanduser()
 
         if not log_dir.exists():
             log_dir.mkdir(parents=True)

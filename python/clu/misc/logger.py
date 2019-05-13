@@ -156,10 +156,10 @@ class SDSSLogger(logging.Logger):
     def save_log(self, path):
         shutil.copyfile(self.log_filename, os.path.expanduser(path))
 
-    def start_file_logger(self, path, log_level=logging.DEBUG):
+    def start_file_logger(self, log_file_path, log_level=logging.DEBUG):
         """Start file logging."""
 
-        log_file_path = os.path.expanduser(path)
+        log_file_path = os.path.expandvars(os.path.expanduser(log_file_path))
         logdir = os.path.dirname(log_file_path)
 
         try:
