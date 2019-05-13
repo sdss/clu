@@ -9,7 +9,7 @@ Refer to https://trac.sdss3.org/wiki/Ops/Types
 import re
 import textwrap
 
-from . import html
+from . import html, pvt
 
 
 class ValueTypeError(Exception):
@@ -274,8 +274,8 @@ class PVT(CompoundValueType):
                   Double(name='time', units='MJD-secs(TAI)'))
         if 'wrapper' not in kwargs:
             # by default, use RO.PVT to wrap values of type PVT
-            import RO.PVT
-            kwargs['wrapper'] = RO.PVT.PVT
+
+            kwargs['wrapper'] = pvt.PVT
         CompoundValueType.__init__(self, *vtypes, **kwargs)
 
 
