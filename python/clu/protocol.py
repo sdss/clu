@@ -7,13 +7,14 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-08 07:51:44
+# @Last modified time: 2019-05-10 13:18:31
 
 import asyncio
 
 
 __all__ = ['TCPProtocol', 'PeriodicTCPServer',
-           'TCPStreamServer', 'TCPStreamPeriodicServer']
+           'TCPStreamServer', 'TCPStreamPeriodicServer',
+           'TCPStreamClient', 'TCPStreamClientContainer']
 
 
 class TCPProtocol(asyncio.Protocol):
@@ -257,6 +258,56 @@ class TCPStreamServer(object):
             if self.data_received_callback:
                 await self._do_callback(self.data_received_callback,
                                         writer.transport, data)
+
+
+class TCPStreamClientContainer(object):
+    """An object containing a writer and reader stream to a TCP server."""
+
+    def __init__(self, host, port):
+
+        self.host = host
+        self.port = port
+
+        self.reader = None
+        self.writer = None
+
+    async def open_connection(self):
+        """Creates the connection."""
+
+        self.reader, self.writer = await asyncio.open_connection(self.host, self.port)
+
+
+async def TCPStreamClient(host, port):
+    """Returns a TCP stream connection with a writer and reader.
+
+    This function is more convenient than doing ::
+
+        >>> client = TCPStreamClientContainer('127.0.0.1', 5555)
+        >>> await client.open_connection()
+
+    Instead just do ::
+
+        >>> client = await TCPStreamClient('127.0.0.1', 5555)
+        >>> client.writer.write('Hi!\\n'.encode())
+
+    Parameters
+    ----------
+    host : str
+        The host of the TCP server.
+    port : int
+        The port of the TCP server.
+
+    Returns
+    -------
+    client : `.TCPStreamClientContainer`
+        A container for the stream reader and writer.
+
+    """
+
+    client = TCPStreamClientContainer(host, port)
+    await client.open_connection()
+
+    return client
 
 
 class TCPStreamPeriodicServer(TCPStreamServer):
