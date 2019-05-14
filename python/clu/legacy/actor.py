@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-13 19:41:23
+# @Last modified time: 2019-05-13 19:49:44
 
 
 import warnings
@@ -42,7 +42,8 @@ class LegacyActor(Actor):
         super().__init__(*args, **kwargs)
 
         if tron_host and tron_port:
-            self.tron = TronConnection(self.name, tron_host, tron_port, tron_models=tron_models)
+            self.tron = TronConnection(self.name, tron_host, tron_port,
+                                       tron_models=tron_models)
         else:
             self.tron = False
 
@@ -53,9 +54,11 @@ class LegacyActor(Actor):
         try:
             if self.tron:
                 await self.tron.start()
-                self.log.info(f'started tron connection at {self.tron.host}:{self.tron.port}')
+                self.log.info('started tron connection at '
+                              f'{self.tron.host}:{self.tron.port}')
             else:
-                warnings.warn('starting LegacyActor without Tron connection.', clu.CluWarning)
+                warnings.warn('starting LegacyActor without Tron connection.',
+                              clu.CluWarning)
         except ConnectionRefusedError as ee:
             raise clu.CluError(f'failed trying to create a connection to tron: {ee}')
 
