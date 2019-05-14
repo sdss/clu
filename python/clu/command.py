@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-12 19:18:30
+# @Last modified time: 2019-05-14 15:32:05
 
 import asyncio
 import re
@@ -99,9 +99,15 @@ class BaseCommand(StatusMixIn):
         if status != self._status:
 
             status_code = status.code
-            msg = None if message is None else {'text': message}
 
-            self.write(status_code, msg)
+            if message is None:
+                pass
+            elif isinstance(message, dict):
+                pass
+            else:
+                message = {'text': message}
+
+            self.write(status_code, message)
 
             self._status = status
 
