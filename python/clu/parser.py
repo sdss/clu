@@ -7,7 +7,9 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-06 23:27:42
+# @Last modified time: 2019-05-13 17:28:53
+
+import asyncio
 
 import click
 
@@ -22,7 +24,12 @@ class Command(click.Command):
 
         if self.callback is not None:
             with ctx:
-                ctx.invoke(self.callback, ctx.obj['command'], **ctx.params)
+                # If the callback is a coroutine, schedules it as a task.
+                callback = ctx.invoke(self.callback, *ctx.obj['parser_args'], **ctx.params)
+                if asyncio.iscoroutine(callback):
+                    ctx.task = asyncio.create_task(callback)
+                else:
+                    ctx.task = None
             return ctx
 
 
@@ -69,7 +76,6 @@ def help(ctx, *args):
     command = args[0]
 
     for line in ctx.parent.get_help().splitlines():
-        # line = json.dumps(line).replace(';', '')
         command.write('w', {'text': line})
 
     return
