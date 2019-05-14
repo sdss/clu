@@ -24,12 +24,9 @@ class Command(click.Command):
 
         if self.callback is not None:
             with ctx:
-                # If the callback is a coroutine, schedules it as a task.
-                callback = ctx.invoke(self.callback, *ctx.obj['parser_args'], **ctx.params)
-                if asyncio.iscoroutine(callback):
-                    ctx.task = asyncio.create_task(callback)
-                else:
-                    ctx.task = None
+                # Makes sure the callback is a coroutine
+                if not asyncio.iscoroutinefunction(self.callback):
+                    self.callback = asyncio.coroutine(self.callback)
             return ctx
 
 
