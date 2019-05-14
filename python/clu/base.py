@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-10 16:30:34
+# @Last modified time: 2019-05-14 15:18:21
 
 import asyncio
 import contextlib
@@ -33,6 +33,7 @@ COMMAND_STATUS_TO_CODE = {
     'DONE': ':',
     'CANCELLED': 'f',
     'FAILED': 'f',
+    'TIMEDOUT': 'f',
     'READY': 'i',
     'RUNNING': 'i',
     'CANCELLING': 'w',
@@ -46,6 +47,7 @@ class CommandStatus(Maskbit):
     DONE = enum.auto()
     CANCELLED = enum.auto()
     FAILED = enum.auto()
+    TIMEDOUT = enum.auto()
     READY = enum.auto()
     RUNNING = enum.auto()
     CANCELLING = enum.auto()
@@ -53,7 +55,7 @@ class CommandStatus(Maskbit):
     DEBUG = enum.auto()
 
     ACTIVE_STATES = RUNNING | CANCELLING | FAILING
-    FAILED_STATES = CANCELLED | FAILED
+    FAILED_STATES = CANCELLED | FAILED | TIMEDOUT
     FAILING_STATES = CANCELLING | FAILING
     DONE_STATES = DONE | FAILED_STATES
     ALL_STATES = READY | ACTIVE_STATES | DONE_STATES
