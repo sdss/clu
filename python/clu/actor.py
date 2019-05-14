@@ -7,12 +7,11 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-12 19:17:40
+# @Last modified time: 2019-05-13 17:26:53
 
 import asyncio
 import pathlib
-import sys
-import traceback
+import warnings
 
 import click
 import ruamel.yaml
@@ -224,12 +223,21 @@ class Actor(object):
             return
 
         try:
-            self.parse(command)
-        except clu.CommandError as ee:
-            command.set_status(command.status.FAILED,
-                               message=f'Command {command.body!r} failed: {ee}')
 
-        return command
+            self.parse(command)
+            return command
+
+        except clu.CommandParserError as ee:
+
+            lines = ee.args[0].splitlines()
+            for line in lines:
+                command.write('w', {'text': line})
+
+        except Exception:
+
+            self.log.exception('command failed with error:')
+
+        command.set_status(command.status.FAILED, message=f'Command {command.body!r} failed.')
 
     def parse(self, command):
         """Parses an user command with the default parser.
@@ -260,15 +268,16 @@ class Actor(object):
                                               obj={'parser_args': parser_args})
             with ctx:
                 command_parser.invoke(ctx)
-        except click.UsageError as ee:
+
+        except click.ClickException as ee:
+
             # If this is a command that cannot be parsed.
-            raise clu.CommandError(ee)
-        except Exception as ee:
-            # If this is a general exception, outputs the traceback to stderr
-            # and replies with the error message.
-            sys.stderr.write(f'command {command.raw_command_string!r} failed\n')
-            traceback.print_exc(file=sys.stderr)
-            raise clu.CommandError(ee)
+            if ee.message is None:
+                ee.message = f'{ee.__class__.__name__}:\n{ctx.get_help()}'
+            else:
+                ee.message = f'{ee.__class__.__name__}: {ee.message}'
+
+            raise clu.CommandParserError(ee.message)
 
     def show_new_user_info(self, user_id):
         """Shows information for new users. Called when a new user connects."""
@@ -441,8 +450,6 @@ class LegacyActor(Actor):
                 warnings.warn('starting LegacyActor without Tron connection.', clu.CluWarning)
         except ConnectionRefusedError as ee:
             raise clu.CluError(f'failed trying to create a connection to tron: {ee}')
-
-        self.log.info(f'started tron connection at {self.tron.host}:{self.tron.port}')
 
         await super().run(**kwargs)
 

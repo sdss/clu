@@ -10,7 +10,7 @@
 
 
 __all__ = ['CluError', 'CluNotImplemented', 'CluWarning',
-           'CluDeprecationWarning', 'CommandError']
+           'CluDeprecationWarning', 'CommandError', 'CommandParserError']
 
 
 class CluError(Exception):
@@ -36,6 +36,12 @@ class CluNotImplemented(CluError):
 
 class CommandError(CluError):
     """An error raised when a `Command` fails."""
+
+    pass
+
+
+class CommandParserError(CluError):
+    """An error raised when parsing a command fails."""
 
     pass
 

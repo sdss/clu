@@ -64,6 +64,10 @@ def colored_formatter(record):
     sys.__stdout__.write('{}{}\n'.format(header, message))
     sys.__stdout__.flush()
 
+    if record.exc_info:
+        sys.__stdout__.write(get_exception_formatted(*sys.exc_info()))
+        sys.__stdout__.flush()
+
     return
 
 
