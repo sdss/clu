@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-14 16:57:25
+# @Last modified time: 2019-05-14 17:08:27
 
 import asyncio
 import functools
@@ -15,7 +15,7 @@ import functools
 import click
 
 
-class Command(click.Command):
+class ClickCommand(click.Command):
     """Override `click.Command` to pass the actor and command as arguments."""
 
     async def _schedule_callback(self, ctx, timeout=None):
@@ -54,8 +54,8 @@ class Command(click.Command):
             return ctx
 
 
-class Group(click.Group):
-    """Override `click.Group` to make all child commands instances of `Command`."""
+class ClickGroup(click.Group):
+    """Override `click.Group` to make all child commands instances of `.ClickCommand`."""
 
     def command(self, *args, **kwargs):
         """Override `click.Group` to use `Command` as class by default."""
@@ -63,7 +63,7 @@ class Group(click.Group):
         if 'cls' in kwargs:
             pass
         else:
-            kwargs['cls'] = Command
+            kwargs['cls'] = ClickCommand
 
         def decorator(f):
             cmd = click.decorators.command(*args, **kwargs)(f)
@@ -90,7 +90,7 @@ def timeout(seconds):
     return decorator
 
 
-@click.group(cls=Group)
+@click.group(cls=ClickGroup)
 @click.pass_context
 def command_parser(ctx):
     pass
