@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-10 13:18:31
+# @Last modified time: 2019-05-14 17:29:35
 
 import asyncio
 
@@ -275,6 +275,14 @@ class TCPStreamClientContainer(object):
         """Creates the connection."""
 
         self.reader, self.writer = await asyncio.open_connection(self.host, self.port)
+
+    def close(self):
+        """Closes the stream."""
+
+        if self.writer:
+            self.writer.close()
+        else:
+            raise RuntimeError('connection cannot be closed because it is not open.')
 
 
 async def TCPStreamClient(host, port):

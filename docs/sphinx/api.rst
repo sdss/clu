@@ -9,6 +9,8 @@ Actor
 
 .. automodule:: clu.actor
 
+.. automodule:: clu.device
+
 
 Command
 -------
