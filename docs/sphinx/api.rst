@@ -39,6 +39,15 @@ MixIns
 .. autoclass:: clu.base.StatusMixIn
 
 
+Parser
+------
+
+.. autoclass:: clu.parser.ClickCommand
+.. autoclass:: clu.parser.ClickGroup
+
+.. autofunction:: clu.parser.timeout
+
+
 Sockets
 -------
 
