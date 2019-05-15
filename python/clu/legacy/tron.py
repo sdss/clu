@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-13 11:39:24
+# @Last modified time: 2019-05-14 17:10:39
 
 import asyncio
 import collections
@@ -224,7 +224,7 @@ class TronConnection(object):
 
         self._parser = None
 
-        self.client = None
+        self.connection = None
 
     async def start(self, get_keys=True):
         """Starts the connection to Tron.
@@ -236,7 +236,7 @@ class TronConnection(object):
 
         """
 
-        self.client = await TCPStreamClient(self.host, self.port)
+        self.connection = await TCPStreamClient(self.host, self.port)
 
         self._parser = asyncio.create_task(self._parse_tron())
 
@@ -271,7 +271,7 @@ class TronConnection(object):
         # the reply will fail to parse.
         command = f'{self.actor}.{self.actor} {mid} {target} {command_string}\n'
 
-        self.client.writer.write(command.encode())
+        self.connection.writer.write(command.encode())
 
         self._mid += 1
 
@@ -306,7 +306,7 @@ class TronConnection(object):
 
         while True:
 
-            line = await self.client.reader.readline()
+            line = await self.connection.reader.readline()
 
             try:
                 line = line.decode().strip()
