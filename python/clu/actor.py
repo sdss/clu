@@ -7,46 +7,49 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-13 19:41:16
+# @Last modified time: 2019-05-17 16:06:07
 
+import abc
 import asyncio
+import json
 import pathlib
+import uuid
 
 import click
 import ruamel.yaml
 
 import clu
-from clu.command import Command
-from clu.misc import get_logger
-from clu.parser import command_parser
-from clu.protocol import TCPStreamServer
+
+from .command import Command
+from .misc import get_logger
+from .parser import command_parser
+from .protocol import TopicListener
 
 
-__all__ = ['Actor', 'command_parser']
+try:
+    import aio_pika as apika
+except ImportError:
+    apika = None
 
 
-class Actor(object):
+__all__ = ['BaseActor', 'Actor', 'command_parser']
+
+
+__COMMANDER_EXCHANGE__ = 'commands'
+__REPLIES_EXCHANGE__ = 'replies'
+
+
+class BaseActor(metaclass=abc.ABCMeta):
     """An actor based on `asyncio <https://docs.python.org/3/library/asyncio.html>`__.
 
     This class defines a new actor. Normally a new instance is created by
     passing a configuration file path which defines how the actor must
     be started.
 
-    The TCP servers need to be started by awaiting the coroutine `.run`. The
-    following is an example of a basic actor instantiation: ::
-
-        loop = asyncio.get_event_loop()
-        my_actor = Actor('my_actor', '127.0.0.1', 9999)
-        loop.run_until_complete(my_actor.run())
-
     Parameters
     ----------
     name : str
         The name of the actor.
-    host : str
-        The host where the TCP server will run.
-    port : int
-        The port of the TCP server.
     version : str
         The version of the actor.
     loop
@@ -64,8 +67,7 @@ class Actor(object):
     #: Note that the command is always passed first.
     parser_args = []
 
-    def __init__(self, name, host, port, version=None, loop=None,
-                 log_dir=None, log=None):
+    def __init__(self, name, version=None, loop=None, log_dir=None, log=None):
 
         self.name = name
         assert self.name, 'name cannot be empty.'
@@ -74,42 +76,21 @@ class Actor(object):
 
         self.loop = loop or asyncio.get_event_loop()
 
-        self.user_dict = dict()
-
         self.version = version or '?'
-
-        self.host = host
-        self.port = port
-
-        #: TCPStreamServer: The server to talk to this actor.
-        self.server = TCPStreamServer(host, port, loop=self.loop,
-                                      connection_callback=self.new_user,
-                                      data_received_callback=self.new_command)
 
     def __repr__(self):
 
-        return f'<{str(self)} (name={self.name}, host={self.host!r}, port={self.port})>'
+        return f'<{str(self)} (name={self.name})>'
 
     def __str__(self):
 
         return self.__class__.__name__
 
-    async def run(self, block=True):
-        """Starts the server.
+    @abc.abstractmethod
+    async def run(self):
+        """Starts the server. Must be overridden by the subclasses."""
 
-        Parameters
-        ----------
-        block : bool
-            Whether to block the execution by serving forever.
-
-        """
-
-        await self.server.start_server()
-
-        self.log.info(f'running TCP server on {self.host}:{self.port}')
-
-        if block:
-            await self.server.server.serve_forever()
+        pass
 
     async def shutdown(self):
         """Shuts down all the remaining tasks."""
@@ -161,8 +142,8 @@ class Actor(object):
 
         # We also pass *args and **kwargs in case the actor has been subclassed
         # and the subclass' __init__ accepts different arguments.
-        new_actor = cls(*args, config_dict['name'], config_dict['host'],
-                        config_dict['port'], version=version, log_dir=log_dir, **kwargs)
+        new_actor = cls(config_dict['name'], *args,
+                        version=version, log_dir=log_dir, **kwargs)
 
         return new_actor
 
@@ -184,41 +165,23 @@ class Actor(object):
         log.sh.setLevel(shell_level)
         log.fh.setLevel(file_level)
 
-        log.info('logging system initiated.')
+        log.info(f'{self.name}: logging system initiated.')
 
         return log
 
-    def new_user(self, transport):
-        """Assigns userID to new client connection."""
+    @abc.abstractmethod
+    def new_command(self):
+        """Handles a new command.
 
-        curr_ids = set(self.user_dict.keys())
-        user_id = 1 if len(curr_ids) == 0 else max(curr_ids) + 1
+        Must be overridden by the subclass and call ``_new_command_internal``
+        with a `.Command` object.
 
-        transport.user_id = user_id
+        """
 
-        self.user_dict[user_id] = transport
+        pass
 
-        # report user information and additional info
-        self.show_new_user_info(user_id)
-
-        return
-
-    def new_command(self, transport, command_str):
+    def _new_command_internal(self, command):
         """Handles a new command received by the actor."""
-
-        command_str = command_str.decode().strip()
-
-        if not command_str:
-            return
-
-        user_id = transport.user_id
-
-        try:
-            command = Command(command_str, user_id=user_id, actor=self, loop=self.loop)
-            command.actor = self  # Assign the actor
-        except clu.CommandError as ee:
-            self.write('f', {'text': f'Could not parse the following as a command: {ee!r}'})
-            return
 
         try:
 
@@ -229,7 +192,7 @@ class Actor(object):
 
             lines = ee.args[0].splitlines()
             for line in lines:
-                command.write('w', {'text': line})
+                command.write('w', text=line)
 
         except Exception:
 
@@ -277,68 +240,183 @@ class Actor(object):
 
             raise clu.CommandParserError(ee.message)
 
-    def show_new_user_info(self, user_id):
-        """Shows information for new users. Called when a new user connects."""
+    @abc.abstractmethod
+    def send_command(self):
+        """Sends a command to another actor. Must be overridden."""
 
-        self.show_user_info(user_id)
-        self.show_version(user_id=user_id)
+        pass
 
-    def show_user_info(self, user_id):
-        """Shows user information including your user_id."""
+    @abc.abstractmethod
+    def write(self):
+        """Writes a message to user(s). To be overridden by the subclasses."""
 
-        num_users = len(self.user_dict)
-        if num_users == 0:
-            return
+        pass
 
-        msg = {'yourUserID': user_id,
-               'num_users': num_users}
 
-        self.write('i', msg, user_id=user_id)
-        self.show_user_list()
+class Actor(BaseActor):
+    """An actor class that uses AMQP message brokering.
 
-    def show_user_list(self):
-        """Shows a list of connected users. Broadcast to all users."""
+    Parameters
+    ----------
+    Parameters
+    ----------
+    name : str
+        The name of the actor.
+    user : str
+        The user to connect to the AMQP broker.
+    host : str
+        The host where the AMQP message broker lives.
+    version : str
+        The version of the actor.
+    loop
+        The event loop. If `None`, the current event loop will be used.
+    log_dir : str
+        The directory where to store the logs. Defaults to
+        ``$HOME/logs/<name>`` where ``<name>`` is the name of the actor.
+    log : logging.Logger
+        A `logging.Logger` instance to be used for logging instead of creating
+        a new one.
 
-        user_id_list = sorted(self.user_dict.keys())
-        for user_id in user_id_list:
-            transport = self.user_dict[user_id]
-            peername = transport.get_extra_info('peername')[0]
-            msg = {'UserInfo': f'{user_id}, {peername}'}
-            self.write('i', msg)
+    """
 
-    def show_version(self, user_id=None):
-        """Shows actor version."""
+    #: list: Arguments to be passed to each command in the parser.
+    #: Note that the command is always passed first.
+    parser_args = []
 
-        msg = {'version': repr(self.version)}
+    def __init__(self, name, user, host, version=None,
+                 loop=None, log_dir=None, log=None):
 
-        self.write('i', msg, user_id=user_id)
+        if not apika:
+            raise ImportError('to instantiate a new Actor class '
+                              'you need to have aio_pika installed.')
 
-    @staticmethod
-    def get_user_command_id(command=None, user_id=None, command_id=None):
-        """Returns user_id, command_id based on user-supplied information.
+        super().__init__(name, version=version, loop=loop, log_dir=log_dir, log=log)
 
-        Parameters
-        ----------
-        command : Command
-            User command; used as a default for ``user_id`` and ``command_id``.
-            If the command is done, it is ignored.
-        user_id : int
-            If `None` then use ``command.user_id``.
-        command_id : int
-            If `None` then use ``command.command_id``.
+        self.user = user
+        self.host = host
+
+        # Binds a queue to the command exchange
+        self.commander = TopicListener(self.new_command, bindings=[self.name])
+
+        # Binds a queue to the replies exchange
+        self.listener = TopicListener(self.handle_reply, bindings=[self.name, 'broadcast.#'])
+
+    def __repr__(self):
+
+        if self.commander.connection is None:
+            url = 'disconnected'
+        else:
+            url = str(self.commander.connection.url)
+
+        return f'<{str(self)} (name={self.name}, {url}>'
+
+    async def run(self):
+        """Starts the server."""
+
+        await self.commander.connect(user=self.user, host=self.host,
+                                     queue_name=f'{self.name}_commands',
+                                     exchange_name=__COMMANDER_EXCHANGE__,
+                                     loop=self.loop)
+        self.log.info(f'commands queue bound to {self.commander.connection.url!s}')
+
+        await self.listener.connect(channel=self.commander.channel,
+                                    queue_name=f'{self.name}_replies',
+                                    exchange_name=__REPLIES_EXCHANGE__,
+                                    loop=self.loop)
+        self.log.info(f'replies queue bound to {self.listener.connection.url!s}')
+
+        return self
+
+    @classmethod
+    def from_config(cls, config, *args, **kwargs):
+        """Starts a new actor from a configuration file.
+
+        Refer to `.BaseActor.from_config`.
 
         """
 
-        if command is not None and command.status.is_done:
-            command = None
+        config_dict = cls._parse_config(config)
 
-        user_id = user_id or (command.user_id if command else 0)
-        command_id = command_id or (command.command_id if command else 0)
+        args = [config_dict.get('user'),
+                config_dict.get('host')]
 
-        return (user_id, command_id)
+        return super().from_config(config_dict, *args, **kwargs)
 
-    def write(self, msg_code, message=None, command=None,
-              user_id=None, command_id=None):
+    async def new_command(self, message):
+        """Handles a new command received by the actor."""
+
+        with message.process():
+
+            headers = message.info()['headers']
+            command_body = json.loads(message.body.decode())
+
+        commander_id = headers['commander_id'].decode()
+        command_id = headers['command_id'].decode()
+        command_string = command_body['command_string']
+
+        try:
+            command = Command(command_string, command_id=command_id,
+                              commander_id=commander_id, actor=self, loop=self.loop)
+            command.actor = self  # Assign the actor
+        except clu.CommandError as ee:
+            self.write('f', {'text': f'Could not parse the following as a command: {ee!r}'})
+            return
+
+        self._new_command_internal(command)
+
+    def handle_reply(self, message):
+        """Handles a reply received by the message and updates the models.
+
+        Parameters
+        ----------
+        message : aio_pika.IncomingMessage
+            The message received.
+
+        """
+
+        with message.process():
+
+            routing_key = message.routing_key
+
+            # Ignores broadcast that come from this actor.
+            if 'broadcast' in routing_key and self.name in routing_key:
+                return
+
+            print(self.name, message.info()['headers'], message.body.decode())
+
+    async def send_command(self, actor, command_string, command_id=None):
+        """Commands another actor over its RCP queue.
+
+        Parameters
+        ----------
+        actor : str
+            The actor we are commanding.
+        command_string : str
+            The command string that will be parsed by the remote actor.
+        command_id
+            The command ID associated with this command. If empty, an unique
+            identifier will be attached.
+
+        """
+
+        command_id = command_id or str(uuid.uuid4())
+
+        headers = {'command_id': command_id,
+                   'commander_id': self.name}
+
+        message_body = {'command_string': command_string}
+
+        await self.commander.exchange.publish(
+            apika.Message(json.dumps(message_body).encode(),
+                          content_type='text/json',
+                          headers=headers,
+                          correlation_id=command_id,
+                          reply_to=self.listener.queue.name),
+            routing_key=actor)
+
+        return
+
+    async def write(self, msg_code, message=None, command=None, broadcast=False, **kwargs):
         """Writes a message to user(s).
 
         Parameters
@@ -349,13 +427,30 @@ class Actor(object):
             The keywords to be output. Must be a dictionary of pairs
             ``{keyword: value}``.
         command : Command
-            User command; used as a default for ``user_id`` and ``command_id``.
-            If the command is done, it is ignored.
-        user_id : int
-            If `None` then use ``command.user_id``.
-        command_id : int
-            If `None` then use ``command.command_id``.
+            The command to which we are replying. If not set, it is assumed
+            that this is a broadcast.
+        broadcast : bool
+            Whether to broadcast the message to all the actor or only to the
+            commander.
+        kwargs
+            Keyword arguments that will be added to the message.
 
         """
 
-        raise clu.CluNotImplemented('write is not yet implemented for Actor.')
+        message = message or {}
+
+        assert isinstance(message, dict), 'message must be a dictionary'
+
+        message.update(kwargs)
+        print(message)
+        message_json = json.dumps(message).encode()
+
+        if command is None:
+            broadcast = True
+
+        headers = {'message_code': msg_code, 'sender': self.name}
+        routing_key = f'broadcast.{self.name}' if broadcast else command.commander_id
+
+        await self.listener.exchange.publish(
+            apika.Message(message_json, content_type='text/json', headers=headers),
+            routing_key=routing_key)

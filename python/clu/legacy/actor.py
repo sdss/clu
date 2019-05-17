@@ -7,39 +7,73 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-13 19:49:44
+# @Last modified time: 2019-05-17 16:03:58
 
 
 import warnings
 
 import clu
-from clu.actor import Actor
 
+from ..actor import BaseActor
+from ..command import Command
+from ..protocol import TCPStreamServer
 from .tron import TronConnection
 
 
 __all__ = ['LegacyActor']
 
 
-class LegacyActor(Actor):
+class LegacyActor(BaseActor):
     """An actor that provides compatibility with the SDSS opscore protocol.
+
+    The TCP servers need to be started by awaiting the coroutine `.run`. The
+    following is an example of a basic actor instantiation: ::
+
+        loop = asyncio.get_event_loop()
+        my_actor = Actor('my_actor', '127.0.0.1', 9999)
+        loop.run_until_complete(my_actor.run())
 
     Parameters
     ----------
-    args, kwargs
-        Arguments to be passed to `Actor`.
+    name : str
+        The name of the actor.
+    host : str
+        The host where the TCP server will run.
+    port : int
+        The port of the TCP server.
     tron_host : str
         The host on which Tron is running.
     tron_port : int
         The port on which Tron is running.
     tron_models : list
         A list of strings with the actors whose models will be tracked.
+    version : str
+        The version of the actor.
+    loop
+        The event loop. If `None`, the current event loop will be used.
+    log_dir : str
+        The directory where to store the logs. Defaults to
+        ``$HOME/logs/<name>`` where ``<name>`` is the name of the actor.
+    log : logging.Logger
+        A `logging.Logger` instance to be used for logging instead of creating
+        a new one.
 
     """
 
-    def __init__(self, *args, tron_host=None, tron_port=None, tron_models=None, **kwargs):
+    def __init__(self, name, host, port, tron_host=None, tron_port=None,
+                 tron_models=None, version=None, loop=None, log_dir=None, log=None):
 
-        super().__init__(*args, **kwargs)
+        super().__init__(name, version=version, loop=loop, log_dir=log_dir, log=log)
+
+        self.user_dict = dict()
+
+        self.host = host
+        self.port = port
+
+        #: TCPStreamServer: The server to talk to this actor.
+        self.server = TCPStreamServer(host, port, loop=self.loop,
+                                      connection_callback=self.new_user,
+                                      data_received_callback=self.new_command)
 
         if tron_host and tron_port:
             self.tron = TronConnection(self.name, tron_host, tron_port,
@@ -47,8 +81,15 @@ class LegacyActor(Actor):
         else:
             self.tron = False
 
-    async def run(self, **kwargs):
+    def __repr__(self):
+
+        return f'<{str(self)} (name={self.name}, host={self.host!r}, port={self.port})>'
+
+    async def run(self):
         """Starts the server and the Tron client connection."""
+
+        await self.server.start_server()
+        self.log.info(f'running TCP server on {self.host}:{self.port}')
 
         # Start tron connection
         try:
@@ -62,18 +103,62 @@ class LegacyActor(Actor):
         except ConnectionRefusedError as ee:
             raise clu.CluError(f'failed trying to create a connection to tron: {ee}')
 
-        await super().run(**kwargs)
+        return self
 
     @classmethod
     def from_config(cls, config, *args, **kwargs):
+        """Starts a new actor from a configuration file.
+
+        Refer to `.BaseActor.from_config`.
+
+        """
 
         config_dict = cls._parse_config(config)
+
+        args = [config_dict.get('name'),
+                config_dict.get('host'),
+                config_dict.get('port')]
+
         if 'tron' in config_dict:
             kwargs.update({'tron_host': config_dict['tron'].get('host', None)})
             kwargs.update({'tron_port': config_dict['tron'].get('port', None)})
             kwargs.update({'tron_models': config_dict['tron'].get('models', None)})
 
         return super().from_config(config_dict, *args, **kwargs)
+
+    def new_user(self, transport):
+        """Assigns userID to new client connection."""
+
+        curr_ids = set(self.user_dict.keys())
+        user_id = 1 if len(curr_ids) == 0 else max(curr_ids) + 1
+
+        transport.user_id = user_id
+
+        self.user_dict[user_id] = transport
+
+        # report user information and additional info
+        self.show_new_user_info(user_id)
+
+        return
+
+    def new_command(self, transport, command_str):
+        """Handles a new command received by the actor."""
+
+        command_str = command_str.decode().strip()
+
+        if not command_str:
+            return
+
+        user_id = transport.user_id
+
+        try:
+            command = Command(command_str, commander_id=user_id, actor=self, loop=self.loop)
+            command.actor = self  # Assign the actor
+        except clu.CommandError as ee:
+            self.write('f', {'text': f'Could not parse the following as a command: {ee!r}'})
+            return
+
+        self._new_command_internal(command)
 
     @staticmethod
     def format_user_output(msg_code, msg_str=None, user_id=None, command_id=None):
@@ -83,8 +168,86 @@ class LegacyActor(Actor):
 
         return f'{command_id:d} {user_id:d} {msg_code:s}{msg_str:s}'
 
+    def show_new_user_info(self, user_id):
+        """Shows information for new users. Called when a new user connects."""
+
+        self.show_user_info(user_id)
+        self.show_version(user_id=user_id)
+
+    def show_user_info(self, user_id):
+        """Shows user information including your user_id."""
+
+        num_users = len(self.user_dict)
+        if num_users == 0:
+            return
+
+        msg = {'yourUserID': user_id,
+               'num_users': num_users}
+
+        self.write('i', msg, user_id=user_id)
+        self.show_user_list()
+
+    def show_user_list(self):
+        """Shows a list of connected users. Broadcast to all users."""
+
+        user_id_list = sorted(self.user_dict.keys())
+        for user_id in user_id_list:
+            transport = self.user_dict[user_id]
+            peername = transport.get_extra_info('peername')[0]
+            msg = {'UserInfo': f'{user_id}, {peername}'}
+            self.write('i', msg)
+
+    @staticmethod
+    def get_user_command_id(command=None, user_id=None, command_id=None):
+        """Returns user_id, command_id based on user-supplied information.
+
+        Parameters
+        ----------
+        command : Command
+            User command; used as a default for ``user_id`` and ``command_id``.
+            If the command is done, it is ignored.
+        user_id : int
+            If `None` then use ``command.commander_id``.
+        command_id : int
+            If `None` then use ``command.command_id``.
+
+        """
+
+        if command is not None and command.status.is_done:
+            command = None
+
+        user_id = user_id or (command.commander_id if command else 0)
+        command_id = command_id or (command.command_id if command else 0)
+
+        return (user_id, command_id)
+
+    def show_version(self, user_id=None):
+        """Shows actor version."""
+
+        msg = {'version': repr(self.version)}
+
+        self.write('i', msg, user_id=user_id)
+
+    def send_command(self, target, command_string, command_id=None):
+        """Sends a command through the hub.
+
+        Parameters
+        ----------
+        target : str
+            The actor to command.
+        command_string : str
+            The command to send.
+        command_id : int
+            The command id. If `None`, a sequentially increasing value will
+            be used. You should not specify a ``command_id`` unless you really
+            know what you're doing.
+
+        """
+
+        self.tron.send_command(target, command_string, mid=command_id)
+
     def write(self, msg_code, message=None, command=None, user_id=None,
-              command_id=None, escape=True, concatenate=True):
+              command_id=None, escape=True, concatenate=True, broadcast=False):
         """Writes a message to user(s).
 
         Parameters
@@ -99,7 +262,7 @@ class LegacyActor(Actor):
             User command; used as a default for ``user_id`` and ``command_id``.
             If the command is done, it is ignored.
         user_id : int
-            If `None` then use ``command.user_id``.
+            If `None` then use ``command.commander_id``.
         command_id : int
             If `None` then use ``command.command_id``.
         escape : bool
@@ -110,12 +273,17 @@ class LegacyActor(Actor):
             ``concatenate=True``, all the keywords will be output in a single
             reply with the keywords joined with semicolons. Otherwise each
             keyword will be output in multiple lines.
+        broadcast : bool
+            Whether to broadcast the reply. Equivalent to ``user_id=0``.
 
         """
 
         user_id, command_id = self.get_user_command_id(command=command,
                                                        user_id=user_id,
                                                        command_id=command_id)
+
+        if broadcast:
+            user_id = 0
 
         if message is None:
             lines = ['']

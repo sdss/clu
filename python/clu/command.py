@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-14 15:32:05
+# @Last modified time: 2019-05-17 16:05:08
 
 import asyncio
 import re
@@ -26,10 +26,13 @@ class BaseCommand(StatusMixIn):
     ----------
     cmd_str : str
         The command string to be parsed.
-    user_id : int
-        The ID of the user issuing this command.
-    cmd_id : int
-        The ID associated to this command.
+    commander_id : str or int
+        The ID of the commander issuing this command. Can be a string or an
+        integer. Normally the former is used for new-style actor and the latter
+        for legacy actors.
+    command_id : str or int
+        The ID associated to this command. As with the commander_id, it can be
+        a string or an integer
     status_callback : function
         A function to call when the status changes.
     call_now : bool
@@ -41,11 +44,11 @@ class BaseCommand(StatusMixIn):
 
     """
 
-    def __init__(self, user_id=0, command_id=0, status_callback=None,
+    def __init__(self, commander_id=0, command_id=0, status_callback=None,
                  call_now=False, loop=None, actor=None):
 
-        self.user_id = int(user_id)
-        self.command_id = int(command_id)
+        self.commander_id = commander_id
+        self.command_id = command_id
 
         # Set by the actor.
         self.actor = actor
@@ -116,7 +119,7 @@ class BaseCommand(StatusMixIn):
             if self.watcher is not None:
                 self.watcher.set()
 
-    def write(self, msg_code, message=None, user_id=None):
+    def write(self, msg_code, message=None, broadcast=False, **kwargs):
         """Writes to the user(s).
 
         Parameters
@@ -125,9 +128,6 @@ class BaseCommand(StatusMixIn):
             The message code (e.g., ``'i'`` or ``':'``).
         message : str or dict
             The text to be output. If `None`, only the code will be written.
-        user_id : int
-            The user to which to send this message. Defaults to the command
-            ``user_id``.
 
         """
 
@@ -135,7 +135,11 @@ class BaseCommand(StatusMixIn):
             raise clu.CommandError('An actor has not been defined for '
                                    'this command. Cannot write to users.')
 
-        self.actor.write(msg_code, message=message, command=self)
+        result = self.actor.write(msg_code, message=message, command=self,
+                                  broadcast=broadcast, **kwargs)
+
+        if asyncio.iscoroutine(result):
+            self.loop.create_task(result)
 
 
 class Command(BaseCommand):
@@ -159,6 +163,11 @@ class Command(BaseCommand):
 
         self.parse_command_string(command_string)
 
+    def __str__(self):
+
+        return (f'<Command (commander_id={self.commander_id!r}, '
+                f'command_id={self.command_id!r}, body={self.body!r})>')
+
     def parse_command_string(self, command_string):
         """Parse command."""
 
@@ -172,6 +181,8 @@ class Command(BaseCommand):
         if command_id_str:
             self.command_id = int(command_id_str)
         else:
-            self.command_id = 0
+            # Only set command_id to 0 if we haven't set it somehow else.
+            if self.command_id is None:
+                self.command_id = 0
 
         self.body = command_dict.get('command_body', '')
