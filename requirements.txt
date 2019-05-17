@@ -2,3 +2,4 @@ numpy>=1.15.1
 ruamel.yaml>=0.15.61
 pygments>=2.2.0
 click>=7.0
+aoi_pika>=5.5.3

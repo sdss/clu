@@ -7,14 +7,24 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-14 17:29:35
+# @Last modified time: 2019-05-17 14:24:19
 
 import asyncio
+
+from .exceptions import CluError
+
+
+try:
+    import aio_pika as apika
+    import aiormq
+except ImportError:
+    apika = None
 
 
 __all__ = ['TCPProtocol', 'PeriodicTCPServer',
            'TCPStreamServer', 'TCPStreamPeriodicServer',
-           'TCPStreamClient', 'TCPStreamClientContainer']
+           'TCPStreamClient', 'TCPStreamClientContainer',
+           'TopicListener']
 
 
 class TCPProtocol(asyncio.Protocol):
@@ -376,3 +386,112 @@ class TCPStreamPeriodicServer(TCPStreamServer):
                     await self._do_callback(self.periodic_callback, transport)
 
             await asyncio.sleep(self.sleep_time)
+
+
+class TopicListener(object):
+    """A class to declare and listen to AMQP queues with topic conditions.
+
+    Parameters
+    ----------
+    callback
+        A callable that will be called when a new message is received in
+        the queue. Can be a coroutine.
+    bindings : list or str
+        The list of bindings for the queue. Can be a list of string or a single
+        string in which the bindings are comma-separated.
+
+    """
+
+    __EXCHANGE_NAME__ = None
+    __EXCHANGE_TYPE__ = apika.ExchangeType.TOPIC
+
+    user = None
+    host = None
+
+    loop = None
+
+    connection = None
+    channel = None
+    exchange = None
+    queue = None
+
+    def __init__(self, callback=None, bindings='*'):
+
+        if not apika:
+            raise ImportError('cannot use TopicListener without aoi_pika.')
+
+        self.callback = callback
+
+        if isinstance(bindings, str):
+            self.bindings = bindings.split(',')
+        elif isinstance(bindings, (list, tuple)):
+            self.bindings = list(bindings)
+        else:
+            raise TypeError('invalid type for bindings {bindings!r}.')
+
+    async def connect(self, user=None, host=None, channel=None,
+                      queue_name=None, exchange_name=None,
+                      exchange_type=__EXCHANGE_TYPE__, loop=None):
+        """Initialise the connection and binds the queue.
+
+        Parameters
+        ----------
+        user : str
+            The user to connect to the RabbitMQ broker.
+        host : str
+            The host where the RabbitMQ message broker lives.
+        channel
+            If specified, ``user`` and ``host`` are ignored and the connection
+            and channel are set from ``channel``.
+        queue_name : str
+            The name of the queue.
+        exchange_name : str
+            The name of the exchange to create.
+        exchange_type : str
+            The type of exchange to create.
+        loop
+            Event loop. If empty, the current event loop will be used.
+
+        """
+
+        # To make sure things are internally consistent
+        self.__EXCHANGE_NAME__ = exchange_name
+        self.__EXCHANGE_TYPE__ = exchange_type
+
+        self.loop = loop or asyncio.get_event_loop()
+
+        if not channel:
+
+            self.user = user
+            self.host = host
+
+            self.connection = await apika.connect_robust(user=user, host=host, loop=self.loop)
+            self.channel = await self.connection.channel()
+            await self.channel.set_qos(prefetch_count=1)
+
+        else:
+
+            self.connection = channel._connection
+            self.channel = channel
+
+            self.user = self.connection.url.user
+            self.host = self.connection.url.host
+
+        self.exchange = await self.channel.declare_exchange(exchange_name,
+                                                            type=exchange_type,
+                                                            auto_delete=True)
+
+        try:
+            self.queue = await self.channel.declare_queue(queue_name, exclusive=True)
+        except aiormq.exceptions.ChannelLockedResource:
+            raise CluError(f'cannot create queue {queue_name}. '
+                           'This may indicate that another instance of the '
+                           'same actor is running.')
+
+        for binding in self.bindings:
+            await self.queue.bind(self.exchange, routing_key=binding)
+
+        if self.callback:
+            await self.queue.consume(self.callback)
+
+        return self
