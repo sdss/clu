@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-17 16:05:08
+# @Last modified time: 2019-05-17 16:15:12
 
 import asyncio
 import re
@@ -19,8 +19,11 @@ from clu.base import CommandStatus, StatusMixIn
 __all__ = ['BaseCommand', 'Command']
 
 
-class BaseCommand(StatusMixIn):
+class BaseCommand(asyncio.Future, StatusMixIn):
     """Base class for commands of all types (user and device).
+
+    A `BaseCommand` instance is a `~asyncio.Future` whose result gets set
+    when the status is done (either successfully or not).
 
     Parameters
     ----------
@@ -54,6 +57,8 @@ class BaseCommand(StatusMixIn):
         self.actor = actor
 
         self.loop = loop or asyncio.get_event_loop()
+
+        asyncio.Future.__init__(self, loop=self.loop)
 
         StatusMixIn.__init__(self, CommandStatus, initial_status=CommandStatus.READY,
                              callback_func=status_callback, call_now=call_now)
@@ -116,6 +121,11 @@ class BaseCommand(StatusMixIn):
 
             self.do_callbacks()
 
+            # If the command is done, set the result of the future.
+            if self._status.is_done:
+                self.set_result(self.status)
+
+            # Set the status watcher
             if self.watcher is not None:
                 self.watcher.set()
 
