@@ -2,7 +2,7 @@
 CLU's documentation
 ===================
 
-This is the Sphinx documentation for the SDSS Python product ``CLU``.
+This is the Sphinx documentation for the SDSS Python product `CLU <https://tron.fandom.com/wiki/Clu>`__.
 
 Contents
 --------
