@@ -7,12 +7,11 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-17 17:28:46
+# @Last modified time: 2019-05-17 18:21:15
 
 import asyncio
-import json
 
-from clu.base import CallbackScheduler, CaseInsensitiveDict
+from clu.model import BaseModel, Property
 from clu.protocol import TCPStreamClient
 
 from .keys import KeysDictionary
@@ -22,7 +21,7 @@ from .parser import ParseError, ReplyParser
 __all__ = ['TronConnection', 'TronModel', 'TronKey']
 
 
-class TronKey(object):
+class TronKey(Property):
     """A Tron model key with callbacks.
 
     Parameters
@@ -37,34 +36,11 @@ class TronKey(object):
 
     """
 
-    def __init__(self, key, callback=None):
-
-        self.key = key
-        self._value = None
-
-        self.scheduler = CallbackScheduler()
-        self.callback = callback
-
     def __repr__(self):
-        return f'<TronKey ({self.key.name}): {self.value}>'
-
-    @property
-    def value(self):
-        """The value associated to the key."""
-
-        return self._value
-
-    @value.setter
-    def value(self, new_value):
-        """Sets the value of the key and schedules the callback."""
-
-        self._value = new_value
-
-        if self.callback:
-            self.scheduler.add_callback(self.callback, self)
+        return f'<{self.__class__.__name__!s} ({self.key}): {self.value}>'
 
 
-class TronModel(CaseInsensitiveDict):
+class TronModel(BaseModel):
     """A JSON-compliant model for actor keywords.
 
     Parameters
@@ -82,36 +58,13 @@ class TronModel(CaseInsensitiveDict):
 
     def __init__(self, keydict, callback=None, log=None):
 
-        self.name = keydict.name
-
-        self.callback = callback
-        self.scheduler = CallbackScheduler()
-
-        self.log = log
+        super().__init__(keydict.name, callback, log=log)
 
         self.keydict = keydict
 
-        model_keys = {}
         for key in self.keydict.keys:
             key = self.keydict.keys[key]
-            model_keys[key.name] = TronKey(key)
-
-        CaseInsensitiveDict.__init__(self, model_keys)
-
-    def flatten(self):
-        """Returns a dictionary of values.
-
-        Return a dictionary in which the `TronKey` instances are replaced
-        with their values.
-
-        """
-
-        return {key: self[key].value for key in self}
-
-    def jsonify(self):
-        """Returns a JSON string with the model."""
-
-        return json.dumps(self.unkey())
+            self[key.name] = TronKey(key, model=self)
 
     def parse_reply(self, reply):
         """Parses a reply and updates the datamodel."""
