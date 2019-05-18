@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-17 18:38:54
+# @Last modified time: 2019-05-17 18:53:47
 
 import os
 
@@ -140,6 +140,7 @@ html_theme_options = {
     'github_button': True,
     'github_type': 'star',
     'sidebar_collapse': True,
+    'github_banner': True,
     'page_width': '80%'
 }
 
