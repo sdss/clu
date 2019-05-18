@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-17 17:09:47
+# @Last modified time: 2019-05-17 17:24:17
 
 import abc
 import asyncio
@@ -44,8 +44,8 @@ class BaseActor(metaclass=abc.ABCMeta):
     """An actor based on `asyncio <https://docs.python.org/3/library/asyncio.html>`__.
 
     This class defines a new actor. Normally a new instance is created by
-    passing a configuration file path which defines how the actor must
-    be started.
+    passing a configuration file path to `.from_config` which defines how the
+    actor must be started.
 
     Parameters
     ----------
@@ -259,8 +259,20 @@ class BaseActor(metaclass=abc.ABCMeta):
 class Actor(BaseActor):
     """An actor class that uses AMQP message brokering.
 
-    Parameters
-    ----------
+    This class differs from `~clu.legacy.actor.LegacyActor` in that it uses
+    an AMQP messaging broker (typically RabbitMQ) to communicate with other
+    actors in the system, instead of standard TCP sockets. Although the
+    internals and protocols are different the entry points and behaviour for
+    both classes should be almost identical.
+
+    To start a new actor first instantiate the class and then run `.run` as
+    a coroutine. Note that `.run` does not block so you will need to use
+    asyncio's ``run_forever`` or a similar system ::
+
+        >>> loop = asyncio.get_event_loop()
+        >>> actor = await Actor('my_actor', 'guest', 'localhost', loop=loop).run()
+        >>> loop.run_forever()
+
     Parameters
     ----------
     name : str

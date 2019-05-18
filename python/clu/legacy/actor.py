@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-17 16:28:31
+# @Last modified time: 2019-05-17 17:25:39
 
 
 import warnings
@@ -26,12 +26,13 @@ __all__ = ['LegacyActor']
 class LegacyActor(BaseActor):
     """An actor that provides compatibility with the SDSS opscore protocol.
 
-    The TCP servers need to be started by awaiting the coroutine `.run`. The
-    following is an example of a basic actor instantiation: ::
+    The TCP servers need to be started by awaiting the coroutine `.run`.
+    Note that `.run` does not block so you will need to use asyncio's
+    ``run_forever`` or a similar system ::
 
-        loop = asyncio.get_event_loop()
-        my_actor = Actor('my_actor', '127.0.0.1', 9999)
-        loop.run_until_complete(my_actor.run())
+        >>> loop = asyncio.get_event_loop()
+        >>> my_actor = await Actor('my_actor', '127.0.0.1', 9999, loop=loop).run()
+        >>> loop.run_forever()
 
     Parameters
     ----------
