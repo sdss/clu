@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-17 16:15:12
+# @Last modified time: 2019-05-17 16:29:00
 
 import asyncio
 import re
@@ -16,7 +16,7 @@ import clu
 from clu.base import CommandStatus, StatusMixIn
 
 
-__all__ = ['BaseCommand', 'Command']
+__all__ = ['BaseCommand', 'Command', 'ParsedCommand']
 
 
 class BaseCommand(asyncio.Future, StatusMixIn):
@@ -36,25 +36,25 @@ class BaseCommand(asyncio.Future, StatusMixIn):
     command_id : str or int
         The ID associated to this command. As with the commander_id, it can be
         a string or an integer
+    consumer_id : str or int
+        The actor that is consuming this command. Normally this is our own
+        actor but if we are commanding another actor ``consumer_id`` will
+        be the destination actor.
     status_callback : function
         A function to call when the status changes.
     call_now : bool
         Whether to call ``status_callback`` when initialising the command.
     loop
         The event loop.
-    actor : ~clu.actor.Actor
-        The actor associated with this command.
 
     """
 
-    def __init__(self, commander_id=0, command_id=0, status_callback=None,
-                 call_now=False, loop=None, actor=None):
+    def __init__(self, commander_id=0, command_id=0, consumer_id=0,
+                 status_callback=None, call_now=False, loop=None):
 
         self.commander_id = commander_id
+        self.consumer_id = consumer_id
         self.command_id = command_id
-
-        # Set by the actor.
-        self.actor = actor
 
         self.loop = loop or asyncio.get_event_loop()
 
@@ -153,30 +153,47 @@ class BaseCommand(asyncio.Future, StatusMixIn):
 
 
 class Command(BaseCommand):
-    """A command from a user (typically the hub)."""
+    """A command from a user.
 
-    _HEADER_BODY_RE = re.compile(
-        r'((?P<command_id>\d+)(?:\s+\d+)?\s+)?((?P<command_body>[A-Za-z_].*))?$')
+    Parameters
+    ----------
+    command_string : str
+        The string that defines the body of the command.
+    actor : ~clu.actor.BaseActor
+        The actor instance associated to this command.
 
-    def __init__(self, command_string='', **kwargs):
+    """
+
+    def __init__(self, command_string='', actor=None, **kwargs):
 
         BaseCommand.__init__(self, **kwargs)
 
         #: The raw command string.
         self.raw_command_string = command_string
 
-        #: The body of the command, after parsing.
-        self.body = None
+        #: The body of the command.
+        self.body = command_string
 
         #: The actor in which this command will run.
-        self.actor = None
-
-        self.parse_command_string(command_string)
+        self.actor = actor
 
     def __str__(self):
 
         return (f'<Command (commander_id={self.commander_id!r}, '
                 f'command_id={self.command_id!r}, body={self.body!r})>')
+
+
+class ParsedCommand(Command):
+    """A command from a user (typically the hub) that gets parsed."""
+
+    _HEADER_BODY_RE = re.compile(
+        r'((?P<command_id>\d+)(?:\s+\d+)?\s+)?((?P<command_body>[A-Za-z_].*))?$')
+
+    def __init__(self, *args, **kwargs):
+
+        super().__init__(*args, **kwargs)
+
+        self.parse_command_string(self.raw_command_string)
 
     def parse_command_string(self, command_string):
         """Parse command."""

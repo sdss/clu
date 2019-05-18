@@ -214,7 +214,9 @@ class BaseActor(metaclass=abc.ABCMeta):
 
         # Empty command. Just finish the command.
         if not command.body:
-            self.write(':', '', command=command)
+            result = self.write(':', '', command=command)
+            if asyncio.iscoroutine(result):
+                self.loop.create_task(result)
             return
 
         command.set_status(command.status.RUNNING)
@@ -356,10 +358,12 @@ class Actor(BaseActor):
 
         try:
             command = Command(command_string, command_id=command_id,
-                              commander_id=commander_id, actor=self, loop=self.loop)
+                              commander_id=commander_id,
+                              consumer_id=self.name,
+                              actor=self, loop=self.loop)
             command.actor = self  # Assign the actor
         except clu.CommandError as ee:
-            self.write('f', {'text': f'Could not parse the following as a command: {ee!r}'})
+            await self.write('f', {'text': f'Could not parse the following as a command: {ee!r}'})
             return
 
         self._new_command_internal(command)

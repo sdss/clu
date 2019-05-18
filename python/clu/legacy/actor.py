@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-17 16:03:58
+# @Last modified time: 2019-05-17 16:28:31
 
 
 import warnings
@@ -15,7 +15,7 @@ import warnings
 import clu
 
 from ..actor import BaseActor
-from ..command import Command
+from ..command import ParsedCommand
 from ..protocol import TCPStreamServer
 from .tron import TronConnection
 
@@ -152,8 +152,9 @@ class LegacyActor(BaseActor):
         user_id = transport.user_id
 
         try:
-            command = Command(command_str, commander_id=user_id, actor=self, loop=self.loop)
-            command.actor = self  # Assign the actor
+            command = ParsedCommand(command_str, commander_id=user_id,
+                                    consumer_id=self.name, actor=self,
+                                    loop=self.loop)
         except clu.CommandError as ee:
             self.write('f', {'text': f'Could not parse the following as a command: {ee!r}'})
             return
