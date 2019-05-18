@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-17 17:29:03
+# @Last modified time: 2019-05-17 17:53:53
 
 import asyncio
 import collections
@@ -212,7 +212,7 @@ class CallbackScheduler(object):
         self.queue = asyncio.Queue()
 
         self.running = []  # Running callbacks
-        self._task = asyncio.create_task(self._process_queue())
+        self._task = self.loop.create_task(self._process_queue())
 
     async def stop(self):
         """Stops processing callbacks and awaits currently running ones."""
