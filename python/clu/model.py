@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-17 18:31:06
+# @Last modified time: 2019-05-17 18:45:02
 
 import json
 import pathlib
@@ -17,7 +17,7 @@ import jsonschema
 from .base import CallbackScheduler, CaseInsensitiveDict
 
 
-__all__ = ['Property', 'BaseModel', 'Model']
+__all__ = ['Property', 'BaseModel', 'Model', 'ModelSet']
 
 
 class Property(object):
@@ -97,12 +97,15 @@ class BaseModel(CaseInsensitiveDict):
         CaseInsensitiveDict.__init__(self, {})
 
     def __repr__(self):
-        return f'Model ({self.name}):\n\t {str(dict(self))}'
+        return f'<Model ({self.name})>'
+
+    def __str__(self):
+        return str(self.flatten())
 
     def flatten(self):
         """Returns a dictionary of values.
 
-        Return a dictionary in which the `TronKey` instances are replaced
+        Return a dictionary in which the `Property` instances are replaced
         with their values.
 
         """
