@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-17 16:06:07
+# @Last modified time: 2019-05-17 17:09:47
 
 import abc
 import asyncio
@@ -20,6 +20,7 @@ import ruamel.yaml
 
 import clu
 
+from .base import CommandStatus
 from .command import Command
 from .misc import get_logger
 from .parser import command_parser
@@ -303,6 +304,9 @@ class Actor(BaseActor):
         # Binds a queue to the replies exchange
         self.listener = TopicListener(self.handle_reply, bindings=[self.name, 'broadcast.#'])
 
+        #: dict: External commands currently running.
+        self.running_commands = {}
+
     def __repr__(self):
 
         if self.commander.connection is None:
@@ -378,22 +382,39 @@ class Actor(BaseActor):
 
         """
 
-        with message.process():
+        # Acknowledges receipt of message
+        message.ack()
 
-            routing_key = message.routing_key
+        message_info = message.info()
+        headers = message_info['headers']
 
-            # Ignores broadcast that come from this actor.
-            if 'broadcast' in routing_key and self.name in routing_key:
-                return
+        if 'message_code' in headers:
+            message_code = headers['message_code'].decode()
+        else:
+            message_code = None
+            self.log.warning(f'received message without message_code: {message}')
 
-            print(self.name, message.info()['headers'], message.body.decode())
+        command_id = message.correlation_id
+        routing_key = message.routing_key
 
-    async def send_command(self, actor, command_string, command_id=None):
+        # Ignores broadcast that come from this actor.
+        if 'broadcast' in routing_key and self.name in routing_key:
+            return
+
+        # If the command is running we check if the message code indicates
+        # the command is done and, if so, sets the result in the Future.
+        if command_id in self.running_commands:
+            is_done = CommandStatus.get_inverse_dict()[message_code].is_done
+            if is_done:
+                command = self.running_commands.pop(command_id)
+                command.set_result(None)
+
+    async def send_command(self, consumer, command_string, command_id=None):
         """Commands another actor over its RCP queue.
 
         Parameters
         ----------
-        actor : str
+        consumer : str
             The actor we are commanding.
         command_string : str
             The command string that will be parsed by the remote actor.
@@ -404,6 +425,15 @@ class Actor(BaseActor):
         """
 
         command_id = command_id or str(uuid.uuid4())
+
+        # Creates and registers a command.
+        command = Command(command_string=command_string,
+                          command_id=command_id,
+                          commander_id=self.name,
+                          consumer_id=consumer,
+                          actor=self, loop=self.loop)
+
+        self.running_commands[command_id] = command
 
         headers = {'command_id': command_id,
                    'commander_id': self.name}
@@ -416,9 +446,9 @@ class Actor(BaseActor):
                           headers=headers,
                           correlation_id=command_id,
                           reply_to=self.listener.queue.name),
-            routing_key=actor)
+            routing_key=consumer)
 
-        return
+        return command
 
     async def write(self, msg_code, message=None, command=None, broadcast=False, **kwargs):
         """Writes a message to user(s).
@@ -446,15 +476,24 @@ class Actor(BaseActor):
         assert isinstance(message, dict), 'message must be a dictionary'
 
         message.update(kwargs)
-        print(message)
+
         message_json = json.dumps(message).encode()
 
         if command is None:
             broadcast = True
 
-        headers = {'message_code': msg_code, 'sender': self.name}
+        commander_id = command.commander_id if command else None
+        command_id = command.command_id if command else None
+
+        headers = {'message_code': msg_code,
+                   'commander_id': commander_id,
+                   'command_id': command_id}
+
         routing_key = f'broadcast.{self.name}' if broadcast else command.commander_id
 
         await self.listener.exchange.publish(
-            apika.Message(message_json, content_type='text/json', headers=headers),
+            apika.Message(message_json,
+                          content_type='text/json',
+                          headers=headers,
+                          correlation_id=command_id),
             routing_key=routing_key)
