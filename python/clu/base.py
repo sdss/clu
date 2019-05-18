@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-17 17:05:01
+# @Last modified time: 2019-05-17 17:14:09
 
 import asyncio
 import contextlib
@@ -16,7 +16,8 @@ import functools
 import json
 
 
-__ALL__ = ['CommandStatus', 'StatusMixIn', 'escape', 'CallbackScheduler']
+__ALL__ = ['CommandStatus', 'StatusMixIn', 'escape', 'CallbackScheduler',
+           'CaseInsensitiveDict']
 
 
 class Maskbit(enum.Flag):
@@ -274,3 +275,43 @@ def escape(text):
     """
 
     return json.dumps(text)
+
+
+class CaseInsensitiveDict(collections.OrderedDict):
+    """A dictionary that performs case-insensitive operations."""
+
+    def __init__(self, values):
+
+        self._lc = []
+
+        collections.OrderedDict.__init__(self, values)
+
+        self._lc = [key.lower() for key in values]
+        assert len(set(self._lc)) == len(self._lc), 'the are duplicated items in the dict.'
+
+    def __get_key__(self, key):
+        """Returns the correct value of the key, regardless of its case."""
+
+        try:
+            idx = self._lc.index(key.lower())
+        except ValueError:
+            return key
+
+        return list(self)[idx]
+
+    def __getitem__(self, key):
+        return collections.OrderedDict.__getitem__(self, self.__get_key__(key))
+
+    def __setitem__(self, key, value):
+
+        if key.lower() not in self._lc:
+            self._lc.append(key.lower())
+            collections.OrderedDict.__setitem__(self, key, value)
+        else:
+            collections.OrderedDict.__setitem__(self, self.__get_key__(key), value)
+
+    def __contains__(self, key):
+        return collections.OrderedDict.__contains__(self, self.__get_key__(key))
+
+    def __eq__(self, key):
+        return collections.OrderedDict.__eq__(self, self.__get_key__(key))
