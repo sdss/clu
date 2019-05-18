@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-14 15:18:21
+# @Last modified time: 2019-05-17 17:05:01
 
 import asyncio
 import contextlib
@@ -98,6 +98,17 @@ class CommandStatus(Maskbit):
         """Command is being cancelled or is failing."""
 
         return self in self.FAILING_STATES
+
+    @staticmethod
+    def get_inverse_dict():
+        """Gets a reversed dictionary of code to status.
+
+        Note that the inverse dictionary is not unique and you can get
+        different statuses associated with the same code.
+
+        """
+
+        return dict((status.code, status) for status in CommandStatus if status.code)
 
 
 class StatusMixIn(object):
