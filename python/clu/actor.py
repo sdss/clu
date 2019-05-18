@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-17 17:24:17
+# @Last modified time: 2019-05-18 12:11:11
 
 import abc
 import asyncio
@@ -462,12 +462,13 @@ class Actor(BaseActor):
 
         return command
 
-    async def write(self, msg_code, message=None, command=None, broadcast=False, **kwargs):
+    async def write(self, message_code, message=None, command=None,
+                    broadcast=False, **kwargs):
         """Writes a message to user(s).
 
         Parameters
         ----------
-        msg_code : str
+        message_code : str
             The message code (e.g., ``'i'`` or ``':'``).
         message : dict
             The keywords to be output. Must be a dictionary of pairs
@@ -497,7 +498,7 @@ class Actor(BaseActor):
         commander_id = command.commander_id if command else None
         command_id = command.command_id if command else None
 
-        headers = {'message_code': msg_code,
+        headers = {'message_code': message_code,
                    'commander_id': commander_id,
                    'command_id': command_id}
 

@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-17 17:25:39
+# @Last modified time: 2019-05-18 12:12:06
 
 
 import warnings
@@ -163,12 +163,12 @@ class LegacyActor(BaseActor):
         self._new_command_internal(command)
 
     @staticmethod
-    def format_user_output(msg_code, msg_str=None, user_id=None, command_id=None):
+    def format_user_output(message_code, msg_str=None, user_id=None, command_id=None):
         """Formats a string to send to users."""
 
         msg_str = '' if msg_str is None else ' ' + msg_str
 
-        return f'{command_id:d} {user_id:d} {msg_code:s}{msg_str:s}'
+        return f'{command_id:d} {user_id:d} {message_code:s}{msg_str:s}'
 
     def show_new_user_info(self, user_id):
         """Shows information for new users. Called when a new user connects."""
@@ -248,13 +248,13 @@ class LegacyActor(BaseActor):
 
         self.tron.send_command(target, command_string, mid=command_id)
 
-    def write(self, msg_code, message=None, command=None, user_id=None,
+    def write(self, message_code, message=None, command=None, user_id=None,
               command_id=None, escape=True, concatenate=True, broadcast=False):
         """Writes a message to user(s).
 
         Parameters
         ----------
-        msg_code : str
+        message_code : str
             The message code (e.g., ``'i'`` or ``':'``).
         message : str or dict
             The text to be output. It can be either a string with the keywords
@@ -305,7 +305,7 @@ class LegacyActor(BaseActor):
 
         for line in lines:
 
-            full_msg_str = self.format_user_output(msg_code, line,
+            full_msg_str = self.format_user_output(message_code, line,
                                                    user_id=user_id,
                                                    command_id=command_id)
 

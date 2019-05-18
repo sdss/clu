@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-17 16:29:00
+# @Last modified time: 2019-05-18 12:11:21
 
 import asyncio
 import re
@@ -129,12 +129,12 @@ class BaseCommand(asyncio.Future, StatusMixIn):
             if self.watcher is not None:
                 self.watcher.set()
 
-    def write(self, msg_code, message=None, broadcast=False, **kwargs):
+    def write(self, message_code, message=None, broadcast=False, **kwargs):
         """Writes to the user(s).
 
         Parameters
         ----------
-        msg_code : str
+        message_code : str
             The message code (e.g., ``'i'`` or ``':'``).
         message : str or dict
             The text to be output. If `None`, only the code will be written.
@@ -145,7 +145,7 @@ class BaseCommand(asyncio.Future, StatusMixIn):
             raise clu.CommandError('An actor has not been defined for '
                                    'this command. Cannot write to users.')
 
-        result = self.actor.write(msg_code, message=message, command=self,
+        result = self.actor.write(message_code, message=message, command=self,
                                   broadcast=broadcast, **kwargs)
 
         if asyncio.iscoroutine(result):
