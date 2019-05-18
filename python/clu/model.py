@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-17 18:45:02
+# @Last modified time: 2019-05-17 18:47:34
 
 import json
 import pathlib
@@ -182,10 +182,10 @@ class ModelSet(dict):
 
     Example
     -------
-    ::
+
         >>> model_set = ModelSet('~/my_models', model_names=['sop', 'guider'])
         >>> model_set['sop']
-        Model([('test', <Property (text): None>), ...
+        <Model (name='sop')>
 
     """
 

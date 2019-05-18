@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-14 17:04:44
+# @Last modified time: 2019-05-17 18:38:54
 
 import os
 
@@ -104,7 +104,8 @@ releases_unstable_prehistory = True
 # Intersphinx mappings
 intersphinx_mapping = {'python': ('https://docs.python.org/3.7', None),
                        'numpy': ('http://docs.scipy.org/doc/numpy/', None),
-                       'click': ('https://click.palletsprojects.com/en/7.x/', None)}
+                       'click': ('https://click.palletsprojects.com/en/7.x/', None),
+                       'aio_pika': ('https://aio-pika.readthedocs.io/en/latest/', None)}
 # 'astropy': ('http://docs.astropy.org/en/latest', None),
 # 'matplotlib': ('https://matplotlib.org/', None),
 # 'scipy': ('https://docs.scipy.org/doc/scipy/reference', None)}

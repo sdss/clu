@@ -21,6 +21,9 @@ Command
 Legacy
 ------
 
+.. automodule:: clu.legacy.actor
+    :members: LegacyActor
+
 .. automodule:: clu.legacy.tron
     :members: TronCommander, TronModel, TronKey
 
@@ -39,6 +42,13 @@ MixIns
 ------
 
 .. autoclass:: clu.base.StatusMixIn
+.. autoclass:: clu.base.CaseInsensitiveDict
+
+
+Model
+-----
+
+.. automodule:: clu.model
 
 
 Parser
