@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-14 19:07:46
+# @Last modified time: 2019-05-18 16:59:30
 
 import asyncio
 import contextlib
@@ -56,7 +56,8 @@ class Device(object):
         gets a single argument with all the buffer received from the client
         until a newline arrives. If no callback is specified,
         `.process_message` is called. The callback is always awaited and it is
-        the user's responsibility to handle long tasks appropriately.
+        the user's responsibility to handle long tasks appropriately. If the
+        callback is not a coroutine, it will be converted to one.
 
     """
 
@@ -70,7 +71,8 @@ class Device(object):
         self.scheduler = CallbackScheduler()
 
         self.callback = callback or self.process_message
-        assert asyncio.iscoroutinefunction(self.callback)
+        if not asyncio.iscoroutinefunction(self.callback):
+            self.callback = asyncio.coroutine(self.callback)
 
     async def start(self):
         """Opens the connection and starts the listener."""
