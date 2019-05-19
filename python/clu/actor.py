@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-19 15:56:27
+# @Last modified time: 2019-05-19 16:03:45
 
 import abc
 import asyncio
@@ -185,19 +185,19 @@ class BaseActor(metaclass=abc.ABCMeta):
     def new_command(self):
         """Handles a new command.
 
-        Must be overridden by the subclass and call ``_new_command_internal``
+        Must be overridden by the subclass and call `.parse_command`
         with a `.Command` object.
 
         """
 
         pass
 
-    def _new_command_internal(self, command):
+    def parse_command(self, command):
         """Handles a new command received by the actor."""
 
         try:
 
-            self.parse(command)
+            self._parse(command)
             return command
 
         except clu.CommandParserError as ee:
@@ -212,7 +212,7 @@ class BaseActor(metaclass=abc.ABCMeta):
 
         command.set_status(command.status.FAILED, message=f'Command {command.body!r} failed.')
 
-    def parse(self, command):
+    def _parse(self, command):
         """Parses an user command with the default parser.
 
         This method can be overridden to use a custom parser.
@@ -409,7 +409,7 @@ class Actor(BaseActor):
             await self.write('f', {'text': f'Could not parse the following as a command: {ee!r}'})
             return
 
-        self._new_command_internal(command)
+        self.parse_command(command)
 
     def handle_reply(self, message):
         """Handles a reply received by the message and updates the models.
