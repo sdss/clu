@@ -46,33 +46,6 @@ which will create the connection to RabbitMQ, set up the exchanges and queues, a
     loop.create_task(main(loop))
     loop.run_forever()
 
-.. _device-example:
-
-Frequently you will end up subclassing `.Actor`, for example if you want to start a new :ref:`device <devices>`. That's relatively straightforward to do ::
-
-    from clu import Actor, Device
-
-    class MyActor(Actor):
-
-        def __init__(self, *args, device_host, device_port, **kwargs):
-
-            super().__init__(*args, **kwargs)
-
-            self.device = Device(device_host, device_port,
-                                 callback=self.process_device)
-
-        async def run():
-
-            await self.device.start()
-            await super().run()
-
-        async def process_device(self, line):
-
-            # Here we do something with the line received
-            # from the device.
-
-            return
-
 In these examples we have used the new-style `.Actor` class, but it's trivial to replace it with the legacy actor class `.LegacyActor`. The parameters to start a `.LegacyActor` are the same with the exception that we pass the hostname and port where the actor will be serving, and we can provide the ``tron_host`` and ``tron_port`` to connect to an instance of ``Tron``. We'll talk more about legacy actor in a :ref:`following section <legacy-actors>`.
 
 Configuration files
@@ -132,6 +105,8 @@ When an actor gets instantiated, a new logger is attached. The path to the file 
 
 The logger provides a few niceties, such as coloured console output and exception traceback formatting. It also captures the warnings issues with the ``warnings`` module.
 
+It is possible to pass your own `~logging.Logger` instance to the actor via the ``log`` parameter, or set ``log=False`` to disable logging.
+
 
 Defining commands
 -----------------
@@ -149,21 +124,21 @@ Ultimately the whole process of receiving a command string, parsing it, creating
 
         return
 
-We'll worry about what ``@command_parser.command()`` means later. For now lets focus on the function. ``ping()`` gets called when the parser receives the ``ping`` string. The function always receives a `.Command` instance as the first argument, followed by other arguments or parameters the command accepts (none for ``ping``). In this case command function simply replies with the keyword ``text`` set to ``'Pong'`` and then marks the status as `~.CommandStatus.DONE`. This is an easy way of knowing if the actor is running and alive.
+We'll worry about what ``@command_parser.command()`` means later. For now lets focus on the function. ``ping()`` gets called when the parser receives the ``ping`` string. The function always receives a `.Command` instance as the first argument, followed by other arguments or parameters the command accepts (none for ``ping``). In this case the command function simply replies with the keyword ``text`` set to ``'Pong'`` and then marks the status as `~.CommandStatus.DONE`. This is an easy way of knowing if the actor is running and alive.
 
 The command parser
 ~~~~~~~~~~~~~~~~~~
 
-So, what was that weird decorator wrapping the command function? CLU uses `click <https://click.palletsprojects.com/en/7.x/>`_ as its default command parser. If you're not familiar with that package you should go and read their documentation since you'll need it to define new commands.
+So, what was that weird decorator wrapping the command function? CLU uses `click <https://click.palletsprojects.com/en/7.x/>`_ as its default command parser. If you're not familiar with that package you should go and read their `documentation <click>`_ since you'll need it to define new commands.
 
-The entry point for all commands is the ``command_parser`` `group <https://click.palletsprojects.com/en/7.x/commands/>`_. Any command added to ``command_parser`` will become an actor command. Let's add a simple status command that accepts an optional parameter ::
+The entry point for all commands is the ``command_parser`` `group <https://click.palletsprojects.com/en/7.x/commands/>`_. Any command added to ``command_parser`` will become an actor command. Let's add a simple status command that accepts an optional flag ``--verbose`` ::
 
     import click
     from clu import command_parser
 
     @command_parser.command()
-    @click.option('--verbose', is_flag=True, help='returns extra information')
-    def ping(command, verbose=False):
+    @click.option('--verbose', is_flag=True, help='outputs extra information')
+    def status(command, verbose=False):
         """Returns the status."""
 
         command.write(text='Everything is ok.')
@@ -279,7 +254,32 @@ Devices
 
 A `.Device` provides a TCP socket to a remote server and a way of handling messages from it. Devices are usually small pieces of hardware that do not need a dedicated actor and that have a limited command set. For example, a telescope control actor can have multiple devices (mirror actuators, lamps, flat field screens), each one of them behind a terminal server.
 
-Devices are usually instantiated and started with the actor as we :ref:`previously saw <device-example>`. The callback passed to the `.Device` must be a coroutine that handles each line received from the actor. We can write to the device via the `.Device.write` method.
+Devices are usually instantiated and started with the actor by subclassing `.Actor` or `.LegacyActor`, which is quite straightforward to do ::
+
+    from clu import Actor, Device
+
+    class MyActor(Actor):
+
+        def __init__(self, *args, device_host, device_port, **kwargs):
+
+            super().__init__(*args, **kwargs)
+
+            self.device = Device(device_host, device_port,
+                                 callback=self.process_device)
+
+        async def run():
+
+            await self.device.start()
+            await super().run()
+
+        async def process_device(self, line):
+
+            # Here we do something with the line received
+            # from the device.
+
+            return
+
+We can write to the device via the `.Device.write` method. The callback passed to the `.Device` must be a coroutine that handles each line received from the actor.
 
 
 .. _asyncio: https://docs.python.org/3/library/asyncio.html
