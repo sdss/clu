@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-18 22:44:03
+# @Last modified time: 2019-05-19 01:21:14
 
 import abc
 import asyncio
@@ -310,8 +310,8 @@ class Actor(BaseActor):
     log_dir : str
         The directory where to store the logs. Defaults to
         ``$HOME/logs/<name>`` where ``<name>`` is the name of the actor.
-    log : logging.Logger
-        A `logging.Logger` instance to be used for logging instead of creating
+    log : ~logging.Logger
+        A `~logging.Logger` instance to be used for logging instead of creating
         a new one.
 
     """
