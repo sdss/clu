@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-18 12:12:06
+# @Last modified time: 2019-05-18 17:40:27
 
 
 import warnings
@@ -116,9 +116,9 @@ class LegacyActor(BaseActor):
 
         config_dict = cls._parse_config(config)
 
-        args = [config_dict.get('name'),
-                config_dict.get('host'),
-                config_dict.get('port')]
+        args = list(args) + [config_dict.get('name'),
+                             config_dict.get('host'),
+                             config_dict.get('port')]
 
         if 'tron' in config_dict:
             kwargs.update({'tron_host': config_dict['tron'].get('host', None)})

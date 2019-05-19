@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-18 17:09:31
+# @Last modified time: 2019-05-18 17:42:46
 
 import abc
 import asyncio
@@ -146,13 +146,18 @@ class BaseActor(metaclass=abc.ABCMeta):
 
         config_dict = cls._parse_config(config)
 
+        # If we subclass and override from_config we need to super() it and
+        # send all the arguments already unpacked. Otherwise we get the name
+        # from the config.
+        if len(args) == 0:
+            args = [config_dict['name']]
+
         version = config_dict.get('version', '?')
         log_dir = config_dict.get('log_dir', None)
 
         # We also pass *args and **kwargs in case the actor has been subclassed
         # and the subclass' __init__ accepts different arguments.
-        new_actor = cls(config_dict['name'], *args,
-                        version=version, log_dir=log_dir, **kwargs)
+        new_actor = cls(*args, version=version, log_dir=log_dir, **kwargs)
 
         return new_actor
 
@@ -363,8 +368,8 @@ class Actor(BaseActor):
 
         config_dict = cls._parse_config(config)
 
-        args = [config_dict.get('user'),
-                config_dict.get('host')]
+        args = list(args) + [config_dict.get('user'),
+                             config_dict.get('host')]
 
         return super().from_config(config_dict, *args, **kwargs)
 
