@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-18 12:11:21
+# @Last modified time: 2019-05-18 20:19:14
 
 import asyncio
 import re
@@ -87,7 +87,7 @@ class BaseCommand(asyncio.Future, StatusMixIn):
 
         self.set_state(status)
 
-    def set_status(self, status, message=None):
+    def set_status(self, status, message=None, **kwargs):
         """Same as `.status` but allows to specify a message to the users."""
 
         if self.status.is_done:
@@ -115,7 +115,7 @@ class BaseCommand(asyncio.Future, StatusMixIn):
             else:
                 message = {'text': message}
 
-            self.write(status_code, message)
+            self.write(status_code, message, **kwargs)
 
             self._status = status
 
