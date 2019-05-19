@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-19 01:21:14
+# @Last modified time: 2019-05-19 14:46:49
 
 import abc
 import asyncio
@@ -35,10 +35,6 @@ except ImportError:
 
 
 __all__ = ['BaseActor', 'Actor', 'command_parser']
-
-
-__COMMANDER_EXCHANGE__ = 'commands'
-__REPLIES_EXCHANGE__ = 'replies'
 
 
 class BaseActor(metaclass=abc.ABCMeta):
@@ -316,6 +312,8 @@ class Actor(BaseActor):
 
     """
 
+    __EXCHANGE_NAME__ = 'actor_exchange'
+
     #: list: Arguments to be passed to each command in the parser.
     #: Note that the command is always passed first.
     parser_args = []
@@ -332,11 +330,11 @@ class Actor(BaseActor):
         self.user = user
         self.host = host
 
-        # Binds a queue to the command exchange
-        self.commander = TopicListener(self.new_command, bindings=[self.name])
+        self.commands_queue = None
+        self.replies_queue = None
 
-        # Binds a queue to the replies exchange
-        self.listener = TopicListener(self.handle_reply, bindings=[self.name, 'broadcast.#'])
+        # Creates the connection to the AMQP broker
+        self.connection = TopicListener(self.user, self.host)
 
         #: dict: External commands currently running.
         self.running_commands = {}
@@ -350,20 +348,27 @@ class Actor(BaseActor):
 
         return f'<{str(self)} (name={self.name}, {url}>'
 
-    async def run(self):
-        """Starts the server."""
+    async def run(self, exchange_name=__EXCHANGE_NAME__):
+        """Starts the connection to the AMQP broker."""
 
-        await self.commander.connect(user=self.user, host=self.host,
-                                     queue_name=f'{self.name}_commands',
-                                     exchange_name=__COMMANDER_EXCHANGE__,
-                                     loop=self.loop)
-        self.log.info(f'commands queue bound to {self.commander.connection.url!s}')
+        # Starts the connection and creates the exchange
+        await self.connection.connect(exchange_name, loop=self.loop)
 
-        await self.listener.connect(channel=self.commander.channel,
-                                    queue_name=f'{self.name}_replies',
-                                    exchange_name=__REPLIES_EXCHANGE__,
-                                    loop=self.loop)
-        self.log.info(f'replies queue bound to {self.listener.connection.url!s}')
+        # Binds the commands queue.
+        self.commands_queue = await self.connection.add_queue(
+            f'{self.name}_commands', callback=self.new_command,
+            bindings=[f'command.{self.name}.#'])
+
+        self.log.info(f'commands queue {self.commands_queue.name!r} bound '
+                      f'to {self.connection.connection.url!s}')
+
+        # Binds the replies queue.
+        self.replies_queue = await self.connection.add_queue(
+            f'{self.name}_replies', callback=self.handle_reply,
+            bindings=[f'reply.{self.name}.#', 'reply.broadcast.#'])
+
+        self.log.info(f'replies queue {self.replies_queue.name!r} bound '
+                      f'to {self.connection.connection.url!s}')
 
         return self
 
@@ -393,7 +398,7 @@ class Actor(BaseActor):
         commander_id = headers['commander_id'].decode()
         command_id = headers['command_id'].decode()
         command_string = command_body['command_string']
-
+        print(self.name, command_string)
         try:
             command = Command(command_string, command_id=command_id,
                               commander_id=commander_id,
@@ -443,6 +448,8 @@ class Actor(BaseActor):
                 command = self.running_commands.pop(command_id)
                 command.set_result(None)
 
+        print(self.name, message_code, message.body.decode())
+
     async def send_command(self, consumer, command_string, command_id=None):
         """Commands another actor over its RCP queue.
 
@@ -472,15 +479,18 @@ class Actor(BaseActor):
         headers = {'command_id': command_id,
                    'commander_id': self.name}
 
+        # The routing key has the topic command and the name of the commanded actor.
+        routing_key = f'command.{consumer}'
+
         message_body = {'command_string': command_string}
 
-        await self.commander.exchange.publish(
+        await self.connection.exchange.publish(
             apika.Message(json.dumps(message_body).encode(),
                           content_type='text/json',
                           headers=headers,
                           correlation_id=command_id,
-                          reply_to=self.listener.queue.name),
-            routing_key=consumer)
+                          reply_to=self.replies_queue.name),
+            routing_key=routing_key)
 
         return command
 
@@ -524,9 +534,12 @@ class Actor(BaseActor):
                    'commander_id': commander_id,
                    'command_id': command_id}
 
-        routing_key = f'broadcast.{self.name}' if broadcast else command.commander_id
+        if broadcast:
+            routing_key = f'reply.broadcast'
+        else:
+            routing_key = f'reply.{command.commander_id}'
 
-        await self.listener.exchange.publish(
+        await self.connection.exchange.publish(
             apika.Message(message_json,
                           content_type='text/json',
                           headers=headers,

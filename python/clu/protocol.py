@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-17 14:24:19
+# @Last modified time: 2019-05-19 14:38:28
 
 import asyncio
 
@@ -393,60 +393,37 @@ class TopicListener(object):
 
     Parameters
     ----------
-    callback
-        A callable that will be called when a new message is received in
-        the queue. Can be a coroutine.
-    bindings : list or str
-        The list of bindings for the queue. Can be a list of string or a single
-        string in which the bindings are comma-separated.
+    user : str
+        The user to connect to the RabbitMQ broker.
+    host : str
+        The host where the RabbitMQ message broker lives.
 
     """
 
-    __EXCHANGE_NAME__ = None
-    __EXCHANGE_TYPE__ = apika.ExchangeType.TOPIC
-
-    user = None
-    host = None
-
-    loop = None
-
-    connection = None
-    channel = None
-    exchange = None
-    queue = None
-
-    def __init__(self, callback=None, bindings='*'):
+    def __init__(self, user=None, host=None):
 
         if not apika:
             raise ImportError('cannot use TopicListener without aoi_pika.')
 
-        self.callback = callback
+        self.user = user
+        self.host = host
 
-        if isinstance(bindings, str):
-            self.bindings = bindings.split(',')
-        elif isinstance(bindings, (list, tuple)):
-            self.bindings = list(bindings)
-        else:
-            raise TypeError('invalid type for bindings {bindings!r}.')
+        self.connection = None
+        self.channel = None
+        self.exchange = None
+        self.queues = []
 
-    async def connect(self, user=None, host=None, channel=None,
-                      queue_name=None, exchange_name=None,
-                      exchange_type=__EXCHANGE_TYPE__, loop=None):
-        """Initialise the connection and binds the queue.
+    async def connect(self, exchange_name, channel=None, loop=None,
+                      exchange_type=apika.ExchangeType.TOPIC):
+        """Initialise the connection.
 
         Parameters
         ----------
-        user : str
-            The user to connect to the RabbitMQ broker.
-        host : str
-            The host where the RabbitMQ message broker lives.
+        exchange_name : str
+            The name of the exchange to create.
         channel
             If specified, ``user`` and ``host`` are ignored and the connection
             and channel are set from ``channel``.
-        queue_name : str
-            The name of the queue.
-        exchange_name : str
-            The name of the exchange to create.
         exchange_type : str
             The type of exchange to create.
         loop
@@ -454,18 +431,16 @@ class TopicListener(object):
 
         """
 
-        # To make sure things are internally consistent
-        self.__EXCHANGE_NAME__ = exchange_name
-        self.__EXCHANGE_TYPE__ = exchange_type
-
         self.loop = loop or asyncio.get_event_loop()
 
         if not channel:
 
-            self.user = user
-            self.host = host
+            assert self.user and self.host, 'either user or host are not set.'
 
-            self.connection = await apika.connect_robust(user=user, host=host, loop=self.loop)
+            self.connection = await apika.connect_robust(user=self.user,
+                                                         host=self.host,
+                                                         loop=self.loop)
+
             self.channel = await self.connection.channel()
             await self.channel.set_qos(prefetch_count=1)
 
@@ -481,17 +456,44 @@ class TopicListener(object):
                                                             type=exchange_type,
                                                             auto_delete=True)
 
+        return self
+
+    async def add_queue(self, queue_name, callback=None, bindings='*'):
+        """Adds a queue with bindings.
+
+        Parameters
+        ----------
+        queue_name : str
+            The name of the queue to create.
+        callback
+            A callable that will be called when a new message is received in
+            the queue. Can be a coroutine.
+        bindings : list or str
+            The list of bindings for the queue. Can be a list of string or a
+            single string in which the bindings are comma-separated.
+
+        """
+
+        if isinstance(bindings, str):
+            bindings = bindings.split(',')
+        elif isinstance(bindings, (list, tuple)):
+            bindings = list(bindings)
+        else:
+            raise TypeError('invalid type for bindings {bindings!r}.')
+
         try:
-            self.queue = await self.channel.declare_queue(queue_name, exclusive=True)
+            queue = await self.channel.declare_queue(queue_name, exclusive=True)
         except aiormq.exceptions.ChannelLockedResource:
             raise CluError(f'cannot create queue {queue_name}. '
                            'This may indicate that another instance of the '
                            'same actor is running.')
 
-        for binding in self.bindings:
-            await self.queue.bind(self.exchange, routing_key=binding)
+        for binding in bindings:
+            await queue.bind(self.exchange, routing_key=binding)
 
-        if self.callback:
-            await self.queue.consume(self.callback)
+        self.queues.append(queue)
 
-        return self
+        if callback:
+            queue.consumer_task = self.loop.create_task(queue.consume(callback))
+
+        return queue
