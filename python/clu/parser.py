@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-14 17:08:27
+# @Last modified time: 2019-05-18 19:39:58
 
 import asyncio
 import functools
@@ -91,8 +91,7 @@ def timeout(seconds):
 
 
 @click.group(cls=ClickGroup)
-@click.pass_context
-def command_parser(ctx):
+def command_parser():
     pass
 
 
@@ -113,7 +112,7 @@ def help(ctx, *args):
 
     command = args[0]
 
-    for line in ctx.parent.get_help().splitlines():
+    for line in ctx.get_help().splitlines():
         command.write('w', {'text': line})
 
     return

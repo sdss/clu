@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-18 18:01:05
+# @Last modified time: 2019-05-18 19:39:46
 
 import abc
 import asyncio
@@ -236,13 +236,20 @@ class BaseActor(metaclass=abc.ABCMeta):
         command.set_status(command.status.RUNNING)
 
         try:
+
             # We call the command with a custom context to get around
             # the default handling of exceptions in Click. This will force
             # exceptions to be raised instead of redirected to the stdout.
             # See http://click.palletsprojects.com/en/7.x/exceptions/
-            ctx = command_parser.make_context('command-parser',
+            ctx = command_parser.make_context(f'{self.name}-command-parser',
                                               command.body.split(),
                                               obj={'parser_args': parser_args})
+
+            # Makes sure this is the global context. This solves problems when
+            # the actor have been started from inside an existing context,
+            # for example when it's called from a CLI click application.
+            click.globals.push_context(ctx)
+
             with ctx:
                 command_parser.invoke(ctx)
 
