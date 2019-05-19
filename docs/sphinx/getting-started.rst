@@ -281,5 +281,7 @@ Devices are usually instantiated and started with the actor by subclassing `.Act
 
 We can write to the device via the `.Device.write` method. The callback passed to the `.Device` must be a coroutine that handles each line received from the actor.
 
+It is possible, in principle, to connect directly to another legacy actor using a device (as long as the actor accepts multiple connections) and handle the commands and replies directly. This is strongly discouraged since it contravenes the :ref:`legacy protocol <opscore-protocol>`; all communication to and from other legacy actors must happen through ``Tron``.
+
 
 .. _asyncio: https://docs.python.org/3/library/asyncio.html
