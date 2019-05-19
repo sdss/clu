@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-18 19:39:46
+# @Last modified time: 2019-05-18 20:33:29
 
 import abc
 import asyncio
@@ -482,7 +482,7 @@ class Actor(BaseActor):
 
         return command
 
-    async def write(self, message_code, message=None, command=None,
+    async def write(self, message_code='i', message=None, command=None,
                     broadcast=False, **kwargs):
         """Writes a message to user(s).
 

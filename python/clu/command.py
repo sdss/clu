@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-18 20:19:14
+# @Last modified time: 2019-05-18 20:33:09
 
 import asyncio
 import re
@@ -129,7 +129,7 @@ class BaseCommand(asyncio.Future, StatusMixIn):
             if self.watcher is not None:
                 self.watcher.set()
 
-    def write(self, message_code, message=None, broadcast=False, **kwargs):
+    def write(self, message_code='i', message=None, broadcast=False, **kwargs):
         """Writes to the user(s).
 
         Parameters

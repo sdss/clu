@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-18 19:29:48
+# @Last modified time: 2019-05-18 20:33:38
 
 
 import warnings
@@ -248,7 +248,7 @@ class LegacyActor(BaseActor):
 
         self.tron.send_command(target, command_string, mid=command_id)
 
-    def write(self, message_code, message=None, command=None, user_id=None,
+    def write(self, message_code='i', message=None, command=None, user_id=None,
               command_id=None, escape=True, concatenate=True, broadcast=False, **kwargs):
         """Writes a message to user(s).
 
