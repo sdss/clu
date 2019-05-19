@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-19 14:46:49
+# @Last modified time: 2019-05-19 15:56:27
 
 import abc
 import asyncio
@@ -398,7 +398,7 @@ class Actor(BaseActor):
         commander_id = headers['commander_id'].decode()
         command_id = headers['command_id'].decode()
         command_string = command_body['command_string']
-        print(self.name, command_string)
+
         try:
             command = Command(command_string, command_id=command_id,
                               commander_id=commander_id,
@@ -447,8 +447,6 @@ class Actor(BaseActor):
             if is_done:
                 command = self.running_commands.pop(command_id)
                 command.set_result(None)
-
-        print(self.name, message_code, message.body.decode())
 
     async def send_command(self, consumer, command_string, command_id=None):
         """Commands another actor over its RCP queue.
@@ -532,7 +530,8 @@ class Actor(BaseActor):
 
         headers = {'message_code': message_code,
                    'commander_id': commander_id,
-                   'command_id': command_id}
+                   'command_id': command_id,
+                   'from': self.name}
 
         if broadcast:
             routing_key = f'reply.broadcast'
