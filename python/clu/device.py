@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-18 16:59:30
+# @Last modified time: 2019-05-18 21:55:36
 
 import asyncio
 import contextlib
@@ -66,6 +66,7 @@ class Device(object):
         self.host = host
         self.port = port
 
+        #: TCPStreamClientContainer: the connection to the device.
         self.connection = None
         self.listener = None
         self.scheduler = CallbackScheduler()
@@ -100,6 +101,14 @@ class Device(object):
             return False
 
         return not self.connection.writer.is_closing()
+
+    def write(self, message, newline='\n'):
+        """Write to the device. The message is encoded and a new line added."""
+
+        assert self.is_connected() and self.connection.writer, 'device is not connected'
+
+        message = message.strip() + newline
+        self.connection.writer.write(message.encode())
 
     async def _listen(self):
         """Listens to the reader stream and callbacks on message received."""
