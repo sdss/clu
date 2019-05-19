@@ -7,7 +7,8 @@ API Reference
 Actor
 -----
 
-.. automodule:: clu.actor
+.. autoclass:: clu.actor.BaseActor
+.. autoclass:: clu.actor.Actor
 
 .. automodule:: clu.device
 

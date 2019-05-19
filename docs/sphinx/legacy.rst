@@ -3,3 +3,8 @@
 
 Legacy actors
 =============
+
+.. _opscore-protocol:
+
+The opscore protocol
+--------------------

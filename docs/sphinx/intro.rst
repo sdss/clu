@@ -11,6 +11,7 @@ Features
 - New-style `actor <clu.actor.Actor>` with message passing based on `AMQP <https://www.amqp.org/>`_ and `RabbitMQ <https://rabbitmq.com>`_.
 - Legacy-style `actor <clu.legacy.actor.LegacyActor>` for TCP socket communication through `Tron <clu.legacy.tron.TronConnection>`.
 - Tools for device handling.
+- Messages are validated JSON strings.
 
 .. warning:: CLU is under active development and it must be considered in beta stage. The API is changing quickly and breaking changes are frequent.
 

@@ -1,7 +1,7 @@
 Why a new messaging protocol for SDSS?
 --------------------------------------
 
-Say whatever you want about it, the current SDSS message passing protocol based on ``Tron``, ``opscore``, and ``actorcore`` is stable and robust. So, why should we replace it? Here is a list of reasons:
+Say whatever you want about it, the :ref:`current SDSS message passing protocol <legacy-actors>` based on ``Tron``, ``opscore``, and ``actorcore`` is stable and robust. So, why should we replace it? Here is a list of reasons:
 
 - It reinvents the wheel. Ok, in all honesty ``Tron`` and ``opscore`` were written when wheel were still not completely circular, but the truth is that nowadays there are more robust, standard, and better documented technologies out there for message passing.
 - We can remove the need for a central hub product by relying in open-source message brokers such as `RabbitMQ <https://rabbitmq.com>`__.

@@ -111,7 +111,7 @@ It is possible to pass your own `~logging.Logger` instance to the actor via the 
 Defining commands
 -----------------
 
-When the actor receives a new command via a queue (new-style actor) or socket (legacy actor), it is parsed and a `.Command` object is created to track its status and completion. Then the *command function* that matches the parsed command is called with the `.Command` instance and the appropriate parameters. It can sound a bit confusing that a command can be the string received from commander, the instance of `.Command` used to keep track of its completion, and the function that executes the command task, but there are historical reasons to keep this nomenclature and in most cases it's obvious from the context to which one we are referring to.
+When the actor receives a new command via a queue (new-style actor) or socket (legacy actor), it is parsed and a `.Command` object is created to track its status and completion. Then the *command function* that matches the parsed command is called with the `.Command` instance and the appropriate parameters. It may sound a bit confusing that a command can be the string received from commander, the instance of `.Command` used to keep track of its completion, and the function that executes the command task, but there are historical reasons to keep this nomenclature and in most cases it's obvious from the context to which one we are referring.
 
 Ultimately the whole process of receiving a command string, parsing it, creating a `.Command` instance, and calling the command function happens internally and the user does not need to worry about it unless you're planning to `create your own parser <override-parser>`_. Let's see a very simple example of a command that is always available, ``ping`` ::
 
@@ -208,6 +208,8 @@ One of the most frequent tasks the command needs to do is to reply to the comman
     command.write(message_code='i', message={'lamp_on': True, 'ffs': 'closed'})
 
 In this case we are outputting two keywords, ``lamp_on`` and ``ffs``, the first with a boolean value and the second with a string. The first parameter, ``mesage_code``, indicates the typo of message and must be:
+
+.. _message-codes:
 
 - ``d`` for a *debug* message.
 - ``i`` for an *info* message.

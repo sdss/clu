@@ -39,3 +39,7 @@
   td.field-body > ul > li > em {
       font-style: normal !important;
   }
+
+  .underline{
+    text-decoration: underline;
+  }
