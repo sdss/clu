@@ -2,7 +2,8 @@
 CLU's documentation
 ===================
 
-This is the Sphinx documentation for the SDSS Python product `CLU <https://tron.fandom.com/wiki/Clu>`__.
+.. include:: intro.rst
+
 
 Contents
 --------
@@ -10,12 +11,13 @@ Contents
 .. toctree::
   :maxdepth: 2
 
-  intro
-
+  getting-started
+  new-actor
+  legacy
+  keyword-model
+  parser
   api
-
   changelog
-
 
 
 Indices and tables
