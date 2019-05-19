@@ -16,6 +16,7 @@ Contents
   legacy
   keyword-model
   parser
+  patterns
   api
   changelog
 
