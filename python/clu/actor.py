@@ -7,11 +7,12 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-18 12:11:11
+# @Last modified time: 2019-05-18 17:09:31
 
 import abc
 import asyncio
 import json
+import logging
 import pathlib
 import uuid
 
@@ -58,6 +59,8 @@ class BaseActor(metaclass=abc.ABCMeta):
     log_dir : str
         The directory where to store the logs. Defaults to
         ``$HOME/logs/<name>`` where ``<name>`` is the name of the actor.
+        If ``log_dir=False`` or ``log=False``, a logger with a
+        `~logging.NullHandler` will be created.
     log : logging.Logger
         A `logging.Logger` instance to be used for logging instead of creating
         a new one.
@@ -73,7 +76,12 @@ class BaseActor(metaclass=abc.ABCMeta):
         self.name = name
         assert self.name, 'name cannot be empty.'
 
-        self.log = log or self.setup_logger(log_dir)
+        if log_dir is False or log is False:
+            # Create a null logger.
+            self.log = logging.getLogger(f'actor:{self.name}')
+            self.log.addHandler(logging.NullHandler())
+        else:
+            self.log = log or self.setup_logger(log_dir)
 
         self.loop = loop or asyncio.get_event_loop()
 
