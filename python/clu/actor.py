@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-18 20:33:29
+# @Last modified time: 2019-05-18 22:44:03
 
 import abc
 import asyncio
@@ -152,12 +152,14 @@ class BaseActor(metaclass=abc.ABCMeta):
         if len(args) == 0:
             args = [config_dict['name']]
 
-        version = config_dict.get('version', '?')
-        log_dir = config_dict.get('log_dir', None)
+        version = config_dict.pop('version', '?')
+        log_dir = config_dict.pop('log_dir', None)
+
+        config_dict.update(kwargs)
 
         # We also pass *args and **kwargs in case the actor has been subclassed
         # and the subclass' __init__ accepts different arguments.
-        new_actor = cls(*args, version=version, log_dir=log_dir, **kwargs)
+        new_actor = cls(*args, version=version, log_dir=log_dir, **config_dict)
 
         return new_actor
 
@@ -375,8 +377,8 @@ class Actor(BaseActor):
 
         config_dict = cls._parse_config(config)
 
-        args = list(args) + [config_dict.get('user'),
-                             config_dict.get('host')]
+        args = list(args) + [config_dict.pop('user'),
+                             config_dict.pop('host')]
 
         return super().from_config(config_dict, *args, **kwargs)
 
