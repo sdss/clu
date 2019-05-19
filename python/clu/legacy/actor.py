@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-18 17:40:27
+# @Last modified time: 2019-05-18 19:29:48
 
 
 import warnings
@@ -249,7 +249,7 @@ class LegacyActor(BaseActor):
         self.tron.send_command(target, command_string, mid=command_id)
 
     def write(self, message_code, message=None, command=None, user_id=None,
-              command_id=None, escape=True, concatenate=True, broadcast=False):
+              command_id=None, escape=True, concatenate=True, broadcast=False, **kwargs):
         """Writes a message to user(s).
 
         Parameters
@@ -277,6 +277,8 @@ class LegacyActor(BaseActor):
             keyword will be output in multiple lines.
         broadcast : bool
             Whether to broadcast the reply. Equivalent to ``user_id=0``.
+        kwargs
+            Keyword arguments that will be added to the message.
 
         """
 
@@ -302,6 +304,11 @@ class LegacyActor(BaseActor):
                 lines = ['; '.join(lines)]
         else:
             raise TypeError('invalid message type ' + type(message))
+
+        for key, value in kwargs.items():
+            if escape:
+                value = clu.escape(value)
+            lines.append(f'{key}={value}')
 
         for line in lines:
 
