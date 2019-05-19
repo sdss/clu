@@ -12,6 +12,7 @@ Features
 - Legacy-style `actor <clu.legacy.actor.LegacyActor>` for TCP socket communication through `Tron <clu.legacy.tron.TronConnection>`.
 - Tools for device handling.
 - Messages are validated JSON strings.
+- `click <https://click.palletsprojects.com/en/7.x/>`__-enabled command parser.
 
 .. warning:: CLU is under active development and it must be considered in beta stage. The API is changing quickly and breaking changes are frequent.
 
