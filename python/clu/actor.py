@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-18 17:42:46
+# @Last modified time: 2019-05-18 18:01:05
 
 import abc
 import asyncio
@@ -58,7 +58,7 @@ class BaseActor(metaclass=abc.ABCMeta):
         The event loop. If `None`, the current event loop will be used.
     log_dir : str
         The directory where to store the logs. Defaults to
-        ``$HOME/logs/<name>`` where ``<name>`` is the name of the actor.
+        ``/data/logs/actors/<name>`` where ``<name>`` is the name of the actor.
         If ``log_dir=False`` or ``log=False``, a logger with a
         `~logging.NullHandler` will be created.
     log : logging.Logger
