@@ -7,10 +7,11 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-18 19:39:58
+# @Last modified time: 2019-05-18 19:53:05
 
 import asyncio
 import functools
+import re
 
 import click
 
@@ -113,6 +114,11 @@ def help(ctx, *args):
     command = args[0]
 
     for line in ctx.get_help().splitlines():
+        # Remove the parser name.
+        match = re.match(r'^Usage:([A-Za-z-\ ]+? \[OPTIONS\]) .*', line)
+        if match:
+            line = line.replace(match.groups()[0], '')
+
         command.write('w', {'text': line})
 
     return
