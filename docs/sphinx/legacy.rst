@@ -54,7 +54,11 @@ where:
 - ``user_id`` is the ID number of the user that sent the command that triggered this reply. Note that this is not the same as the ``commander_id`` from the command, but the internal ID assigned to the connection socket from which the command came. In most cases where there is a single connection to the actor this is irrelevant.
 - ``message_id`` is the ID number of the message that triggered this reply. Use 0 if the reply is unsolicited (i.e. not in response to any command).
 - ``message_code`` is a one-character :ref:`message type code <message-codes>`.
-- ``reply_data`` is the message data in keyword-value format.
+- ``reply_data`` is the message data in keyword-value format. Multiple keywords can be output in the same reply as long as they are separated by semi-colons.
+
+For example, if we are replying to ``OBSERVER.john 17 sop status`` from Tron, and assuming that Tron is connected to ``sop`` with ``user_id=1``, we can reply ::
+
+    1 17 i lamps_on=true; ffs="closed"
 
 Tron receives the reply, changes the header to match the original format and then sends it back to all the connected users.
 
