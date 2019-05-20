@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-18 19:53:05
+# @Last modified time: 2019-05-20 14:58:45
 
 import asyncio
 import functools
@@ -16,21 +16,28 @@ import re
 import click
 
 
-class ClickCommand(click.Command):
+class CluCommand(click.Command):
     """Override `click.Command` to pass the actor and command as arguments."""
 
     async def _schedule_callback(self, ctx, timeout=None):
         """Schedules the callback as a task."""
 
-        command = ctx.obj['parser_args'][0]
+        if not hasattr(ctx, 'obj') or 'parser_args' not in ctx.obj:
+            parser_args = []
+            command = None
+        else:
+            parser_args = ctx.obj['parser_args']
+            command = parser_args[0]
+
         callback_task = asyncio.create_task(
-            ctx.invoke(self.callback, *ctx.obj['parser_args'], **ctx.params))
+            ctx.invoke(self.callback, *parser_args, **ctx.params))
 
         try:
             await asyncio.wait_for(callback_task, timeout=timeout)
         except asyncio.TimeoutError:
-            command.set_status(command.status.TIMEDOUT,
-                               f'command timed out after {timeout} seconds.')
+            if command:
+                command.set_status(command.status.TIMEDOUT,
+                                   f'command timed out after {timeout} seconds.')
             return False
 
         return True
@@ -50,12 +57,13 @@ class ClickCommand(click.Command):
                 # If so, schedules a task to be cancelled after timeout.
                 timeout = getattr(self.callback, 'timeout', None)
 
-                ctx.task = asyncio.create_task(self._schedule_callback(ctx, timeout=timeout))
+                loop = asyncio.get_event_loop()
+                ctx.task = loop.create_task(self._schedule_callback(ctx, timeout=timeout))
 
             return ctx
 
 
-class ClickGroup(click.Group):
+class CluGroup(click.Group):
     """Override `click.Group` to make all child commands instances of `.ClickCommand`."""
 
     def command(self, *args, **kwargs):
@@ -64,7 +72,7 @@ class ClickGroup(click.Group):
         if 'cls' in kwargs:
             pass
         else:
-            kwargs['cls'] = ClickCommand
+            kwargs['cls'] = CluCommand
 
         def decorator(f):
             cmd = click.decorators.command(*args, **kwargs)(f)
@@ -91,7 +99,7 @@ def timeout(seconds):
     return decorator
 
 
-@click.group(cls=ClickGroup)
+@click.group(cls=CluGroup)
 def command_parser():
     pass
 
