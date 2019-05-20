@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-20 13:01:34
+# @Last modified time: 2019-05-20 13:06:47
 
 import asyncio
 
@@ -24,15 +24,9 @@ __all__ = ['TronConnection', 'TronModel', 'TronKey']
 class TronKey(Property):
     """A Tron model key with callbacks.
 
-    Parameters
-    ----------
-    key
-        The opscore ``Key`` to be represented.
-    callback
-        The function or coroutine that will be called if the value of the key
-        if modified. The callback is called with the instance of `TronKey`
-        as the only argument. Note that the callback will be scheduled even
-        if the new value is the same as the previous one.
+    Differs from `.Property` in that it is usually instantiated by
+    `.TronModel` with a ``key`` that is of type ``clu.legacy.keys.Key``
+    instead of a string.
 
     """
 
