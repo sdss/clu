@@ -433,7 +433,7 @@ class Actor(BaseActor):
             message_code = None
             self.log.warning(f'received message without message_code: {message}')
 
-        sender = headers['sender']
+        sender = headers.get('sender', None)
         command_id = message.correlation_id
 
         # Ignores message from self.
@@ -531,7 +531,7 @@ class Actor(BaseActor):
         headers = {'message_code': message_code,
                    'commander_id': commander_id,
                    'command_id': command_id,
-                   'from': self.name}
+                   'sender': self.name}
 
         if broadcast:
             routing_key = f'reply.broadcast'
