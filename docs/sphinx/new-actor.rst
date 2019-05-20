@@ -3,6 +3,8 @@
     :class: underline
 
 
+.. _new-actors:
+
 The AMQP actor
 ==============
 
@@ -11,6 +13,7 @@ The new-style actor that CLU introduces uses the `AMQP <https://www.amqp.org/>`_
 
 .. include:: why.rst
 
+.. _new-actors-how:
 
 How does the new actor work?
 ----------------------------
@@ -35,7 +38,7 @@ This may look daunting so let's break it into smaller pieces:
 
 - We have two actors that are both producers (i.e., can send messages) and consumers (can receive messages). Messages can either be commands or replies.
 - There is a global exchange, ``actor_exchange`` used both to send commands and replies. The exchange is of type `topic <https://www.rabbitmq.com/tutorials/tutorial-five-python.html>`_, which  allow queues to subscribe to them and receive only messages that match a certain *routing key*.
-- Each actor has a queue for commands and another for replies. The command queue (``<actor>_commands``) only gets messages whose routing key contains the key ``command`` and the name of the actor, and ignores all other command messages. Similarly, the replies queue, ``<actor>_replies``, receives messages that contain the name of the actor. The replies queue also subscribes to messages that have a routing keys ``reply.broadcast``. This enables sending a message to the replies exchange that will be received by all actors.
+- Each actor has a queue for commands and another for replies. The command queue (``<actor>_commands``) only gets messages whose routing key contains the key ``command`` and the name of the actor, and ignores all other command messages. The replies queue, ``<actor>_replies``, receives all messages with topic ``reply`` in the routing key.
 
 More actors can be added to this picture, but they all share the same basic components. This enables us to create a slightly modified `RCP <https://www.rabbitmq.com/tutorials/tutorial-six-python.html>`_ pattern in which the callback queue is fixed and we use a topic exchange instead of a direct one.
 
@@ -55,7 +58,7 @@ Communication happens through a single :underline:`topic exchange` called ``acto
 Each actor receives messages from two queues:
 
 - The commands queue must be called ``<actor>_commands``, where ``<actor>`` is the name of the actor. It subscribes to the exchange and listens to messages with ``command`` and ``<actor>`` in their routing key. Clients that are not actors do not need to have a commands queue.
-- The replies queue is called ``<actor>_replies``. It subscribes to exchange and listens to message with ``reply`` and ``<actor>`` as routing keys. It also listens to messages with the ``reply.broadcast`` routing key.
+- The replies queue is called ``<actor>_replies``. It subscribes to exchange and listens to message with a ``reply`` routing key.
 
 Queues must be `exclusive <https://www.rabbitmq.com/queues.html#properties>`__ and both exchanges and queues must auto-delete when the connection is closed.
 
@@ -86,8 +89,8 @@ Replies
 
 The format for a reply to a command is as follows:
 
-- The routing key must be ``reply.<producer>`` where ``<producer>`` is the actor or client that sent the command we are replying to. If an actor wants to reply with a broadcast to all the actors connected to the exchanged, it may do so with the routing key ``reply.broadcast``.
-- The header of the message must contain the keywords ``command_id`` set to the command ID of the command we are replying to, ``commander_id`` set to the name of the commander actor, ``sender`` set to the name of the actor replying, and ``message_code`` with the message type code, which must be one of :ref:`these <message-codes>`. ``commander_id`` and ``command_id`` can be null, if it's the reply is a broadcast.
+- The routing key must be ``reply.<producer>`` where ``<producer>`` is the actor or client that sent the command we are replying to. If an actor wants to reply with a broadcast to all the actors connected to the exchanged, it may do so with the routing key ``reply.broadcast``. This is technically not necessary since all actors and clients receive all message with topic ``reply``, regardless of whether they have a secondary topic, but it allows finer filtering.
+- The header of the message must contain the keywords ``command_id`` set to the command ID of the command we are replying to, ``commander_id`` set to the name of the commander actor, ``sender`` set to the name of the actor replying, and ``message_code`` with the message type code, which must be one of :ref:`these <message-codes>`. ``commander_id`` and ``command_id`` can be null, if the reply is a broadcast.
 - The ``correlation_id`` must be the same as the ``command_id`` (`None` for broadcasts).
 - The content type of the message must be ``text/json``.
 - The body of the message must be a JSON string with a series of keyword-value pairs that conform to the :ref:`keyword model <keyword-model>` of the actor that is replying.

@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-19 16:03:45
+# @Last modified time: 2019-05-19 17:31:13
 
 import abc
 import asyncio
@@ -365,7 +365,7 @@ class Actor(BaseActor):
         # Binds the replies queue.
         self.replies_queue = await self.connection.add_queue(
             f'{self.name}_replies', callback=self.handle_reply,
-            bindings=[f'reply.{self.name}.#', 'reply.broadcast.#'])
+            bindings=[f'reply.#'])
 
         self.log.info(f'replies queue {self.replies_queue.name!r} bound '
                       f'to {self.connection.connection.url!s}')
@@ -433,11 +433,11 @@ class Actor(BaseActor):
             message_code = None
             self.log.warning(f'received message without message_code: {message}')
 
+        sender = headers['sender']
         command_id = message.correlation_id
-        routing_key = message.routing_key
 
-        # Ignores broadcast that come from this actor.
-        if 'broadcast' in routing_key and self.name in routing_key:
+        # Ignores message from self.
+        if self.name == sender:
             return
 
         # If the command is running we check if the message code indicates
