@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-20 12:54:40
+# @Last modified time: 2019-05-20 13:15:14
 
 
 import warnings
@@ -102,7 +102,7 @@ class LegacyActor(BaseActor):
             else:
                 warnings.warn('starting LegacyActor without Tron connection.',
                               clu.CluWarning)
-        except ConnectionRefusedError as ee:
+        except (ConnectionRefusedError, OSError) as ee:
             raise clu.CluError(f'failed trying to create a connection to tron: {ee}')
 
         return self

@@ -62,12 +62,14 @@ The parameter passed to `~.Actor.from_config` must be a YAML file with the confi
 
     .. code:: yaml
 
-        actor:
-            name: jaeger
-            user: guest
-            host: 127.0.0.1
-            version: 0.2.0dev
-            log_dir: /data/logs/actors/jaeger
+        {
+         actor:
+             name: jaeger
+             user: guest
+             host: 127.0.0.1
+             version: 0.2.0dev
+             log_dir: /data/logs/actors/jaeger
+        }
 
 The behaviour for `.LegacyActor` is the same but note that the parameters for tron must be grouped under its own subsection
 
