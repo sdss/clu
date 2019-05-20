@@ -72,5 +72,4 @@ Next, head to the :ref:`getting-started` section for more information about usin
 
 .. |docs| image:: https://readthedocs.org/projects/docs/badge/?version=latest
     :alt: Documentation Status
-    :scale: 100%
     :target: https://clu.readthedocs.io/en/latest/?badge=latest

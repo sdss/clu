@@ -48,6 +48,9 @@ which will create the connection to RabbitMQ, set up the exchanges and queues, a
 
 In these examples we have used the new-style `.Actor` class, but it's trivial to replace it with the legacy actor class `.LegacyActor`. The parameters to start a `.LegacyActor` are the same with the exception that we pass the hostname and port where the actor will be serving, and we can provide the ``tron_host`` and ``tron_port`` to connect to an instance of ``Tron``. We'll talk more about legacy actor in a :ref:`following section <legacy-actors>`.
 
+.. note::
+    Right now it is assumed that the AMQP client can connect to the server without a password. This may change in the future.
+
 Configuration files
 ~~~~~~~~~~~~~~~~~~~
 
