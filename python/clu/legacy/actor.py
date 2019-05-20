@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-19 16:06:07
+# @Last modified time: 2019-05-20 01:23:10
 
 
 import warnings
@@ -15,7 +15,7 @@ import warnings
 import clu
 
 from ..actor import BaseActor
-from ..command import ParsedCommand
+from ..command import Command, parse_legacy_command
 from ..protocol import TCPStreamServer
 from .tron import TronConnection
 
@@ -77,6 +77,7 @@ class LegacyActor(BaseActor):
                                       data_received_callback=self.new_command)
 
         if tron_host and tron_port:
+            #: TronConnection: The client connection to Tron.
             self.tron = TronConnection(self.name, tron_host, tron_port,
                                        tron_models=tron_models)
         else:
@@ -150,13 +151,11 @@ class LegacyActor(BaseActor):
 
         if not command_str:
             return
-
-        user_id = transport.user_id
-
         try:
-            command = ParsedCommand(command_str, commander_id=user_id,
-                                    consumer_id=self.name, actor=self,
-                                    loop=self.loop)
+            commander_id, command_id, command_body = parse_legacy_command(command_str)
+            command = Command(command_string=command_body, commander_id=commander_id,
+                              command_id=command_id, consumer_id=self.name,
+                              actor=self, loop=self.loop, transport=transport)
         except clu.CommandError as ee:
             self.write('f', {'text': f'Could not parse the following as a command: {ee!r}'})
             return
@@ -164,12 +163,12 @@ class LegacyActor(BaseActor):
         self.parse_command(command)
 
     @staticmethod
-    def format_user_output(message_code, msg_str=None, user_id=None, command_id=None):
+    def format_user_output(user_id, command_id, message_code, msg_str=None):
         """Formats a string to send to users."""
 
         msg_str = '' if msg_str is None else ' ' + msg_str
 
-        return f'{command_id:d} {user_id:d} {message_code:s}{msg_str:s}'
+        return f'{user_id} {command_id:d} {message_code:s}{msg_str:s}'
 
     def show_new_user_info(self, user_id):
         """Shows information for new users. Called when a new user connects."""
@@ -202,24 +201,27 @@ class LegacyActor(BaseActor):
 
     @staticmethod
     def get_user_command_id(command=None, user_id=None, command_id=None):
-        """Returns user_id, command_id based on user-supplied information.
+        """Returns commander_id, command_id based on user-supplied information.
 
         Parameters
         ----------
         command : Command
-            User command; used as a default for ``user_id`` and ``command_id``.
-            If the command is done, it is ignored.
+            User command; used as a default for ``user_id`` and
+            ``command_id``.
         user_id : int
-            If `None` then use ``command.commander_id``.
+            If `None` then use ``command.user_id``.
         command_id : int
             If `None` then use ``command.command_id``.
 
+        Returns
+        -------
+        user_id, command_id : `tuple`
+            The commander ID and the command ID, parsed from the inputs. If
+            they cannot be determined, returns zeros.
+
         """
 
-        if command is not None and command.status.is_done:
-            command = None
-
-        user_id = user_id or (command.commander_id if command else 0)
+        user_id = user_id or (command.user_id if command else 0)
         command_id = command_id or (command.command_id if command else 0)
 
         return (user_id, command_id)
@@ -262,10 +264,10 @@ class LegacyActor(BaseActor):
             to output or a dictionary of pairs ``{keyword: value}`` where
             ``value`` must be a string.
         command : Command
-            User command; used as a default for ``user_id`` and ``command_id``.
-            If the command is done, it is ignored.
+            User command; used as a default for ``user_id`` and
+            ``command_id``. If the command is done, it is ignored.
         user_id : int
-            If `None` then use ``command.commander_id``.
+            If `None` defaults to 0.
         command_id : int
             If `None` then use ``command.command_id``.
         escape : bool
@@ -283,12 +285,17 @@ class LegacyActor(BaseActor):
 
         """
 
-        user_id, command_id = self.get_user_command_id(command=command,
-                                                       user_id=user_id,
-                                                       command_id=command_id)
+        # For a reply, the commander ID is the user assigned to the transport
+        # that issues this command.
+        transport = command.transport if command else None
+        user_id = transport.user_id if transport else 0
 
         if broadcast:
             user_id = 0
+            command_id = 0
+
+        user_id, command_id = self.get_user_command_id(
+            command=command, user_id=user_id, command_id=command_id)
 
         if message is None:
             lines = ['']
@@ -313,15 +320,12 @@ class LegacyActor(BaseActor):
 
         for line in lines:
 
-            full_msg_str = self.format_user_output(message_code, line,
-                                                   user_id=user_id,
-                                                   command_id=command_id)
-
+            full_msg_str = self.format_user_output(user_id, command_id,
+                                                   message_code, line)
             msg = (full_msg_str + '\n').encode()
 
-            if user_id is None or user_id == 0:
+            if user_id is None or user_id == 0 or transport is None:
                 for transport in self.user_dict.values():
                     transport.write(msg)
             else:
-                transport = self.user_dict[user_id]
                 transport.write(msg)

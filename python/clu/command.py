@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-18 20:33:09
+# @Last modified time: 2019-05-20 01:12:38
 
 import asyncio
 import re
@@ -16,7 +16,7 @@ import clu
 from clu.base import CommandStatus, StatusMixIn
 
 
-__all__ = ['BaseCommand', 'Command', 'ParsedCommand']
+__all__ = ['BaseCommand', 'Command', 'parse_legacy_command']
 
 
 class BaseCommand(asyncio.Future, StatusMixIn):
@@ -161,10 +161,13 @@ class Command(BaseCommand):
         The string that defines the body of the command.
     actor : ~clu.actor.BaseActor
         The actor instance associated to this command.
+    transport
+        The TCP transport associated with this command (only relevant
+        for `.LegacyActor` commands).
 
     """
 
-    def __init__(self, command_string='', actor=None, **kwargs):
+    def __init__(self, command_string='', actor=None, transport=None, **kwargs):
 
         BaseCommand.__init__(self, **kwargs)
 
@@ -177,39 +180,58 @@ class Command(BaseCommand):
         #: The actor in which this command will run.
         self.actor = actor
 
+        self.transport = transport
+
     def __str__(self):
 
         return (f'<Command (commander_id={self.commander_id!r}, '
                 f'command_id={self.command_id!r}, body={self.body!r})>')
 
 
-class ParsedCommand(Command):
-    """A command from a user (typically the hub) that gets parsed."""
+def parse_legacy_command(command_string):
+    """Parses a command received by a legacy actor.
 
-    _HEADER_BODY_RE = re.compile(
-        r'((?P<command_id>\d+)(?:\s+\d+)?\s+)?((?P<command_body>[A-Za-z_].*))?$')
+    Parameters
+    ----------
+    command_string : str
+        The command to parse, including an optional header.
 
-    def __init__(self, *args, **kwargs):
+    Returns
+    -------
+    user_id, command_id, command_body : tuple
+        The user ID, command ID, and the command body parsed from the command
+        string.
 
-        super().__init__(*args, **kwargs)
+    """
 
-        self.parse_command_string(self.raw_command_string)
+    _HEADER_BODY_RE = re.compile(r'((?P<uid>[A-Za-z0-9.]+)(?P<cid>\s+\d+)?\s+)?((?P<body>[A-Za-z_].*))?$')
 
-    def parse_command_string(self, command_string):
-        """Parse command."""
+    command_match = _HEADER_BODY_RE.match(command_string)
+    if not command_match:
+        raise clu.CommandError(f'Could not parse command {command_string!r}')
 
-        command_match = self._HEADER_BODY_RE.match(command_string)
-        if not command_match:
-            raise clu.CommandError(f'Could not parse command {command_string!r}')
+    command_dict = command_match.groupdict('')
 
-        command_dict = command_match.groupdict('')
-        command_id_str = command_dict['command_id']
+    user_id_str = command_dict['uid']
+    command_id_str = command_dict['cid']
 
-        if command_id_str:
-            self.command_id = int(command_id_str)
-        else:
-            # Only set command_id to 0 if we haven't set it somehow else.
-            if self.command_id is None:
-                self.command_id = 0
+    if command_id_str and user_id_str:
+        user_id = user_id_str
+        command_id = int(command_id_str)
+    elif user_id_str and not command_id_str:
+        # There has to be a better way to do this with another regex but ...
+        user_id = 0
+        command_id = user_id_str
+    else:
+        command_id = 0
+        user_id = 0
 
-        self.body = command_dict.get('command_body', '')
+    if not isinstance(user_id, str):
+        try:
+            user_id = int(user_id)
+        except ValueError:
+            pass
+
+    command_body = command_dict.get('body', '')
+
+    return user_id, command_id, command_body
