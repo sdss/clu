@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-17 18:21:15
+# @Last modified time: 2019-05-20 13:01:34
 
 import asyncio
 
@@ -221,11 +221,11 @@ class TronConnection(object):
             line = await self.connection.reader.readline()
 
             try:
-                line = line.decode().strip()
+                line = line.decode()  # Do not strip here or that will cause parsing problems.
                 reply = rparser.parse(line)
             except ParseError:
                 if self.log:
-                    self.log.warning(f'failed parsing reply {line}')
+                    self.log.debug(f'failed parsing reply {line}.')
                 continue
 
             actor = reply.header.actor
@@ -238,4 +238,8 @@ class TronConnection(object):
             if actor not in self.models:
                 continue
 
-            self.models[actor].parse_reply(reply)
+            try:
+                self.models[actor].parse_reply(reply)
+            except Exception as ee:
+                if self.log:
+                    self.log.debug(f'failed parsing reply {reply!r} with error: {ee!s}')
