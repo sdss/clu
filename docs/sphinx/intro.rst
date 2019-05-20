@@ -1,4 +1,4 @@
-|Build Status| |Coverage Status| |py37|
+|Build Status| |Coverage Status| |docs| |py37|
 
 
 `CLU <https://tron.fandom.com/wiki/Clu>`_ implements a new protocol for SDSS actor while providing support for legacy-style actor.
@@ -69,3 +69,8 @@ and can connect to the actor on ``localhost:9999``. Next, head to the :ref:`gett
 .. |py37| image:: https://img.shields.io/badge/python-3.7-blue.svg
     :alt: Python 3.7
     :target: https://docs.python.org/3/
+
+.. |docs| image:: https://readthedocs.org/projects/docs/badge/?version=latest
+    :alt: Documentation Status
+    :scale: 100%
+    :target: https://clu.readthedocs.io/en/latest/?badge=latest
