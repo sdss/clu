@@ -60,31 +60,29 @@ In general the parameters to start a new actor are stored in a configuration fil
 
 The parameter passed to `~.Actor.from_config` must be a YAML file with the configuration. If the configuration file has a section called ``actor``, that subsection will be used. Alternatively, a dictionary with the configuration already parsed can be passed to `~.Actor.from_config`. The parameter names in the configuration files must be the same as those of the arguments and keyword arguments used to instantiate `.Actor`. The following is an example of a valid configuration file
 
-    .. code:: yaml
+    .. code-block:: yaml
 
-        {
          actor:
-             name: jaeger
-             user: guest
-             host: 127.0.0.1
-             version: 0.2.0dev
-             log_dir: /data/logs/actors/jaeger
-        }
+             name: 'jaeger'
+             user: 'guest'
+             host: '127.0.0.1'
+             version: '0.2.0dev'
+             log_dir: '/data/logs/actors/jaeger'
 
 The behaviour for `.LegacyActor` is the same but note that the parameters for tron must be grouped under its own subsection
 
-    .. code:: yaml
+    .. code-block:: yaml
 
         actor:
-            name: jaeger
-            host: 127.0.0.1
+            name: 'jaeger'
+            host: '127.0.0.1'
             port: 19990
-            version: 0.2.0dev
+            version: '0.2.0dev'
             tron:
-                host: 127.0.0.1
+                host: '127.0.0.1'
                 port: 6093
                 models: ['tcc']
-            log_dir: /data/logs/actors/jaeger
+            log_dir: '/data/logs/actors/jaeger'
 
 Overriding `~.Actor.from_config` when subclassing the actor can be a bit tricky if you have added new parameters. Here is an example of how to correctly do so ::
 
