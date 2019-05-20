@@ -46,12 +46,12 @@ Replies
 
 While processing the command, the actor will usually have to output replies back to the hub. The format of the replies is ::
 
-    cid mid message_code reply_data
+    uid mid message_code reply_data
 
 where:
 
 - Messages are ASCII.
-- ``cid`` is the ID number of the commander that sent the command that triggered this reply. Note that this is not the same ``cid`` from the command but the internal ID assigned to the connection from which the command came. In most cases where there is a single connection to the actor this is irrelevant.
+- ``uid`` is the ID number of the user that sent the command that triggered this reply. Note that this is not the same as the ``cid`` from the command, but the internal ID assigned to the connection socket from which the command came. In most cases where there is a single connection to the actor this is irrelevant.
 - ``mid`` is the ID number of the message that triggered this reply. Use 0 if the reply is unsolicited (i.e. not in response to any command).
 - ``message_code`` is a one-character :ref:`message type code <message-codes>`.
 - ``reply_data`` is the message data in keyword-value format.
