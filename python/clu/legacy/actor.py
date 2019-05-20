@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-20 13:15:14
+# @Last modified time: 2019-05-20 16:05:42
 
 
 import warnings
@@ -55,8 +55,8 @@ class LegacyActor(BaseActor):
     log_dir : str
         The directory where to store the logs. Defaults to
         ``$HOME/logs/<name>`` where ``<name>`` is the name of the actor.
-    log : logging.Logger
-        A `logging.Logger` instance to be used for logging instead of creating
+    log : ~logging.Logger
+        A `~logging.Logger` instance to be used for logging instead of creating
         a new one.
 
     """

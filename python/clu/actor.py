@@ -7,25 +7,19 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-19 17:31:13
+# @Last modified time: 2019-05-20 15:57:21
 
 import abc
 import asyncio
 import json
-import logging
-import pathlib
-import uuid
 
 import click
-import ruamel.yaml
 
 import clu
 
-from .base import CommandStatus
+from .client import AMQPClient, BaseClient
 from .command import Command
-from .misc import get_logger
 from .parser import command_parser
-from .protocol import TopicListener
 
 
 try:
@@ -37,29 +31,12 @@ except ImportError:
 __all__ = ['BaseActor', 'Actor', 'command_parser']
 
 
-class BaseActor(metaclass=abc.ABCMeta):
+class BaseActor(BaseClient):
     """An actor based on `asyncio <https://docs.python.org/3/library/asyncio.html>`__.
 
-    This class defines a new actor. Normally a new instance is created by
-    passing a configuration file path to `.from_config` which defines how the
-    actor must be started.
-
-    Parameters
-    ----------
-    name : str
-        The name of the actor.
-    version : str
-        The version of the actor.
-    loop
-        The event loop. If `None`, the current event loop will be used.
-    log_dir : str
-        The directory where to store the logs. Defaults to
-        ``/data/logs/actors/<name>`` where ``<name>`` is the name of the actor.
-        If ``log_dir=False`` or ``log=False``, a logger with a
-        `~logging.NullHandler` will be created.
-    log : logging.Logger
-        A `logging.Logger` instance to be used for logging instead of creating
-        a new one.
+    This class expands `.BaseClient` with a parsing system for new commands
+    and placeholders for methods for handling new commands and writing replies,
+    which should be overridden by the specific actors.
 
     """
 
@@ -67,119 +44,11 @@ class BaseActor(metaclass=abc.ABCMeta):
     #: Note that the command is always passed first.
     parser_args = []
 
-    def __init__(self, name, version=None, loop=None, log_dir=None, log=None):
-
-        self.name = name
-        assert self.name, 'name cannot be empty.'
-
-        if log_dir is False or log is False:
-            # Create a null logger.
-            self.log = logging.getLogger(f'actor:{self.name}')
-            self.log.addHandler(logging.NullHandler())
-        else:
-            self.log = log or self.setup_logger(log_dir)
-
-        self.loop = loop or asyncio.get_event_loop()
-
-        self.version = version or '?'
-
-    def __repr__(self):
-
-        return f'<{str(self)} (name={self.name})>'
-
-    def __str__(self):
-
-        return self.__class__.__name__
-
     @abc.abstractmethod
     async def run(self):
         """Starts the server. Must be overridden by the subclasses."""
 
         pass
-
-    async def shutdown(self):
-        """Shuts down all the remaining tasks."""
-
-        self.log.info('cancelling all pending tasks and shutting down.')
-
-        tasks = [task for task in asyncio.Task.all_tasks(loop=self.loop)
-                 if task is not asyncio.tasks.Task.current_task(loop=self.loop)]
-        list(map(lambda task: task.cancel(), tasks))
-
-        await asyncio.gather(*tasks, return_exceptions=True)
-
-        self.loop.stop()
-
-    @staticmethod
-    def _parse_config(config):
-
-        if not isinstance(config, dict):
-
-            config = pathlib.Path(config)
-            assert config.exists(), 'configuration path does not exist.'
-
-            yaml = ruamel.yaml.YAML(typ='safe')
-            config = yaml.load(open(str(config)))
-
-        if 'actor' in config:
-            config = config['actor']
-
-        return config
-
-    @classmethod
-    def from_config(cls, config, *args, **kwargs):
-        """Parses a configuration file.
-
-        Parameters
-        ----------
-        config : dict or str
-            A configuration dictionary or the path to a YAML configuration
-            file that must contain a section ``'actor'`` (if the section is
-            not present, the whole file is assumed to be the actor
-            configuration).
-
-        """
-
-        config_dict = cls._parse_config(config)
-
-        # If we subclass and override from_config we need to super() it and
-        # send all the arguments already unpacked. Otherwise we get the name
-        # from the config.
-        if len(args) == 0:
-            args = [config_dict['name']]
-
-        version = config_dict.pop('version', '?')
-        log_dir = config_dict.pop('log_dir', None)
-
-        config_dict.update(kwargs)
-
-        # We also pass *args and **kwargs in case the actor has been subclassed
-        # and the subclass' __init__ accepts different arguments.
-        new_actor = cls(*args, version=version, log_dir=log_dir, **config_dict)
-
-        return new_actor
-
-    def setup_logger(self, log_dir, file_level=10, shell_level=20):
-        """Starts the file logger."""
-
-        log = get_logger('actor:' + self.name)
-
-        if log_dir is None:
-            log_dir = pathlib.Path(f'/data/logs/actors/{self.name}/').expanduser()
-        else:
-            log_dir = pathlib.Path(log_dir).expanduser()
-
-        if not log_dir.exists():
-            log_dir.mkdir(parents=True)
-
-        log.start_file_logger(log_dir / f'{self.name}.log')
-
-        log.sh.setLevel(shell_level)
-        log.fh.setLevel(file_level)
-
-        log.info(f'{self.name}: logging system initiated.')
-
-        return log
 
     @abc.abstractmethod
     def new_command(self):
@@ -274,7 +143,7 @@ class BaseActor(metaclass=abc.ABCMeta):
         pass
 
 
-class Actor(BaseActor):
+class Actor(AMQPClient, BaseActor):
     """An actor class that uses AMQP message brokering.
 
     This class differs from `~clu.legacy.actor.LegacyActor` in that it uses
@@ -283,76 +152,21 @@ class Actor(BaseActor):
     internals and protocols are different the entry points and behaviour for
     both classes should be almost identical.
 
-    To start a new actor first instantiate the class and then run `.run` as
-    a coroutine. Note that `.run` does not block so you will need to use
-    asyncio's ``run_forever`` or a similar system ::
-
-        >>> loop = asyncio.get_event_loop()
-        >>> actor = await Actor('my_actor', 'guest', 'localhost', loop=loop).run()
-        >>> loop.run_forever()
-
-    Parameters
-    ----------
-    name : str
-        The name of the actor.
-    user : str
-        The user to connect to the AMQP broker.
-    host : str
-        The host where the AMQP message broker lives.
-    version : str
-        The version of the actor.
-    loop
-        The event loop. If `None`, the current event loop will be used.
-    log_dir : str
-        The directory where to store the logs. Defaults to
-        ``$HOME/logs/<name>`` where ``<name>`` is the name of the actor.
-    log : ~logging.Logger
-        A `~logging.Logger` instance to be used for logging instead of creating
-        a new one.
+    See the documentation for `.AMQPClient` for parameter information.
 
     """
-
-    __EXCHANGE_NAME__ = 'actor_exchange'
 
     #: list: Arguments to be passed to each command in the parser.
     #: Note that the command is always passed first.
     parser_args = []
 
-    def __init__(self, name, user, host, version=None,
-                 loop=None, log_dir=None, log=None):
+    commands_queue = None
 
-        if not apika:
-            raise ImportError('to instantiate a new Actor class '
-                              'you need to have aio_pika installed.')
-
-        super().__init__(name, version=version, loop=loop, log_dir=log_dir, log=log)
-
-        self.user = user
-        self.host = host
-
-        self.commands_queue = None
-        self.replies_queue = None
-
-        # Creates the connection to the AMQP broker
-        self.connection = TopicListener(self.user, self.host)
-
-        #: dict: External commands currently running.
-        self.running_commands = {}
-
-    def __repr__(self):
-
-        if self.commander.connection is None:
-            url = 'disconnected'
-        else:
-            url = str(self.commander.connection.url)
-
-        return f'<{str(self)} (name={self.name}, {url}>'
-
-    async def run(self, exchange_name=__EXCHANGE_NAME__):
+    async def run(self, **kwargs):
         """Starts the connection to the AMQP broker."""
 
-        # Starts the connection and creates the exchange
-        await self.connection.connect(exchange_name, loop=self.loop)
+        # This sets the replies queue but not a commands one.
+        await AMQPClient.run(self, **kwargs)
 
         # Binds the commands queue.
         self.commands_queue = await self.connection.add_queue(
@@ -362,30 +176,17 @@ class Actor(BaseActor):
         self.log.info(f'commands queue {self.commands_queue.name!r} bound '
                       f'to {self.connection.connection.url!s}')
 
-        # Binds the replies queue.
-        self.replies_queue = await self.connection.add_queue(
-            f'{self.name}_replies', callback=self.handle_reply,
-            bindings=[f'reply.#'])
-
-        self.log.info(f'replies queue {self.replies_queue.name!r} bound '
-                      f'to {self.connection.connection.url!s}')
-
         return self
 
     @classmethod
     def from_config(cls, config, *args, **kwargs):
         """Starts a new actor from a configuration file.
 
-        Refer to `.BaseActor.from_config`.
+        Refer to `.BaseClient.from_config`.
 
         """
 
-        config_dict = cls._parse_config(config)
-
-        args = list(args) + [config_dict.pop('user'),
-                             config_dict.pop('host')]
-
-        return super().from_config(config_dict, *args, **kwargs)
+        return AMQPClient.from_config(cls, config, *args, **kwargs)
 
     async def new_command(self, message):
         """Handles a new command received by the actor."""
@@ -421,76 +222,7 @@ class Actor(BaseActor):
 
         """
 
-        # Acknowledges receipt of message
-        message.ack()
-
-        message_info = message.info()
-        headers = message_info['headers']
-
-        if 'message_code' in headers:
-            message_code = headers['message_code'].decode()
-        else:
-            message_code = None
-            self.log.warning(f'received message without message_code: {message}')
-
-        sender = headers.get('sender', None)
-        command_id = message.correlation_id
-
-        # Ignores message from self.
-        if self.name == sender:
-            return
-
-        # If the command is running we check if the message code indicates
-        # the command is done and, if so, sets the result in the Future.
-        if command_id in self.running_commands:
-            is_done = CommandStatus.get_inverse_dict()[message_code].is_done
-            if is_done:
-                command = self.running_commands.pop(command_id)
-                command.set_result(None)
-
-    async def send_command(self, consumer, command_string, command_id=None):
-        """Commands another actor over its RCP queue.
-
-        Parameters
-        ----------
-        consumer : str
-            The actor we are commanding.
-        command_string : str
-            The command string that will be parsed by the remote actor.
-        command_id
-            The command ID associated with this command. If empty, an unique
-            identifier will be attached.
-
-        """
-
-        command_id = command_id or str(uuid.uuid4())
-
-        # Creates and registers a command.
-        command = Command(command_string=command_string,
-                          command_id=command_id,
-                          commander_id=self.name,
-                          consumer_id=consumer,
-                          actor=self, loop=self.loop)
-
-        self.running_commands[command_id] = command
-
-        headers = {'command_id': command_id,
-                   'commander_id': self.name}
-
-        # The routing key has the topic command and the name of the commanded actor.
-        routing_key = f'command.{consumer}'
-
-        message_body = {'command_string': command_string}
-
-        await self.connection.exchange.publish(
-            apika.Message(json.dumps(message_body).encode(),
-                          content_type='text/json',
-                          headers=headers,
-                          correlation_id=command_id,
-                          reply_to=self.replies_queue.name),
-            routing_key=routing_key)
-
-        return command
+        AMQPClient.handle_reply(self, message)
 
     async def write(self, message_code='i', message=None, command=None,
                     broadcast=False, **kwargs):

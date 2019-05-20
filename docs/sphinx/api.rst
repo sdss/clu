@@ -4,6 +4,12 @@
 API Reference
 =============
 
+Client
+------
+
+.. automodule:: clu.client
+
+
 Actor
 -----
 
@@ -55,8 +61,8 @@ Model
 Parser
 ------
 
-.. autoclass:: clu.parser.ClickCommand
-.. autoclass:: clu.parser.ClickGroup
+.. autoclass:: clu.parser.CluCommand
+.. autoclass:: clu.parser.CluGroup
 
 .. autofunction:: clu.parser.timeout
 
