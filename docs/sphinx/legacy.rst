@@ -25,9 +25,9 @@ Commands
 
 Commands are sent to Tron as a string over the TCP socket. The format of the command header changes depending on how the Tron decoder has been configured, but for SDSS the format is as follows ::
 
-    program.client mid target command_string
+    program.client message_id target command_string
 
-where ``program.client`` are the program and name of the commander, ``mid`` is a positive integer assigned by the commander to identify this command and its replies, ``target`` is the actor being commanded, and ``command_string`` is the command to be parsed by the actor. The following is a valid command ::
+where ``program.client`` are the program and name of the commander, ``message_id`` is a positive integer assigned by the commander to identify this command and its replies, ``target`` is the actor being commanded, and ``command_string`` is the command to be parsed by the actor. The following is a valid command ::
 
     OBSERVER.john 17 sop status
 
@@ -37,22 +37,22 @@ When an actor is commanding another actor we normally write the ``program.client
 
 Tron receives the message, reformats the header and sends it to the actor as ::
 
-    cid mid command_string
+    commander_id message_id command_string
 
-where ``cid`` is a number identifying the commander and``mid`` is a message ID that does not need to be the same as the commanded ``mid``.
+where ``commander_id`` is a number identifying the commander and``message_id`` is a message ID that does not need to be the same as the commanded ``message_id``.
 
 Replies
 ~~~~~~~
 
 While processing the command, the actor will usually have to output replies back to the hub. The format of the replies is ::
 
-    uid mid message_code reply_data
+    user_id message_id message_code reply_data
 
 where:
 
 - Messages are ASCII.
-- ``uid`` is the ID number of the user that sent the command that triggered this reply. Note that this is not the same as the ``cid`` from the command, but the internal ID assigned to the connection socket from which the command came. In most cases where there is a single connection to the actor this is irrelevant.
-- ``mid`` is the ID number of the message that triggered this reply. Use 0 if the reply is unsolicited (i.e. not in response to any command).
+- ``user_id`` is the ID number of the user that sent the command that triggered this reply. Note that this is not the same as the ``commander_id`` from the command, but the internal ID assigned to the connection socket from which the command came. In most cases where there is a single connection to the actor this is irrelevant.
+- ``message_id`` is the ID number of the message that triggered this reply. Use 0 if the reply is unsolicited (i.e. not in response to any command).
 - ``message_code`` is a one-character :ref:`message type code <message-codes>`.
 - ``reply_data`` is the message data in keyword-value format.
 
