@@ -134,7 +134,10 @@ class ValueType(type, Descriptive):
         }
         if cls == Bits:
             # leave special bit handling alone, since some code may rely on it
-            pass
+            def getNative(self):
+                return int(self)
+
+            dct['native'] = property(getNative)
         elif cls == Bool:
             # cls.baseType is int, not bool, because one cannot subclass bool
             def getNative(self):
