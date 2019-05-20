@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-20 01:23:10
+# @Last modified time: 2019-05-20 12:54:40
 
 
 import warnings
@@ -79,7 +79,7 @@ class LegacyActor(BaseActor):
         if tron_host and tron_port:
             #: TronConnection: The client connection to Tron.
             self.tron = TronConnection(self.name, tron_host, tron_port,
-                                       tron_models=tron_models)
+                                       tron_models=tron_models, log=self.log)
         else:
             self.tron = False
 
