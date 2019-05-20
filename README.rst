@@ -41,20 +41,20 @@ If you want to install it using `modules <http://modules.sourceforge.net/>`_ you
 Quick start
 -----------
 
-Creating a new actor with ``CLU`` is easy. To instantiate and run a legacy-style actor you can simply do ::
+Creating a new actor with ``CLU`` is easy. To instantiate and run an actor you can simply do ::
 
     import asyncio
-    from clu import LegacyActor
+    from clu import Actor
 
     async def main(loop):
-        actor = LegacyActor('localhost', 9999, 'localhost, loop=loop).run()
+        actor = Actor('guest', 'localhost', loop=loop).run()
 
 
     loop = asyncio.get_event_loop()
     loop.create_task(main(loop))
     loop.run_forever()
 
-and can connect to the actor on ``localhost:9999``. Next, head to the `Getting started <https://clu.readthedocs.io/en/latest/getting-started.html>`_ section for more information about using actors.
+Next, head to the `Getting started <https://clu.readthedocs.io/en/latest/getting-started.html>`_ section for more information about using actors.
 
 
 Why a new messaging protocol for SDSS?
