@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-20 16:13:38
+# @Last modified time: 2019-05-21 12:40:06
 
 import os
 
@@ -118,7 +118,7 @@ autodoc_default_options = {
 }
 
 napoleon_use_rtype = False
-napoleon_use_ivar = False
+napoleon_use_ivar = True
 
 rst_epilog = """
 """
