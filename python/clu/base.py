@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-17 17:53:53
+# @Last modified time: 2019-05-20 16:43:15
 
 import asyncio
 import collections
@@ -18,7 +18,7 @@ import json
 
 
 __ALL__ = ['CommandStatus', 'StatusMixIn', 'escape', 'CallbackScheduler',
-           'CaseInsensitiveDict']
+           'CaseInsensitiveDict', 'cli_coro']
 
 
 class Maskbit(enum.Flag):
@@ -316,3 +316,15 @@ class CaseInsensitiveDict(collections.OrderedDict):
 
     def __eq__(self, key):
         return collections.OrderedDict.__eq__(self, self.__get_key__(key))
+
+
+def cli_coro(f):
+    """Decorator function that allows defining coroutines with click."""
+
+    f = asyncio.coroutine(f)
+
+    def wrapper(*args, **kwargs):
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(f(*args, **kwargs))
+
+    return functools.update_wrapper(wrapper, f)
