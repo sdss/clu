@@ -106,14 +106,14 @@ References
 CLU Legacy actor
 ----------------
 
-CLU provides its own implementation of the above protocol via the `.LegacyActor` class. Although the internals are different, the behaviour for the user should be exactly the same as with the new-style `.Actor` class (e.g., `~.Legacy.write` and `~.Legacy.send_command` have the same interface).
+CLU provides its own implementation of the above protocol via the `.LegacyActor` class. Although the internals are different, the behaviour for the user should be exactly the same as with the new-style `.Actor` class (e.g., `~.LegacyActor.write` and `~.LegacyActor.send_command` have the same interface).
 
 When the actor is run, it starts a `~.LegacyActor.server` which is an instance of `.TCPStreamServer`. Similarly, it creates a client connection to Tron that can be accessed over the `~.LegacyActor.tron` attribute. When a new user connects to the server, a callback is issued to `~.LegacyActor.new_user`, which adds the transport to the list of users and outputs some information to the new user. New commands are handled by the `~.LegacyActor.new_command` callback, which parses the command and creates a `.Command` instance which is then sent to `~.BaseActor.parse_command`.
 
 Keyword parsing
 ~~~~~~~~~~~~~~~
 
-CLU provides tracking of actor models through Tron. The actors for which models need to be tracked must be specified when starting the `actor <.LegacyActor>` via the ``tron_models`` list. The models and their values can be accessed via the `.TronConnection.models` parameter (``actor.tron.models``).
+CLU provides tracking of actor models through Tron. The actors for which models need to be tracked must be specified when starting the `actor <.LegacyActor>` with the ``model_names`` list. The models and their values can be accessed via the `actor.tron.models <.TronConnection.models>` parameter.
 
 Internally the parsing of the keywords received from Tron uses the opscore code (opscore does not need to be installed, the code is now part of CLU and migrated to Python 3) and the model must be defined as part of the ``actorkeys`` product.
 
