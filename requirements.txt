@@ -4,3 +4,4 @@ pygments>=2.2.0
 click>=7.0
 aio_pika>=5.5.3
 jsonschema>=3.0.1
+prompt-toolkit>=2.0.9
