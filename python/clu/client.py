@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-20 16:05:33
+# @Last modified time: 2019-05-20 19:16:55
 
 import abc
 import asyncio
@@ -18,6 +18,7 @@ import uuid
 
 import ruamel.yaml
 
+from .base import CommandStatus
 from .command import Command
 from .misc.logger import get_logger
 from .protocol import TopicListener
@@ -278,7 +279,7 @@ class AMQPClient(BaseClient):
 
         return super().from_config(config_dict, *args, **kwargs)
 
-    def handle_reply(self, message):
+    async def handle_reply(self, message):
         """Handles a reply received by the message and updates the models.
 
         Parameters
@@ -300,12 +301,25 @@ class AMQPClient(BaseClient):
             message_code = None
             self.log.warning(f'received message without message_code: {message}')
 
-        sender = headers['sender']
+        sender = headers.get('sender', None)
+        if sender:
+            sender = sender.decode()
+
         command_id = message.correlation_id
 
         # Ignores message from self.
-        if self.name == sender:
-            return
+        if sender and self.name == sender:
+            return None
+
+        # If the command is running we check if the message code indicates
+        # the command is done and, if so, sets the result in the Future.
+        if command_id in self.running_commands:
+            is_done = CommandStatus.get_inverse_dict()[message_code].is_done
+            if is_done:
+                command = self.running_commands.pop(command_id)
+                command.set_result(None)
+
+        return message
 
     async def send_command(self, consumer, command_string, command_id=None):
         """Commands another actor over its RCP queue.
