@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-17 18:47:34
+# @Last modified time: 2019-05-21 12:42:00
 
 import json
 import pathlib
@@ -17,7 +17,77 @@ import jsonschema
 from .base import CallbackScheduler, CaseInsensitiveDict
 
 
-__all__ = ['Property', 'BaseModel', 'Model', 'ModelSet']
+__all__ = ['Reply', 'Property', 'BaseModel', 'Model', 'ModelSet']
+
+
+class Reply(object):
+    """A container for a `~aio_pika.IncomingMessage` that expands and decodes it.
+
+    Parameters
+    ----------
+    message : aio_pika.IncomingMessage
+        The message that contains the reply.
+    ack : bool
+        Whether to acknowledge the message.
+
+    Attributes
+    ----------
+    is_valid : bool
+        Whether the message is valid and correctly parsed.
+    body : dict
+        The body of the message, as a JSON dictionary.
+    info : dict
+        The info dictionary.
+    headers : dict
+        The headers of the message, decoded if they are bytes.
+    message_code : str
+        The message code.
+    sender : str
+        The name of the actor that sends the reply.
+    command_id
+        The command ID.
+
+    """
+
+    def __init__(self, message, ack=True):
+
+        self.message = message
+
+        self.is_valid = True
+
+        self.body = None
+
+        # Acknowledges receipt of message
+        if ack:
+            message.ack()
+
+        self.info = message.info()
+
+        self.headers = self.info['headers']
+        for key in self.headers:
+            if isinstance(self.headers[key], bytes):
+                self.headers[key] = self.headers[key].decode()
+
+        self.message_code = self.headers.get('message_code', None)
+        if self.message_code is None:
+            self.log.warning(f'received message without message_code: {message}')
+
+        self.sender = self.headers.get('sender', None)
+        if self.sender is None:
+            self.log.warning(f'received message without sender: {message}')
+
+        self.command_id = message.correlation_id
+
+        command_id_header = self.headers.get('command_id', None)
+        if command_id_header and command_id_header != self.command_id:
+            self.log.error(f'mismatch between message '
+                           f'correlation_id={self.command_id} '
+                           f'and header command_id={command_id_header} '
+                           f'in message {message}')
+            self.is_valid = False
+            return
+
+        self.body = json.loads(self.message.body.decode())
 
 
 class Property(object):
@@ -150,8 +220,8 @@ class Model(BaseModel):
             self.validator.validate(instance)
         except jsonschema.exceptions.ValidationError:
             if self.log:
-                self.log.error(f'model cannot be updated. '
-                               f'Failed validating {instance}.')
+                self.log.error(f'model {self.name} cannot be updated. '
+                               f'Failed validating instance {instance}.')
             return False
 
         for key, value in instance.items():
@@ -177,6 +247,8 @@ class ModelSet(dict):
         (e.g., ``sop.json``).
     model_names : list
         A list of models whose schemas will be loaded.
+    raise_exception : bool
+        Whether to raise an exception if any of the models cannot be loaded.
     kwargs
         Keyword arguments to be passed to `Model`.
 
@@ -189,16 +261,29 @@ class ModelSet(dict):
 
     """
 
-    def __init__(self, model_path, model_names, **kwargs):
+    def __init__(self, model_path, model_names, raise_exception=True, **kwargs):
 
         dict.__init__(self, {})
+
+        log = kwargs.get('log', None)
 
         self.model_path = pathlib.Path(model_path).expanduser()
 
         for name in model_names:
-            schema_path = self.model_path / f'{name}.json'
-            assert schema_path.exists()
 
-            schema = json.load(open(schema_path))
+            try:
 
-            self[name] = Model(name, schema, **kwargs)
+                schema_path = self.model_path / f'{name}.json'
+                assert schema_path.exists(), f'model path {schema_path} does not exist.'
+
+                schema = json.load(open(schema_path))
+
+                self[name] = Model(name, schema, **kwargs)
+
+            except Exception:
+
+                if not raise_exception:
+                    if log:
+                        log.warning(f'cannot load model for actor {name!r}')
+                    continue
+                raise
