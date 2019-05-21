@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-20 19:16:55
+# @Last modified time: 2019-05-21 12:33:43
 
 import abc
 import asyncio
@@ -21,6 +21,7 @@ import ruamel.yaml
 from .base import CommandStatus
 from .command import Command
 from .misc.logger import get_logger
+from .model import Reply
 from .protocol import TopicListener
 
 
@@ -143,7 +144,7 @@ class BaseClient(metaclass=abc.ABCMeta):
         # send all the arguments already unpacked. Otherwise we get the name
         # from the config.
         if len(args) == 0:
-            args = [config_dict['name']]
+            args = [config_dict.pop('name')]
 
         version = config_dict.pop('version', '?')
         log_dir = config_dict.pop('log_dir', None)
@@ -174,7 +175,7 @@ class BaseClient(metaclass=abc.ABCMeta):
         log.sh.setLevel(shell_level)
         log.fh.setLevel(file_level)
 
-        log.info(f'{self.name}: logging system initiated.')
+        log.debug(f'{self.name}: logging system initiated.')
 
         return log
 
@@ -259,8 +260,8 @@ class AMQPClient(BaseClient):
             f'{self.name}_replies', callback=self.handle_reply,
             bindings=[f'reply.#'])
 
-        self.log.info(f'replies queue {self.replies_queue.name!r} bound '
-                      f'to {self.connection.connection.url!s}')
+        self.log.info(f'replies queue {self.replies_queue.name!r} '
+                      f'bound to {self.connection.connection.url!s}')
 
         return self
 
@@ -274,52 +275,48 @@ class AMQPClient(BaseClient):
 
         config_dict = cls._parse_config(config)
 
-        args = list(args) + [config_dict.pop('user'),
+        args = list(args) + [config_dict.pop('name'),
+                             config_dict.pop('user'),
                              config_dict.pop('host')]
 
         return super().from_config(config_dict, *args, **kwargs)
 
     async def handle_reply(self, message):
-        """Handles a reply received by the message and updates the models.
+        """Handles a reply received from the exchange.
+
+        Creates a new instance of `.Reply` from the ``message``. If the
+        reply is valid it updates any running command.
 
         Parameters
         ----------
         message : aio_pika.IncomingMessage
             The message received.
 
+        Returns
+        -------
+        reply : `.Reply`
+            The `.Reply` object created from the message.
+
         """
 
-        # Acknowledges receipt of message
-        message.ack()
-
-        message_info = message.info()
-        headers = message_info['headers']
-
-        if 'message_code' in headers:
-            message_code = headers['message_code'].decode()
-        else:
-            message_code = None
-            self.log.warning(f'received message without message_code: {message}')
-
-        sender = headers.get('sender', None)
-        if sender:
-            sender = sender.decode()
-
-        command_id = message.correlation_id
+        reply = Reply(message, ack=True)
+        if not reply.is_valid:
+            self.log.error('invalid message.')
+            return reply
 
         # Ignores message from self.
-        if sender and self.name == sender:
-            return None
+        if reply.sender and self.name == reply.sender:
+            return reply
 
         # If the command is running we check if the message code indicates
         # the command is done and, if so, sets the result in the Future.
-        if command_id in self.running_commands:
-            is_done = CommandStatus.get_inverse_dict()[message_code].is_done
+        if reply.command_id in self.running_commands:
+            is_done = CommandStatus.get_inverse_dict()[reply.message_code].is_done
             if is_done:
-                command = self.running_commands.pop(command_id)
+                command = self.running_commands.pop(reply.command_id)
                 command.set_result(None)
 
-        return message
+        return reply
 
     async def send_command(self, consumer, command_string, command_id=None):
         """Commands another actor over its RCP queue.

@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-20 15:57:21
+# @Last modified time: 2019-05-21 12:35:51
 
 import abc
 import asyncio
@@ -19,6 +19,7 @@ import clu
 
 from .client import AMQPClient, BaseClient
 from .command import Command
+from .model import ModelSet
 from .parser import command_parser
 
 
@@ -160,7 +161,26 @@ class Actor(AMQPClient, BaseActor):
     #: Note that the command is always passed first.
     parser_args = []
 
-    commands_queue = None
+    def __init__(self, *args, model_path=None, model_names=None, **kwargs):
+
+        AMQPClient.__init__(self, *args, **kwargs)
+
+        self.commands_queue = None
+
+        if model_path:
+
+            model_names = model_names or []
+
+            if self.name not in model_names:
+                model_names.append(self.name)
+
+            self.models = ModelSet(model_path, model_names=model_names,
+                                   raise_exception=False, log=self.log)
+
+        else:
+
+            self.log.warning('no models loaded.')
+            self.models = None
 
     async def run(self, **kwargs):
         """Starts the connection to the AMQP broker."""
@@ -173,8 +193,8 @@ class Actor(AMQPClient, BaseActor):
             f'{self.name}_commands', callback=self.new_command,
             bindings=[f'command.{self.name}.#'])
 
-        self.log.info(f'commands queue {self.commands_queue.name!r} bound '
-                      f'to {self.connection.connection.url!s}')
+        self.log.info(f'commands queue {self.commands_queue.name!r} '
+                      f'bound to {self.connection.connection.url!s}')
 
         return self
 
@@ -186,7 +206,7 @@ class Actor(AMQPClient, BaseActor):
 
         """
 
-        return AMQPClient.from_config(cls, config, *args, **kwargs)
+        return super().from_config(config, *args, **kwargs)
 
     async def new_command(self, message):
         """Handles a new command received by the actor."""
@@ -212,7 +232,7 @@ class Actor(AMQPClient, BaseActor):
 
         self.parse_command(command)
 
-    def handle_reply(self, message):
+    async def handle_reply(self, message):
         """Handles a reply received by the message and updates the models.
 
         Parameters
@@ -222,7 +242,12 @@ class Actor(AMQPClient, BaseActor):
 
         """
 
-        AMQPClient.handle_reply(self, message)
+        reply = await AMQPClient.handle_reply(self, message)
+
+        if self.models and reply.sender in self.models:
+            self.models[reply.sender].update_model(reply.body)
+
+        return
 
     async def write(self, message_code='i', message=None, command=None,
                     broadcast=False, **kwargs):
