@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-20 13:06:47
+# @Last modified time: 2019-05-21 15:48:04
 
 import asyncio
 
@@ -31,7 +31,7 @@ class TronKey(Property):
     """
 
     def __repr__(self):
-        return f'<{self.__class__.__name__!s} ({self.key}): {self.value}>'
+        return f'<{self.__class__.__name__!s} ({self.key.name}): {self.value}>'
 
 
 class TronModel(BaseModel):
