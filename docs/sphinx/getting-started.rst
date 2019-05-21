@@ -248,8 +248,59 @@ In this case our command, ``my_command``, is commanding ``actor2`` and sending i
 The keyword model
 -----------------
 
-Validating keywords
-~~~~~~~~~~~~~~~~~~~
+CLU uses the `JSON Schema Draft 7 <https://json-schema.org/>`_ specification to define and validate data models for the actors. Each actor must be accompanied by a JSON Schema-compatible file with a definition of the actor model. An example of a model definition file for an actor with two keywords, ``text`` and ``temperature``, the first having to be a string and the second a float, would look something like
+
+.. code:: json
+
+    {
+    "type" : "object",
+    "properties" : {
+        "text" : {"type" : "string"},
+        "temperature" : {"type" : "number"}
+        }
+    }
+
+The name of the file must be ``<actor>.json`` with ``<actor>`` being the name of the actor. To load a series of models when the actor begins you need to do something like ::
+
+    my_actor = await Actor('my_actor', 'guest', 'localhost',
+                           model_path='~/my_models/', model_names=['sop', 'guider'],
+                           version='0.1.0', loop=loop).run()
+
+This will load and keep track of the models for the ``sop`` and ``guider`` actors. The model for the own actor, ``my_actor``, is always loaded if available. If one or more of the model schemas cannot be found, a warning will be issued.
+
+Models are accessible as a `.ModelSet` object via the ``models`` attribute. A `.ModelSet` is just a dictionary of `.Model` instances, one for each of the models being tracked. When a new reply is received from an actor, the body of the reply is automatically parsed and validated against the model schema, and the model itself is updated.
+
+::
+
+    >>> my_actor.models['guider']
+    {
+        "text": "Pong.",
+        "guideState": "on",
+        "axisError": [0.1, 0.04, 1.2]
+        ...
+    }
+    >>> type(my_actor.models['guider']['guideState'])
+    clu.model.Property
+    >>> my_actor.models['guider']['guideState']
+    <Property (guideState): 'on'>
+    >>> my_actor.models['guider']['guideState'].value
+    'on'
+
+It is possible to set callbacks that will be invoked when the model is updated or when a specific property changes.
+
+Validating schemas
+~~~~~~~~~~~~~~~~~~
+
+To check whether the actor schema you are writing is JSON Schema-compliant you can use the `.Model.check_schema` staticmethod ::
+
+    >>> from clu.model import Model
+    >>> Model.check_schema('~/my_models/my_actor.json', is_file=True)
+    True
+
+Legacy actors
+~~~~~~~~~~~~~
+
+Actors that derive from `.LegacyActor` track their models via the `.TronConnection` instance. In this case the model schema needs to be defined as part of the ``actorkeys`` and the parsing and validation of the keys is done using the ``opscore`` machinery that has been integrated into CLU. That said, the bahviour of the `.TronModel` instances that can be accessed via `.TronConnection.models` is the same as the one described above for `.Model`, including the access format and the ability to set callbacks.
 
 
 .. _devices:
