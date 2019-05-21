@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-21 13:10:59
+# @Last modified time: 2019-05-21 15:46:30
 
 import json
 import pathlib
@@ -238,7 +238,7 @@ class Model(BaseModel):
         """
 
         if is_file:
-            schema = json.load(open(schema, 'r'))
+            schema = json.load(open(pathlib.Path(schema).expanduser(), 'r'))
         elif not is_file and isinstance(schema, str):
             try:
                 schema = json.loads(schema)
