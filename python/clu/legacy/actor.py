@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-20 16:05:42
+# @Last modified time: 2019-05-21 15:49:20
 
 
 import warnings
@@ -46,7 +46,7 @@ class LegacyActor(BaseActor):
         The host on which Tron is running.
     tron_port : int
         The port on which Tron is running.
-    tron_models : list
+    model_names : list
         A list of strings with the actors whose models will be tracked.
     version : str
         The version of the actor.
@@ -62,7 +62,7 @@ class LegacyActor(BaseActor):
     """
 
     def __init__(self, name, host, port, tron_host=None, tron_port=None,
-                 tron_models=None, version=None, loop=None, log_dir=None, log=None):
+                 model_names=None, version=None, loop=None, log_dir=None, log=None):
 
         super().__init__(name, version=version, loop=loop, log_dir=log_dir, log=log)
 
@@ -79,7 +79,7 @@ class LegacyActor(BaseActor):
         if tron_host and tron_port:
             #: TronConnection: The client connection to Tron.
             self.tron = TronConnection(self.name, tron_host, tron_port,
-                                       tron_models=tron_models, log=self.log)
+                                       model_names=model_names, log=self.log)
         else:
             self.tron = False
 

@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-21 15:48:04
+# @Last modified time: 2019-05-21 15:49:44
 
 import asyncio
 
@@ -100,14 +100,14 @@ class TronConnection(object):
         The host on which Tron is running.
     port : int
         The port on which Tron is running.
-    tron_models : list
+    model_names : list
         A list of strings with the actors whose models will be tracked.
     log : ~logging.Logger
         Where to log messages.
 
     """
 
-    def __init__(self, actor, host, port, tron_models=None, log=None):
+    def __init__(self, actor, host, port, model_names=None, log=None):
 
         self.actor = actor
 
@@ -118,15 +118,15 @@ class TronConnection(object):
 
         self._mid = 1
 
-        tron_models = tron_models or []
+        model_names = model_names or []
 
         #: dict: The `KeysDictionary` associated with each actor to track.
         self.keyword_dicts = {actor: KeysDictionary.load(actor)
-                              for actor in tron_models}
+                              for actor in model_names}
 
         #: dict: The `TronModel` instance holding the model and values of each actor being tracked.
         self.models = {actor: TronModel(self.keyword_dicts[actor], log=log)
-                       for actor in tron_models}
+                       for actor in model_names}
 
         self._parser = None
 
