@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-21 12:42:00
+# @Last modified time: 2019-05-21 12:46:20
 
 import json
 import pathlib
@@ -205,7 +205,7 @@ class Model(BaseModel):
 
         self.schema = schema
 
-        self.validator = jsonschema.Draft3Validator(self.schema)
+        self.validator = jsonschema.Draft7Validator(self.schema)
         self.validator.check_schema(self.schema)
 
         super().__init__(name, **kwargs)
