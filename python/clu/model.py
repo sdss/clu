@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-21 12:46:20
+# @Last modified time: 2019-05-21 13:10:59
 
 import json
 import pathlib
@@ -201,17 +201,55 @@ class Model(BaseModel):
 
     """
 
+    VALIDATOR = jsonschema.Draft7Validator
+
     def __init__(self, name, schema, **kwargs):
 
         self.schema = schema
 
-        self.validator = jsonschema.Draft7Validator(self.schema)
-        self.validator.check_schema(self.schema)
+        if not self.check_schema(schema, is_file=False):
+            raise ValueError(f'schema {name!r} is invalid.')
+
+        self.validator = self.VALIDATOR(self.schema)
 
         super().__init__(name, **kwargs)
 
         for key in self.schema['properties']:
             self[key] = Property(key, model=self)
+
+    @staticmethod
+    def check_schema(schema, is_file=False):
+        """Checks whether a JSON schema is valid.
+
+        Parameters
+        ----------
+        schema : str or dict
+            The schema to check. It can be a JSON dictionary or the path to a
+            file.
+        is_file : bool
+            Whether the input schema is a filepath or not.
+
+        Returns
+        -------
+        result : `bool`
+            Returns `True` if the schema is a valid JSON schema, `False`
+            otherwise.
+
+        """
+
+        if is_file:
+            schema = json.load(open(schema, 'r'))
+        elif not is_file and isinstance(schema, str):
+            try:
+                schema = json.loads(schema)
+            except json.JSONDecodeError:
+                raise ValueError('cannot parse input schema.')
+
+        try:
+            Model.VALIDATOR.check_schema(schema)
+            return True
+        except jsonschema.SchemaError:
+            return False
 
     def update_model(self, instance):
         """Validates a new instance and updates the model."""
@@ -265,7 +303,7 @@ class ModelSet(dict):
 
         dict.__init__(self, {})
 
-        log = kwargs.get('log', None)
+        self.log = kwargs.get('log', None)
 
         self.model_path = pathlib.Path(model_path).expanduser()
 
@@ -280,10 +318,10 @@ class ModelSet(dict):
 
                 self[name] = Model(name, schema, **kwargs)
 
-            except Exception:
+            except Exception as ee:
 
                 if not raise_exception:
-                    if log:
-                        log.warning(f'cannot load model for actor {name!r}')
+                    if self.log:
+                        self.log.warning(f'cannot load model for actor {name!r}: {ee}')
                     continue
                 raise
