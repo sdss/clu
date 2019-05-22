@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-21 23:35:00
+# @Last modified time: 2019-05-22 08:19:15
 
 
 import warnings
@@ -302,25 +302,30 @@ class LegacyActor(BaseActor):
             command=command, user_id=user_id, command_id=command_id)
 
         if message is None:
-            lines = ['']
+            lines = []
         elif isinstance(message, str):
             lines = [message]
         elif isinstance(message, dict):
             lines = []
             for keyword in message:
                 value = message[keyword]
+                if value is None:
+                    continue
                 if escape:
                     value = clu.escape(value)
                 lines.append(f'{keyword}={value}')
-            if concatenate:
-                lines = ['; '.join(lines)]
         else:
             raise TypeError('invalid message type ' + type(message))
 
         for key, value in kwargs.items():
+            if value is None:
+                continue
             if escape:
                 value = clu.escape(value)
             lines.append(f'{key}={value}')
+
+        if concatenate:
+            lines = ['; '.join(lines)]
 
         for line in lines:
 
