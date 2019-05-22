@@ -113,7 +113,7 @@ When the actor is run, it starts a `~.LegacyActor.server` which is an instance o
 Keyword parsing
 ~~~~~~~~~~~~~~~
 
-CLU provides tracking of actor models through Tron. The actors for which models need to be tracked must be specified when starting the `actor <.LegacyActor>` with the ``model_names`` list. The models and their values can be accessed via the `actor.tron.models <.TronConnection.models>` parameter.
+CLU provides tracking of actor models through Tron. The actors for which models need to be tracked must be specified when starting the `actor <.LegacyActor>` with the ``model_names`` list. The models and their values can be accessed via the `actor.models <.TronConnection.models>` parameter.
 
 Internally the parsing of the keywords received from Tron uses the opscore code (opscore does not need to be installed, the code is now part of CLU and migrated to Python 3) and the model must be defined as part of the ``actorkeys`` product.
 

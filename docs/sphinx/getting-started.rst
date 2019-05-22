@@ -300,7 +300,7 @@ To check whether the actor schema you are writing is JSON Schema-compliant you c
 Legacy actors
 ~~~~~~~~~~~~~
 
-Actors that derive from `.LegacyActor` track their models via the `.TronConnection` instance. In this case the model schema needs to be defined as part of the ``actorkeys`` and the parsing and validation of the keys is done using the ``opscore`` machinery that has been integrated into CLU. That said, the bahviour of the `.TronModel` instances that can be accessed via `.TronConnection.models` is the same as the one described above for `.Model`, including the access format and the ability to set callbacks.
+Actors that derive from `.LegacyActor` track their models via the `.TronConnection` instance. In this case the model schema needs to be defined as part of the ``actorkeys`` and the parsing and validation of the keys is done using the ``opscore`` machinery that has been integrated into CLU. That said, the bahviour of the `.TronModel` instances that can be accessed via `actor.models <.TronConnection.models>` is the same as the one described above for `.Model`, including the access format and the ability to set callbacks.
 
 
 .. _devices:

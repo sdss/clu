@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-21 15:49:20
+# @Last modified time: 2019-05-21 23:35:00
 
 
 import warnings
@@ -82,6 +82,10 @@ class LegacyActor(BaseActor):
                                        model_names=model_names, log=self.log)
         else:
             self.tron = False
+
+        if self.tron:
+            #: dict: Actor models.
+            self.models = self.tron.models
 
     def __repr__(self):
 
