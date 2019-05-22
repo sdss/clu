@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-20 14:58:45
+# @Last modified time: 2019-05-22 09:16:26
 
 import asyncio
 import functools
@@ -115,13 +115,20 @@ def ping(*args):
 
 
 @command_parser.command()
+@click.argument('PARSER-COMMAND', type=str, required=False)
 @click.pass_context
-def help(ctx, *args):
+def help(ctx, *args, parser_command):
     """Shows the help."""
 
     command = args[0]
 
-    for line in ctx.get_help().splitlines():
+    # Gets the help lines for the command group or for a specific command.
+    if parser_command and parser_command.lower() != 'help':
+        help_lines = ctx.command.commands[parser_command.lower()].get_help(ctx)
+    else:
+        help_lines = ctx.get_help()
+
+    for line in help_lines.splitlines():
         # Remove the parser name.
         match = re.match(r'^Usage:([A-Za-z-\ ]+? \[OPTIONS\]) .*', line)
         if match:

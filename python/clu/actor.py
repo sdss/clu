@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-21 12:35:51
+# @Last modified time: 2019-05-22 09:14:56
 
 import abc
 import asyncio
@@ -76,6 +76,10 @@ class BaseActor(BaseClient):
             for line in lines:
                 command.write('w', text=line)
 
+        except click.exceptions.Exit:
+
+            return command.set_status(command.status.FAILED, {'text': f'Use help [CMD]'})
+
         except Exception:
 
             self.log.exception('command failed with error:')
@@ -102,6 +106,11 @@ class BaseActor(BaseClient):
             return
 
         command.set_status(command.status.RUNNING)
+
+        # If the command contains the --help flag, redirects it to the help command.
+        if '--help' in command.body:
+            command.body = 'help ' + command.body
+            command.body = command.body.replace(' --help', '')
 
         try:
 
