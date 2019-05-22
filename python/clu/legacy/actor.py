@@ -129,7 +129,7 @@ class LegacyActor(BaseActor):
             tron_config = config_dict.pop('tron')
             kwargs.update({'tron_host': tron_config.get('host', None)})
             kwargs.update({'tron_port': tron_config.get('port', None)})
-            kwargs.update({'tron_models': tron_config.get('models', None)})
+            kwargs.update({'model_names': tron_config.get('models', None)})
 
         return super().from_config(config_dict, *args, **kwargs)
 
