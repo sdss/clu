@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-20 01:12:38
+# @Last modified time: 2019-05-22 08:42:27
 
 import asyncio
 import re
@@ -204,7 +204,7 @@ def parse_legacy_command(command_string):
 
     """
 
-    _HEADER_BODY_RE = re.compile(r'((?P<uid>[A-Za-z0-9.]+)(?P<cid>\s+\d+)?\s+)?((?P<body>[A-Za-z_].*))?$')
+    _HEADER_BODY_RE = re.compile(r'((?P<uid>\s+\d+)(?P<cid>\s+\d+)?\s+)?((?P<body>[A-Za-z_].*))?$')
 
     command_match = _HEADER_BODY_RE.match(command_string)
     if not command_match:
