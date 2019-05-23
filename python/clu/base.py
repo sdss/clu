@@ -19,8 +19,10 @@ import logging
 
 from .misc.logger import REPLY
 
-__ALL__ = ['CommandStatus', 'StatusMixIn', 'escape', 'CallbackScheduler',
-           'CaseInsensitiveDict', 'cli_coro']
+
+__ALL__ = ['CommandStatus', 'StatusMixIn', 'format_value', 'CallbackScheduler',
+           'CaseInsensitiveDict', 'cli_coro', 'value', 'as_complete_failer',
+           'log_reply']
 
 
 class Maskbit(enum.Flag):
@@ -330,6 +332,70 @@ def cli_coro(f):
         return loop.run_until_complete(f(*args, **kwargs))
 
     return functools.update_wrapper(wrapper, f)
+
+
+async def as_complete_failer(aws, on_fail_callback=None, **kwargs):
+    """Similar to `~asyncio.as_complete` but cancels all the tasks
+    if any of them returns `False`.
+
+    Parameters
+    ----------
+    aws : list
+        A list of awaitable objects. If not a list, it will be wrapped in one.
+    on_fail_callback
+        A function or coroutine to call if any of the tasks failed.
+    kwargs : dict
+        A dictionary of keywords to be passed to `~asyncio.as_complete`.
+
+    Returns
+    -------
+    result_tuple : tuple
+        A tuple in which the first element is `True` if all the tasks
+        completed, `False` if any of them failed and the rest were cancelled.
+        If `False`, the second element is `None` if no exceptions were caught
+        during the execution of the tasks, otherwise it contains the error
+        message. If `True`, the second element is always `None`.
+
+    """
+
+    if not isinstance(aws, (list, tuple)):
+        aws = [aws]
+
+    loop = kwargs.get('loop', asyncio.get_event_loop())
+
+    tasks = [loop.create_task(aw) for aw in aws]
+
+    failed = False
+    error_message = None
+    for next_completed in asyncio.as_completed(tasks, **kwargs):
+        try:
+            result = await next_completed
+        except Exception as ee:
+            error_message = str(ee)
+            result = False
+
+        if not result:
+            failed = True
+            break
+
+    if failed:
+
+        # Cancel tasks
+        [task.cancel() for task in tasks]
+
+        with contextlib.suppress(asyncio.CancelledError):
+            await asyncio.gather(*[task for task in tasks])
+
+        if on_fail_callback:
+            if asyncio.iscoroutinefunction(on_fail_callback):
+                await on_fail_callback()
+            else:
+                on_fail_callback()
+
+        return (False, error_message)
+
+    return (True, None)
+
 
 def log_reply(log, message_code, message, use_message_code=False):
     """Logs an actor message with the correct code."""
