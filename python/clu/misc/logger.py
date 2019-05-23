@@ -21,8 +21,6 @@ from pygments import highlight
 from pygments.formatters import TerminalFormatter
 from pygments.lexers import get_lexer_by_name
 
-from clu.base import escape
-
 from .color_print import color_text
 
 
