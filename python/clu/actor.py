@@ -286,7 +286,7 @@ class Actor(AMQPClient, BaseActor):
 
         message.update(kwargs)
 
-        message_json = json.dumps(message).encode()
+        message_json = json.dumps(message)
 
         if command is None:
             broadcast = True
@@ -305,8 +305,10 @@ class Actor(AMQPClient, BaseActor):
             routing_key = f'reply.{command.commander_id}'
 
         await self.connection.exchange.publish(
-            apika.Message(message_json,
+            apika.Message(message_json.encode(),
                           content_type='text/json',
                           headers=headers,
                           correlation_id=command_id),
             routing_key=routing_key)
+
+        log_reply(self.log, message_code, message_json)

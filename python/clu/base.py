@@ -15,7 +15,9 @@ import contextlib
 import enum
 import functools
 import json
+import logging
 
+from .misc.logger import REPLY
 
 __ALL__ = ['CommandStatus', 'StatusMixIn', 'escape', 'CallbackScheduler',
            'CaseInsensitiveDict', 'cli_coro']
@@ -328,3 +330,24 @@ def cli_coro(f):
         return loop.run_until_complete(f(*args, **kwargs))
 
     return functools.update_wrapper(wrapper, f)
+
+def log_reply(log, message_code, message, use_message_code=False):
+    """Logs an actor message with the correct code."""
+
+    code_dict = {'f': logging.ERROR,
+                 'w': logging.WARNING,
+                 'i': logging.INFO,
+                 ':': logging.INFO,
+                 'd': logging.DEBUG}
+
+    if use_message_code:
+        log.log(code_dict[message_code], message)
+    else:
+        # Sets the REPLY log level
+        log_level_no = REPLY
+        if log_level_no in logging._levelToName:
+            log_level = log_level_no
+        else:
+            log_level = logging.DEBUG
+
+        log.log(log_level, message)

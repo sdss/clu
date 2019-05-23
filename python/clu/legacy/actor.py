@@ -338,3 +338,5 @@ class LegacyActor(BaseActor):
                     transport.write(msg)
             else:
                 transport.write(msg)
+
+            log_reply(self.log, message_code, full_msg_str)
