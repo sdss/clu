@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-23 15:27:11
+# @Last modified time: 2019-05-23 16:13:52
 
 import abc
 import asyncio
@@ -134,18 +134,23 @@ class BaseActor(BaseClient):
             for line in lines:
                 command.write('w', text=line)
 
+            command.set_status(command.status.FAILED,
+                               text=f'Command {command.body!r} failed.')
+
         except click.exceptions.Exit:
 
             # This happens when using --help, although it should be handled
             # in parse_command.
             return command.set_status(command.status.FAILED, {'text': f'Use help [CMD]'})
 
-        except Exception:
+        except Exception as ee:
+
+            command.set_status(
+                command.status.FAILED,
+                text=f'Command failed with error: {ee.__class__.__name__}: {ee!s}')
 
             if log:
                 log.exception('command failed with error:')
-
-        command.set_status(command.status.FAILED, message=f'Command {command.body!r} failed.')
 
     @abc.abstractmethod
     def send_command(self):
