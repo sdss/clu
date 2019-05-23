@@ -7,12 +7,12 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-20 15:58:01
+# @Last modified time: 2019-05-23 11:45:10
 
 # flake8: noqa
 
 from .actor import *
-from .base import CommandStatus, escape
+from .base import CommandStatus, as_complete_failer, escape, format_value
 from .client import AMQPClient
 from .command import *
 from .device import *
