@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-22 08:19:15
+# @Last modified time: 2019-05-23 13:16:08
 
 
 import warnings
@@ -165,7 +165,7 @@ class LegacyActor(BaseActor):
             self.write('f', {'text': f'Could not parse the following as a command: {ee!r}'})
             return
 
-        self.parse_command(command)
+        return self.parse_command(command)
 
     @staticmethod
     def format_user_output(user_id, command_id, message_code, msg_str=None):

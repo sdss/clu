@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-22 09:16:26
+# @Last modified time: 2019-05-23 12:37:47
 
 import asyncio
 import functools
@@ -19,8 +19,19 @@ import click
 class CluCommand(click.Command):
     """Override `click.Command` to pass the actor and command as arguments."""
 
+    def done_callback(self, task, exception_handler=None):
+        """Checks if the command task has been successfully done."""
+
+        log = getattr(task, 'log', None)
+        ctx = task.ctx
+
+        command = ctx.obj['parser_args'][0]
+
+        if exception_handler and task.exception():
+            exception_handler(command, task.exception(), log=log)
+
     async def _schedule_callback(self, ctx, timeout=None):
-        """Schedules the callback as a task."""
+        """Schedules the callback as a task with a timeout."""
 
         if not hasattr(ctx, 'obj') or 'parser_args' not in ctx.obj:
             parser_args = []
@@ -48,7 +59,11 @@ class CluCommand(click.Command):
         click.core._maybe_show_deprecated_notice(self)
 
         if self.callback is not None:
+
             with ctx:
+
+                loop = asyncio.get_event_loop()
+
                 # Makes sure the callback is a coroutine
                 if not asyncio.iscoroutinefunction(self.callback):
                     self.callback = asyncio.coroutine(self.callback)
@@ -57,8 +72,21 @@ class CluCommand(click.Command):
                 # If so, schedules a task to be cancelled after timeout.
                 timeout = getattr(self.callback, 'timeout', None)
 
-                loop = asyncio.get_event_loop()
+                log = ctx.obj.pop('log', None)
+
+                # Defines the done callback function.
+                exception_handler = ctx.obj.pop('exception_handler', None)
+                done_callback = functools.partial(self.done_callback,
+                                                  exception_handler=exception_handler)
+
+                # Launches callback scheduler and adds the done callback
                 ctx.task = loop.create_task(self._schedule_callback(ctx, timeout=timeout))
+                ctx.task.add_done_callback(done_callback)
+
+                # Add some attributes to the task because it's
+                # what will be passed to done_callback
+                ctx.task.ctx = ctx
+                ctx.task.log = log
 
             return ctx
 

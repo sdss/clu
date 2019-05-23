@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-22 08:42:27
+# @Last modified time: 2019-05-23 12:34:25
 
 import asyncio
 import re
@@ -179,6 +179,10 @@ class Command(BaseCommand):
 
         #: The actor in which this command will run.
         self.actor = actor
+
+        #: The `~click.Context` running this command. Only relevant if
+        #: using the built-in click-based parser.
+        self.ctx = None
 
         self.transport = transport
 

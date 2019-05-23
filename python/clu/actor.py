@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-22 09:14:56
+# @Last modified time: 2019-05-23 15:27:11
 
 import abc
 import asyncio
@@ -15,10 +15,10 @@ import json
 
 import click
 
-import clu
-
+from .base import log_reply
 from .client import AMQPClient, BaseClient
 from .command import Command
+from .exceptions import CommandError
 from .model import ModelSet
 from .parser import command_parser
 
@@ -63,30 +63,6 @@ class BaseActor(BaseClient):
         pass
 
     def parse_command(self, command):
-        """Handles a new command received by the actor."""
-
-        try:
-
-            self._parse(command)
-            return command
-
-        except clu.CommandParserError as ee:
-
-            lines = ee.args[0].splitlines()
-            for line in lines:
-                command.write('w', text=line)
-
-        except click.exceptions.Exit:
-
-            return command.set_status(command.status.FAILED, {'text': f'Use help [CMD]'})
-
-        except Exception:
-
-            self.log.exception('command failed with error:')
-
-        command.set_status(command.status.FAILED, message=f'Command {command.body!r} failed.')
-
-    def _parse(self, command):
         """Parses an user command with the default parser.
 
         This method can be overridden to use a custom parser.
@@ -112,33 +88,64 @@ class BaseActor(BaseClient):
             command.body = 'help ' + command.body
             command.body = command.body.replace(' --help', '')
 
+        # We call the command with a custom context to get around
+        # the default handling of exceptions in Click. This will force
+        # exceptions to be raised instead of redirected to the stdout.
+        # See http://click.palletsprojects.com/en/7.x/exceptions/
+        ctx = command_parser.make_context(
+            f'{self.name}-command-parser', command.body.split(),
+            obj={'parser_args': parser_args,
+                 'log': self.log,
+                 'exception_handler': self._handle_command_exception})
+
+        # Makes sure this is the global context. This solves problems when
+        # the actor have been started from inside an existing context,
+        # for example when it's called from a CLI click application.
+        click.globals.push_context(ctx)
+
+        with ctx:
+            command_parser.invoke(ctx)
+
+        # Sets the context in the command.
+        command.ctx = ctx
+
+        return command
+
+    @staticmethod
+    def _handle_command_exception(command, exception, log=None):
+        """Handles an exception during parsing or execution of a command."""
+
         try:
 
-            # We call the command with a custom context to get around
-            # the default handling of exceptions in Click. This will force
-            # exceptions to be raised instead of redirected to the stdout.
-            # See http://click.palletsprojects.com/en/7.x/exceptions/
-            ctx = command_parser.make_context(f'{self.name}-command-parser',
-                                              command.body.split(),
-                                              obj={'parser_args': parser_args})
-
-            # Makes sure this is the global context. This solves problems when
-            # the actor have been started from inside an existing context,
-            # for example when it's called from a CLI click application.
-            click.globals.push_context(ctx)
-
-            with ctx:
-                command_parser.invoke(ctx)
+            raise exception
 
         except click.ClickException as ee:
 
-            # If this is a command that cannot be parsed.
-            if ee.message is None:
-                ee.message = f'{ee.__class__.__name__}:\n{ctx.get_help()}'
-            else:
-                ee.message = f'{ee.__class__.__name__}: {ee.message}'
+            ctx = command.ctx
+            message = ''
 
-            raise clu.CommandParserError(ee.message)
+            # If this is a command that cannot be parsed.
+            if ee.message is None and ctx:
+                message = f'{ee.__class__.__name__}:\n{ctx.get_help()}'
+            else:
+                message = f'{ee.__class__.__name__}: {ee.message}'
+
+            lines = message.splitlines()
+            for line in lines:
+                command.write('w', text=line)
+
+        except click.exceptions.Exit:
+
+            # This happens when using --help, although it should be handled
+            # in parse_command.
+            return command.set_status(command.status.FAILED, {'text': f'Use help [CMD]'})
+
+        except Exception:
+
+            if log:
+                log.exception('command failed with error:')
+
+        command.set_status(command.status.FAILED, message=f'Command {command.body!r} failed.')
 
     @abc.abstractmethod
     def send_command(self):
@@ -235,11 +242,11 @@ class Actor(AMQPClient, BaseActor):
                               consumer_id=self.name,
                               actor=self, loop=self.loop)
             command.actor = self  # Assign the actor
-        except clu.CommandError as ee:
+        except CommandError as ee:
             await self.write('f', {'text': f'Could not parse the following as a command: {ee!r}'})
             return
 
-        self.parse_command(command)
+        return self.parse_command(command)
 
     async def handle_reply(self, message):
         """Handles a reply received by the message and updates the models.
