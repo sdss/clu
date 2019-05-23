@@ -21,6 +21,8 @@ from pygments import highlight
 from pygments.formatters import TerminalFormatter
 from pygments.lexers import get_lexer_by_name
 
+from clu.base import escape
+
 from .color_print import color_text
 
 
@@ -70,6 +72,40 @@ def colored_formatter(record):
         sys.__stdout__.flush()
 
     return
+
+
+class ActorHandler(logging.Handler):
+    """An actor that outputs log messages to an actor.
+
+    Parameters
+    ----------
+    actor
+        The actor instance.
+    level : int
+        The level above which records will be output in the actor.
+    keyword : str
+        The keyword around which the messages will be output.
+
+    """
+
+    def __init__(self, actor, level=logging.ERROR, keyword='text'):
+        self.actor = actor
+        self.keyword = keyword
+        super().__init__(level=level)
+
+    def emit(self, record):
+        """Emits the record."""
+
+        message = record.getMessage()
+
+        if record.levelno <= logging.DEBUG:
+            code = 'd'
+        elif record.levelno <= logging.INFO:
+            code = 'i'
+        elif record.levelno <= logging.ERROR:
+            code = 'w'
+
+        self.actor.write(code, message={self.keyword: message})
 
 
 class SDSSFormatter(logging.Formatter):
