@@ -27,6 +27,12 @@ from .color_print import color_text
 __all__ = ['get_logger']
 
 
+# Adds custom log level for actor replies
+REPLY = 5
+logging.addLevelName(REPLY, 'REPLY')
+logging.Logger.REPLY = lambda self, message, *args, **kws: self._log(REPLY, message, *args, **kws)
+
+
 def get_exception_formatted(tp, value, tb):
     """Adds colours to tracebacks."""
 
@@ -157,7 +163,7 @@ class SDSSLogger(logging.Logger):
     def init(self, log_level=logging.INFO, capture_warnings=True):
 
         # Set levels
-        self.setLevel(logging.DEBUG)
+        self.setLevel(REPLY)
 
         # Sets the console handler
         self.sh = logging.StreamHandler()
@@ -206,7 +212,7 @@ class SDSSLogger(logging.Logger):
     def save_log(self, path):
         shutil.copyfile(self.log_filename, os.path.expanduser(path))
 
-    def start_file_logger(self, log_file_path, log_level=logging.DEBUG):
+    def start_file_logger(self, log_file_path, log_level=REPLY):
         """Start file logging."""
 
         log_file_path = os.path.expandvars(os.path.expanduser(log_file_path))

@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-21 12:33:43
+# @Last modified time: 2019-05-23 15:22:24
 
 import abc
 import asyncio
@@ -20,7 +20,7 @@ import ruamel.yaml
 
 from .base import CommandStatus
 from .command import Command
-from .misc.logger import get_logger
+from .misc.logger import REPLY, get_logger
 from .model import Reply
 from .protocol import TopicListener
 
@@ -157,7 +157,7 @@ class BaseClient(metaclass=abc.ABCMeta):
 
         return new_actor
 
-    def setup_logger(self, log_dir, file_level=10, shell_level=20):
+    def setup_logger(self, log_dir, file_level=REPLY, shell_level=20):
         """Starts the file logger."""
 
         log = get_logger('actor:' + self.name)
