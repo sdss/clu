@@ -15,6 +15,7 @@ import warnings
 import clu
 
 from ..actor import BaseActor
+from ..base import log_reply
 from ..command import Command, parse_legacy_command
 from ..protocol import TCPStreamServer
 from .tron import TronConnection
@@ -256,36 +257,35 @@ class LegacyActor(BaseActor):
         self.tron.send_command(target, command_string, mid=command_id)
 
     def write(self, message_code='i', message=None, command=None, user_id=None,
-              command_id=None, escape=True, concatenate=True, broadcast=False, **kwargs):
+              command_id=None, concatenate=True, broadcast=False, **kwargs):
         """Writes a message to user(s).
 
         Parameters
         ----------
         message_code : str
             The message code (e.g., ``'i'`` or ``':'``).
-        message : str or dict
-            The text to be output. It can be either a string with the keywords
-            to output or a dictionary of pairs ``{keyword: value}`` where
-            ``value`` must be a string.
+        message : dict
+            The keywords to be output. Must be a dictionary of pairs
+            ``{keyword: value}``. If ``value`` is a list it will be converted
+            into a comma-separated string. To prevent unexpected casting,
+            it is recommended for ``value`` to always be a string.
         command : Command
             User command; used as a default for ``user_id`` and
             ``command_id``. If the command is done, it is ignored.
         user_id : int
-            If `None` defaults to 0.
+            The user (transport) to which to write. `None` defaults to 0.
         command_id : int
             If `None` then use ``command.command_id``.
-        escape : bool
-            Whether to use `json.dumps` to escape the text of the message.
-            This option is ignored unless ``message`` is a dictionary.
         concatenate : bool
-            If ``message`` is a dictionary with multiple keywords and
-            ``concatenate=True``, all the keywords will be output in a single
-            reply with the keywords joined with semicolons. Otherwise each
-            keyword will be output in multiple lines.
+            Concatenates all the keywords to be output in a single
+            reply with the keyword-values joined with semicolons. Otherwise
+            each keyword will be output as a different message.
         broadcast : bool
             Whether to broadcast the reply. Equivalent to ``user_id=0``.
         kwargs
-            Keyword arguments that will be added to the message.
+            Keyword arguments that will be added to the message. If a keyword
+            is both in ``message`` and in ``kwargs``, the value in ``kwargs``
+            supersedes ``message``.
 
         """
 
@@ -302,27 +302,16 @@ class LegacyActor(BaseActor):
             command=command, user_id=user_id, command_id=command_id)
 
         if message is None:
-            lines = []
-        elif isinstance(message, str):
-            lines = [message]
-        elif isinstance(message, dict):
-            lines = []
-            for keyword in message:
-                value = message[keyword]
-                if value is None:
-                    continue
-                if escape:
-                    value = clu.escape(value)
-                lines.append(f'{keyword}={value}')
-        else:
+            message = {}
+        elif not isinstance(message, dict):
             raise TypeError('invalid message type ' + type(message))
 
-        for key, value in kwargs.items():
-            if value is None:
-                continue
-            if escape:
-                value = clu.escape(value)
-            lines.append(f'{key}={value}')
+        message.update(kwargs)
+
+        lines = []
+        for keyword in message:
+            value = clu.format_value(message[keyword])
+            lines.append(f'{keyword}={value}')
 
         if concatenate:
             lines = ['; '.join(lines)]

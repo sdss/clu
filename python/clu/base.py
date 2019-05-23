@@ -264,22 +264,38 @@ class CallbackScheduler(object):
             self.running = [task for task in self.running if task not in done_cb]
 
 
-def escape(text):
-    """Escapes a string using `json.dumps`.
+def format_value(value):
+    """Formats messages in a way that is compatible with the parser.
 
     Parameters
     ----------
-    text : str
-        The string to be escaped.
+    value
+        The data to be formatted.
 
     Returns
     -------
-    escaped_text : `str`
-        The output of ``json.dumps(text)``.
+    formatted_text : `str`
+        A string with the escaped text.
 
     """
 
-    return json.dumps(text)
+    if isinstance(value, str):
+        if ' ' in value and not (value.startswith('\'') or value.startswith('"')):
+            value = json.dumps(value)
+    elif isinstance(value, bool):
+        value = 'T' if value else 'F'
+    elif isinstance(value, (tuple, list)):
+        value = ','.join([format_value(item) for item in value])
+    else:
+        value = str(value)
+
+    return value
+
+
+def escape(value):
+    """Escapes a text using `json.dumps`."""
+
+    return json.dumps(value)
 
 
 class CaseInsensitiveDict(collections.OrderedDict):
