@@ -1,8 +1,0 @@
-[run]
-branch = true
-
-[report]
-omit =
-    python/clu/etc/*
-    python/clu/misc/*
-    python/clu/tests/*
