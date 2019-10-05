@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-23 15:22:24
+# @Last modified time: 2019-10-04 18:38:43
 
 import abc
 import asyncio
@@ -22,6 +22,7 @@ from .base import CommandStatus
 from .command import Command
 from .misc.logger import REPLY, get_logger
 from .model import Reply
+from .parser import command_parser
 from .protocol import TopicListener
 
 
@@ -62,10 +63,14 @@ class BaseClient(metaclass=abc.ABCMeta):
     log : ~logging.Logger
         A `~logging.Logger` instance to be used for logging instead of creating
         a new one.
+    parser : ~clu.parser.CluGroup
+        A click command parser that is a subclass of `~clu.parser.CluGroup`.
+        If `None`, the active parser will be used.
 
     """
 
-    def __init__(self, name, version=None, loop=None, log_dir=None, log=None):
+    def __init__(self, name, version=None, loop=None, log_dir=None, log=None,
+                 parser=None):
 
         self.name = name
         assert self.name, 'name cannot be empty.'
@@ -76,6 +81,8 @@ class BaseClient(metaclass=abc.ABCMeta):
             self.log.addHandler(logging.NullHandler())
         else:
             self.log = log or self.setup_logger(log_dir)
+
+        self.command_parser = parser or command_parser
 
         self.loop = loop or asyncio.get_event_loop()
 
@@ -215,19 +222,23 @@ class AMQPClient(BaseClient):
     log : ~logging.Logger
         A `~logging.Logger` instance to be used for logging instead of creating
         a new one.
+    parser : ~clu.parser.CluGroup
+        A click command parser that is a subclass of `~clu.parser.CluGroup`.
+        If `None`, the active parser will be used.
 
     """
 
     __EXCHANGE_NAME__ = 'actor_exchange'
 
     def __init__(self, name, user, host, version=None,
-                 loop=None, log_dir=None, log=None):
+                 loop=None, log_dir=None, log=None, parser=None):
 
         if not apika:
             raise ImportError('to instantiate a new Client class '
                               'you need to have aio_pika installed.')
 
-        super().__init__(name, version=version, loop=loop, log_dir=log_dir, log=log)
+        super().__init__(name, version=version, loop=loop,
+                         log_dir=log_dir, log=log, parser=parser)
 
         self.user = user
         self.host = host

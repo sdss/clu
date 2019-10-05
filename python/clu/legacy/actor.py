@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-23 13:16:08
+# @Last modified time: 2019-10-04 18:38:24
 
 
 import warnings
@@ -59,13 +59,18 @@ class LegacyActor(BaseActor):
     log : ~logging.Logger
         A `~logging.Logger` instance to be used for logging instead of creating
         a new one.
+    parser : ~clu.parser.CluGroup
+        A click command parser that is a subclass of `~clu.parser.CluGroup`.
+        If `None`, the active parser will be used.
 
     """
 
     def __init__(self, name, host, port, tron_host=None, tron_port=None,
-                 model_names=None, version=None, loop=None, log_dir=None, log=None):
+                 model_names=None, version=None, loop=None, log_dir=None,
+                 log=None, parser=None):
 
-        super().__init__(name, version=version, loop=loop, log_dir=log_dir, log=log)
+        super().__init__(name, version=version, loop=loop,
+                         log_dir=log_dir, log=log, parser=parser)
 
         self.user_dict = dict()
 

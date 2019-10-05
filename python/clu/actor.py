@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-23 16:13:52
+# @Last modified time: 2019-10-04 18:20:33
 
 import abc
 import asyncio
@@ -20,7 +20,6 @@ from .client import AMQPClient, BaseClient
 from .command import Command
 from .exceptions import CommandError
 from .model import ModelSet
-from .parser import command_parser
 
 
 try:
@@ -29,7 +28,7 @@ except ImportError:
     apika = None
 
 
-__all__ = ['BaseActor', 'Actor', 'command_parser']
+__all__ = ['BaseActor', 'Actor']
 
 
 class BaseActor(BaseClient):
@@ -92,7 +91,7 @@ class BaseActor(BaseClient):
         # the default handling of exceptions in Click. This will force
         # exceptions to be raised instead of redirected to the stdout.
         # See http://click.palletsprojects.com/en/7.x/exceptions/
-        ctx = command_parser.make_context(
+        ctx = self.command_parser.make_context(
             f'{self.name}-command-parser', command.body.split(),
             obj={'parser_args': parser_args,
                  'log': self.log,
@@ -104,7 +103,7 @@ class BaseActor(BaseClient):
         click.globals.push_context(ctx)
 
         with ctx:
-            command_parser.invoke(ctx)
+            self.command_parser.invoke(ctx)
 
         # Sets the context in the command.
         command.ctx = ctx

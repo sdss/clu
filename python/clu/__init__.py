@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-23 11:45:10
+# @Last modified time: 2019-10-04 18:25:07
 
 # flake8: noqa
 
@@ -18,6 +18,7 @@ from .command import *
 from .device import *
 from .exceptions import *
 from .legacy import LegacyActor
+from .parser import command_parser
 
 
 NAME = 'clu'
