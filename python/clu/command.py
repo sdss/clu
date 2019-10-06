@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-23 12:34:25
+# @Last modified time: 2019-10-05 19:38:07
 
 import asyncio
 import re
@@ -202,13 +202,13 @@ def parse_legacy_command(command_string):
 
     Returns
     -------
-    user_id, command_id, command_body : tuple
-        The user ID, command ID, and the command body parsed from the command
+    command_id, command_body : tuple
+        The command ID, and the command body parsed from the command
         string.
 
     """
 
-    _HEADER_BODY_RE = re.compile(r'((?P<uid>\s+\d+)(?P<cid>\s+\d+)?\s+)?((?P<body>[A-Za-z_].*))?$')
+    _HEADER_BODY_RE = re.compile(r'((?P<cmdID>\d+)(?:\s+\d+)?\s+)?((?P<cmdBody>[A-Za-z_].*))?$')
 
     command_match = _HEADER_BODY_RE.match(command_string)
     if not command_match:
@@ -216,26 +216,12 @@ def parse_legacy_command(command_string):
 
     command_dict = command_match.groupdict('')
 
-    user_id_str = command_dict['uid']
-    command_id_str = command_dict['cid']
-
-    if command_id_str and user_id_str:
-        user_id = user_id_str
-        command_id = int(command_id_str)
-    elif user_id_str and not command_id_str:
-        # There has to be a better way to do this with another regex but ...
-        user_id = 0
-        command_id = user_id_str
+    command_id = command_dict['cmdID']
+    if command_id:
+        command_id = int(command_id)
     else:
         command_id = 0
-        user_id = 0
 
-    if not isinstance(user_id, str):
-        try:
-            user_id = int(user_id)
-        except ValueError:
-            pass
+    command_body = command_dict.get('cmdBody', '').strip()
 
-    command_body = command_dict.get('body', '')
-
-    return user_id, command_id, command_body
+    return command_id, command_body

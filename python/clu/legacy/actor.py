@@ -157,12 +157,14 @@ class LegacyActor(BaseActor):
     def new_command(self, transport, command_str):
         """Handles a new command received by the actor."""
 
+        commander_id = getattr(transport, 'user_id', 0)
         command_str = command_str.decode().strip()
 
         if not command_str:
             return
         try:
-            commander_id, command_id, command_body = parse_legacy_command(command_str)
+            command_id, command_body = parse_legacy_command(command_str)
+
             command = Command(command_string=command_body, commander_id=commander_id,
                               command_id=command_id, consumer_id=self.name,
                               actor=self, loop=self.loop, transport=transport)
