@@ -7,8 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-10-04 18:38:24
-
+# @Last modified time: 2019-10-05 20:27:31
 
 import warnings
 
@@ -308,10 +307,10 @@ class LegacyActor(BaseActor):
         user_id, command_id = self.get_user_command_id(
             command=command, user_id=user_id, command_id=command_id)
 
-        if message is None:
+        if message is None or (isinstance(message, str) and message.strip() == ''):
             message = {}
         elif not isinstance(message, dict):
-            raise TypeError('invalid message type ' + type(message))
+            raise TypeError('invalid message type ' + str(type(message)))
 
         message.update(kwargs)
 
