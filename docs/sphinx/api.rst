@@ -77,3 +77,10 @@ Tools
 -----
 
 .. autofunction:: clu.escape
+
+
+Testing
+-------
+
+.. automodule:: clu.testing
+    :members: setup_test_actor, MockReplyList, MockReply

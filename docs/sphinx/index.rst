@@ -17,6 +17,7 @@ Contents
   keyword-model
   parser
   patterns
+  testing
   api
   changelog
 
