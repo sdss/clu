@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-23 12:37:47
+# @Last modified time: 2019-10-05 20:13:49
 
 import asyncio
 import functools
@@ -163,5 +163,7 @@ def help(ctx, *args, parser_command):
             line = line.replace(match.groups()[0], '')
 
         command.write('w', {'text': line})
+
+    command.set_status(command.status.DONE)
 
     return
