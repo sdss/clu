@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-10-04 18:38:43
+# @Last modified time: 2019-10-05 15:35:44
 
 import abc
 import asyncio
@@ -145,7 +145,7 @@ class BaseClient(metaclass=abc.ABCMeta):
 
         """
 
-        config_dict = cls._parse_config(config)
+        config_dict = cls._parse_config(config).copy()
 
         # If we subclass and override from_config we need to super() it and
         # send all the arguments already unpacked. Otherwise we get the name

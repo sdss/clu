@@ -125,7 +125,7 @@ class LegacyActor(BaseActor):
 
         """
 
-        config_dict = cls._parse_config(config)
+        config_dict = cls._parse_config(config).copy()
 
         args = list(args) + [config_dict.pop('name'),
                              config_dict.pop('host'),
