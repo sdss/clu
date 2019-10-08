@@ -4,8 +4,8 @@ Generates HTML files via python declarations
 
 # Created 28-Jun-2008 by David Kirkby (dkirkby@uci.edu)
 
-from cgi import escape
 from getpass import getuser
+from html import escape
 from os.path import splitext
 from socket import gethostname
 from sys import argv
