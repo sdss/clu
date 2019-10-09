@@ -6,11 +6,12 @@
 # @Filename: client.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
-# @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-10-05 15:35:44
+# @Last modified by: José Sánchez-Gallego
+# @Last modified time: 2019-10-09 13:34:14
 
 import abc
 import asyncio
+import inspect
 import json
 import logging
 import pathlib
@@ -160,7 +161,23 @@ class BaseClient(metaclass=abc.ABCMeta):
         version = config_dict.pop('version', '?')
         log_dir = config_dict.pop('log_dir', None)
 
-        config_dict.update(kwargs)
+        # Decide what to do with the rest of the keyword arguments:
+        args_inspect = inspect.getfullargspec(cls)
+
+        if args_inspect.varkw is not None:
+            # If there is a catch-all kw variable, send everything and let the
+            # subclass handle it.
+            config_dict.update(kwargs)
+        else:
+            # Check the kw arguments in the subclass and pass only
+            # values from config_dict that match them.
+            kw_args = args_inspect.kwonlyargs
+            if len(args_inspect.defaults) > 0:
+                args_invert = args_inspect.args[::-1]
+                kw_args += args_invert[:len(args_inspect.defaults)]
+            for kw in kwargs:
+                if kw in kw_args:
+                    config_dict[kw] = kwargs[kw]
 
         # We also pass *args and **kwargs in case the actor has been subclassed
         # and the subclass' __init__ accepts different arguments.
