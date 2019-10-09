@@ -88,6 +88,9 @@ class BaseClient(metaclass=abc.ABCMeta):
 
         self.version = version or '?'
 
+        # Internally store the original configuation used to start the client.
+        self._config = None
+
     def __repr__(self):
 
         return f'<{str(self)} (name={self.name})>'
@@ -145,7 +148,8 @@ class BaseClient(metaclass=abc.ABCMeta):
 
         """
 
-        config_dict = cls._parse_config(config).copy()
+        orig_config_dict = cls._parse_config(config)
+        config_dict = orig_config_dict.copy()
 
         # If we subclass and override from_config we need to super() it and
         # send all the arguments already unpacked. Otherwise we get the name
@@ -161,6 +165,11 @@ class BaseClient(metaclass=abc.ABCMeta):
         # We also pass *args and **kwargs in case the actor has been subclassed
         # and the subclass' __init__ accepts different arguments.
         new_actor = cls(*args, version=version, log_dir=log_dir, **config_dict)
+
+        # Store original config. This may not be complete since from_config
+        # may have been super'd from somewhere else.
+        new_actor._config = orig_config_dict
+        new_actor._config.update(kwargs)
 
         return new_actor
 
