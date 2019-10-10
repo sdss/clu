@@ -7,7 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 #
 # @Last modified by: José Sánchez-Gallego
-# @Last modified time: 2019-10-09 13:34:14
+# @Last modified time: 2019-10-10 12:41:11
 
 import abc
 import asyncio
@@ -21,7 +21,7 @@ import ruamel.yaml
 
 from .base import CommandStatus
 from .command import Command
-from .misc.logger import REPLY, get_logger
+from .misc.logger import REPLY, ActorHandler, get_logger
 from .model import Reply
 from .parser import command_parser
 from .protocol import TopicListener
@@ -59,8 +59,7 @@ class BaseClient(metaclass=abc.ABCMeta):
     log_dir : str
         The directory where to store the logs. Defaults to
         ``/data/logs/actors/<name>`` where ``<name>`` is the name of the actor.
-        If ``log_dir=False`` or ``log=False``, a logger with a
-        `~logging.NullHandler` will be created.
+        If ``log_dir=False``, only console and reply logging will be enabled.
     log : ~logging.Logger
         A `~logging.Logger` instance to be used for logging instead of creating
         a new one.
@@ -73,19 +72,15 @@ class BaseClient(metaclass=abc.ABCMeta):
     def __init__(self, name, version=None, loop=None, log_dir=None, log=None,
                  parser=None):
 
+        self.loop = loop or asyncio.get_event_loop()
+
         self.name = name
         assert self.name, 'name cannot be empty.'
 
-        if log_dir is False or log is False:
-            # Create a null logger.
-            self.log = logging.getLogger(f'actor:{self.name}')
-            self.log.addHandler(logging.NullHandler())
-        else:
-            self.log = log or self.setup_logger(log_dir)
+        self.log = None
+        self.setup_logger(log, log_dir)
 
         self.command_parser = parser or command_parser
-
-        self.loop = loop or asyncio.get_event_loop()
 
         self.version = version or '?'
 
@@ -190,25 +185,41 @@ class BaseClient(metaclass=abc.ABCMeta):
 
         return new_actor
 
-    def setup_logger(self, log_dir, file_level=REPLY, shell_level=20):
+    def setup_logger(self, log, log_dir, file_level=REPLY, shell_level=20):
         """Starts the file logger."""
 
-        log = get_logger('actor:' + self.name)
+        if not log:
+            log = get_logger('actor:' + self.name)
 
-        if log_dir is None:
-            log_dir = pathlib.Path(f'/data/logs/actors/{self.name}/').expanduser()
-        else:
-            log_dir = pathlib.Path(log_dir).expanduser()
+        if log_dir is not False:
 
-        if not log_dir.exists():
-            log_dir.mkdir(parents=True)
+            if log_dir is None:
+                log_dir = pathlib.Path(f'/data/logs/actors/{self.name}/').expanduser()
+            else:
+                log_dir = pathlib.Path(log_dir).expanduser()
 
-        log.start_file_logger(log_dir / f'{self.name}.log')
+            if not log_dir.exists():
+                log_dir.mkdir(parents=True)
+
+            log.start_file_logger(log_dir / f'{self.name}.log')
+
+            log.fh.setLevel(file_level)
 
         log.sh.setLevel(shell_level)
-        log.fh.setLevel(file_level)
 
-        log.debug(f'{self.name}: logging system initiated.')
+        # Creates a log with a handler that converts logs and exceptions to replies.
+        actor_handler = ActorHandler(self)
+        actor_handler.setLevel(logging.WARNING)
+        log.addHandler(actor_handler)
+
+        if log.warnings_logger is not None:
+            log.warnings_logger.addHandler(actor_handler)
+
+        self.log = log
+        self.log.debug(f'{self.name}: logging system initiated.')
+
+        # Set the loop exception handler to be handled by the logger.
+        self.loop.set_exception_handler(self.log.asyncio_exception_handler)
 
         return log
 
