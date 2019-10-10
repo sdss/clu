@@ -253,6 +253,19 @@ class SDSSLogger(logging.Logger):
 
             self.log_filename = log_file_path
 
+    def asyncio_exception_handler(self, context):
+        """Handle an uncaught exception and reports it."""
+
+        exception = context.get('exception', None)
+        if exception is None:
+            exception = 'UnknownException'
+        else:
+            exception = exception.__class__.__name__
+
+        message = context['message'].splitlines()
+        for line in message:
+            self.error(f'{exception}: {line}')
+
     def set_level(self, level):
         """Sets levels for both sh and (if initialised) fh."""
 
