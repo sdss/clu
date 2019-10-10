@@ -17,7 +17,7 @@ from asynctest import CoroutineMock
 __all__ = ['MockReply', 'MockReplyList', 'setup_test_actor']
 
 
-class MockReply(object):
+class MockReply(dict):
     """Stores a reply written to a transport.
 
     Attributes
@@ -33,12 +33,13 @@ class MockReply(object):
 
     """
 
-    def __init__(self, command_id, user_id, flag, keywords):
+    def __init__(self, command_id, user_id, flag, keywords={}):
 
         self.command_id = command_id
         self.user_id = user_id
         self.flag = flag
-        self.keywords = keywords
+
+        dict.__init__(self, keywords)
 
     def __repr__(self):
         return (f'<MockReply ({self.user_id} {self.command_id} '
