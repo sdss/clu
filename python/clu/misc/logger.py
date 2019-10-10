@@ -93,6 +93,7 @@ class ActorHandler(logging.Handler):
     """
 
     def __init__(self, actor, level=logging.ERROR, keyword='text'):
+
         self.actor = actor
         self.keyword = keyword
         super().__init__(level=level)
@@ -100,7 +101,7 @@ class ActorHandler(logging.Handler):
     def emit(self, record):
         """Emits the record."""
 
-        message = record.getMessage()
+        message = record.getMessage().splitlines()
 
         if record.levelno <= logging.DEBUG:
             code = 'd'
@@ -108,8 +109,11 @@ class ActorHandler(logging.Handler):
             code = 'i'
         elif record.levelno <= logging.ERROR:
             code = 'w'
+        elif record.levelno >= logging.ERROR:
+            code = 'f'
 
-        self.actor.write(code, message={self.keyword: message})
+        for line in message:
+            self.actor.write(code, message={self.keyword: line})
 
 
 class SDSSFormatter(logging.Formatter):
