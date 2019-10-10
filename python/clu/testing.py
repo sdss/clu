@@ -5,9 +5,6 @@
 # @Date: 2019-10-05
 # @Filename: testing.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
-#
-# @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-10-05 20:45:50
 
 import asyncio
 import re

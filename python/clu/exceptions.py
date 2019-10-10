@@ -1,12 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Licensed under a 3-clause BSD license.
-#
-# @Author: Brian Cherinka
-# @Date:   2017-12-05 12:01:21
-# @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last Modified time: 2017-12-05 12:19:32
+# @Author: José Sánchez-Gallego (gallegoj@uw.edu)
+# @Date: 2017-12-05
+# @Filename: command.py
+# @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
 
 __all__ = ['CluError', 'CluNotImplemented', 'CluWarning',

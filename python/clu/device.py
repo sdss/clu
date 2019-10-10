@@ -5,9 +5,6 @@
 # @Date: 2019-05-14
 # @Filename: device.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
-#
-# @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-18 21:55:36
 
 import asyncio
 import contextlib

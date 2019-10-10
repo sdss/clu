@@ -5,9 +5,6 @@
 # @Date: 2018-09-16
 # @Filename: conf.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
-#
-# @Last modified by: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Last modified time: 2019-05-21 12:40:06
 
 import os
 

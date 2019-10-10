@@ -5,9 +5,6 @@
 # @Date: 2019-05-20
 # @Filename: client.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
-#
-# @Last modified by: José Sánchez-Gallego
-# @Last modified time: 2019-10-10 12:41:11
 
 import abc
 import asyncio
