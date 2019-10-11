@@ -72,10 +72,8 @@ class BaseActor(BaseClient):
 
         # Empty command. Just finish the command.
         if not command.body:
-            result = self.write(':', '', command=command)
-            if asyncio.iscoroutine(result):
-                self.loop.create_task(result)
-            return
+            command.done()
+            return command
 
         command.set_status(command.status.RUNNING)
 
