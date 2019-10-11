@@ -99,11 +99,14 @@ class BaseActor(BaseClient):
         # for example when it's called from a CLI click application.
         click.globals.push_context(ctx)
 
-        with ctx:
-            self.command_parser.invoke(ctx)
-
         # Sets the context in the command.
         command.ctx = ctx
+
+        with ctx:
+            try:
+                self.command_parser.invoke(ctx)
+            except Exception as exc:
+                self._handle_command_exception(command, exc)
 
         return command
 
@@ -115,7 +118,10 @@ class BaseActor(BaseClient):
 
             raise exception
 
-        except click.ClickException as ee:
+        except (click.ClickException, click.exceptions.Exit) as ee:
+
+            if not hasattr(ee, 'message'):
+                ee.message = None
 
             ctx = command.ctx
             message = ''
@@ -139,14 +145,16 @@ class BaseActor(BaseClient):
             # in parse_command.
             return command.set_status(command.status.FAILED, {'text': f'Use help [CMD]'})
 
-        except Exception as ee:
+        except Exception:
 
             command.set_status(
                 command.status.FAILED,
-                text=f'Command failed with error: {ee.__class__.__name__}: {ee!s}')
+                text=f'Command {command.command_id} failed because of an uncaught error. '
+                     'See traceback in the log for more information.')
 
+            log = log or getattr(command.ctx, 'log', None)
             if log:
-                log.exception('command failed with error:')
+                log.exception(f'Command {command.body!r} failed with error:')
 
     @abc.abstractmethod
     def send_command(self):
