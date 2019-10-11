@@ -11,6 +11,7 @@ import functools
 import re
 
 import click
+from click.decorators import group
 
 
 class CluCommand(click.Command):
@@ -101,6 +102,37 @@ class CluGroup(click.Group):
 
         def decorator(f):
             cmd = click.decorators.command(*args, **kwargs)(f)
+            self.add_command(cmd)
+            return cmd
+
+        return decorator
+
+    def parse_args(self, ctx, args):
+
+        # Copy this method so that we can turn off the printing of the
+        # usage before ctx.exit()
+        if not args and self.no_args_is_help and not ctx.resilient_parsing:
+            # click.echo(ctx.get_help(), color=ctx.color)
+            ctx.exit()
+
+        rest = click.Command.parse_args(self, ctx, args)
+        if self.chain:
+            ctx.protected_args = rest
+            ctx.args = []
+        elif rest:
+            ctx.protected_args, ctx.args = rest[:1], rest[1:]
+
+        return ctx.args
+
+    def group(self, *args, **kwargs):
+        """Creates a new group inheriting from this class."""
+
+        if 'cls' not in kwargs:
+            kwargs['cls'] = self.__class__
+
+        def decorator(f):
+            assert not asyncio.iscoroutinefunction(f), 'groups cannot be coroutines.'
+            cmd = group(*args, **kwargs)(f)
             self.add_command(cmd)
             return cmd
 
