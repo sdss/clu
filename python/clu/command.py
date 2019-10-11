@@ -82,7 +82,7 @@ class BaseCommand(asyncio.Future, StatusMixIn):
 
         """
 
-        self.set_state(status)
+        self.set_status(status)
 
     def set_status(self, status, message=None, **kwargs):
         """Same as `.status` but allows to specify a message to the users."""
