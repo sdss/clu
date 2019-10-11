@@ -49,7 +49,7 @@ class MockReply(dict):
 class MockReplyList(list):
     """Stores replies as `.MockReply` objects."""
 
-    PATTERN = re.compile(r'([0-9]+)\s*([0-9]+)\s*([a-z])\s+(.*)')
+    PATTERN = re.compile(r'([0-9]+)\s+([0-9]+)\s+((?:[a-z]|\:))\s+(.*)')
 
     def __init__(self):
         list.__init__(self)
