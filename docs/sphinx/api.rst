@@ -83,4 +83,4 @@ Testing
 -------
 
 .. automodule:: clu.testing
-    :members: setup_test_actor, MockReplyList, MockReply
+    :members: setup_test_actor, MockReplyList, MockReply, TestCommand

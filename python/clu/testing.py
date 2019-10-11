@@ -13,8 +13,10 @@ import unittest.mock
 
 from asynctest import CoroutineMock
 
+from clu.command import Command
 
-__all__ = ['MockReply', 'MockReplyList', 'setup_test_actor']
+
+__all__ = ['MockReply', 'MockReplyList', 'setup_test_actor', 'TestCommand']
 
 
 class MockReply(dict):
@@ -121,3 +123,18 @@ async def setup_test_actor(actor, user_id=1):
     actor = await actor.run()
 
     return actor
+
+
+class TestCommand(Command):
+    """A `.Command` that can be reset."""
+
+    def reset(self):
+        """Resets the command."""
+
+        self._status = self.flags.READY
+
+        if self.watcher:
+            self.watcher.clear()
+        self.watcher = None
+
+        asyncio.Future.__init__(self, loop=self.loop)
