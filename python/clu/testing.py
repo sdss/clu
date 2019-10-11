@@ -43,7 +43,7 @@ class MockReply(dict):
 
     def __repr__(self):
         return (f'<MockReply ({self.user_id} {self.command_id} '
-                f'{self.flag} {self.keywords!r})>')
+                f'{self.flag} {super().__repr__()})>')
 
 
 class MockReplyList(list):
