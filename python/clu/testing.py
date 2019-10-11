@@ -84,7 +84,7 @@ async def setup_test_actor(actor, user_id=1):
 
     Takes an ``actor`` and modifies it in two ways:
 
-    - Adds a ``receive_mock_command`` method to it that allows to submit a
+    - Adds a ``invoke_mock_command`` method to it that allows to submit a
       command string as if it had been received from a transport.
 
     - Mocks a client transport with ``user_id`` that is connected to the actor.
@@ -96,7 +96,7 @@ async def setup_test_actor(actor, user_id=1):
 
     """
 
-    def receive_mock_command(self, command_str, command_id=0):
+    def invoke_mock_command(self, command_str, command_id=0):
         if isinstance(command_str, str):
             command_str = command_str.encode('utf-8')
         full_command = f' {command_id} '.encode('utf-8') + command_str
@@ -104,10 +104,10 @@ async def setup_test_actor(actor, user_id=1):
 
     actor.run = CoroutineMock(return_value=actor)
 
-    # Adds an receive_mock_command method.
+    # Adds an invoke_mock_command method.
     # We use types.MethodType to bind a method to an existing instance
     # (see http://bit.ly/35buk1m)
-    actor.receive_mock_command = types.MethodType(receive_mock_command, actor)
+    actor.invoke_mock_command = types.MethodType(invoke_mock_command, actor)
 
     # Mocks a user transport and stores the replies in a MockReplyListobject
     actor.mock_replies = MockReplyList()
