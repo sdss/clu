@@ -103,11 +103,14 @@ class ActorHandler(logging.Handler):
 
         message = record.getMessage().splitlines()
 
+        if record.exc_info:
+            message.append(f'{record.exc_info[0].__name__}: {record.exc_info[1]}')
+
         if record.levelno <= logging.DEBUG:
             code = 'd'
         elif record.levelno <= logging.INFO:
             code = 'i'
-        elif record.levelno <= logging.ERROR:
+        elif record.levelno < logging.ERROR:
             code = 'w'
         elif record.levelno >= logging.ERROR:
             code = 'f'
@@ -253,7 +256,7 @@ class SDSSLogger(logging.Logger):
 
             self.log_filename = log_file_path
 
-    def asyncio_exception_handler(self, context):
+    def asyncio_exception_handler(self, loop, context):
         """Handle an uncaught exception and reports it."""
 
         exception = context.get('exception', None)
