@@ -229,7 +229,7 @@ class LegacyActor(BaseActor):
 
         """
 
-        user_id = user_id or (command.user_id if command else 0)
+        user_id = user_id or (command.commander_id if command else 0)
         command_id = command_id or (command.command_id if command else 0)
 
         return (user_id, command_id)
