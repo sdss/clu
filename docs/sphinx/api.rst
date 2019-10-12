@@ -79,6 +79,8 @@ Tools
 .. autofunction:: clu.escape
 
 
+.. _api-testing:
+
 Testing
 -------
 
