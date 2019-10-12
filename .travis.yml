@@ -36,8 +36,8 @@ install:
   - pip install coveralls
   - pip install .[dev]
 
-# script:
-#   - pytest python/clu/tests --cov python/clu --cov-report html
+script:
+  - pytest python/clu/tests --cov python/clu --cov-report html
 
 deploy:
   provider: pypi
