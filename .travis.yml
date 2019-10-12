@@ -6,35 +6,41 @@ cache:
 
 sudo: false
 
-python:
-- '2.7'
-- '3.5'
-- '3.6'
-
 os:
-- linux
+  - linux
 
 matrix:
   fast_finish: true
+  include:
+    - python: 3.7
+      dist: xenial
+      sudo: true
+      # after_success:
+      #   - coveralls
+    - python: 3.8-dev
+      dist: xenial
+      sudo: true
 
 notifications:
   email: false
 
 # repo branches to test
 branches:
-- master
+  - master
 
 install:
-- pip install -U pip wheel --quiet
-- pip install --upgrade setuptools --quiet
-- pip install -r requirements.txt --quiet
-- pip install pytest
-- pip install pytest-coverage
-- pip install coveralls
-- python setup.py install
+  - pip install -U pip wheel --quiet
+  - pip install --upgrade setuptools --quiet
+  - pip install pytest
+  - pip install pytest-coverage
+  - pip install coveralls
+  - pip install .[dev]
 
-script:
-- pytest python/clu/tests --cov python/clu --cov-report html
+# script:
+#   - pytest python/clu/tests --cov python/clu --cov-report html
 
-after_success:
-- coveralls
+deploy:
+  provider: pypi
+  user: "__token__"
+  password:
+    secure: "x5LU/gdm2iIBQQUoSpy6MJ6WSZlakM2Mz+fJZWmAfuGRezne2VXlC28s8qILkSmiAL8bCf6FqZUtInsXwxbDACriaP8fjeuFqaY4auD0Xm2dPjOaqCQE+QP+lT5NYRgPd8aC8IAoXdCn5keXrSJn5hdzfB5fxBAMvfTDS2cFrMtP/YjekhY+CqCVU86sauDIh7jlMULeNf+rotUB/auTENIYX65bK+MIDcfnEgb5uKnId6sTGHNPYcFMWwSopZ5NMNhlRFt1pdC5E58bcOReMCG0/+1o3eRSX1BQKiztDPQvDex3HbstuKBOsjlhhyEj7KK42FT7sKp01KGdzozlpte63prZg/WCrRIzJq0D6glcJSJ/yTfwm4V06BwHWtiWx/I84uwaa7mFtcRoha3a8gVpYFiH1yrORPcp0dRvBUy/geC56K4i8ReKl2qRfjEU3oMwYL9XxOlQObs6yBiG01eXpIzq7mxHxbmkU9pPg59p71rC7vKg4r3qb53LeXXLpuxM0J5TynFyWQHZ9cuJdtcI9YZcSsuMVlpaVs2CUsXYSUcQ3DJBAa5YfWz7Hf7TPzvZhWIkZi5LelsjUL55WoOkVZpQAt6E9iKLUxenFk3BoJXk3k6Z762B3TqqjJSv50dId0qbBw7upyb9Z6HRJ2zCZ+lN8G9+NmSJYi/mEns="
