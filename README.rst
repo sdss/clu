@@ -1,7 +1,7 @@
 `CLU <https://tron.fandom.com/wiki/Clu>`__
 ==========================================
 
-|Build Status| |Coverage Status| |docs| |py37|
+|py| |Build Status| |docs|
 
 
 `CLU <https://tron.fandom.com/wiki/Clu>`_ implements a new protocol for SDSS actor while providing support for legacy-style actor.
@@ -71,7 +71,7 @@ Say whatever you want about it, the `current SDSS message passing protocol <http
 - CLU uses `click <https://click.palletsprojects.com/en/7.x>`__ for parsing commands, providing a well-defined, easy to use parser.
 
 
-.. |Build Status| image:: https://img.shields.io/travis/rtfd/readthedocs.org.svg?style=flat
+.. |Build Status| image:: https://travis-ci.org/sdss/clu.svg?branch=master
     :alt: Build Status
     :target: https://travis-ci.org/sdss/clu
 
@@ -80,8 +80,8 @@ Say whatever you want about it, the `current SDSS message passing protocol <http
     :scale: 100%
     :target: https://codecov.io/gh/sdss/clu
 
-.. |py37| image:: https://img.shields.io/badge/python-3.7-blue.svg
-    :alt: Python 3.7
+.. |py| image:: https://img.shields.io/badge/python-3.7%20|%203.8-blue
+    :alt: Python Versions
     :target: https://docs.python.org/3/
 
 .. |docs| image:: https://readthedocs.org/projects/docs/badge/?version=latest
