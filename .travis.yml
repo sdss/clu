@@ -27,7 +27,7 @@ notifications:
 # repo branches to test
 branches:
   - master
-  - /v\d+\.\d+[a-z]/
+  - /\d+\.\d+\.\d+/
 
 install:
   - pip install -U pip wheel --quiet
