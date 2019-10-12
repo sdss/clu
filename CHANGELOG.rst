@@ -4,7 +4,7 @@
 Changelog
 =========
 
-* :release:`0.1.2 <2019-10-11>`
+* :release:`0.1.3 <2019-10-11>`
 * Fix Travis deployment.
 
 * :release:`0.1.2 <2019-10-11>`
