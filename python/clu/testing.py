@@ -22,6 +22,8 @@ __all__ = ['MockReply', 'MockReplyList', 'setup_test_actor', 'TestCommand']
 class MockReply(dict):
     """Stores a reply written to a transport.
 
+    Keywords are stored as part of the dictionary.
+
     Attributes
     ----------
     user_id : int
@@ -30,8 +32,6 @@ class MockReply(dict):
         The command ID of the command that produced this reply.
     flag : str
         The message type flag.
-    keywords : dict
-        Keyword-value pairs issued with this reply.
 
     """
 
