@@ -59,7 +59,7 @@ class BaseActor(BaseClient):
         pass
 
     def parse_command(self, command):
-        """Parses an user command with the default parser.
+        """Parses an user command with the default, Click-based parser.
 
         This method can be overridden to use a custom parser.
 
@@ -106,7 +106,7 @@ class BaseActor(BaseClient):
             except Exception as exc:
                 self._handle_command_exception(command, exc)
 
-        return command
+        return
 
     @staticmethod
     def _handle_command_exception(command, exception, log=None):
