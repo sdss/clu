@@ -109,7 +109,8 @@ class LegacyActor(BaseActor):
                 warnings.warn('starting LegacyActor without Tron connection.',
                               clu.CluWarning)
         except (ConnectionRefusedError, OSError) as ee:
-            raise clu.CluError(f'failed trying to create a connection to tron: {ee}')
+            warnings.warn(f'connection to tron was refused: {ee}. '
+                          'Some functionality will be limited.', clu.CluWarning)
 
         return self
 
@@ -257,7 +258,10 @@ class LegacyActor(BaseActor):
 
         """
 
-        self.tron.send_command(target, command_string, mid=command_id)
+        if self.tron.connection:
+            self.tron.send_command(target, command_string, mid=command_id)
+        else:
+            raise clu.CluError('cannot connect to tron.')
 
     def write(self, message_code='i', message=None, command=None, user_id=None,
               command_id=None, concatenate=True, broadcast=False, **kwargs):
