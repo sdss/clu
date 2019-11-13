@@ -179,10 +179,30 @@ def help(ctx, *args, parser_command):
 
     command = args[0]
 
+    # The parser_command arrives wrapped in quotes to make sure is a single value.
+    # Strip it and unpack it in as many groups and commands as needed.
+    parser_command = parser_command.strip('"').split()
+
     # Gets the help lines for the command group or for a specific command.
-    if parser_command and parser_command.lower() != 'help':
-        help_lines = ctx.command.commands[parser_command.lower()].get_help(ctx)
+    if len(parser_command) > 0:
+
+        ctx_commands = ctx.command.commands
+
+        for ii in range(len(parser_command)):
+            ctx_command_name = parser_command[ii].lower()
+            if ctx_command_name not in ctx_commands:
+                command.failed(text=f'command {ctx_command_name} not found.')
+                return
+            ctx_command = ctx_commands[ctx_command_name]
+            if ii == len(parser_command) - 1:
+                # This is the last element in the command list
+                # so we want to actually output this help lines.
+                help_lines = ctx_command.get_help(ctx)
+            else:
+                ctx_commands = ctx_command.commands
+
     else:
+
         help_lines = ctx.get_help()
 
     for line in help_lines.splitlines():

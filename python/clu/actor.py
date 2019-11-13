@@ -81,12 +81,17 @@ class BaseActor(BaseClient):
             command.body = 'help ' + command.body
             command.body = command.body.replace(' --help', '')
 
+        if not command.body.startswith('help'):
+            command_args = command.body.split()
+        else:
+            command_args = ['help', '"{}"'.format(command.body[5:])]
+
         # We call the command with a custom context to get around
         # the default handling of exceptions in Click. This will force
         # exceptions to be raised instead of redirected to the stdout.
         # See http://click.palletsprojects.com/en/7.x/exceptions/
         ctx = self.command_parser.make_context(
-            f'{self.name}-command-parser', command.body.split(),
+            f'{self.name}-command-parser', command_args,
             obj={'parser_args': parser_args,
                  'log': self.log,
                  'exception_handler': self._handle_command_exception})
