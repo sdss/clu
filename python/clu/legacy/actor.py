@@ -10,7 +10,7 @@ import warnings
 
 import clu
 
-from ..actor import BaseActor
+from ..actor import BaseActor, TimerCommandList
 from ..base import log_reply
 from ..command import Command, parse_legacy_command
 from ..protocol import TCPStreamServer
@@ -89,6 +89,8 @@ class LegacyActor(BaseActor):
             #: dict: Actor models.
             self.models = self.tron.models
 
+        self.timer_commands = TimerCommandList(self)
+
     def __repr__(self):
 
         return f'<{str(self)} (name={self.name}, host={self.host!r}, port={self.port})>'
@@ -111,6 +113,8 @@ class LegacyActor(BaseActor):
         except (ConnectionRefusedError, OSError) as ee:
             warnings.warn(f'connection to tron was refused: {ee}. '
                           'Some functionality will be limited.', clu.CluWarning)
+
+        self.timer_commands.start()
 
         return self
 
