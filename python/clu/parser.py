@@ -11,7 +11,7 @@ import functools
 import re
 
 import click
-from click.decorators import group
+from click.decorators import group, pass_obj
 
 
 class CluCommand(click.Command):
@@ -151,6 +151,19 @@ def timeout(seconds):
         @functools.wraps(f)
         def new_func(*args, **kwargs):
             return f(*args, **kwargs)
+        return functools.update_wrapper(new_func, f)
+
+    return decorator
+
+
+def pass_args():
+    """Thing wrapper around pass_obj to pass the command and parser_args."""
+
+    def decorator(f):
+        @functools.wraps(f)
+        @pass_obj
+        def new_func(obj, *args, **kwargs):
+            return f(*obj['parser_args'], *args, **kwargs)
         return functools.update_wrapper(new_func, f)
 
     return decorator
