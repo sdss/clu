@@ -57,6 +57,8 @@ def colored_formatter(record):
         levelname_color = colours[levelname]
         header = color_text('[{}]: '.format(levelname.upper()),
                             levelname_color)
+    else:
+        header = f'[{levelname}]'
 
     message = record.getMessage()
 
