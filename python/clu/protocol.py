@@ -257,7 +257,7 @@ class TCPStreamServer(object):
 
             try:
                 data = await reader.readuntil()
-            except asyncio.streams.IncompleteReadError:
+            except asyncio.IncompleteReadError:
                 writer.close()
                 del self.transports[writer.transport]
                 break
