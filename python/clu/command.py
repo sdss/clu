@@ -37,6 +37,10 @@ class BaseCommand(asyncio.Future, StatusMixIn):
         The actor that is consuming this command. Normally this is our own
         actor but if we are commanding another actor ``consumer_id`` will
         be the destination actor.
+    parent : .BaseCommand
+        Another `.BaseCommand` object that is issuing this subcommand. If they
+        are not specified, sets ``commander_id`` and ``consumer_id``
+        appropriately.
     status_callback : function
         A function to call when the status changes.
     call_now : bool
@@ -46,12 +50,24 @@ class BaseCommand(asyncio.Future, StatusMixIn):
 
     """
 
-    def __init__(self, commander_id=0, command_id=0, consumer_id=0,
+    def __init__(self, commander_id=0, command_id=0, consumer_id=0, parent=None,
                  status_callback=None, call_now=False, loop=None):
 
         self.commander_id = commander_id
         self.consumer_id = consumer_id
         self.command_id = command_id
+
+        self.parent = parent
+
+        if self.parent:
+            if not isinstance(self.parent, BaseCommand):
+                raise clu.CluError('invalid parent type.')
+            if self.parent.command_id != 0 and self.command_id == self.parent.command_id:
+                raise clu.CluError('subcommand cannot have the '
+                                   'same command_id as the parent.')
+
+            self.commander_id = self.commander_id or self.parent.commander_id
+            self.consumer_id = self.consumer_id or self.parent.consumer_id
 
         self.loop = loop or asyncio.get_event_loop()
 
@@ -187,11 +203,24 @@ class Command(BaseCommand):
         #: The actor in which this command will run.
         self.actor = actor
 
+        if not self.actor and kwargs.get('parent', None):
+            self.actor = self.parent.actor
+
         #: The `~click.Context` running this command. Only relevant if
         #: using the built-in click-based parser.
         self.ctx = None
 
         self.transport = transport
+
+    def parse(self):
+        """Parses the command."""
+
+        if not self.actor:
+            raise clu.CluError('the actor is not defined. Cannot parse command.')
+
+        self.actor.parse_command(self)
+
+        return self
 
     def __str__(self):
 
