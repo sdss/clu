@@ -192,7 +192,7 @@ class TCPStreamServer(object):
     port : int
         The server port.
     connection_callback
-        Callback to call when a new client connects.
+        Callback to call when a new client connects or disconnects.
     data_received_callback
         Callback to call when a new data is received.
     loop
@@ -259,7 +259,9 @@ class TCPStreamServer(object):
                 data = await reader.readuntil()
             except asyncio.IncompleteReadError:
                 writer.close()
-                del self.transports[writer.transport]
+                self.transports.pop(writer.transport)
+                if self.connection_callback:
+                    await self._do_callback(self.connection_callback, writer.transport)
                 break
 
             if self.data_received_callback:

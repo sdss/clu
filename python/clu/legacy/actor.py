@@ -143,6 +143,11 @@ class LegacyActor(BaseActor):
     def new_user(self, transport):
         """Assigns userID to new client connection."""
 
+        if transport.is_closing():
+            if hasattr(transport, 'user_id'):
+                self.log.debug(f'user {transport.user_id} disconnected.')
+                return self.user_dict.pop(transport.user_id)
+
         curr_ids = set(self.user_dict.keys())
         user_id = 1 if len(curr_ids) == 0 else max(curr_ids) + 1
 
@@ -188,6 +193,10 @@ class LegacyActor(BaseActor):
 
         self.show_user_info(user_id)
         self.show_version(user_id=user_id)
+
+        transport = self.user_dict[user_id]
+        peername = transport.get_extra_info('peername')[0]
+        self.log.debug(f'user {user_id} connected from {peername!r}.')
 
     def show_user_info(self, user_id):
         """Shows user information including your user_id."""
