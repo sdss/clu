@@ -138,21 +138,36 @@ class BaseActor(BaseClient):
             for line in lines:
                 command.write('w', text=line)
 
-            command.set_status(command.status.FAILED,
-                               text=f'Command {command.body!r} failed.')
+            msg = f'Command {command.body!r} failed.'
+
+            if not command.status.is_done:
+                command.failed(text=msg)
+            else:
+                command.write(text=msg)
 
         except click.exceptions.Exit:
 
             # This happens when using --help, although it should be handled
             # in parse_command.
-            return command.set_status(command.status.FAILED, {'text': f'Use help [CMD]'})
+            if command.status.is_done:
+                command.write(text=f'Use help [CMD]')
+            else:
+                command.failed(text=f'Use help [CMD]')
+
+        except click.exceptions.Abort:
+
+            if not command.status.is_done:
+                command.failed(text='Command was aborted.')
 
         except Exception:
 
-            command.set_status(
-                command.status.FAILED,
-                text=f'Command {command.command_id} failed because of an uncaught error. '
-                     'See traceback in the log for more information.')
+            msg = (f'Command {command.command_id} failed because of an uncaught error. '
+                   'See traceback in the log for more information.')
+
+            if command.status.is_done:
+                command.write(text=msg)
+            else:
+                command.failed(text=msg)
 
             log = log or getattr(command.ctx, 'log', None)
             if log:
