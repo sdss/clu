@@ -261,13 +261,17 @@ class SDSSLogger(logging.Logger):
 
         exception = context.get('exception', None)
         if exception is None:
-            exception = 'UnknownException'
+            exception_name = 'UnknownException'
         else:
-            exception = exception.__class__.__name__
+            exception_name = exception.__class__.__name__
 
         message = context['message'].splitlines()
         for line in message:
-            self.error(f'{exception}: {line}')
+            self.error(f'{exception_name}: {line}')
+
+        if exception:
+            for line in exception.args:
+                self.error(f'{exception_name}: {line}')
 
     def set_level(self, level):
         """Sets levels for both sh and (if initialised) fh."""
