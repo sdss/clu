@@ -27,6 +27,9 @@ from .color_print import color_text
 __all__ = ['get_logger']
 
 
+WARNING_REGEX = r'^.*?\s*?(\w*?Warning): (.*)'
+
+
 # Adds custom log level for actor replies
 REPLY = 5
 logging.addLevelName(REPLY, 'REPLY')
@@ -63,7 +66,7 @@ def colored_formatter(record):
     message = record.getMessage()
 
     if levelname == 'warning':
-        warning_category_groups = re.match(r'^.*?\s*?(\w*?Warning): (.*)', message)
+        warning_category_groups = re.match(WARNING_REGEX, message)
         if warning_category_groups is not None:
             warning_category, warning_text = warning_category_groups.groups()
 
@@ -103,10 +106,11 @@ class ActorHandler(logging.Handler):
     def emit(self, record):
         """Emits the record."""
 
-        message = record.getMessage().splitlines()
+        message = record.getMessage()
+        message_lines = message.splitlines()
 
         if record.exc_info:
-            message.append(f'{record.exc_info[0].__name__}: {record.exc_info[1]}')
+            message_lines.append(f'{record.exc_info[0].__name__}: {record.exc_info[1]}')
 
         if record.levelno <= logging.DEBUG:
             code = 'd'
@@ -114,11 +118,15 @@ class ActorHandler(logging.Handler):
             code = 'i'
         elif record.levelno < logging.ERROR:
             code = 'w'
+            warning_category_groups = re.match(WARNING_REGEX, message)
+            if warning_category_groups is not None:
+                warning_category, warning_text = warning_category_groups.groups()
+                message_lines = [f'{warning_category} {warning_text}']
         elif record.levelno >= logging.ERROR:
             code = 'f'
 
-        for line in message:
-            self.actor.write(code, message={self.keyword: line})
+        for line in message_lines:
+            self.actor.write(code, text={self.keyword: line})
 
 
 class SDSSFormatter(logging.Formatter):
