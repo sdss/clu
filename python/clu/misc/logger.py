@@ -121,12 +121,12 @@ class ActorHandler(logging.Handler):
             warning_category_groups = re.match(WARNING_REGEX, message)
             if warning_category_groups is not None:
                 warning_category, warning_text = warning_category_groups.groups()
-                message_lines = [f'{warning_category} {warning_text}']
+                message_lines = [f'{warning_text} ({warning_category})']
         elif record.levelno >= logging.ERROR:
             code = 'f'
 
         for line in message_lines:
-            self.actor.write(code, text={self.keyword: line})
+            self.actor.write(code, message={self.keyword: line})
 
 
 class SDSSFormatter(logging.Formatter):
