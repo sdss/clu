@@ -228,7 +228,7 @@ class TCPStreamServer(object):
 
         return self.server
 
-    async def serve_forever(self):
+    def serve_forever(self):
         """Exposes ``TCPStreamServer.server.serve_forever``."""
 
         return self.server.serve_forever()
