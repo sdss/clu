@@ -228,6 +228,11 @@ class TCPStreamServer(object):
 
         return self.server
 
+    async def serve_forever(self):
+        """Exposes ``TCPStreamServer.server.serve_forever``."""
+
+        return self.server.serve_forever()
+
     async def _do_callback(self, cb, *args, **kwargs):
         """Calls a function or coroutine callback."""
 

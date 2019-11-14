@@ -95,7 +95,7 @@ class LegacyActor(BaseActor):
 
         return f'<{str(self)} (name={self.name}, host={self.host!r}, port={self.port})>'
 
-    async def run(self):
+    async def start(self):
         """Starts the server and the Tron client connection."""
 
         await self.server.start_server()
@@ -117,6 +117,11 @@ class LegacyActor(BaseActor):
         self.timer_commands.start()
 
         return self
+
+    async def run_forever(self):
+        """Runs the actor forever, keeping the loop alive."""
+
+        await self.server.serve_forever()
 
     @classmethod
     def from_config(cls, config, *args, **kwargs):

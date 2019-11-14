@@ -44,7 +44,7 @@ class BaseActor(BaseClient):
     parser_args = []
 
     @abc.abstractmethod
-    async def run(self):
+    async def start(self):
         """Starts the server. Must be overridden by the subclasses."""
 
         pass
@@ -229,11 +229,11 @@ class Actor(AMQPClient, BaseActor):
 
         self.timer_commands = TimerCommandList(self)
 
-    async def run(self, **kwargs):
+    async def start(self, **kwargs):
         """Starts the connection to the AMQP broker."""
 
         # This sets the replies queue but not a commands one.
-        await AMQPClient.run(self, **kwargs)
+        await AMQPClient.start(self, **kwargs)
 
         # Binds the commands queue.
         self.commands_queue = await self.connection.add_queue(

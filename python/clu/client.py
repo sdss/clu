@@ -93,7 +93,7 @@ class BaseClient(metaclass=abc.ABCMeta):
         return self.__class__.__name__
 
     @abc.abstractmethod
-    async def run(self):
+    async def start(self):
         """Runs the client."""
 
         pass
@@ -235,7 +235,7 @@ class AMQPClient(BaseClient):
     asyncio's ``run_forever`` or a similar system ::
 
         >>> loop = asyncio.get_event_loop()
-        >>> client = await Client('my_client', 'guest', 'localhost', loop=loop).run()
+        >>> client = await Client('my_client', 'guest', 'localhost', loop=loop).start()
         >>> loop.run_forever()
 
     Parameters
@@ -294,7 +294,7 @@ class AMQPClient(BaseClient):
 
         return f'<{str(self)} (name={self.name}, {url}>'
 
-    async def run(self, exchange_name=__EXCHANGE_NAME__):
+    async def start(self, exchange_name=__EXCHANGE_NAME__):
         """Starts the connection to the AMQP broker."""
 
         # Starts the connection and creates the exchange

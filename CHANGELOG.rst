@@ -11,6 +11,7 @@ Changelog
 * :bug:`8` Fix `AttributeError` when connection breaks.
 * :feature:`15` Implement subcommands.
 * :feature:`17` Allow to run commands on a loop.
+* **Breaking change:** Rename ``Client.run()`` and ``Actor.run()`` to ``.start()`` (same for legacy actor). Added a `.LegacyActor.run_forever` method for convenience.
 
 * :release:`0.1.4 <2019-10-11>`
 * Fix Travis deployment.
