@@ -20,4 +20,4 @@ from .parser import command_parser
 
 NAME = 'clu'
 
-__version__ = '0.1.6dev'
+__version__ = '0.1.6-dev'
