@@ -142,15 +142,15 @@ class BaseCommand(asyncio.Future, StatusMixIn):
             if self.watcher is not None:
                 self.watcher.set()
 
-    def done(self, **kwargs):
+    def done(self, *args, **kwargs):
         """Convenience method to mark a command `~.CommandStatus.DONE`."""
 
-        self.set_status(CommandStatus.DONE, **kwargs)
+        self.set_status(CommandStatus.DONE, *args, **kwargs)
 
-    def failed(self, **kwargs):
+    def failed(self, *args, **kwargs):
         """Convenience method to mark a command `~.CommandStatus.FAILED`."""
 
-        self.set_status(CommandStatus.FAILED, **kwargs)
+        self.set_status(CommandStatus.FAILED, *args, **kwargs)
 
     def write(self, message_code='i', message=None, broadcast=False, **kwargs):
         """Writes to the user(s).

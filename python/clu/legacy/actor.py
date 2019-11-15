@@ -328,6 +328,8 @@ class LegacyActor(BaseActor):
 
         if message is None or (isinstance(message, str) and message.strip() == ''):
             message = {}
+        elif isinstance(message, str):
+            message = {'text': message}
         elif not isinstance(message, dict):
             raise TypeError('invalid message type ' + str(type(message)))
 
