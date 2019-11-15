@@ -4,6 +4,11 @@
 Changelog
 =========
 
+* :release:`0.1.6 <2019-11-15>`
+* Fix display of warnings in actor.
+* In legacy actor, default to use the ``text`` keyword if the message passed is a string.
+* **Breaking change:** Rename ``Client.run()`` and ``Actor.run()`` to ``.start()`` (same for legacy actor). Added a `.LegacyActor.run_forever` method for convenience.
+
 * :release:`0.1.5 <2019-11-13>`
 * :bug:`6` Fix bug when asking for help of subcommands and command groups.
 * :feature:`7` Allow Tron connection to fail but keep the actor alive and working.
@@ -11,7 +16,6 @@ Changelog
 * :bug:`8` Fix `AttributeError` when connection breaks.
 * :feature:`15` Implement subcommands.
 * :feature:`17` Allow to run commands on a loop.
-* **Breaking change:** Rename ``Client.run()`` and ``Actor.run()`` to ``.start()`` (same for legacy actor). Added a `.LegacyActor.run_forever` method for convenience.
 
 * :release:`0.1.4 <2019-10-11>`
 * Fix Travis deployment.
