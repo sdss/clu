@@ -68,7 +68,7 @@ def deploy(ctx, test=False):
         print('Deploying to Test PyPI!')
         repository_url = '--repository-url https://test.pypi.org/legacy/'
 
-    ctx.run('python setup.py sdist bdist_wheel')
+    ctx.run('python setup.py sdist')
     ctx.run(f'twine upload {repository_url} dist/*')
 
 
