@@ -10,3 +10,8 @@ python:
         path: .
         extra_requirements:
             - docs
+
+submodules:
+   include:
+     - docs/sphinx/releases
+   recursive: true
