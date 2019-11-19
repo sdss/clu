@@ -4,6 +4,9 @@
 Changelog
 =========
 
+* :release:`0.1.7 <2019-11-19>`
+* Added `.BaseCommand.debug`, `~.BaseCommand.info`, and `~.BaseCommand.warning` convenience methods.
+
 * :release:`0.1.6 <2019-11-15>`
 * Fix display of warnings in actor.
 * In legacy actor, default to use the ``text`` keyword if the message passed is a string.

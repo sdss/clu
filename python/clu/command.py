@@ -152,6 +152,21 @@ class BaseCommand(asyncio.Future, StatusMixIn):
 
         self.set_status(CommandStatus.FAILED, *args, **kwargs)
 
+    def debug(self, *args, **kwargs):
+        """Writes a debug-level message."""
+
+        self.write('d', *args, **kwargs)
+
+    def info(self, *args, **kwargs):
+        """Writes a info-level message."""
+
+        self.write('i', *args, **kwargs)
+
+    def warning(self, *args, **kwargs):
+        """Writes a warning-level message."""
+
+        self.write('w', *args, **kwargs)
+
     def write(self, message_code='i', message=None, broadcast=False, **kwargs):
         """Writes to the user(s).
 
