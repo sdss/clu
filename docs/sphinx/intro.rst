@@ -57,7 +57,7 @@ Next, head to the :ref:`getting-started` section for more information about usin
 .. include:: why.rst
 
 
-.. |Build Status| image:: https://img.shields.io/travis/rtfd/readthedocs.org.svg?style=flat
+.. |Build Status| image:: https://travis-ci.org/sdss/clu.svg?branch=master
     :alt: Build Status
     :target: https://travis-ci.org/sdss/clu
 
