@@ -1,7 +1,7 @@
 |Build Status| |Coverage Status| |docs| |py37|
 
 
-`CLU <https://tron.fandom.com/wiki/Clu>`_ implements a new protocol for SDSS actor while providing support for legacy-style actor.
+`CLU <https://tron.fandom.com/wiki/Clu>`_ implements a new protocol for SDSS actor while providing support for legacy-style actor. The current version is |clu_version|.
 
 
 Features

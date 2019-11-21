@@ -5,6 +5,7 @@ Changelog
 =========
 
 * Allow to pass a mapping of logging to actor codes to the `.ActorHandler`.
+* Use `poetry <https://poetry.eustace.io/>`__ for development and building.
 
 * :release:`0.1.7 <2019-11-19>`
 * Added `.BaseCommand.debug`, `~.BaseCommand.info`, and `~.BaseCommand.warning` convenience methods.

@@ -125,7 +125,8 @@ autodoc_default_options = {
 napoleon_use_rtype = False
 napoleon_use_ivar = True
 
-rst_epilog = """
+rst_epilog = f"""
+.. |clu_version| replace:: {__version__}
 """
 
 
