@@ -94,13 +94,28 @@ class ActorHandler(logging.Handler):
         The level above which records will be output in the actor.
     keyword : str
         The keyword around which the messages will be output.
+    code_mapping : dict
+        A mapping of logging levels to actor codes. The values provided
+        override the default mapping. For example, to make input log messages
+        with info level be output as debug,
+        ``code_mapping={logging.INFO: 'd'}``.
 
     """
 
-    def __init__(self, actor, level=logging.ERROR, keyword='text'):
+    def __init__(self, actor, level=logging.ERROR, keyword='text',
+                 code_mapping=None):
 
         self.actor = actor
         self.keyword = keyword
+
+        self.code_mapping = {logging.DEBUG: 'd',
+                             logging.INFO: 'i',
+                             logging.WARNING: 'w',
+                             logging.ERROR: 'f'}
+
+        if code_mapping:
+            self.code_mapping.update(code_mapping)
+
         super().__init__(level=level)
 
     def emit(self, record):
@@ -113,17 +128,19 @@ class ActorHandler(logging.Handler):
             message_lines.append(f'{record.exc_info[0].__name__}: {record.exc_info[1]}')
 
         if record.levelno <= logging.DEBUG:
-            code = 'd'
+            code = self.code_mapping[logging.DEBUG]
         elif record.levelno <= logging.INFO:
-            code = 'i'
-        elif record.levelno < logging.ERROR:
-            code = 'w'
+            code = self.code_mapping[logging.INFO]
+        elif record.levelno <= logging.WARNING:
+            code = self.code_mapping[logging.WARNING]
             warning_category_groups = re.match(WARNING_REGEX, message)
             if warning_category_groups is not None:
                 warning_category, warning_text = warning_category_groups.groups()
                 message_lines = [f'{warning_text} ({warning_category})']
         elif record.levelno >= logging.ERROR:
-            code = 'f'
+            code = self.code_mapping[logging.ERROR]
+        else:
+            code = 'w'
 
         for line in message_lines:
             self.actor.write(code, message={self.keyword: line})

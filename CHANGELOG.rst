@@ -4,6 +4,8 @@
 Changelog
 =========
 
+* Allow to pass a mapping of logging to actor codes to the `.ActorHandler`.
+
 * :release:`0.1.7 <2019-11-19>`
 * Added `.BaseCommand.debug`, `~.BaseCommand.info`, and `~.BaseCommand.warning` convenience methods.
 
