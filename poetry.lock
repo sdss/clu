@@ -1,13 +1,5 @@
 [[package]]
 category = "main"
-description = "Advanced Enumerations (compatible with Python's stdlib Enum), NamedTuples, and NamedConstants"
-name = "aenum"
-optional = false
-python-versions = "*"
-version = "2.2.3"
-
-[[package]]
-category = "main"
 description = "Wrapper for the aiormq for asyncio and humans."
 name = "aio-pika"
 optional = false
@@ -55,25 +47,9 @@ version = "0.1.0"
 
 [[package]]
 category = "main"
-description = "Community-developed python astronomy tools"
-name = "astropy"
-optional = false
-python-versions = ">=3.5"
-version = "3.2.3"
-
-[package.dependencies]
-numpy = ">=1.13"
-
-[package.extras]
-all = ["scipy", "h5py", "beautifulsoup4", "html5lib", "bleach", "pyyaml", "pandas", "sortedcontainers", "pytz", "jplephem", "matplotlib (>=2.0)", "scikit-image", "mpmath", "asdf (>=2.3)", "bottleneck", "ipython", "pytest"]
-docs = ["sphinx-astropy"]
-test = ["pytest-astropy", "pytest-xdist", "pytest-mpl", "objgraph", "ipython", "coverage", "skyfield"]
-
-[[package]]
-category = "dev"
 description = "Enhance the standard unittest package with features for testing asyncio libraries"
 name = "asynctest"
-optional = false
+optional = true
 python-versions = ">=3.5"
 version = "0.13.0"
 
@@ -487,14 +463,6 @@ python-versions = "*"
 version = "5.4.3"
 
 [[package]]
-category = "main"
-description = "a little orm"
-name = "peewee"
-optional = false
-python-versions = "*"
-version = "3.11.2"
-
-[[package]]
 category = "dev"
 description = "Pexpect allows easy control of interactive console applications."
 marker = "sys_platform != \"win32\""
@@ -529,22 +497,6 @@ version = ">=0.12"
 
 [package.extras]
 dev = ["pre-commit", "tox"]
-
-[[package]]
-category = "main"
-description = "A Python Progressbar library to provide visual (yet text based) progress to long running operations."
-name = "progressbar2"
-optional = false
-python-versions = "*"
-version = "3.47.0"
-
-[package.dependencies]
-python-utils = ">=2.3.0"
-six = "*"
-
-[package.extras]
-docs = ["sphinx (>=1.7.4)"]
-tests = ["flake8 (>=3.7.7)", "pytest (>=4.3.1)", "pytest-cov (>=2.6.1)", "pytest-flakes (>=4.0.0)", "pytest-pep8 (>=1.0.6)", "freezegun (>=0.3.11)", "sphinx (>=1.8.5)"]
 
 [[package]]
 category = "main"
@@ -601,25 +553,6 @@ version = "2.4.2"
 
 [[package]]
 category = "main"
-description = "A fully featured modbus protocol stack in python"
-name = "pymodbus"
-optional = false
-python-versions = "*"
-version = "2.3.0"
-
-[package.dependencies]
-pyserial = ">=3.4"
-six = ">=1.11.0"
-
-[package.extras]
-documents = ["sphinx (>=1.1.3)", "sphinx-rtd-theme", "humanfriendly"]
-quality = ["coverage (>=3.5.3)", "nose (>=1.2.1)", "mock (>=1.0.0)", "pep8 (>=1.3.3)"]
-repl = ["click (>=6.7)", "prompt-toolkit (2.0.4)", "pygments (2.2.0)"]
-tornado = ["tornado (>=4.5.3)"]
-twisted = ["twisted (>=12.2.0)", "pyasn1 (>=0.1.4)"]
-
-[[package]]
-category = "main"
 description = "Python parsing module"
 name = "pyparsing"
 optional = false
@@ -636,14 +569,6 @@ version = "0.15.5"
 
 [package.dependencies]
 six = "*"
-
-[[package]]
-category = "main"
-description = "Python Serial Port Extension"
-name = "pyserial"
-optional = false
-python-versions = "*"
-version = "3.4"
 
 [[package]]
 category = "dev"
@@ -713,24 +638,6 @@ pytest = ">=2.9"
 termcolor = ">=1.1.0"
 
 [[package]]
-category = "main"
-description = "Controller Area Network interface module for Python"
-name = "python-can"
-optional = false
-python-versions = ">=2.7"
-version = "3.3.2"
-
-[package.dependencies]
-aenum = "*"
-windows-curses = "*"
-wrapt = ">=1.10,<2.0"
-
-[package.extras]
-neovi = ["python-ics (>=2.12)"]
-serial = ["pyserial (>=3.0,<4.0)"]
-test = ["mock (>=2.0,<3.0)", "pytest (>=4.3,<5.0)", "pytest-timeout (>=1.3,<2.0)", "pytest-cov (>=2.6,<3.0)", "codecov (>=2.0,<3.0)", "future", "six", "hypothesis", "pyserial (>=3.0,<4.0)"]
-
-[[package]]
 category = "dev"
 description = "Extensions to the standard Python datetime module"
 name = "python-dateutil"
@@ -740,17 +647,6 @@ version = "2.8.1"
 
 [package.dependencies]
 six = ">=1.5"
-
-[[package]]
-category = "main"
-description = "Python Utils is a module with some convenient utilities not included with the standard Python install"
-name = "python-utils"
-optional = false
-python-versions = "*"
-version = "2.3.0"
-
-[package.dependencies]
-six = "*"
 
 [[package]]
 category = "main"
@@ -1000,23 +896,6 @@ version = "0.1.7"
 
 [[package]]
 category = "main"
-description = "Support for the standard curses module on Windows"
-marker = "platform_system == \"Windows\""
-name = "windows-curses"
-optional = false
-python-versions = "*"
-version = "2.1.0"
-
-[[package]]
-category = "main"
-description = "Module for decorators, wrappers and monkey patching."
-name = "wrapt"
-optional = false
-python-versions = "*"
-version = "1.11.2"
-
-[[package]]
-category = "main"
 description = "Yet another URL library"
 name = "yarl"
 optional = false
@@ -1044,18 +923,13 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["pathlib2", "contextlib2", "unittest2"]
 
 [extras]
-docs = ["Sphinx", "sphinxcontrib-trio", "semantic-version"]
+docs = ["Sphinx", "sphinxcontrib-trio", "semantic-version", "asynctest"]
 
 [metadata]
-content-hash = "0307f8008f8a7aabff6ca5af2be0a875fa61b7552709a07de7670f42235ba89b"
+content-hash = "85a795b1deb90b72f7d1e3801ab8ff93646473daa00464d9245f34489f6b7981"
 python-versions = "^3.7"
 
 [metadata.files]
-aenum = [
-    {file = "aenum-2.2.3-py2-none-any.whl", hash = "sha256:d2bb6ea7586aaae889d3a5c332eafa851eeffe6e7068807c79b6c86c4326b938"},
-    {file = "aenum-2.2.3-py3-none-any.whl", hash = "sha256:284ddb976413d97239a932d7e5202ba58d66e5dbd81531bf3033ebb36ec30b23"},
-    {file = "aenum-2.2.3.tar.gz", hash = "sha256:a4334cabf47c167d44ab5a6198837b80deec5d5bad1b5cf70c966c3a330260e8"},
-]
 aio-pika = [
     {file = "aio-pika-6.4.1.tar.gz", hash = "sha256:fa32e33b4b7d0804dcf439ae6ff24d2f0a83d1ba280ee9f555e647d71d394ff5"},
     {file = "aio_pika-6.4.1-py3-none-any.whl", hash = "sha256:a5837277e53755078db3a9e8c45bbca605c8ba9ecba7a02d74a7a1779f444723"},
@@ -1071,24 +945,6 @@ alabaster = [
 appnope = [
     {file = "appnope-0.1.0-py2.py3-none-any.whl", hash = "sha256:5b26757dc6f79a3b7dc9fab95359328d5747fcb2409d331ea66d0272b90ab2a0"},
     {file = "appnope-0.1.0.tar.gz", hash = "sha256:8b995ffe925347a2138d7ac0fe77155e4311a0ea6d6da4f5128fe4b3cbe5ed71"},
-]
-astropy = [
-    {file = "astropy-3.2.3-cp35-cp35m-macosx_10_6_intel.macosx_10_9_intel.macosx_10_9_x86_64.macosx_10_10_intel.macosx_10_10_x86_64.whl", hash = "sha256:cad36fd1a1fcb676a0be42b74c5d2f559d1cbb8116d08e100421b6809edeb339"},
-    {file = "astropy-3.2.3-cp35-cp35m-manylinux1_i686.whl", hash = "sha256:78636648183cb0efe14d887a2dddd9877048d76121ca221571322405c0f07eb9"},
-    {file = "astropy-3.2.3-cp35-cp35m-manylinux1_x86_64.whl", hash = "sha256:cfc4f02f8780fe23ff1e057c16d6318ad643e1d811e5052383fc42d603a36e2e"},
-    {file = "astropy-3.2.3-cp35-cp35m-win32.whl", hash = "sha256:57f3f6b21b8e3629a1bd436594e141e24b7ce0e6b26194e2872599391a8245e8"},
-    {file = "astropy-3.2.3-cp35-cp35m-win_amd64.whl", hash = "sha256:2375c06ea92b56b8ee2d54b8930a8b28cf3d7532b200c94f05e44acaa6bd5037"},
-    {file = "astropy-3.2.3-cp36-cp36m-macosx_10_6_intel.macosx_10_9_intel.macosx_10_9_x86_64.macosx_10_10_intel.macosx_10_10_x86_64.whl", hash = "sha256:3a75065e9194756ba1732aa725ea41ce46ec6389a851d35071940aa60e5fa4b4"},
-    {file = "astropy-3.2.3-cp36-cp36m-manylinux1_i686.whl", hash = "sha256:99cbddc61cfc061fdf73ef000d7c548264bdf131a8e00652ab7183e41265a7b8"},
-    {file = "astropy-3.2.3-cp36-cp36m-manylinux1_x86_64.whl", hash = "sha256:cdd87113f16a5c07522dbb30898cf6ba6571cbf912efff06da37342851d08a9d"},
-    {file = "astropy-3.2.3-cp36-cp36m-win32.whl", hash = "sha256:26205b678153faf2cfdd4dcf3fb3fab94b33cbda4f6158e9d9fbe33a6c788f3e"},
-    {file = "astropy-3.2.3-cp36-cp36m-win_amd64.whl", hash = "sha256:eaaf8149e27bf247132cc330ac918e3d2a72c4b5c59077da7162a09bd9a4c6b5"},
-    {file = "astropy-3.2.3-cp37-cp37m-macosx_10_6_intel.macosx_10_9_intel.macosx_10_9_x86_64.macosx_10_10_intel.macosx_10_10_x86_64.whl", hash = "sha256:4a40edb974ed4866e86d1af2d7a3399ef0c634af91a6dd4fe4ff68f7f4656c84"},
-    {file = "astropy-3.2.3-cp37-cp37m-manylinux1_i686.whl", hash = "sha256:6a22733069d352309f2c9482599fede0a249037ae6d0cd83db6f501eec2ae3ac"},
-    {file = "astropy-3.2.3-cp37-cp37m-manylinux1_x86_64.whl", hash = "sha256:f35a3eb0438c0d65fe73b8cd09ff1323cd265a05701049359a203fd8f9a08dbd"},
-    {file = "astropy-3.2.3-cp37-cp37m-win32.whl", hash = "sha256:729c9b905562dd7866739fd52c819c1f9437dac8d83480e4cd1e86322110ed29"},
-    {file = "astropy-3.2.3-cp37-cp37m-win_amd64.whl", hash = "sha256:1f0991019df0d9049143e6f63b773aeb9d16c632d2efb6761f0582a7afa59d7d"},
-    {file = "astropy-3.2.3.tar.gz", hash = "sha256:47f00816c2978fdd10f448c8f0337d6dca7b8cbeaab4bf272b5fd37cb4b890d3"},
 ]
 asynctest = [
     {file = "asynctest-0.13.0-py3-none-any.whl", hash = "sha256:5da6118a7e6d6b54d83a8f7197769d046922a44d2a99c21382f0a6e4fadae676"},
@@ -1366,9 +1222,6 @@ pbr = [
     {file = "pbr-5.4.3-py2.py3-none-any.whl", hash = "sha256:b32c8ccaac7b1a20c0ce00ce317642e6cf231cf038f9875e0280e28af5bf7ac9"},
     {file = "pbr-5.4.3.tar.gz", hash = "sha256:2c8e420cd4ed4cec4e7999ee47409e876af575d4c35a45840d59e8b5f3155ab8"},
 ]
-peewee = [
-    {file = "peewee-3.11.2.tar.gz", hash = "sha256:f3f5c80c51b632d031f60454accadd84f166453a471bff63093ca674973f2a4e"},
-]
 pexpect = [
     {file = "pexpect-4.7.0-py2.py3-none-any.whl", hash = "sha256:2094eefdfcf37a1fdbfb9aa090862c1a4878e5c7e0e7e7088bdb511c558e5cd1"},
     {file = "pexpect-4.7.0.tar.gz", hash = "sha256:9e2c1fd0e6ee3a49b28f95d4b33bc389c89b20af6a1255906e90ff1262ce62eb"},
@@ -1380,10 +1233,6 @@ pickleshare = [
 pluggy = [
     {file = "pluggy-0.13.0-py2.py3-none-any.whl", hash = "sha256:0db4b7601aae1d35b4a033282da476845aa19185c1e6964b25cf324b5e4ec3e6"},
     {file = "pluggy-0.13.0.tar.gz", hash = "sha256:fa5fa1622fa6dd5c030e9cad086fa19ef6a0cf6d7a2d12318e10cb49d6d68f34"},
-]
-progressbar2 = [
-    {file = "progressbar2-3.47.0-py2.py3-none-any.whl", hash = "sha256:eb774d1e0d03ea4730f381c13c2c6ae7abb5ddfb14d8321d7a58a61aa708f0d0"},
-    {file = "progressbar2-3.47.0.tar.gz", hash = "sha256:7538d02045a1fd3aa2b2834bfda463da8755bd3ff050edc6c5ddff3bc616215f"},
 ]
 prompt-toolkit = [
     {file = "prompt_toolkit-2.0.10-py2-none-any.whl", hash = "sha256:e7f8af9e3d70f514373bf41aa51bc33af12a6db3f71461ea47fea985defb2c31"},
@@ -1410,20 +1259,12 @@ pygments = [
     {file = "Pygments-2.4.2-py2.py3-none-any.whl", hash = "sha256:71e430bc85c88a430f000ac1d9b331d2407f681d6f6aec95e8bcfbc3df5b0127"},
     {file = "Pygments-2.4.2.tar.gz", hash = "sha256:881c4c157e45f30af185c1ffe8d549d48ac9127433f2c380c24b84572ad66297"},
 ]
-pymodbus = [
-    {file = "pymodbus-2.3.0-py2.py3-none-any.whl", hash = "sha256:17acbd7b4e57357c71c25a37f03d07fe2fcd4dba19c95b4c0c2621b9f0a8f34f"},
-    {file = "pymodbus-2.3.0.tar.gz", hash = "sha256:8e59d49cdc3f9df8e90fa004baa4aae94814b9ecf1fc03620b1d67234896c444"},
-]
 pyparsing = [
     {file = "pyparsing-2.4.5-py2.py3-none-any.whl", hash = "sha256:20f995ecd72f2a1f4bf6b072b63b22e2eb457836601e76d6e5dfcd75436acc1f"},
     {file = "pyparsing-2.4.5.tar.gz", hash = "sha256:4ca62001be367f01bd3e92ecbb79070272a9d4964dce6a48a82ff0b8bc7e683a"},
 ]
 pyrsistent = [
     {file = "pyrsistent-0.15.5.tar.gz", hash = "sha256:eb6545dbeb1aa69ab1fb4809bfbf5a8705e44d92ef8fc7c2361682a47c46c778"},
-]
-pyserial = [
-    {file = "pyserial-3.4-py2.py3-none-any.whl", hash = "sha256:e0770fadba80c31013896c7e6ef703f72e7834965954a78e71a3049488d4d7d8"},
-    {file = "pyserial-3.4.tar.gz", hash = "sha256:6e2d401fdee0eab996cf734e67773a0143b932772ca8b42451440cfed942c627"},
 ]
 pytest = [
     {file = "pytest-5.3.0-py3-none-any.whl", hash = "sha256:f6a567e20c04259d41adce9a360bd8991e6aa29dd9695c5e6bd25a9779272673"},
@@ -1441,16 +1282,9 @@ pytest-sugar = [
     {file = "pytest-sugar-0.9.2.tar.gz", hash = "sha256:fcd87a74b2bce5386d244b49ad60549bfbc4602527797fac167da147983f58ab"},
     {file = "pytest_sugar-0.9.2-py2.py3-none-any.whl", hash = "sha256:26cf8289fe10880cbbc130bd77398c4e6a8b936d8393b116a5c16121d95ab283"},
 ]
-python-can = [
-    {file = "python-can-3.3.2.tar.gz", hash = "sha256:5fefb5c1e7e7f07faefc02c6eac79f9b58376f007048a04d8e7f325d48ec6b2e"},
-]
 python-dateutil = [
     {file = "python-dateutil-2.8.1.tar.gz", hash = "sha256:73ebfe9dbf22e832286dafa60473e4cd239f8592f699aa5adaf10050e6e1823c"},
     {file = "python_dateutil-2.8.1-py2.py3-none-any.whl", hash = "sha256:75bb3f31ea686f1197762692a9ee6a7550b59fc6ca3a1f4b5d7e32fb98e2da2a"},
-]
-python-utils = [
-    {file = "python-utils-2.3.0.tar.gz", hash = "sha256:34aaf26b39b0b86628008f2ae0ac001b30e7986a8d303b61e1357dfcdad4f6d3"},
-    {file = "python_utils-2.3.0-py2.py3-none-any.whl", hash = "sha256:e25f840564554eaded56eaa395bca507b0b9e9f0ae5ecb13a8cb785305c56d25"},
 ]
 pytz = [
     {file = "pytz-2019.3-py2.py3-none-any.whl", hash = "sha256:1c557d7d0e871de1f5ccd5833f60fb2550652da6be2693c1e02300743d21500d"},
@@ -1550,21 +1384,6 @@ urllib3 = [
 wcwidth = [
     {file = "wcwidth-0.1.7-py2.py3-none-any.whl", hash = "sha256:f4ebe71925af7b40a864553f761ed559b43544f8f71746c2d756c7fe788ade7c"},
     {file = "wcwidth-0.1.7.tar.gz", hash = "sha256:3df37372226d6e63e1b1e1eda15c594bca98a22d33a23832a90998faa96bc65e"},
-]
-windows-curses = [
-    {file = "windows_curses-2.1.0-cp27-cp27m-win32.whl", hash = "sha256:89a6d973f88cfe49b41ea80164dcbec209d296e0cec34a02002578b0bf464a64"},
-    {file = "windows_curses-2.1.0-cp27-cp27m-win_amd64.whl", hash = "sha256:9e474a181f96d60429a4766145628264e60b72e7715876f9135aeb2e842f9433"},
-    {file = "windows_curses-2.1.0-cp35-cp35m-win32.whl", hash = "sha256:73bd3eebccfda55330783f165151de115bfa238d1332f0b2e224b550d6187840"},
-    {file = "windows_curses-2.1.0-cp35-cp35m-win_amd64.whl", hash = "sha256:cfe64c30807c146ef8d094412f90f2a2c81ad6aefff3ebfe8e37aabe2f801303"},
-    {file = "windows_curses-2.1.0-cp36-cp36m-win32.whl", hash = "sha256:669caad3ae16faf2d201d7ab3b8af418a2fd074d8a39d60ca26f3acb34b6afe5"},
-    {file = "windows_curses-2.1.0-cp36-cp36m-win_amd64.whl", hash = "sha256:8ba7c000d7ffa5452bbd0966b96e69261e4f117ebe510aeb8771a9650197b7f0"},
-    {file = "windows_curses-2.1.0-cp37-cp37m-win32.whl", hash = "sha256:97084c6b37b1534f6a28a514d521dfae402f77dcbad42b14ee32e8d5bdc13648"},
-    {file = "windows_curses-2.1.0-cp37-cp37m-win_amd64.whl", hash = "sha256:ff8c67f74b88944d99fa9d22971c05c335bc74f149120f0a69340c2c3a595497"},
-    {file = "windows_curses-2.1.0-cp38-cp38-win32.whl", hash = "sha256:66034dc9a705d87308cc9ea90836f4ee60008a1d5e2c1d34ace627f60268158b"},
-    {file = "windows_curses-2.1.0-cp38-cp38-win_amd64.whl", hash = "sha256:261fde5680d1ce4ce116908996b9a3cfb0ffb03ea68d42240f62b56a9fa6af2c"},
-]
-wrapt = [
-    {file = "wrapt-1.11.2.tar.gz", hash = "sha256:565a021fd19419476b9362b05eeaa094178de64f8361e44468f9e9d7843901e1"},
 ]
 yarl = [
     {file = "yarl-1.3.0-cp35-cp35m-manylinux1_i686.whl", hash = "sha256:3e2724eb9af5dc41648e5bb304fcf4891adc33258c6e14e2a7414ea32541e320"},

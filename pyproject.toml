@@ -25,16 +25,10 @@ exclude = ["python/clu/tests/*"]
 
 [tool.poetry.dependencies]
 python = "^3.7"
-astropy = "^3.0.4"
 numpy = "^1.15.1"
 "ruamel.yaml" = "^0.15.61"
 pygments = "^2.2.0"
 Click = "^7.0"
-python-can = "^3.1.1"
-progressbar2 = "^3.39.3"
-pyserial = "^3.4"
-pymodbus = "^2.3.0"
-peewee = "^3.11.2"
 setuptools = "^41.6.0"
 toml = "^0.10.0"
 aio_pika = "^6.4.1"
