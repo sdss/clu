@@ -14,7 +14,7 @@ import warnings
 
 try:
     import pkg_resources
-    __version__ = pkg_resources.get_distribution('clu').version
+    __version__ = pkg_resources.get_distribution('sdss-clu').version
 except (pkg_resources.DistributionNotFound, ImportError):
     try:
         import toml
