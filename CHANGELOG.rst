@@ -4,6 +4,7 @@
 Changelog
 =========
 
+* :release:`0.1.8 <2019-11-21>`
 * Allow to pass a mapping of logging to actor codes to the `.ActorHandler`.
 * Use `poetry <https://poetry.eustace.io/>`__ for development and building.
 
