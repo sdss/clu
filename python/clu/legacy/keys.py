@@ -8,7 +8,7 @@ Refer to https://trac.sdss3.org/wiki/Ops/Validation for details.
 
 import collections
 import hashlib
-import imp
+import importlib
 import sys
 import textwrap
 
@@ -436,7 +436,7 @@ class KeysDictionary(object):
             raise KeysDictionaryError('no actorkeys package found')
         try:
             # open the file corresponding to the requested keys dictionary
-            (dictfile, name, description) = imp.find_module(dictname, keyspath)
+            (dictfile, name, description) = importlib.util.find_spec(dictname, keyspath)
             # create a global symbol table for evaluating the keys dictionary expression
             symbols = {
                 '__builtins__': __builtins__,
