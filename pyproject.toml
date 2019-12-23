@@ -78,6 +78,6 @@ ignore = [
 ]
 max-line-length = 99
 
-[build-system]
-build-backend = "poetry.masonry.api"
-requires = ["poetry>=1.0.0b6"]
+# [build-system]
+# build-backend = "poetry.masonry.api"
+# requires = ["poetry>=1.0.0b6"]
