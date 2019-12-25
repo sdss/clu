@@ -8,6 +8,8 @@
 
 # flake8: noqa
 
+import pkg_resources
+
 from .actor import *
 from .base import CommandStatus, as_complete_failer, escape, format_value
 from .client import AMQPClient
@@ -17,6 +19,10 @@ from .exceptions import *
 from .legacy import LegacyActor
 from .parser import command_parser
 
-__version__ = '0.1.10-alpha.0'
+
+try:
+    __version__ = pkg_resources.get_distribution('sdss-clu').version
+except pkg_resources.DistributionNotFound:
+    __version__ = 'dev'
 
 NAME = 'clu'
