@@ -4,6 +4,9 @@
 Changelog
 =========
 
+* :release:`0.1.10 <2019-12-25>`
+* Tweak dependencies and poetry install.
+
 * :release:`0.1.9 <2019-11-21>`
 * Fix ``__version__`` definition from package version.
 
