@@ -113,7 +113,7 @@ class BaseActor(BaseClient):
             except Exception as exc:
                 self._handle_command_exception(command, exc)
 
-        return
+        return command
 
     @staticmethod
     def _handle_command_exception(command, exception, log=None):
