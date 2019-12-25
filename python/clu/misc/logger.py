@@ -84,7 +84,7 @@ def colored_formatter(record):
 
 
 class ActorHandler(logging.Handler):
-    """An actor that outputs log messages to an actor.
+    """A handler that outputs log messages as actor keywords.
 
     Parameters
     ----------
@@ -209,6 +209,9 @@ class SDSSLogger(logging.Logger):
         self.fh = None
         self.log_filename = None
 
+        # Placeholder for actor handler
+        self.actor_handler = None
+
         # Catches exceptions
         sys.excepthook = self._catch_exceptions
 
@@ -282,6 +285,27 @@ class SDSSLogger(logging.Logger):
                 self.warnings_logger.addHandler(self.fh)
 
             self.log_filename = log_file_path
+
+    def log_to_actor(self, actor, log_level=logging.INFO, **kwargs):
+        """Adds an `.ActorHandler` that output log messages as actor keywords.
+
+        Parameters
+        ----------
+        actor
+            The actor instance to which to output log messages.
+        log_level : int
+            The log level above which messages will be output to the actor.
+        kwargs : dict
+            Other parameters to pass to `.ActorHandler`
+
+        """
+
+        self.actor_handler = ActorHandler(actor)
+        self.addHandler(self.actor_handler)
+        self.actor_handler.setLevel(log_level)
+
+        if self.warnings_logger:
+            self.warnings_logger.addHandler(self.actor_handler)
 
     def asyncio_exception_handler(self, loop, context):
         """Handle an uncaught exception and reports it."""
