@@ -204,14 +204,6 @@ class BaseClient(metaclass=abc.ABCMeta):
 
         log.sh.setLevel(shell_level)
 
-        # Creates a log with a handler that converts logs and exceptions to replies.
-        actor_handler = ActorHandler(self)
-        actor_handler.setLevel(logging.WARNING)
-        log.addHandler(actor_handler)
-
-        if log.warnings_logger is not None:
-            log.warnings_logger.addHandler(actor_handler)
-
         self.log = log
         self.log.debug(f'{self.name}: logging system initiated.')
 
