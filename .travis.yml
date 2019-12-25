@@ -1,25 +1,18 @@
-language: python
-
 cache:
   pip: true
   timeout: 1000
 
-sudo: false
-
-os:
-  - linux
+language: python
 
 matrix:
   fast_finish: true
   include:
     - python: 3.7
       dist: xenial
-      sudo: true
-      # after_success:
-      #   - coveralls
-    - python: 3.8-dev
+      after_success:
+        - poetry run codecov
+    - python: 3.8
       dist: xenial
-      sudo: true
 
 notifications:
   email: false
@@ -27,18 +20,18 @@ notifications:
 # repo branches to test
 branches:
   - master
-  - /\d+\.\d+\.\d+/
+  - develop
+  - testing
+    - /\d+\.\d+\.\d+/
+
+before_install:
+  - pip install poetry
 
 install:
-  - pip install -U pip wheel --quiet
-  - pip install --upgrade setuptools --quiet
-  - pip install pytest
-  - pip install pytest-coverage
-  - pip install coveralls
-  - pip install .[dev]
+  - poetry install
 
 script:
-  - pytest python/clu/tests --cov python/clu --cov-report html
+  - poetry run pytest
 
 deploy:
   provider: pypi

@@ -52,7 +52,8 @@ pytest = "^5.2.2"
 pytest-asyncio = "^0.10.0"
 pytest-cov = "^2.8.1"
 pytest-sugar = "^0.9.2"
-coveralls = "^1.8.2"
+codecov = "^2.0.15"
+coverage = {version = "5.0", extras = ["toml"]}
 toml = "^0.10.0"
 
 [tool.poetry.extras]
@@ -69,6 +70,18 @@ include_trailing_comma = false
 length_sort_stdlib = false
 lines_after_imports = 2
 # use_parentheses = true
+
+[tool.coverage.run]
+branch = true
+include = ["python/clu/*"]
+omit = [
+    "*/misc/*.py",
+    "*/__init__.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+]
 
 [tool.flake8]
 ignore = [
