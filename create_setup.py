@@ -36,8 +36,8 @@ poetry = factory.create_poetry(os.path.dirname(__file__))
 sdist_builder = SdistBuilder(poetry, None, None)
 setuppy_blob = sdist_builder.build_setup()
 
-if os.path.exists('setup.py'):
-    raise FileExistsError('setup.py already exists. Not overwriting it.')
+# if os.path.exists('setup.py'):
+#     raise FileExistsError('setup.py already exists. Not overwriting it.')
 
 with open('setup.py', 'wb') as unit:
     unit.write(setuppy_blob)
