@@ -49,7 +49,7 @@ version = "0.1.0"
 category = "main"
 description = "Enhance the standard unittest package with features for testing asyncio libraries"
 name = "asynctest"
-optional = true
+optional = false
 python-versions = ">=3.5"
 version = "0.13.0"
 
@@ -921,7 +921,7 @@ testing = ["pathlib2", "contextlib2", "unittest2"]
 docs = ["Sphinx", "sphinxcontrib-trio", "semantic-version", "asynctest"]
 
 [metadata]
-content-hash = "29225eaa166ed53b6da9a1923ac3013af0c980dbc3d21726f5660053b11ae511"
+content-hash = "e3d2323aba559174f9406710156b7f3f69fbd60ba9468b88f55d4889e227087b"
 python-versions = "^3.7"
 
 [metadata.files]
