@@ -22,8 +22,7 @@ install_requires = \
 extras_require = \
 {'docs': ['Sphinx>=2.0,<3.0',
           'sphinxcontrib-trio==1.1.0',
-          'semantic-version==2.8.0',
-          'asynctest>=0.13.0,<0.14.0']}
+          'semantic-version==2.8.0']}
 
 setup_kwargs = {
     'name': 'sdss-clu',

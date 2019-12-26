@@ -8,12 +8,20 @@
 
 import asyncio
 import re
+import sys
 import types
 import unittest.mock
 
-from asynctest import CoroutineMock
-
 from clu.command import Command
+
+
+if sys.version_info.major == 3 and sys.version_info.minor >= 8:
+    CoroutineMock = unittest.mock.AsyncMock
+else:
+    try:
+        from asynctest import CoroutineMock
+    except ImportError:
+        raise ImportError('clu.testing requires asynctest with Python < 3.8.')
 
 
 __all__ = ['MockReply', 'MockReplyList', 'setup_test_actor', 'TestCommand']
