@@ -99,11 +99,14 @@ class ActorHandler(logging.Handler):
         override the default mapping. For example, to make input log messages
         with info level be output as debug,
         ``code_mapping={logging.INFO: 'd'}``.
+    filter_warnings : list
+        A list of warning classes that will be issued to the actor. Subclasses
+        of the filter warning are accepted, any other warnings will be ignored.
 
     """
 
     def __init__(self, actor, level=logging.ERROR, keyword='text',
-                 code_mapping=None):
+                 code_mapping=None, filter_warnings=None):
 
         self.actor = actor
         self.keyword = keyword
@@ -115,6 +118,8 @@ class ActorHandler(logging.Handler):
 
         if code_mapping:
             self.code_mapping.update(code_mapping)
+
+        self.filter_warnings = filter_warnings
 
         super().__init__(level=level)
 
@@ -135,8 +140,7 @@ class ActorHandler(logging.Handler):
             code = self.code_mapping[logging.WARNING]
             warning_category_groups = re.match(WARNING_REGEX, message)
             if warning_category_groups is not None:
-                warning_category, warning_text = warning_category_groups.groups()
-                message_lines = [f'{warning_text} ({warning_category})']
+                message_lines = self._filter_warning(warning_category_groups)
         elif record.levelno >= logging.ERROR:
             code = self.code_mapping[logging.ERROR]
         else:
@@ -144,6 +148,23 @@ class ActorHandler(logging.Handler):
 
         for line in message_lines:
             self.actor.write(code, message={self.keyword: line})
+
+    def _filter_warning(self, warning_category_groups):
+
+        warning_category, warning_text = warning_category_groups.groups()
+        message_lines = [f'{warning_text} ({warning_category})']
+
+        try:
+            warning_class = eval(warning_category)
+            if self.filter_warnings:
+                for warning_filter in self.filter_warnings:
+                    if isinstance(warning_class, warning_filter):
+                        return message_lines
+            return []
+        except NameError:
+            return message_lines
+
+        return []
 
 
 class SDSSFormatter(logging.Formatter):
@@ -300,7 +321,7 @@ class SDSSLogger(logging.Logger):
 
         """
 
-        self.actor_handler = ActorHandler(actor)
+        self.actor_handler = ActorHandler(actor, **kwargs)
         self.addHandler(self.actor_handler)
         self.actor_handler.setLevel(log_level)
 
