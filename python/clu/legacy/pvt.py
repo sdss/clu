@@ -12,9 +12,8 @@ History:
 2015-11-03 ROwen    Replace "!= None" with "is not None" to modernize the code.
 """
 
+import math
 import time
-
-import numpy
 
 
 __all__ = ['PVT']
@@ -140,9 +139,9 @@ class PVT(object):
 
         A pvt is valid if all values are known (not None and finite) and time > 0.
         """
-        return ((self.pos is not None) and numpy.isfinite(self.pos) and
-                (self.vel is not None) and numpy.isfinite(self.vel) and
-                (self.t is not None) and numpy.isfinite(self.t) and
+        return ((self.pos is not None) and math.isfinite(self.pos) and
+                (self.vel is not None) and math.isfinite(self.vel) and
+                (self.t is not None) and math.isfinite(self.t) and
                 (self.t > 0))
 
     def set(self, pos=None, vel=None, t=None):

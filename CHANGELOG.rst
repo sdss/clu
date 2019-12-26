@@ -4,6 +4,8 @@
 Changelog
 =========
 
+* Remove numpy dependency from CLU.
+
 * :release:`0.1.10 <2019-12-25>`
 * Tweak dependencies and poetry install.
 

@@ -14,7 +14,6 @@ install_requires = \
 ['Click>=7.0,<8.0',
  'aio_pika>=6.4.1,<7.0.0',
  'jsonschema>=3.0.1,<4.0.0',
- 'numpy>=1.15.1,<2.0.0',
  'prompt-toolkit>=3.0.0,<4.0.0',
  'pygments>=2.2.0,<3.0.0',
  'ruamel.yaml>=0.15.61,<0.16.0']

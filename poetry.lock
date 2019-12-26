@@ -409,7 +409,7 @@ python-versions = ">=3.5"
 version = "4.7.2"
 
 [[package]]
-category = "main"
+category = "dev"
 description = "NumPy is the fundamental package for array computing with Python."
 name = "numpy"
 optional = false
@@ -921,7 +921,7 @@ testing = ["pathlib2", "contextlib2", "unittest2"]
 docs = ["Sphinx", "sphinxcontrib-trio", "semantic-version"]
 
 [metadata]
-content-hash = "53af23e0e92490262e4a24f44c5879cd779cb5317d62e610794df7f7c8b63226"
+content-hash = "af4ab0aec52802962730f451c2a729c35fb350c6e87aa9a06b07c368b53e1fcf"
 python-versions = "^3.7"
 
 [metadata.files]
