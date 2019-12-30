@@ -492,9 +492,9 @@ class Bool(ValueType):
         cls.validate(value)
         # use (value == True) instead of (value is True) so that 0,1
         # can be used for False,True
-        if value is True or value == cls.trueValue:
+        if value == True or value == cls.trueValue:  # noqa
             return int.__new__(cls, True)
-        elif value is False or value == cls.falseValue:
+        elif value == False or value == cls.falseValue:   # noqa
             return int.__new__(cls, False)
         else:
             raise ValueError('Invalid Bool value: %r' % value)
