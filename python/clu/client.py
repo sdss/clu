@@ -10,15 +10,14 @@ import abc
 import asyncio
 import inspect
 import json
-import logging
 import pathlib
 import uuid
 
-import ruamel.yaml
+from sdsstools import read_yaml_file
 
 from .base import CommandStatus
 from .command import Command
-from .misc.logger import REPLY, ActorHandler, get_logger
+from .misc.logger import REPLY, get_logger
 from .model import Reply
 from .parser import command_parser
 from .protocol import TopicListener
@@ -119,8 +118,7 @@ class BaseClient(metaclass=abc.ABCMeta):
             config = pathlib.Path(config)
             assert config.exists(), 'configuration path does not exist.'
 
-            yaml = ruamel.yaml.YAML(typ='safe')
-            config = yaml.load(open(str(config)))
+            config = read_yaml_file(str(config))
 
         if 'actor' in config:
             config = config['actor']

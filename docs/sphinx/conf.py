@@ -7,18 +7,11 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
 import os
-import sys
 
 # import matplotlib
 from pkg_resources import parse_version
 
 from clu import __version__
-
-
-sys.path.append(os.path.join(os.path.dirname(__file__), 'releases'))
-
-
-import releases  # noqa
 
 
 # Are we building in RTD?
@@ -30,7 +23,7 @@ on_rtd = os.environ.get('READTHEDOCS') == 'True'
 
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'sphinx.ext.autosummary',
               'sphinx.ext.todo', 'sphinx.ext.viewcode', 'sphinx.ext.mathjax',
-              'sphinx.ext.intersphinx', 'sphinxcontrib_trio', 'releases',
+              'sphinx.ext.intersphinx', 'sdsstools.releases',
               'sphinx.ext.inheritance_diagram']
 
 # Add any paths that contain templates here, relative to this directory.
@@ -41,9 +34,7 @@ templates_path = ['_templates']
 # source_suffix = ['.rst', '.md']
 source_suffix = '.rst'
 
-source_parsers = {
-    # '.md': 'recommonmark.parser.CommonMarkParser',
-}
+source_parsers = {}
 
 # The master toctree document.
 master_doc = 'index'
@@ -72,8 +63,7 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'releases/**/*.rst',
-                    'releases/README.rst']
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.
@@ -115,7 +105,7 @@ intersphinx_mapping = {'python': ('https://docs.python.org/3.7', None),
 # 'matplotlib': ('https://matplotlib.org/', None),
 # 'scipy': ('https://docs.scipy.org/doc/scipy/reference', None)}
 
-autodoc_mock_imports = ['_tkinter']
+autodoc_mock_imports = ['_tkinter', 'asynctest']
 autodoc_member_order = 'groupwise'
 autodoc_default_options = {
     'members': None,
