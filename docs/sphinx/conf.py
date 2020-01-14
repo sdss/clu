@@ -97,7 +97,7 @@ releases_document_name = ['changelog']
 releases_unstable_prehistory = True
 
 # Intersphinx mappings
-intersphinx_mapping = {'python': ('https://docs.python.org/3.7', None),
+intersphinx_mapping = {'python': ('https://docs.python.org/3', None),
                        'numpy': ('http://docs.scipy.org/doc/numpy/', None),
                        'click': ('https://click.palletsprojects.com/en/7.x/', None),
                        'aio_pika': ('https://aio-pika.readthedocs.io/en/latest/', None)}
