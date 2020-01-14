@@ -85,7 +85,7 @@ class BaseClient(metaclass=abc.ABCMeta):
 
     def __repr__(self):
 
-        return f'<{str(self)} (name={self.name})>'
+        return f'<{str(self)} (name={self.name!r})>'
 
     def __str__(self):
 
@@ -282,7 +282,7 @@ class AMQPClient(BaseClient):
         else:
             url = str(self.connection.connection.url)
 
-        return f'<{str(self)} (name={self.name}, {url}>'
+        return f'<{str(self)} (name={self.name!r}, {url}>'
 
     async def start(self, exchange_name=__EXCHANGE_NAME__):
         """Starts the connection to the AMQP broker."""

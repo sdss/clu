@@ -7,6 +7,7 @@ Changelog
 * Remove numpy dependency from CLU.
 * Improve logging to actor.
 * Use `~unittest.mock.AsyncMock` in the ``testing`` module when running Python 3.8+.
+* Improve representation of actor classes (print name of class as ``repr``).
 
 * :release:`0.1.10 <2019-12-25>`
 * Tweak dependencies and poetry install.

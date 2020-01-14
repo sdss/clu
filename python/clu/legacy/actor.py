@@ -93,7 +93,7 @@ class LegacyActor(BaseActor):
 
     def __repr__(self):
 
-        return f'<{str(self)} (name={self.name}, host={self.host!r}, port={self.port})>'
+        return f'<{str(self)} (name={self.name!r}, host={self.host!r}, port={self.port})>'
 
     async def start(self):
         """Starts the server and the Tron client connection."""
