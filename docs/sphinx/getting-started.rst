@@ -25,8 +25,8 @@ Running an actor
 
 A new actor can be created by simply instantiating the `.Actor` class ::
 
-    from clu import Actor
-    my_actor = Actor('my_actor', 'guest', 'localhost', version='0.1.0')
+    from clu import AMQPActor
+    my_actor = AMQPActor('my_actor', 'guest', 'localhost', version='0.1.0')
 
 This will create the instance but will not start the actor yet. For that you need to ``await`` the coroutine `~.Actor.run` ::
 
@@ -35,12 +35,12 @@ This will create the instance but will not start the actor yet. For that you nee
 which will create the connection to RabbitMQ, set up the exchanges and queues, and get the actor ready to receive commands. Note that awaiting `~.Actor.run` does not block the event loop so you will need to run the loop forever. A simple implementation is ::
 
     import asyncio
-    from clu import Actor
+    from clu import AMQPActor
 
     def main(loop):
         # run() returns the actor so we can declare and run the actor more compactly.
-        my_actor = await Actor('my_actor', 'guest', 'localhost',
-                               version='0.1.0', loop=loop).run()
+        my_actor = await AMQPActor('my_actor', 'guest', 'localhost',
+                                   version='0.1.0', loop=loop).run()
 
     loop = asyncio.get_event_loop()
     loop.create_task(main(loop))
@@ -262,9 +262,9 @@ CLU uses the `JSON Schema Draft 7 <https://json-schema.org/>`_ specification to 
 
 The name of the file must be ``<actor>.json`` with ``<actor>`` being the name of the actor. To load a series of models when the actor begins you need to do something like ::
 
-    my_actor = await Actor('my_actor', 'guest', 'localhost',
-                           model_path='~/my_models/', model_names=['sop', 'guider'],
-                           version='0.1.0', loop=loop).run()
+    my_actor = await AMQPActor('my_actor', 'guest', 'localhost',
+                               model_path='~/my_models/', model_names=['sop', 'guider'],
+                               version='0.1.0', loop=loop).run()
 
 This will load and keep track of the models for the ``sop`` and ``guider`` actors. The model for the own actor, ``my_actor``, is always loaded if available. If one or more of the model schemas cannot be found, a warning will be issued.
 
@@ -312,9 +312,9 @@ A `.Device` provides a TCP socket to a remote server and a way of handling messa
 
 Devices are usually instantiated and started with the actor by subclassing `.Actor` or `.LegacyActor`, which is quite straightforward to do ::
 
-    from clu import Actor, Device
+    from clu import AMQPActor, Device
 
-    class MyActor(Actor):
+    class MyActor(AMQPActor):
 
         def __init__(self, *args, device_host, device_port, **kwargs):
 

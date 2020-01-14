@@ -28,7 +28,7 @@ class LegacyActor(BaseActor):
     ``run_forever`` or a similar system ::
 
         >>> loop = asyncio.get_event_loop()
-        >>> my_actor = await Actor('my_actor', '127.0.0.1', 9999, loop=loop).run()
+        >>> my_actor = await LegacyActor('my_actor', '127.0.0.1', 9999, loop=loop).run()
         >>> loop.run_forever()
 
     Parameters

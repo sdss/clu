@@ -14,7 +14,7 @@ Actor
 -----
 
 .. autoclass:: clu.actor.BaseActor
-.. autoclass:: clu.actor.Actor
+.. autoclass:: clu.actor.AMQPActor
 .. autoclass:: clu.actor.JSONActor
 
 

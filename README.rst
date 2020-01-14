@@ -44,11 +44,10 @@ Quick start
 Creating a new actor with ``CLU`` is easy. To instantiate and run an actor you can simply do ::
 
     import asyncio
-    from clu import Actor
+    from clu import AMQPActor
 
     async def main(loop):
         actor = Actor('guest', 'localhost', loop=loop).run()
-
 
     loop = asyncio.get_event_loop()
     loop.create_task(main(loop))

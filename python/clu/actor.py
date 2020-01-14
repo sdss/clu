@@ -30,7 +30,7 @@ except ImportError:
     apika = None
 
 
-__all__ = ['BaseActor', 'Actor', 'JSONActor', 'TimerCommand', 'TimerCommandList']
+__all__ = ['BaseActor', 'AMQPActor', 'JSONActor', 'TimerCommand', 'TimerCommandList']
 
 
 class BaseActor(BaseClient):
@@ -207,7 +207,7 @@ class BaseActor(BaseClient):
         pass
 
 
-class Actor(AMQPClient, BaseActor):
+class AMQPActor(AMQPClient, BaseActor):
     """An actor class that uses AMQP message brokering.
 
     This class differs from `~clu.legacy.actor.LegacyActor` in that it uses

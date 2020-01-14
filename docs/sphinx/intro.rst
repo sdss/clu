@@ -8,7 +8,7 @@ Features
 --------
 
 - Asynchronous API based on `asyncio <https://docs.python.org/3/library/asyncio.html>`_.
-- New-style `actor <clu.actor.Actor>` with message passing based on `AMQP <https://www.amqp.org/>`_ and `RabbitMQ <https://rabbitmq.com>`_.
+- New-style `actor <clu.actor.AMQPActor>` with message passing based on `AMQP <https://www.amqp.org/>`_ and `RabbitMQ <https://rabbitmq.com>`_.
 - Legacy-style `actor <clu.legacy.actor.LegacyActor>` for TCP socket communication through `Tron <clu.legacy.tron.TronConnection>`.
 - Tools for device handling.
 - Messages are validated JSON strings.
@@ -41,10 +41,10 @@ Quick start
 Creating a new actor with ``CLU`` is easy. To instantiate and run an actor you can simply do ::
 
     import asyncio
-    from clu import Actor
+    from clu import AMQPActor
 
     async def main(loop):
-        actor = Actor('guest', 'localhost', loop=loop).run()
+        actor = AMQPActor('guest', 'localhost', loop=loop).run()
 
 
     loop = asyncio.get_event_loop()
