@@ -386,7 +386,8 @@ class JSONActor(BaseActor):
         self.host = host
         self.port = port
 
-        self.user_to_transport = dict()
+        #: Mapping of commander_id to transport
+        self.transports = dict()
 
         #: TCPStreamServer: The server to talk to this actor.
         self.server = TCPStreamServer(host, port, loop=self.loop,
@@ -414,23 +415,23 @@ class JSONActor(BaseActor):
         """Assigns userID to new client connection."""
 
         if transport.is_closing():
-            if hasattr(transport, 'commander_id'):
-                self.log.debug(f'user {transport.commander_id} disconnected.')
-                return self.user_to_transport.pop(transport.commander_id)
+            if hasattr(transport, 'user_id'):
+                self.log.debug(f'user {transport.user_id} disconnected.')
+                return self.transports.pop(transport.user_id)
 
-        curr_ids = set(self.user_to_transport.keys())
-        commander_id = 1 if len(curr_ids) == 0 else max(curr_ids) + 1
+        curr_ids = set(self.transports.keys())
+        user_id = 1 if len(curr_ids) == 0 else max(curr_ids) + 1
 
-        transport.commander_id = commander_id
+        transport.user_id = user_id
 
-        self.user_to_transport[commander_id] = transport
+        self.transports[user_id] = transport
 
         return
 
     def new_command(self, transport, command_str):
         """Handles a new command received by the actor."""
 
-        commander_id = getattr(transport, 'commander_id', None)
+        commander_id = getattr(transport, 'user_id', None)
         message = command_str.decode().strip()
 
         if not message:
@@ -495,7 +496,7 @@ class JSONActor(BaseActor):
         message.update(kwargs)
 
         commander_id = command.commander_id if command else None
-        command_id = command.command_id if command else 0
+        command_id = command.command_id if command else None
         transport = command.transport if command else None
 
         message_full = {}
@@ -512,7 +513,7 @@ class JSONActor(BaseActor):
             message_json = json.dumps(message_full, sort_keys=False)
 
         if broadcast or commander_id is None or transport is None:
-            for transport in self.user_to_transport.values():
+            for transport in self.transports.values():
                 transport.write(message_json.encode())
         else:
             transport.write(message_json.encode())

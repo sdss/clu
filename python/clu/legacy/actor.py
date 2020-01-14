@@ -71,7 +71,8 @@ class LegacyActor(BaseActor):
         super().__init__(name, version=version, loop=loop,
                          log_dir=log_dir, log=log, parser=parser)
 
-        self.user_dict = dict()
+        #: Mapping of user_id to transport
+        self.transports = dict()
 
         self.host = host
         self.port = port
@@ -132,14 +133,14 @@ class LegacyActor(BaseActor):
         if transport.is_closing():
             if hasattr(transport, 'user_id'):
                 self.log.debug(f'user {transport.user_id} disconnected.')
-                return self.user_dict.pop(transport.user_id)
+                return self.transports.pop(transport.user_id)
 
-        curr_ids = set(self.user_dict.keys())
+        curr_ids = set(self.transports.keys())
         user_id = 1 if len(curr_ids) == 0 else max(curr_ids) + 1
 
         transport.user_id = user_id
 
-        self.user_dict[user_id] = transport
+        self.transports[user_id] = transport
 
         # report user information and additional info
         self.show_new_user_info(user_id)
@@ -180,14 +181,14 @@ class LegacyActor(BaseActor):
         self.show_user_info(user_id)
         self.show_version(user_id=user_id)
 
-        transport = self.user_dict[user_id]
+        transport = self.transports[user_id]
         peername = transport.get_extra_info('peername')[0]
         self.log.debug(f'user {user_id} connected from {peername!r}.')
 
     def show_user_info(self, user_id):
         """Shows user information including your user_id."""
 
-        num_users = len(self.user_dict)
+        num_users = len(self.transports)
         if num_users == 0:
             return
 
@@ -200,9 +201,9 @@ class LegacyActor(BaseActor):
     def show_user_list(self):
         """Shows a list of connected users. Broadcast to all users."""
 
-        user_id_list = sorted(self.user_dict.keys())
+        user_id_list = sorted(self.transports.keys())
         for user_id in user_id_list:
-            transport = self.user_dict[user_id]
+            transport = self.transports[user_id]
             peername = transport.get_extra_info('peername')[0]
             msg = {'UserInfo': f'{user_id}, {peername}'}
             self.write('i', msg)
@@ -331,7 +332,7 @@ class LegacyActor(BaseActor):
             msg = (full_msg_str + '\n').encode()
 
             if user_id is None or user_id == 0 or transport is None:
-                for transport in self.user_dict.values():
+                for transport in self.transports.values():
                     transport.write(msg)
             else:
                 transport.write(msg)
