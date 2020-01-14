@@ -123,28 +123,6 @@ class LegacyActor(BaseActor):
 
         await self.server.serve_forever()
 
-    @classmethod
-    def from_config(cls, config, *args, **kwargs):
-        """Starts a new actor from a configuration file.
-
-        Refer to `.BaseActor.from_config`.
-
-        """
-
-        config_dict = cls._parse_config(config).copy()
-
-        args = list(args) + [config_dict.pop('name'),
-                             config_dict.pop('host'),
-                             config_dict.pop('port')]
-
-        if 'tron' in config_dict:
-            tron_config = config_dict.pop('tron')
-            kwargs.update({'tron_host': tron_config.get('host', None)})
-            kwargs.update({'tron_port': tron_config.get('port', None)})
-            kwargs.update({'model_names': tron_config.get('models', None)})
-
-        return super().from_config(config_dict, *args, **kwargs)
-
     def new_user(self, transport):
         """Assigns userID to new client connection."""
 

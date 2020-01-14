@@ -80,7 +80,7 @@ class BaseClient(metaclass=abc.ABCMeta):
 
         self.version = version or '?'
 
-        # Internally store the original configuation used to start the client.
+        # Internally store the original configuration used to start the client.
         self._config = None
 
     def __repr__(self):
@@ -142,15 +142,6 @@ class BaseClient(metaclass=abc.ABCMeta):
         orig_config_dict = cls._parse_config(config)
         config_dict = orig_config_dict.copy()
 
-        # If we subclass and override from_config we need to super() it and
-        # send all the arguments already unpacked. Otherwise we get the name
-        # from the config.
-        if len(args) == 0:
-            args = [config_dict.pop('name')]
-
-        version = config_dict.pop('version', '?')
-        log_dir = config_dict.pop('log_dir', None)
-
         # Decide what to do with the rest of the keyword arguments:
         args_inspect = inspect.getfullargspec(cls)
 
@@ -169,9 +160,9 @@ class BaseClient(metaclass=abc.ABCMeta):
                 if kw in kw_args:
                     config_dict[kw] = kwargs[kw]
 
-        # We also pass *args and **kwargs in case the actor has been subclassed
+        # We also pass *args in case the actor has been subclassed
         # and the subclass' __init__ accepts different arguments.
-        new_actor = cls(*args, version=version, log_dir=log_dir, **config_dict)
+        new_actor = cls(*args, **config_dict)
 
         # Store original config. This may not be complete since from_config
         # may have been super'd from somewhere else.

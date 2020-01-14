@@ -247,16 +247,6 @@ class Actor(AMQPClient, BaseActor):
 
         return self
 
-    @classmethod
-    def from_config(cls, config, *args, **kwargs):
-        """Starts a new actor from a configuration file.
-
-        Refer to `.BaseClient.from_config`.
-
-        """
-
-        return super().from_config(config, *args, **kwargs)
-
     async def new_command(self, message):
         """Handles a new command received by the actor."""
 

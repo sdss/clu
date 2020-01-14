@@ -8,6 +8,7 @@ Changelog
 * Improve logging to actor.
 * Use `~unittest.mock.AsyncMock` in the ``testing`` module when running Python 3.8+.
 * Improve representation of actor classes (print name of class as ``repr``).
+* Simplify ``from_config`` by taking advantage that one can pass arguments as keyword arguments and does not need to conserve the original order. This allows to define only `.BaseClient.from_config` and do not need to override it of each subclass.
 
 * :release:`0.1.10 <2019-12-25>`
 * Tweak dependencies and poetry install.
