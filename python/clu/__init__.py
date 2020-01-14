@@ -10,6 +10,8 @@
 
 import pkg_resources
 
+from sdsstools import get_package_version
+
 from .actor import *
 from .base import CommandStatus, as_complete_failer, escape, format_value
 from .client import AMQPClient
@@ -20,9 +22,5 @@ from .legacy import LegacyActor
 from .parser import command_parser
 
 
-try:
-    __version__ = pkg_resources.get_distribution('sdss-clu').version
-except pkg_resources.DistributionNotFound:
-    __version__ = 'dev'
-
-NAME = 'clu'
+NAME = 'sdss-clu'
+__version__ = get_package_version(__file__, 'sdss-clu') or 'dev'
