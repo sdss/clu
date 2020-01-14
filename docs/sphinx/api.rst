@@ -15,8 +15,7 @@ Actor
 
 .. autoclass:: clu.actor.BaseActor
 .. autoclass:: clu.actor.Actor
-
-.. automodule:: clu.device
+.. autoclass:: clu.actor.JSONActor
 
 
 Command
@@ -71,6 +70,7 @@ Sockets
 -------
 
 .. automodule:: clu.protocol
+.. automodule:: clu.device
 
 
 Tools

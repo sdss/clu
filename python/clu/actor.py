@@ -9,6 +9,7 @@
 import abc
 import asyncio
 import json
+import re
 import time
 from contextlib import suppress
 
@@ -19,6 +20,7 @@ from .client import AMQPClient, BaseClient
 from .command import Command
 from .exceptions import CommandError
 from .model import ModelSet
+from .protocol import TCPStreamServer
 
 
 try:
@@ -27,7 +29,7 @@ except ImportError:
     apika = None
 
 
-__all__ = ['BaseActor', 'Actor']
+__all__ = ['BaseActor', 'Actor', 'JSONActor', 'TimerCommand', 'TimerCommandList']
 
 
 class BaseActor(BaseClient):
@@ -340,6 +342,168 @@ class Actor(AMQPClient, BaseActor):
                           headers=headers,
                           correlation_id=command_id),
             routing_key=routing_key)
+
+        log_reply(self.log, message_code, message_json)
+
+
+class JSONActor(BaseActor):
+    """An actor class that replies using JSON.
+
+    This implementation of `.BaseActor` replies to the user by sending
+    a JSON-valid string. This makes it useful as a "device" actor that
+    is not connected to the central message parsing system but that we
+    still want to accept commands and send easily parseable replies.
+
+    Commands received by this actor must be in the format
+    ``[<uid>] <command string>``, where ``<uid>`` is any integer unique
+    identifier that will be used as ``command_id`` and appended to any reply.
+
+    Parameters
+    ----------
+    host : str
+        The host where the TCP server will run.
+    port : int
+        The port of the TCP server.
+
+    """
+
+    def __init__(self, name, host, port, *args, **kwargs):
+
+        super().__init__(name, *args, **kwargs)
+
+        self.host = host
+        self.port = port
+
+        self.user_to_transport = dict()
+
+        #: TCPStreamServer: The server to talk to this actor.
+        self.server = TCPStreamServer(host, port, loop=self.loop,
+                                      connection_callback=self.new_user,
+                                      data_received_callback=self.new_command)
+
+        self.timer_commands = TimerCommandList(self)
+
+    async def start(self):
+        """Starts the server and the Tron client connection."""
+
+        await self.server.start_server()
+        self.log.info(f'running TCP server on {self.host}:{self.port}')
+
+        self.timer_commands.start()
+
+        return self
+
+    async def run_forever(self):
+        """Runs the actor forever, keeping the loop alive."""
+
+        await self.server.serve_forever()
+
+    def new_user(self, transport):
+        """Assigns userID to new client connection."""
+
+        if transport.is_closing():
+            if hasattr(transport, 'commander_id'):
+                self.log.debug(f'user {transport.commander_id} disconnected.')
+                return self.user_to_transport.pop(transport.commander_id)
+
+        curr_ids = set(self.user_to_transport.keys())
+        commander_id = 1 if len(curr_ids) == 0 else max(curr_ids) + 1
+
+        transport.commander_id = commander_id
+
+        self.user_to_transport[commander_id] = transport
+
+        return
+
+    def new_command(self, transport, command_str):
+        """Handles a new command received by the actor."""
+
+        commander_id = getattr(transport, 'commander_id', None)
+        message = command_str.decode().strip()
+
+        if not message:
+            return
+
+        command_id, command_string = re.match(r'([0-9]*)\s*(.+)', message).groups()
+
+        if command_id == '':
+            command_id = 0
+        else:
+            command_id = int(command_id)
+
+        command_string = command_string.strip()
+
+        if not command_string:
+            return
+        try:
+            command = Command(command_string=command_string, commander_id=commander_id,
+                              command_id=command_id, consumer_id=self.name,
+                              actor=self, loop=self.loop, transport=transport)
+        except CommandError as ee:
+            self.write('f', {'text': f'Could not parse the following as a command: {ee!r}'})
+            return
+
+        return self.parse_command(command)
+
+    def send_command(self):
+        """Not implemented for `.JSONActor`."""
+
+        raise NotImplementedError('JSONActor cannot send commands to other actors.')
+
+    async def write(self, message_code='i', message=None, command=None,
+                    broadcast=False, beautify=True, **kwargs):
+        """Writes a message to user(s) as a JSON.
+
+        A header with the ``commander_id`` (i.e., the user id of the transport
+        that sent the command), ``command_id``, and ``sender`` is prepended
+        to each message.
+
+        Parameters
+        ----------
+        message_code : str
+            The message code (e.g., ``'i'`` or ``':'``). Ignored.
+        message : dict
+            The keywords to be output. Must be a dictionary of pairs
+            ``{keyword: value}``.
+        command : Command
+            The command to which we are replying. If not set, it is assumed
+            that this is a broadcast.
+        broadcast : bool
+            Whether to broadcast the message to all the users or only to the
+            commander.
+        beautify : bool
+            Whether to format the JSON to make it more readable.
+        kwargs
+            Keyword arguments that will be added to the message.
+
+        """
+
+        message = message or {}
+        assert isinstance(message, dict), 'message must be a dictionary'
+        message.update(kwargs)
+
+        commander_id = command.commander_id if command else None
+        command_id = command.command_id if command else 0
+        transport = command.transport if command else None
+
+        message_full = {}
+        header = {'command_id': command_id,
+                  'commander_id': commander_id,
+                  'sender': self.name}
+
+        message_full.update(header)
+        message_full.update(message)
+
+        if beautify:
+            message_json = json.dumps(message_full, sort_keys=False, indent=4)
+        else:
+            message_json = json.dumps(message_full, sort_keys=False)
+
+        if broadcast or commander_id is None or transport is None:
+            for transport in self.user_to_transport.values():
+                transport.write(message_json.encode())
+        else:
+            transport.write(message_json.encode())
 
         log_reply(self.log, message_code, message_json)
 
