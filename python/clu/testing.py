@@ -7,11 +7,13 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
 import asyncio
+import json
 import re
 import sys
 import types
 import unittest.mock
 
+import clu
 from clu.command import Command
 
 
@@ -59,9 +61,12 @@ class MockReply(dict):
 class MockReplyList(list):
     """Stores replies as `.MockReply` objects."""
 
-    PATTERN = re.compile(r'([0-9]+)\s+([0-9]+)\s+((?:[a-z]|\:))\s+(.*)')
+    LEGACY_REPLY_PATTERN = re.compile(r'([0-9]+)\s+([0-9]+)\s+((?:[a-z]|\:))\s+(.*)')
 
-    def __init__(self):
+    def __init__(self, actor):
+
+        self.actor = actor
+
         list.__init__(self)
 
     def parse_reply(self, reply):
@@ -70,20 +75,37 @@ class MockReplyList(list):
         if isinstance(reply, bytes):
             reply = reply.decode()
 
-        match = self.PATTERN.match(reply)
-        if not match:
-            return
+        if issubclass(self.actor.__class__, clu.LegacyActor):
 
-        user_id, command_id, flag, keywords_raw = match.groups()
+            match = self.LEGACY_REPLY_PATTERN.match(reply)
+            if not match:
+                return
 
-        keywords = {}
-        for keyword_raw in keywords_raw.split(';'):
-            if keyword_raw.strip() == '':
-                continue
-            name, value = keyword_raw.split('=')
-            keywords[name] = value
+            user_id, command_id, flag, keywords_raw = match.groups()
 
-        list.append(self, MockReply(int(user_id), int(command_id), flag, keywords))
+            user_id = int(user_id)
+            command_id = int(command_id)
+
+            keywords = {}
+            for keyword_raw in keywords_raw.split(';'):
+                if keyword_raw.strip() == '':
+                    continue
+                name, value = keyword_raw.split('=')
+                keywords[name] = value
+
+        elif issubclass(self.actor.__class__, clu.JSONActor):
+
+            reply = json.loads(reply)
+            user_id = reply.pop('commander_id', None)
+            command_id = reply.pop('command_id', None)
+            reply.pop('sender', None)
+            flag = 'd'
+            keywords = reply
+
+        else:
+            raise RuntimeError('actor must be LegacyActor or JSONActor.')
+        print('aaaaa', user_id, command_id, flag, keywords)
+        list.append(self, MockReply(user_id, command_id, flag, keywords))
 
     def clear(self):
         list.__init__(self)
@@ -106,11 +128,15 @@ async def setup_test_actor(actor, user_id=1):
 
     """
 
+    if not issubclass(actor.__class__, (clu.LegacyActor, clu.JSONActor)):
+        raise RuntimeError('setup_test_actor is only usable with '
+                           'LegacyActor or JSONActor actors.')
+
     def invoke_mock_command(self, command_str, command_id=0):
         if isinstance(command_str, str):
             command_str = command_str.encode('utf-8')
         full_command = f' {command_id} '.encode('utf-8') + command_str
-        return self.new_command(actor.user_dict['mock_user'], full_command)
+        return self.new_command(actor.transports['mock_user'], full_command)
 
     actor.run = CoroutineMock(return_value=actor)
 
@@ -120,13 +146,13 @@ async def setup_test_actor(actor, user_id=1):
     actor.invoke_mock_command = types.MethodType(invoke_mock_command, actor)
 
     # Mocks a user transport and stores the replies in a MockReplyListobject
-    actor.mock_replies = MockReplyList()
+    actor.mock_replies = MockReplyList(actor)
 
     mock_transport = unittest.mock.MagicMock(spec=asyncio.Transport)
     mock_transport.user_id = user_id
     mock_transport.write.side_effect = actor.mock_replies.parse_reply
 
-    actor.user_dict['mock_user'] = mock_transport
+    actor.transports['mock_user'] = mock_transport
 
     actor = await actor.run()
 
