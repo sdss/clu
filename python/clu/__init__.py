@@ -8,8 +8,6 @@
 
 # flake8: noqa
 
-import pkg_resources
-
 from sdsstools import get_package_version
 
 from .actor import *
