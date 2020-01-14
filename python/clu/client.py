@@ -19,7 +19,6 @@ from .base import CommandStatus
 from .command import Command
 from .misc.logger import REPLY, get_logger
 from .model import Reply
-from .parser import command_parser
 from .protocol import TopicListener
 
 
@@ -59,9 +58,6 @@ class BaseClient(metaclass=abc.ABCMeta):
     log : ~logging.Logger
         A `~logging.Logger` instance to be used for logging instead of creating
         a new one.
-    parser : ~clu.parser.CluGroup
-        A click command parser that is a subclass of `~clu.parser.CluGroup`.
-        If `None`, the active parser will be used.
 
     """
 
@@ -76,8 +72,6 @@ class BaseClient(metaclass=abc.ABCMeta):
 
         self.log = None
         self.setup_logger(log, log_dir)
-
-        self.command_parser = parser or command_parser
 
         self.version = version or '?'
 

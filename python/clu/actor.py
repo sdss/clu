@@ -20,6 +20,7 @@ from .client import AMQPClient, BaseClient
 from .command import Command
 from .exceptions import CommandError
 from .model import ModelSet
+from .parser import command_parser
 from .protocol import TCPStreamServer
 
 
@@ -39,11 +40,26 @@ class BaseActor(BaseClient):
     and placeholders for methods for handling new commands and writing replies,
     which should be overridden by the specific actors.
 
+    In addition to the parameters to pass to `.BaseClient`, `.BaseActor`
+    accepts the following arguments:
+
+    Parameters
+    ----------
+    parser : ~clu.parser.CluGroup
+        A click command parser that is a subclass of `~clu.parser.CluGroup`.
+        If `None`, the active parser will be used.
+
     """
 
     #: list: Arguments to be passed to each command in the parser.
     #: Note that the command is always passed first.
     parser_args = []
+
+    def __init__(self, *args, parser=None, **kwargs):
+
+        self.command_parser = parser or command_parser
+
+        super().__init__(*args, **kwargs)
 
     @abc.abstractmethod
     async def start(self):

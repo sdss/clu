@@ -10,6 +10,7 @@ Changelog
 * Improve representation of actor classes (print name of class as ``repr``).
 * Simplify ``from_config`` by taking advantage that one can pass arguments as keyword arguments and does not need to conserve the original order. This allows to define only `.BaseClient.from_config` and do not need to override it of each subclass.
 * Add a `.JSONActor` class that replies to the user using JSON dictionaries.
+* Move ``parser`` argument from `.BaseClient` to `.BaseActor`, since only actors receive and need to parse commands.
 
 * :release:`0.1.10 <2019-12-25>`
 * Tweak dependencies and poetry install.
