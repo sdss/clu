@@ -204,10 +204,6 @@ class Actor(AMQPClient, BaseActor):
 
     """
 
-    #: list: Arguments to be passed to each command in the parser.
-    #: Note that the command is always passed first.
-    parser_args = []
-
     def __init__(self, *args, model_path=None, model_names=None, **kwargs):
 
         AMQPClient.__init__(self, *args, **kwargs)

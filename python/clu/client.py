@@ -65,8 +65,9 @@ class BaseClient(metaclass=abc.ABCMeta):
 
     """
 
-    def __init__(self, name, version=None, loop=None, log_dir=None, log=None,
-                 parser=None):
+    name = None
+
+    def __init__(self, name, version=None, loop=None, log_dir=None, log=None):
 
         self.loop = loop or asyncio.get_event_loop()
 
@@ -245,6 +246,8 @@ class AMQPClient(BaseClient):
 
     __EXCHANGE_NAME__ = 'actor_exchange'
 
+    connection = None
+
     def __init__(self, name, user, host, version=None,
                  loop=None, log_dir=None, log=None, parser=None):
 
@@ -268,7 +271,7 @@ class AMQPClient(BaseClient):
 
     def __repr__(self):
 
-        if self.connection.connection is None:
+        if not self.connection or self.connection.connection is None:
             url = 'disconnected'
         else:
             url = str(self.connection.connection.url)

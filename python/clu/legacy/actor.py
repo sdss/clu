@@ -61,6 +61,9 @@ class LegacyActor(BaseActor):
 
     """
 
+    host = None
+    port = None
+
     def __init__(self, name, host, port, tron_host=None, tron_port=None,
                  model_names=None, version=None, loop=None, log_dir=None,
                  log=None, parser=None):
