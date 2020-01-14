@@ -303,7 +303,7 @@ class Actor(AMQPClient, BaseActor):
             The command to which we are replying. If not set, it is assumed
             that this is a broadcast.
         broadcast : bool
-            Whether to broadcast the message to all the actor or only to the
+            Whether to broadcast the message to all the users or only to the
             commander.
         kwargs
             Keyword arguments that will be added to the message.
