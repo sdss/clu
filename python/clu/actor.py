@@ -463,8 +463,8 @@ class JSONActor(BaseActor):
 
         raise NotImplementedError('JSONActor cannot send commands to other actors.')
 
-    async def write(self, message_code='i', message=None, command=None,
-                    broadcast=False, beautify=True, **kwargs):
+    def write(self, message_code='i', message=None, command=None,
+              broadcast=False, beautify=True, **kwargs):
         """Writes a message to user(s) as a JSON.
 
         A header with the ``commander_id`` (i.e., the user id of the transport

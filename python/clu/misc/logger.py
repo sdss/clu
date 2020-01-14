@@ -6,6 +6,7 @@
 # @Filename: logger.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
+import asyncio
 import copy
 import datetime
 import logging
@@ -147,7 +148,10 @@ class ActorHandler(logging.Handler):
             code = 'w'
 
         for line in message_lines:
-            self.actor.write(code, message={self.keyword: line})
+            result = self.actor.write(code, message={self.keyword: line})
+
+            if asyncio.iscoroutine(result):
+                asyncio.create_task(result)
 
     def _filter_warning(self, warning_category_groups):
 
