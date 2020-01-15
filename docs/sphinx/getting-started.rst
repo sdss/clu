@@ -28,11 +28,11 @@ A new actor can be created by simply instantiating the `.AMQPActor` class ::
     from clu import AMQPActor
     my_actor = AMQPActor('my_actor', 'guest', 'localhost', version='0.1.0')
 
-This will create the instance but will not start the actor yet. For that you need to ``await`` the coroutine `~.Actor.run` ::
+This will create the instance but will not start the actor yet. For that you need to ``await`` the coroutine `~.AMQPActor.run` ::
 
     await my_actor.run()
 
-which will create the connection to RabbitMQ, set up the exchanges and queues, and get the actor ready to receive commands. Note that awaiting `~.Actor.run` does not block the event loop so you will need to run the loop forever. A simple implementation is ::
+which will create the connection to RabbitMQ, set up the exchanges and queues, and get the actor ready to receive commands. Note that awaiting `~.AMQPActor.run` does not block the event loop so you will need to run the loop forever. A simple implementation is ::
 
     import asyncio
     from clu import AMQPActor
@@ -54,11 +54,11 @@ In these examples we have used the new-style `.AMQPActor` class, but it's trivia
 Configuration files
 ~~~~~~~~~~~~~~~~~~~
 
-In general the parameters to start a new actor are stored in a configuration file. We can instantiate a new actor from it with the `~.Actor.from_config` classmethod ::
+In general the parameters to start a new actor are stored in a configuration file. We can instantiate a new actor from it with the `~.AMQPActor.from_config` classmethod ::
 
     actor = Actor.from_config('~/config_files/actor.yaml')
 
-The parameter passed to `~.Actor.from_config` must be a YAML file with the configuration. If the configuration file has a section called ``actor``, that subsection will be used. Alternatively, a dictionary with the configuration already parsed can be passed to `~.Actor.from_config`. The parameter names in the configuration files must be the same as those of the arguments and keyword arguments used to instantiate `.AMQPActor`. The following is an example of a valid configuration file
+The parameter passed to `~.AMQPActor.from_config` must be a YAML file with the configuration. If the configuration file has a section called ``actor``, that subsection will be used. Alternatively, a dictionary with the configuration already parsed can be passed to `~.AMQPActor.from_config`. The parameter names in the configuration files must be the same as those of the arguments and keyword arguments used to instantiate `.AMQPActor`. The following is an example of a valid configuration file
 
     .. code-block:: yaml
 
@@ -84,7 +84,7 @@ The behaviour for `.LegacyActor` is the same but note that the parameters for tr
                 models: ['tcc']
             log_dir: '/data/logs/actors/jaeger'
 
-Overriding `~.Actor.from_config` when subclassing the actor can be a bit tricky if you have added new parameters. Here is an example of how to correctly do so ::
+Overriding `~.AMQPActor.from_config` when subclassing the actor can be a bit tricky if you have added new parameters. Here is an example of how to correctly do so ::
 
     class JaegerActor(clu.LegacyActor):
 
