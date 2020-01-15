@@ -4,6 +4,7 @@
 Changelog
 =========
 
+* :release:`0.1.11 <2020-01-14>`
 * Remove numpy dependency from CLU.
 * Improve logging to actor.
 * Use `~unittest.mock.AsyncMock` in the ``testing`` module when running Python 3.8+.
