@@ -414,6 +414,7 @@ def log_reply(log, message_code, message, use_message_code=False):
     """Logs an actor message with the correct code."""
 
     code_dict = {'f': logging.ERROR,
+                 'e': logging.ERROR,
                  'w': logging.WARNING,
                  'i': logging.INFO,
                  ':': logging.INFO,

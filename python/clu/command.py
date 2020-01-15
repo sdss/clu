@@ -158,7 +158,7 @@ class BaseCommand(asyncio.Future, StatusMixIn):
         self.write('d', *args, **kwargs)
 
     def info(self, *args, **kwargs):
-        """Writes a info-level message."""
+        """Writes an info-level message."""
 
         self.write('i', *args, **kwargs)
 
@@ -166,6 +166,11 @@ class BaseCommand(asyncio.Future, StatusMixIn):
         """Writes a warning-level message."""
 
         self.write('w', *args, **kwargs)
+
+    def error(self, *args, **kwargs):
+        """Writes an error-level message (does not fail the command)."""
+
+        self.write('e', *args, **kwargs)
 
     def write(self, message_code='i', message=None, broadcast=False, **kwargs):
         """Writes to the user(s).

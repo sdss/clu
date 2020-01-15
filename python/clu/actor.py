@@ -509,7 +509,7 @@ class JSONActor(BaseActor):
         beautify : bool
             Whether to format the JSON to make it more readable.
         kwargs
-            Keyword arguments that will be added to the message.
+            Keyword arguments that will used to update the message.
 
         """
 
