@@ -502,6 +502,7 @@ class JSONActor(BaseActor):
         message_full = {}
         header = {'command_id': command_id,
                   'commander_id': commander_id,
+                  'message_code': message_code,
                   'sender': self.name}
 
         message_full.update(header)

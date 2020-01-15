@@ -99,7 +99,7 @@ class MockReplyList(list):
             user_id = reply.pop('commander_id', None)
             command_id = reply.pop('command_id', None)
             reply.pop('sender', None)
-            flag = 'd'
+            flag = reply.pop('message_code', 'd')
             keywords = reply
 
         else:
