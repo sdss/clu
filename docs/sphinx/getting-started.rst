@@ -23,7 +23,7 @@ We will expand on these concepts in following sections.
 Running an actor
 ----------------
 
-A new actor can be created by simply instantiating the `.Actor` class ::
+A new actor can be created by simply instantiating the `.AMQPActor` class ::
 
     from clu import AMQPActor
     my_actor = AMQPActor('my_actor', 'guest', 'localhost', version='0.1.0')
@@ -46,7 +46,7 @@ which will create the connection to RabbitMQ, set up the exchanges and queues, a
     loop.create_task(main(loop))
     loop.run_forever()
 
-In these examples we have used the new-style `.Actor` class, but it's trivial to replace it with the legacy actor class `.LegacyActor`. The parameters to start a `.LegacyActor` are the same with the exception that we pass the hostname and port where the actor will be serving, and we can provide the ``tron_host`` and ``tron_port`` to connect to an instance of ``Tron``. We'll talk more about legacy actor in a :ref:`following section <legacy-actors>`.
+In these examples we have used the new-style `.AMQPActor` class, but it's trivial to replace it with the legacy actor class `.LegacyActor`. The parameters to start a `.LegacyActor` are the same with the exception that we pass the hostname and port where the actor will be serving, and we can provide the ``tron_host`` and ``tron_port`` to connect to an instance of ``Tron``. We'll talk more about legacy actor in a :ref:`following section <legacy-actors>`.
 
 .. note::
     Right now it is assumed that the AMQP client can connect to the server without a password. This may change in the future.
@@ -58,7 +58,7 @@ In general the parameters to start a new actor are stored in a configuration fil
 
     actor = Actor.from_config('~/config_files/actor.yaml')
 
-The parameter passed to `~.Actor.from_config` must be a YAML file with the configuration. If the configuration file has a section called ``actor``, that subsection will be used. Alternatively, a dictionary with the configuration already parsed can be passed to `~.Actor.from_config`. The parameter names in the configuration files must be the same as those of the arguments and keyword arguments used to instantiate `.Actor`. The following is an example of a valid configuration file
+The parameter passed to `~.Actor.from_config` must be a YAML file with the configuration. If the configuration file has a section called ``actor``, that subsection will be used. Alternatively, a dictionary with the configuration already parsed can be passed to `~.Actor.from_config`. The parameter names in the configuration files must be the same as those of the arguments and keyword arguments used to instantiate `.AMQPActor`. The following is an example of a valid configuration file
 
     .. code-block:: yaml
 
@@ -310,7 +310,7 @@ Devices
 
 A `.Device` provides a TCP socket to a remote server and a way of handling messages from it. Devices are usually small pieces of hardware that do not need a dedicated actor and that have a limited command set. For example, a telescope control actor can have multiple devices (mirror actuators, lamps, flat field screens), each one of them behind a terminal server.
 
-Devices are usually instantiated and started with the actor by subclassing `.Actor` or `.LegacyActor`, which is quite straightforward to do ::
+Devices are usually instantiated and started with the actor by subclassing `.AMQPActor` or `.LegacyActor`, which is quite straightforward to do ::
 
     from clu import AMQPActor, Device
 
