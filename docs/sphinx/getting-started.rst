@@ -217,6 +217,7 @@ In this case we are outputting two keywords, ``lamp_on`` and ``ffs``, the first 
 - ``d`` for a *debug* message.
 - ``i`` for an *info* message.
 - ``w`` for a *warning* message.
+- ``e`` for an *error* message (does not fail the command).
 - ``f`` for a message that accompanies to a failed command.
 - ``:`` for a message that accompanies to a successfully done command.
 
