@@ -104,7 +104,7 @@ class MockReplyList(list):
 
         else:
             raise RuntimeError('actor must be LegacyActor or JSONActor.')
-        print('aaaaa', user_id, command_id, flag, keywords)
+
         list.append(self, MockReply(user_id, command_id, flag, keywords))
 
     def clear(self):
