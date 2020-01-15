@@ -28,7 +28,7 @@ or from source ::
 
     git clone https://github.org/sdss/clu
     cd clu
-    python setup.py install
+    pip install .
 
 If you want to install it using `modules <http://modules.sourceforge.net/>`_ you can use `sdss_install <https://github.com/sdss/sdss_install>`_ ::
 
