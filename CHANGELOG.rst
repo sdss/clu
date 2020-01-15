@@ -4,6 +4,8 @@
 Changelog
 =========
 
+* Some tweaks to `.JSONActor` and the testing framework.
+
 * :release:`0.1.11 <2020-01-14>`
 * Remove numpy dependency from CLU.
 * Improve logging to actor.

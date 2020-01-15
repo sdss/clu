@@ -32,7 +32,7 @@ __all__ = ['MockReply', 'MockReplyList', 'setup_test_actor', 'TestCommand']
 class MockReply(dict):
     """Stores a reply written to a transport.
 
-    Keywords are stored as part of the dictionary.
+    The data of the message is stored as part of the dictionary.
 
     Attributes
     ----------
@@ -42,16 +42,18 @@ class MockReply(dict):
         The command ID of the command that produced this reply.
     flag : str
         The message type flag.
+    data : dict
+        The payload of the message.
 
     """
 
-    def __init__(self, command_id, user_id, flag, keywords={}):
+    def __init__(self, command_id, user_id, flag, data={}):
 
         self.command_id = command_id
         self.user_id = user_id
         self.flag = flag
 
-        dict.__init__(self, keywords)
+        dict.__init__(self, data)
 
     def __repr__(self):
         return (f'<MockReply ({self.user_id} {self.command_id} '
@@ -86,26 +88,28 @@ class MockReplyList(list):
             user_id = int(user_id)
             command_id = int(command_id)
 
-            keywords = {}
+            data = {}
             for keyword_raw in keywords_raw.split(';'):
                 if keyword_raw.strip() == '':
                     continue
                 name, value = keyword_raw.split('=')
-                keywords[name] = value
+                data[name] = value
 
         elif issubclass(self.actor.__class__, clu.JSONActor):
 
             reply = json.loads(reply)
-            user_id = reply.pop('commander_id', None)
-            command_id = reply.pop('command_id', None)
-            reply.pop('sender', None)
-            flag = reply.pop('message_code', 'd')
-            keywords = reply
+
+            header = reply['header']
+            user_id = header.pop('commander_id', None)
+            command_id = header.pop('command_id', None)
+            flag = header.pop('message_code', 'd')
+
+            data = reply['data']
 
         else:
             raise RuntimeError('actor must be LegacyActor or JSONActor.')
 
-        list.append(self, MockReply(user_id, command_id, flag, keywords))
+        list.append(self, MockReply(user_id, command_id, flag, data))
 
     def clear(self):
         list.__init__(self)

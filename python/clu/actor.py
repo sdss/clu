@@ -467,9 +467,31 @@ class JSONActor(BaseActor):
               broadcast=False, beautify=True, **kwargs):
         """Writes a message to user(s) as a JSON.
 
-        A header with the ``commander_id`` (i.e., the user id of the transport
-        that sent the command), ``command_id``, and ``sender`` is prepended
-        to each message.
+        A ``header`` keyword with the ``commander_id`` (i.e., the user id of
+        the transport that sent the command), ``command_id``, ``message_code``,
+        and ``sender`` is added to each message. The payload of the message
+        is written to ``data``. An example of a valid message is
+
+        .. code-block:: yaml
+
+            {
+                "header": {
+                    "command_id": 0,
+                    "commander_id": 1,
+                    "message_code": "i",
+                    "sender": "test_camera"
+                },
+                "message": {
+                    "camera": {
+                        "name": "test_camera",
+                        "uid": "DEV_12345"
+                    },
+                    "status": {
+                        "temperature": 25.0,
+                        "cooler": 10.0
+                    }
+                }
+            }
 
         Parameters
         ----------
@@ -500,13 +522,14 @@ class JSONActor(BaseActor):
         transport = command.transport if command else None
 
         message_full = {}
-        header = {'command_id': command_id,
-                  'commander_id': commander_id,
-                  'message_code': message_code,
-                  'sender': self.name}
+        header = {'header': {'command_id': command_id,
+                             'commander_id': commander_id,
+                             'message_code': message_code,
+                             'sender': self.name}
+                  }
 
         message_full.update(header)
-        message_full.update(message)
+        message_full.update({'data': message})
 
         if beautify:
             message_json = json.dumps(message_full, sort_keys=False, indent=4)
