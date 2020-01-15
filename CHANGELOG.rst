@@ -4,6 +4,7 @@
 Changelog
 =========
 
+* :release:`0.1.12 <2020-01-14>`
 * Some tweaks to `.JSONActor` and the testing framework.
 * Added an error reply level.
 
