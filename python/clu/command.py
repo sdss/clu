@@ -136,7 +136,7 @@ class BaseCommand(asyncio.Future, StatusMixIn):
 
             # If the command is done, set the result of the future.
             if self._status.is_done:
-                self.set_result(self.status)
+                self.set_result(self)
 
             # Set the status watcher
             if self.watcher is not None:

@@ -337,7 +337,8 @@ class AMQPClient(BaseClient):
             is_done = CommandStatus.get_inverse_dict()[reply.message_code].is_done
             if is_done:
                 command = self.running_commands.pop(reply.command_id)
-                command.set_result(None)
+                if not command.done():
+                    command.set_result(command)
 
         return reply
 
