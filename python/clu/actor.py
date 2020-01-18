@@ -162,7 +162,7 @@ class BaseActor(BaseClient):
             msg = f'Command {command.body!r} failed.'
 
             if not command.status.is_done:
-                command.failed(text=msg)
+                command.fail(text=msg)
             else:
                 command.write(text=msg)
 
@@ -173,12 +173,12 @@ class BaseActor(BaseClient):
             if command.status.is_done:
                 command.write(text=f'Use help [CMD]')
             else:
-                command.failed(text=f'Use help [CMD]')
+                command.fail(text=f'Use help [CMD]')
 
         except click.exceptions.Abort:
 
             if not command.status.is_done:
-                command.failed(text='Command was aborted.')
+                command.fail(text='Command was aborted.')
 
         except Exception:
 
@@ -188,7 +188,7 @@ class BaseActor(BaseClient):
             if command.status.is_done:
                 command.write(text=msg)
             else:
-                command.failed(text=msg)
+                command.fail(text=msg)
 
             log = log or getattr(command.ctx, 'log', None)
             if log:
