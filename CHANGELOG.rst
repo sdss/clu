@@ -4,6 +4,8 @@
 Changelog
 =========
 
+* :feature:`21` Renamed ``Command.done`` and ``.failed`` to `.Command.finish` and `.Command.fail`.
+
 * :release:`0.1.12 <2020-01-14>`
 * Some tweaks to `.JSONActor` and the testing framework.
 * Added an error reply level.
