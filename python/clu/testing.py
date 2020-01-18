@@ -114,6 +114,10 @@ class MockReplyList(list):
     def clear(self):
         list.__init__(self)
 
+    def __contains__(self, m):
+
+        return any([m in reply[kw] for reply in self for kw in reply.keys()])
+
 
 async def setup_test_actor(actor, user_id=1):
     """Setups an actor for testing, mocking the client transport.
