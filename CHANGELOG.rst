@@ -4,6 +4,8 @@
 Changelog
 =========
 
+* :feature:`18` Allow to pass a command parser that inherits from `.CluGroup` and autocomplete ``help`` and ``ping`` if needed.
+
 * :release:`0.2.0 <2020-01-19>`
 * :feature:`21` Renamed ``Command.done`` and ``.failed`` to `.Command.finish` and `.Command.fail`.
 * Allow to define the default keyword to use if a message is just a string.
