@@ -4,6 +4,7 @@
 Changelog
 =========
 
+* :release:`0.2.0 <2020-01-19>`
 * :feature:`21` Renamed ``Command.done`` and ``.failed`` to `.Command.finish` and `.Command.fail`.
 * Allow to define the default keyword to use if a message is just a string.
 * `.Command.finish` and `.Command.fail` now return the command itself. This is useful when doing ``return command.fail()`` in case the user wants to do something else with the command.
