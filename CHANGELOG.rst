@@ -5,6 +5,7 @@ Changelog
 =========
 
 * :feature:`18` Allow to pass a command parser that inherits from `.CluGroup` and autocomplete ``help`` and ``ping`` if needed.
+* Add `.CommandStatus.did_succeed`.
 
 * :release:`0.2.0 <2020-01-19>`
 * :feature:`21` Renamed ``Command.done`` and ``.failed`` to `.Command.finish` and `.Command.fail`.

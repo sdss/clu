@@ -85,6 +85,12 @@ class CommandStatus(Maskbit):
         return self in self.FAILED_STATES
 
     @property
+    def did_succeed(self):
+        """Command finished with DONE status."""
+
+        return self == self.DONE
+
+    @property
     def is_active(self):
         """Command is running, cancelling or failing."""
 
