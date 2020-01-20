@@ -184,10 +184,10 @@ def ping(*args):
     return
 
 
-@command_parser.command()
+@command_parser.command(name='help')
 @click.argument('PARSER-COMMAND', type=str, required=False)
 @click.pass_context
-def help(ctx, *args, parser_command):
+def help_(ctx, *args, parser_command):
     """Shows the help."""
 
     command = args[0]

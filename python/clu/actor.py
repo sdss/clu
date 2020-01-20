@@ -20,7 +20,7 @@ from .client import AMQPClient, BaseClient
 from .command import Command
 from .exceptions import CommandError
 from .model import ModelSet
-from .parser import command_parser
+from .parser import CluGroup, command_parser, help_, ping
 from .protocol import TCPStreamServer
 
 
@@ -58,6 +58,13 @@ class BaseActor(BaseClient):
     def __init__(self, *args, parser=None, **kwargs):
 
         self.command_parser = parser or command_parser
+        assert isinstance(self.command_parser, CluGroup), \
+            'the parser group must be an instance of clu.parser.CluGroup.'
+
+        if 'help' not in parser.commands:
+            parser.add_command(help_)
+        if 'ping' not in parser.commands:
+            parser.add_command(ping)
 
         super().__init__(*args, **kwargs)
 
