@@ -144,11 +144,13 @@ class BaseCommand(asyncio.Future, StatusMixIn):
         """Convenience method to mark a command `~.CommandStatus.DONE`."""
 
         self.set_status(CommandStatus.DONE, *args, **kwargs)
+        return self
 
     def fail(self, *args, **kwargs):
         """Convenience method to mark a command `~.CommandStatus.FAILED`."""
 
         self.set_status(CommandStatus.FAILED, *args, **kwargs)
+        return self
 
     def debug(self, *args, **kwargs):
         """Writes a debug-level message."""
