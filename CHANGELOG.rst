@@ -5,6 +5,7 @@ Changelog
 =========
 
 * :feature:`21` Renamed ``Command.done`` and ``.failed`` to `.Command.finish` and `.Command.fail`.
+* Allow to define the default keyword to use if a message is just a string.
 
 * :release:`0.1.12 <2020-01-14>`
 * Some tweaks to `.JSONActor` and the testing framework.

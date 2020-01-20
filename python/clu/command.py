@@ -45,13 +45,17 @@ class BaseCommand(asyncio.Future, StatusMixIn):
         A function to call when the status changes.
     call_now : bool
         Whether to call ``status_callback`` when initialising the command.
+    default_keyword : str
+        The keyword to use when writing a message that does not specify a
+        keyword.
     loop
         The event loop.
 
     """
 
     def __init__(self, commander_id=0, command_id=0, consumer_id=0, parent=None,
-                 status_callback=None, call_now=False, loop=None):
+                 status_callback=None, call_now=False, default_keyword='text',
+                 loop=None):
 
         self.commander_id = commander_id
         self.consumer_id = consumer_id
@@ -69,6 +73,7 @@ class BaseCommand(asyncio.Future, StatusMixIn):
             self.commander_id = self.commander_id or self.parent.commander_id
             self.consumer_id = self.consumer_id or self.parent.consumer_id
 
+        self.default_keyword = default_keyword
         self.loop = loop or asyncio.get_event_loop()
 
         asyncio.Future.__init__(self, loop=self.loop)
@@ -120,13 +125,6 @@ class BaseCommand(asyncio.Future, StatusMixIn):
         if status != self._status:
 
             status_code = status.code
-
-            if message is None:
-                pass
-            elif isinstance(message, dict):
-                pass
-            else:
-                message = {'text': message}
 
             self.write(status_code, message, **kwargs)
 
@@ -183,6 +181,15 @@ class BaseCommand(asyncio.Future, StatusMixIn):
             The text to be output. If `None`, only the code will be written.
 
         """
+
+        if message is None:
+            message = {}
+        elif isinstance(message, dict):
+            pass
+        elif isinstance(message, str):
+            message = {self.default_keyword: message}
+        else:
+            raise ValueError(f'invalid message {message!r}')
 
         if not self.actor:
             raise clu.CommandError('An actor has not been defined for '
