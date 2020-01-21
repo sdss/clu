@@ -13,6 +13,8 @@ import re
 import click
 from click.decorators import group, pass_obj
 
+from . import actor
+
 
 class CluCommand(click.Command):
     """Override `click.Command` to pass the actor and command as arguments."""
@@ -204,8 +206,7 @@ def help_(ctx, *args, parser_command):
         for ii in range(len(parser_command)):
             ctx_command_name = parser_command[ii].lower()
             if ctx_command_name not in ctx_commands:
-                command.failed(text=f'command {ctx_command_name} not found.')
-                return
+                return command.fail(text=f'command {ctx_command_name} not found.')
             ctx_command = ctx_commands[ctx_command_name]
             if ii == len(parser_command) - 1:
                 # This is the last element in the command list
@@ -218,14 +219,19 @@ def help_(ctx, *args, parser_command):
 
         help_lines = ctx.get_help()
 
+    message = []
     for line in help_lines.splitlines():
         # Remove the parser name.
         match = re.match(r'^Usage:([A-Za-z-\ ]+? \[OPTIONS\]) .*', line)
         if match:
             line = line.replace(match.groups()[0], '')
 
-        command.write('w', {'text': line})
+        message.append(line)
 
-    command.set_status(command.status.DONE)
-
-    return
+    if isinstance(command.actor, (actor.AMQPActor, actor.JSONActor)):
+        message = '\n'.join(message)
+        return command.finish(help=message)
+    else:
+        for line in message:
+            command.warning(help=line)
+        return command.finish()
