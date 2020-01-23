@@ -229,7 +229,6 @@ def help_(ctx, *args, parser_command):
         message.append(line)
 
     if isinstance(command.actor, (actor.AMQPActor, actor.JSONActor)):
-        message = '\n'.join(message)
         return command.finish(help=message)
     else:
         for line in message:

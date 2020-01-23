@@ -4,6 +4,8 @@
 Changelog
 =========
 
+* For `.JSONActor`, the ``help`` commands output lines as a list to improve readability.
+
 * :feature:`18` Allow to pass a command parser that inherits from `.CluGroup` and autocomplete ``help`` and ``ping`` if needed.
 * Add `.CommandStatus.did_succeed`.
 
