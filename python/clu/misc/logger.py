@@ -336,18 +336,15 @@ class SDSSLogger(logging.Logger):
         """Handle an uncaught exception and reports it."""
 
         exception = context.get('exception', None)
-        if exception is None:
-            exception_name = 'UnknownException'
-        else:
-            exception_name = exception.__class__.__name__
-
-        message = context['message'].splitlines()
-        for line in message:
-            self.error(f'{exception_name}: {line}')
-
         if exception:
-            for line in exception.args:
-                self.error(f'{exception_name}: {line}')
+            try:
+                raise exception
+            except Exception:
+                self.exception(context['message'])
+        else:
+            message = context['message'].splitlines()
+            for line in message:
+                self.error(f'{line}')
 
     def set_level(self, level):
         """Sets levels for both sh and (if initialised) fh."""
