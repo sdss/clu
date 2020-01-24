@@ -542,7 +542,7 @@ marker = "sys_platform != \"win32\""
 name = "pexpect"
 optional = false
 python-versions = "*"
-version = "4.7.0"
+version = "4.8.0"
 
 [package.dependencies]
 ptyprocess = ">=0.5"
@@ -668,7 +668,7 @@ description = "pytest: simple powerful testing with Python"
 name = "pytest"
 optional = false
 python-versions = ">=3.5"
-version = "5.3.2"
+version = "5.3.4"
 
 [package.dependencies]
 atomicwrites = ">=1.0"
@@ -685,6 +685,7 @@ python = "<3.8"
 version = ">=0.12"
 
 [package.extras]
+checkqa-mypy = ["mypy (v0.761)"]
 testing = ["argcomplete", "hypothesis (>=3.56)", "mock", "nose", "requests", "xmlschema"]
 
 [[package]]
@@ -828,7 +829,7 @@ description = "Small tools for SDSS products"
 name = "sdsstools"
 optional = false
 python-versions = ">=3.7,<4.0"
-version = "0.1.2"
+version = "0.1.4"
 
 [package.dependencies]
 pygments = ">=2.5.2,<3.0.0"
@@ -876,8 +877,8 @@ category = "main"
 description = "Python 2 and 3 compatibility utilities"
 name = "six"
 optional = false
-python-versions = ">=2.6, !=3.0.*, !=3.1.*"
-version = "1.13.0"
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*"
+version = "1.14.0"
 
 [[package]]
 category = "main"
@@ -1065,8 +1066,8 @@ category = "main"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
 name = "urllib3"
 optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, <4"
-version = "1.25.7"
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, <4"
+version = "1.25.8"
 
 [package.extras]
 brotli = ["brotlipy (>=0.6.0)"]
@@ -1118,15 +1119,14 @@ description = "Backport of pathlib-compatible object wrapper for zip files"
 marker = "python_version < \"3.8\""
 name = "zipp"
 optional = false
-python-versions = ">=2.7"
-version = "1.0.0"
+python-versions = ">=3.6"
+version = "2.0.1"
 
 [package.dependencies]
 more-itertools = "*"
 
 [package.extras]
 docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
-testing = ["pathlib2", "contextlib2", "unittest2"]
 
 [extras]
 docs = ["Sphinx"]
@@ -1507,8 +1507,8 @@ pbr = [
     {file = "pbr-5.4.4.tar.gz", hash = "sha256:139d2625547dbfa5fb0b81daebb39601c478c21956dc57e2e07b74450a8c506b"},
 ]
 pexpect = [
-    {file = "pexpect-4.7.0-py2.py3-none-any.whl", hash = "sha256:2094eefdfcf37a1fdbfb9aa090862c1a4878e5c7e0e7e7088bdb511c558e5cd1"},
-    {file = "pexpect-4.7.0.tar.gz", hash = "sha256:9e2c1fd0e6ee3a49b28f95d4b33bc389c89b20af6a1255906e90ff1262ce62eb"},
+    {file = "pexpect-4.8.0-py2.py3-none-any.whl", hash = "sha256:0b48a55dcb3c05f3329815901ea4fc1537514d6ba867a152b581d69ae3710937"},
+    {file = "pexpect-4.8.0.tar.gz", hash = "sha256:fc65a43959d153d0114afe13997d439c22823a27cefceb5ff35c2178c6784c0c"},
 ]
 pickleshare = [
     {file = "pickleshare-0.7.5-py2.py3-none-any.whl", hash = "sha256:9649af414d74d4df115d5d718f82acb59c9d418196b7b4290ed47a12ce62df56"},
@@ -1557,8 +1557,8 @@ pyrsistent = [
     {file = "pyrsistent-0.15.7.tar.gz", hash = "sha256:cdc7b5e3ed77bed61270a47d35434a30617b9becdf2478af76ad2c6ade307280"},
 ]
 pytest = [
-    {file = "pytest-5.3.2-py3-none-any.whl", hash = "sha256:e41d489ff43948babd0fad7ad5e49b8735d5d55e26628a58673c39ff61d95de4"},
-    {file = "pytest-5.3.2.tar.gz", hash = "sha256:6b571215b5a790f9b41f19f3531c53a45cf6bb8ef2988bc1ff9afb38270b25fa"},
+    {file = "pytest-5.3.4-py3-none-any.whl", hash = "sha256:c13d1943c63e599b98cf118fcb9703e4d7bde7caa9a432567bcdcae4bf512d20"},
+    {file = "pytest-5.3.4.tar.gz", hash = "sha256:1d122e8be54d1a709e56f82e2d85dcba3018313d64647f38a91aec88c239b600"},
 ]
 pytest-asyncio = [
     {file = "pytest-asyncio-0.10.0.tar.gz", hash = "sha256:9fac5100fd716cbecf6ef89233e8590a4ad61d729d1732e0a96b84182df1daaf"},
@@ -1613,8 +1613,8 @@ restructuredtext-lint = [
     {file = "restructuredtext_lint-1.3.0.tar.gz", hash = "sha256:97b3da356d5b3a8514d8f1f9098febd8b41463bed6a1d9f126cf0a048b6fd908"},
 ]
 sdsstools = [
-    {file = "sdsstools-0.1.2-py3-none-any.whl", hash = "sha256:8e621511293333d45bb46abdfa06ad45ed22b478d8cceda2010a9e7d2b15d62a"},
-    {file = "sdsstools-0.1.2.tar.gz", hash = "sha256:b3e29025d224d93433c9d0fbc36a415c1cef79c9b214c527324b4d8c9d1373f2"},
+    {file = "sdsstools-0.1.4-py3-none-any.whl", hash = "sha256:2bc875adb21770700ebf209c374ddd2df803e97c5dcf35ec9363b33a3f57c3c1"},
+    {file = "sdsstools-0.1.4.tar.gz", hash = "sha256:a0ac38b447425035839b2883bd392947c869c908354f6f9d3a2ea67a3ed91c48"},
 ]
 secretstorage = [
     {file = "SecretStorage-3.1.2-py3-none-any.whl", hash = "sha256:b5ec909dde94d4ae2fa26af7c089036997030f0cf0a5cb372b4cccabd81c143b"},
@@ -1625,8 +1625,8 @@ semantic-version = [
     {file = "semantic_version-2.8.4.tar.gz", hash = "sha256:352459f640f3db86551d8054d1288608b29a96e880c7746f0a59c92879d412a3"},
 ]
 six = [
-    {file = "six-1.13.0-py2.py3-none-any.whl", hash = "sha256:1f1b7d42e254082a9db6279deae68afb421ceba6158efa6131de7b3003ee93fd"},
-    {file = "six-1.13.0.tar.gz", hash = "sha256:30f610279e8b2578cab6db20741130331735c781b56053c59c4076da27f06b66"},
+    {file = "six-1.14.0-py2.py3-none-any.whl", hash = "sha256:8f3cd2e254d8f793e7f3d6d9df77b92252b52637291d0f0da013c76ea2724b6c"},
+    {file = "six-1.14.0.tar.gz", hash = "sha256:236bdbdce46e6e6a3d61a337c0f8b763ca1e8717c03b369e87a7ec7ce1319c0a"},
 ]
 snowballstemmer = [
     {file = "snowballstemmer-2.0.0-py2.py3-none-any.whl", hash = "sha256:209f257d7533fdb3cb73bdbd24f436239ca3b2fa67d56f6ff88e86be08cc5ef0"},
@@ -1685,8 +1685,8 @@ twine = [
     {file = "twine-3.1.1.tar.gz", hash = "sha256:d561a5e511f70275e5a485a6275ff61851c16ffcb3a95a602189161112d9f160"},
 ]
 urllib3 = [
-    {file = "urllib3-1.25.7-py2.py3-none-any.whl", hash = "sha256:a8a318824cc77d1fd4b2bec2ded92646630d7fe8619497b142c84a9e6f5a7293"},
-    {file = "urllib3-1.25.7.tar.gz", hash = "sha256:f3c5fd51747d450d4dcf6f923c81f78f811aab8205fda64b0aba34a4e48b0745"},
+    {file = "urllib3-1.25.8-py2.py3-none-any.whl", hash = "sha256:2f3db8b19923a873b3e5256dc9c2dedfa883e33d87c690d9c7913e1f40673cdc"},
+    {file = "urllib3-1.25.8.tar.gz", hash = "sha256:87716c2d2a7121198ebcb7ce7cccf6ce5e9ba539041cfbaeecfb641dc0bf6acc"},
 ]
 wcwidth = [
     {file = "wcwidth-0.1.8-py2.py3-none-any.whl", hash = "sha256:8fd29383f539be45b20bd4df0dc29c20ba48654a41e661925e612311e9f3c603"},
@@ -1720,6 +1720,6 @@ yarl = [
     {file = "yarl-1.4.2.tar.gz", hash = "sha256:58cd9c469eced558cd81aa3f484b2924e8897049e06889e8ff2510435b7ef74b"},
 ]
 zipp = [
-    {file = "zipp-1.0.0-py2.py3-none-any.whl", hash = "sha256:8dda78f06bd1674bd8720df8a50bb47b6e1233c503a4eed8e7810686bde37656"},
-    {file = "zipp-1.0.0.tar.gz", hash = "sha256:d38fbe01bbf7a3593a32bc35a9c4453c32bc42b98c377f9bff7e9f8da157786c"},
+    {file = "zipp-2.0.1-py3-none-any.whl", hash = "sha256:e013e7800f60ec4dde789ebf4e9f7a54236e4bbf5df2a1a4e20ce9e1d9609d67"},
+    {file = "zipp-2.0.1.tar.gz", hash = "sha256:b338014b9bc7102ca69e0fb96ed07215a8954d2989bc5d83658494ab2ba634af"},
 ]
