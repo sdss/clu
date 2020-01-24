@@ -543,6 +543,8 @@ class JSONActor(BaseActor):
         else:
             message_json = json.dumps(message_full, sort_keys=False)
 
+        message_json += '\n'
+
         if broadcast or commander_id is None or transport is None:
             for transport in self.transports.values():
                 transport.write(message_json.encode())
