@@ -829,7 +829,7 @@ description = "Small tools for SDSS products"
 name = "sdsstools"
 optional = false
 python-versions = ">=3.7,<4.0"
-version = "0.1.4"
+version = "0.1.5"
 
 [package.dependencies]
 pygments = ">=2.5.2,<3.0.0"
@@ -1613,8 +1613,8 @@ restructuredtext-lint = [
     {file = "restructuredtext_lint-1.3.0.tar.gz", hash = "sha256:97b3da356d5b3a8514d8f1f9098febd8b41463bed6a1d9f126cf0a048b6fd908"},
 ]
 sdsstools = [
-    {file = "sdsstools-0.1.4-py3-none-any.whl", hash = "sha256:2bc875adb21770700ebf209c374ddd2df803e97c5dcf35ec9363b33a3f57c3c1"},
-    {file = "sdsstools-0.1.4.tar.gz", hash = "sha256:a0ac38b447425035839b2883bd392947c869c908354f6f9d3a2ea67a3ed91c48"},
+    {file = "sdsstools-0.1.5-py3-none-any.whl", hash = "sha256:29d08f7f3f3556a55bd21ac089614504cd4f41424ce933164c74dc50ff078654"},
+    {file = "sdsstools-0.1.5.tar.gz", hash = "sha256:85fc460878542cad5160f080fc54dff8456305c831317fdbe4eb3b0d52d7979d"},
 ]
 secretstorage = [
     {file = "SecretStorage-3.1.2-py3-none-any.whl", hash = "sha256:b5ec909dde94d4ae2fa26af7c089036997030f0cf0a5cb372b4cccabd81c143b"},
