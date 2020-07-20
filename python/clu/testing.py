@@ -92,7 +92,7 @@ class MockReplyList(list):
             for keyword_raw in keywords_raw.split(';'):
                 if keyword_raw.strip() == '':
                     continue
-                name, value = keyword_raw.split('=')
+                name, value = keyword_raw.split('=', maxsplit=1)
                 data[name] = value
 
         elif issubclass(self.actor.__class__, clu.JSONActor):
