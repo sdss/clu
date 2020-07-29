@@ -5,6 +5,7 @@ Changelog
 =========
 
 * :bug:`-` Fix bus in `MockReplyList.parse_reply` when the value of the keyword contains multiple ``=``.
+* :support:`-` Relax ``sdsstools`` version to allow ``jaeger`` to bump the minimum version.
 
 * :release:`0.2.1 <2020-01-24>`
 * For `.JSONActor`, the ``help`` commands output lines as a list to improve readability.
