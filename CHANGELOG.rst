@@ -51,7 +51,7 @@ Changelog
 * :release:`0.1.6 <2019-11-15>`
 * Fix display of warnings in actor.
 * In legacy actor, default to use the ``text`` keyword if the message passed is a string.
-* **Breaking change:** Rename ``Client.run()`` and ``Actor.run()`` to ``.start()`` (same for legacy actor). Added a `.LegacyActor.run_forever` method for convenience.
+* *Breaking change:* Rename ``Client.run()`` and ``Actor.run()`` to ``.start()`` (same for legacy actor). Added a `.BaseLegacyActor.run_forever` method for convenience.
 
 * :release:`0.1.5 <2019-11-13>`
 * :bug:`6` Fix bug when asking for help of subcommands and command groups.
