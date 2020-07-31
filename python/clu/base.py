@@ -46,12 +46,15 @@ class BaseClient(metaclass=abc.ABCMeta):
     log : ~logging.Logger
         A `~logging.Logger` instance to be used for logging instead of creating
         a new one.
+    verbose : bool or int
+        Whether to log to stdout. Can be an integer logging level.
 
     """
 
     name = None
 
-    def __init__(self, name, version=None, loop=None, log_dir=None, log=None):
+    def __init__(self, name, version=None, loop=None,
+                 log_dir=None, log=None, verbose=False):
 
         self.loop = loop or asyncio.get_event_loop()
 
@@ -59,7 +62,7 @@ class BaseClient(metaclass=abc.ABCMeta):
         assert self.name, 'name cannot be empty.'
 
         self.log = None
-        self.setup_logger(log, log_dir)
+        self.setup_logger(log, log_dir, verbose=verbose)
 
         self.version = version or '?'
 
@@ -154,7 +157,7 @@ class BaseClient(metaclass=abc.ABCMeta):
 
         return new_actor
 
-    def setup_logger(self, log, log_dir, file_level=REPLY, shell_level=20):
+    def setup_logger(self, log, log_dir, verbose=False):
         """Starts the file logger."""
 
         if not log:
@@ -174,7 +177,11 @@ class BaseClient(metaclass=abc.ABCMeta):
 
             log.fh.setLevel(file_level)
 
-        log.sh.setLevel(shell_level)
+        log.sh.setLevel(logging.INFO)
+        if verbose:
+            log.sh.setLevel(int(verbose))
+        else:
+            log.sh.setLevel(logging.CRITICAL)
 
         self.log = log
         self.log.debug(f'{self.name}: logging system initiated.')
