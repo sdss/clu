@@ -2,24 +2,18 @@
 # -*- coding: utf-8 -*-
 #
 # @Author: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Date: 2019-05-20
+# @Date: 2020-07-30
 # @Filename: client.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
-import abc
-import asyncio
-import inspect
 import json
-import pathlib
 import uuid
 
-from sdsstools import read_yaml_file
-
-from .base import CommandStatus
+from .base import BaseClient
 from .command import Command
-from .misc.logger import REPLY, get_logger
 from .model import Reply
 from .protocol import TopicListener
+from .tools import CommandStatus
 
 
 try:
@@ -28,179 +22,7 @@ except ImportError:
     apika = None
 
 
-__all__ = ['BaseClient', 'AMQPClient']
-
-
-class BaseClient(metaclass=abc.ABCMeta):
-    """A base client that can be used for listening or for an actor.
-
-    This class defines a new client. Clients differ from actors in that
-    they do not receive commands or issue replies, but do send commands to
-    other actors and listen to the keyword-value flow. All actors are also
-    clients and any actor should subclass from `.BaseClient`.
-
-    Normally a new instance of a client or actor is created by passing a
-    configuration file path to `.from_config` which defines how the
-    client must be started.
-
-    Parameters
-    ----------
-    name : str
-        The name of the actor.
-    version : str
-        The version of the actor.
-    loop
-        The event loop. If `None`, the current event loop will be used.
-    log_dir : str
-        The directory where to store the logs. Defaults to
-        ``/data/logs/actors/<name>`` where ``<name>`` is the name of the actor.
-        If ``log_dir=False``, only console and reply logging will be enabled.
-    log : ~logging.Logger
-        A `~logging.Logger` instance to be used for logging instead of creating
-        a new one.
-
-    """
-
-    name = None
-
-    def __init__(self, name, version=None, loop=None, log_dir=None, log=None):
-
-        self.loop = loop or asyncio.get_event_loop()
-
-        self.name = name
-        assert self.name, 'name cannot be empty.'
-
-        self.log = None
-        self.setup_logger(log, log_dir)
-
-        self.version = version or '?'
-
-        # Internally store the original configuration used to start the client.
-        self._config = None
-
-    def __repr__(self):
-
-        return f'<{str(self)} (name={self.name!r})>'
-
-    def __str__(self):
-
-        return self.__class__.__name__
-
-    @abc.abstractmethod
-    async def start(self):
-        """Runs the client."""
-
-        pass
-
-    async def shutdown(self):
-        """Shuts down all the remaining tasks."""
-
-        self.log.info('cancelling all pending tasks and shutting down.')
-
-        tasks = [task for task in asyncio.Task.all_tasks(loop=self.loop)
-                 if task is not asyncio.tasks.Task.current_task(loop=self.loop)]
-        list(map(lambda task: task.cancel(), tasks))
-
-        await asyncio.gather(*tasks, return_exceptions=True)
-
-        self.loop.stop()
-
-    @staticmethod
-    def _parse_config(config):
-
-        if not isinstance(config, dict):
-
-            config = pathlib.Path(config)
-            assert config.exists(), 'configuration path does not exist.'
-
-            config = read_yaml_file(str(config))
-
-        if 'actor' in config:
-            config = config['actor']
-
-        return config
-
-    @classmethod
-    def from_config(cls, config, *args, **kwargs):
-        """Parses a configuration file.
-
-        Parameters
-        ----------
-        config : dict or str
-            A configuration dictionary or the path to a YAML configuration
-            file that must contain a section ``'actor'`` (if the section is
-            not present, the whole file is assumed to be the actor
-            configuration).
-
-        """
-
-        orig_config_dict = cls._parse_config(config)
-        config_dict = orig_config_dict.copy()
-
-        # Decide what to do with the rest of the keyword arguments:
-        args_inspect = inspect.getfullargspec(cls)
-
-        if args_inspect.varkw is not None:
-            # If there is a catch-all kw variable, send everything and let the
-            # subclass handle it.
-            config_dict.update(kwargs)
-        else:
-            # Check the kw arguments in the subclass and pass only
-            # values from config_dict that match them.
-            kw_args = args_inspect.kwonlyargs
-            if len(args_inspect.defaults) > 0:
-                args_invert = args_inspect.args[::-1]
-                kw_args += args_invert[:len(args_inspect.defaults)]
-            for kw in kwargs:
-                if kw in kw_args:
-                    config_dict[kw] = kwargs[kw]
-
-        # We also pass *args in case the actor has been subclassed
-        # and the subclass' __init__ accepts different arguments.
-        new_actor = cls(*args, **config_dict)
-
-        # Store original config. This may not be complete since from_config
-        # may have been super'd from somewhere else.
-        new_actor._config = orig_config_dict
-        new_actor._config.update(kwargs)
-
-        return new_actor
-
-    def setup_logger(self, log, log_dir, file_level=REPLY, shell_level=20):
-        """Starts the file logger."""
-
-        if not log:
-            log = get_logger('actor:' + self.name)
-
-        if log_dir is not False:
-
-            if log_dir is None:
-                log_dir = pathlib.Path(f'/data/logs/actors/{self.name}/').expanduser()
-            else:
-                log_dir = pathlib.Path(log_dir).expanduser()
-
-            if not log_dir.exists():
-                log_dir.mkdir(parents=True)
-
-            log.start_file_logger(log_dir / f'{self.name}.log')
-
-            log.fh.setLevel(file_level)
-
-        log.sh.setLevel(shell_level)
-
-        self.log = log
-        self.log.debug(f'{self.name}: logging system initiated.')
-
-        # Set the loop exception handler to be handled by the logger.
-        self.loop.set_exception_handler(self.log.asyncio_exception_handler)
-
-        return log
-
-    @abc.abstractmethod
-    def send_command(self):
-        """Sends a command to an actor. Must be overridden."""
-
-        pass
+__all__ = ['AMQPClient']
 
 
 class AMQPClient(BaseClient):
@@ -281,7 +103,7 @@ class AMQPClient(BaseClient):
         # Binds the replies queue.
         self.replies_queue = await self.connection.add_queue(
             f'{self.name}_replies', callback=self.handle_reply,
-            bindings=[f'reply.#'])
+            bindings=['reply.#'])
 
         self.log.info(f'replies queue {self.replies_queue.name!r} '
                       f'bound to {self.connection.connection.url!s}')

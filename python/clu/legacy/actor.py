@@ -10,25 +10,27 @@ import warnings
 
 import clu
 
-from ..actor import BaseActor, TimerCommandList
-from ..base import log_reply
+from ..actor import TimerCommandList
+from ..base import BaseActor
 from ..command import Command, parse_legacy_command
+from ..parser import ClickParser
 from ..protocol import TCPStreamServer
+from ..tools import log_reply
 from .tron import TronConnection
 
 
-__all__ = ['LegacyActor']
+__all__ = ['LegacyActor', 'BaseLegacyActor']
 
 
-class LegacyActor(BaseActor):
+class BaseLegacyActor(BaseActor):
     """An actor that provides compatibility with the SDSS opscore protocol.
 
-    The TCP servers need to be started by awaiting the coroutine `.run`.
-    Note that `.run` does not block so you will need to use asyncio's
-    ``run_forever`` or a similar system ::
+    The TCP servers need to be started by awaiting the coroutine `.start`.
+    Note that `.start` does not block so you will need to use asyncio's
+    `.run_forever` or a similar system ::
 
         >>> loop = asyncio.get_event_loop()
-        >>> my_actor = await LegacyActor('my_actor', '127.0.0.1', 9999, loop=loop).run()
+        >>> my_actor = await LegacyActor('my_actor', '127.0.0.1', 9999, loop=loop).start()
         >>> loop.run_forever()
 
     Parameters
@@ -55,9 +57,6 @@ class LegacyActor(BaseActor):
     log : ~logging.Logger
         A `~logging.Logger` instance to be used for logging instead of creating
         a new one.
-    parser : ~clu.parser.CluGroup
-        A click command parser that is a subclass of `~clu.parser.CluGroup`.
-        If `None`, the active parser will be used.
 
     """
 
@@ -66,10 +65,10 @@ class LegacyActor(BaseActor):
 
     def __init__(self, name, host, port, tron_host=None, tron_port=None,
                  model_names=None, version=None, loop=None, log_dir=None,
-                 log=None, parser=None):
+                 log=None):
 
         super().__init__(name, version=version, loop=loop,
-                         log_dir=log_dir, log=log, parser=parser)
+                         log_dir=log_dir, log=log)
 
         #: Mapping of user_id to transport
         self.transports = dict()
@@ -338,3 +337,7 @@ class LegacyActor(BaseActor):
                 transport.write(msg)
 
             log_reply(self.log, message_code, full_msg_str)
+
+
+class LegacyActor(ClickParser, BaseLegacyActor):
+    """A legacy actor that uses the `.ClickParser`."""

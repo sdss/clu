@@ -7,5 +7,6 @@ ignore =
 
 per-file-ignores =
     __init__.py:F401,F403
+    setup.py:E
 
 max-line-length = 99

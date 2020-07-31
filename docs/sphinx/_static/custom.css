@@ -1,3 +1,5 @@
+@charset "utf-8";
+
 .red {
     color: red;
   }
@@ -42,4 +44,8 @@
 
   .underline{
     text-decoration: underline;
+  }
+
+  dl + .class, dl + .function, span + .class, span + .function {
+    padding-top: 40px;
   }

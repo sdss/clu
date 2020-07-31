@@ -5,6 +5,9 @@
 # meant to be used as a library in other tokenizers.
 # ----------------------------------------------------------------------
 
+# flake8:noqa
+# isort:skip_file
+
 # Reserved words
 
 tokens = [

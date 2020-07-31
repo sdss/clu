@@ -106,9 +106,9 @@ References
 CLU Legacy actor
 ----------------
 
-CLU provides its own implementation of the above protocol via the `.LegacyActor` class. Although the internals are different, the behaviour for the user should be exactly the same as with the new-style `.AMQPActor` class (e.g., `~.LegacyActor.write` and `~.LegacyActor.send_command` have the same interface).
+CLU provides its own implementation of the above protocol via the `.BaseLegacyActor` class. Although the internals are different, the behaviour for the user should be exactly the same as with the new-style `.AMQPActor` class (e.g., `~.BaseLegacyActor.write` and `~.BaseLegacyActor.send_command` have the same interface). The `.LegacyActor` class provides the actor functionality along with the usual :ref:`Click-based parsing <parser>`.
 
-When the actor is run, it starts a `~.LegacyActor.server` which is an instance of `.TCPStreamServer`. Similarly, it creates a client connection to Tron that can be accessed over the `~.LegacyActor.tron` attribute. When a new user connects to the server, a callback is issued to `~.LegacyActor.new_user`, which adds the transport to the list of users and outputs some information to the new user. New commands are handled by the `~.LegacyActor.new_command` callback, which parses the command and creates a `.Command` instance which is then sent to `~.BaseActor.parse_command`.
+When the actor is run, it starts a `~.BaseLegacyActor.server` which is an instance of `.TCPStreamServer`. Similarly, it creates a client connection to Tron that can be accessed over the `~.BaseLegacyActor.tron` attribute. When a new user connects to the server, a callback is issued to `~.BaseLegacyActor.new_user`, which adds the transport to the list of users and outputs some information to the new user. New commands are handled by the `~.BaseLegacyActor.new_command` callback, which parses the command and creates a `.Command` instance which is then sent to `~.BaseActor.parse_command`.
 
 Keyword parsing
 ~~~~~~~~~~~~~~~

@@ -35,13 +35,17 @@
 
 # This module implements an ANSI-C style lexical preprocessor for PLY.
 # -----------------------------------------------------------------------------
+
+# flake8:noqa
+# isort:skip_file
+
 from __future__ import generators
 
 import sys
 
 # Some Python 3 compatibility shims
 if sys.version_info.major < 3:
-    STRING_TYPES = (str, unicode)
+    STRING_TYPES = (str, unicode)  # noqa
 else:
     STRING_TYPES = str
     xrange = range

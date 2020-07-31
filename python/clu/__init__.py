@@ -8,17 +8,27 @@
 
 # flake8: noqa
 
+import logging
+
 from sdsstools import get_package_version
 
 from .actor import *
-from .base import CommandStatus, as_complete_failer, escape, format_value
-from .client import AMQPClient
+from .base import *
+from .client import *
 from .command import *
 from .device import *
 from .exceptions import *
 from .legacy import LegacyActor
-from .parser import command_parser
+from .parser import ClickParser, command_parser
+from .tools import (REPLY, CommandStatus, as_complete_failer,
+                    escape, format_value)
+
+
+# Add REPLY level to logging
+logging.addLevelName(REPLY, 'REPLY')
+logging.Logger.REPLY = lambda self, message, *args, **kws: \
+    self._log(REPLY, message, *args, **kws)
 
 
 NAME = 'sdss-clu'
-__version__ = get_package_version(__file__, 'sdss-clu') or 'dev'
+__version__ = get_package_version(__file__, 'sdss-clu', pep_440=True)

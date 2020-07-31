@@ -4,6 +4,13 @@
 API Reference
 =============
 
+Base classes
+------------
+
+.. autoclass:: clu.base.BaseClient
+.. autoclass:: clu.base.BaseActor
+
+
 Client
 ------
 
@@ -13,7 +20,6 @@ Client
 Actor
 -----
 
-.. autoclass:: clu.actor.BaseActor
 .. autoclass:: clu.actor.AMQPActor
 .. autoclass:: clu.actor.JSONActor
 
@@ -37,9 +43,9 @@ Legacy
 Maskbits
 --------
 
-.. autoclass:: clu.base.Maskbit
+.. autoclass:: clu.tools.Maskbit
 
-.. autoclass:: clu.base.CommandStatus
+.. autoclass:: clu.tools.CommandStatus
     :undoc-members:
     :member-order: bysource
 
@@ -47,8 +53,8 @@ Maskbits
 MixIns
 ------
 
-.. autoclass:: clu.base.StatusMixIn
-.. autoclass:: clu.base.CaseInsensitiveDict
+.. autoclass:: clu.tools.StatusMixIn
+.. autoclass:: clu.tools.CaseInsensitiveDict
 
 
 Model
@@ -60,6 +66,7 @@ Model
 Parser
 ------
 
+.. autoclass:: clu.parser.ClickParser
 .. autoclass:: clu.parser.CluCommand
 .. autoclass:: clu.parser.CluGroup
 

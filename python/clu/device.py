@@ -9,8 +9,8 @@
 import asyncio
 import contextlib
 
-from .base import CallbackScheduler
 from .protocol import TCPStreamClient
+from .tools import CallbackScheduler
 
 
 __all__ = ['Device']

@@ -10,7 +10,7 @@ import asyncio
 import re
 
 import clu
-from clu.base import CommandStatus, StatusMixIn
+from clu.tools import CommandStatus, StatusMixIn
 
 
 __all__ = ['BaseCommand', 'Command', 'parse_legacy_command']
