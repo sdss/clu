@@ -10,6 +10,7 @@ import asyncio
 import json
 import re
 import time
+import uuid
 from contextlib import suppress
 
 from .base import BaseActor
@@ -249,10 +250,9 @@ class JSONActor(ClickParser, BaseActor):
                 self.log.debug(f'user {transport.user_id} disconnected.')
                 return self.transports.pop(transport.user_id)
 
-        curr_ids = set(self.transports.keys())
-        user_id = 1 if len(curr_ids) == 0 else max(curr_ids) + 1
-
+        user_id = str(uuid.uuid4())
         transport.user_id = user_id
+        self.transports[user_id] = transport
 
         sock = transport.get_extra_info('socket')
         if sock is not None:
