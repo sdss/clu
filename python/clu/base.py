@@ -2,438 +2,235 @@
 # -*- coding: utf-8 -*-
 #
 # @Author: José Sánchez-Gallego (gallegoj@uw.edu)
-# @Date: 2018-09-07
+# @Date: 2019-05-20
 # @Filename: base.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
+import abc
 import asyncio
-import collections
-import contextlib
-import enum
-import functools
-import json
-import logging
+import inspect
+import pathlib
 
-from .misc.logger import REPLY
+from sdsstools import read_yaml_file
+
+from .misc.logger import REPLY, get_logger
 
 
-__ALL__ = ['CommandStatus', 'StatusMixIn', 'format_value', 'CallbackScheduler',
-           'CaseInsensitiveDict', 'cli_coro', 'value', 'as_complete_failer',
-           'log_reply']
+__all__ = ['BaseClient', 'BaseActor']
 
 
-class Maskbit(enum.Flag):
-    """A maskbit enumeration. Intended for subclassing."""
+class BaseClient(metaclass=abc.ABCMeta):
+    """A base client that can be used for listening or for an actor.
 
-    @property
-    def active_bits(self):
-        """Returns a list of flags that match the value."""
+    This class defines a new client. Clients differ from actors in that
+    they do not receive commands or issue replies, but do send commands to
+    other actors and listen to the keyword-value flow. All actors are also
+    clients and any actor should subclass from `.BaseClient`.
 
-        return [bit for bit in self.__class__ if bit.value & self.value]
-
-
-COMMAND_STATUS_TO_CODE = {
-    'DONE': ':',
-    'CANCELLED': 'f',
-    'FAILED': 'f',
-    'TIMEDOUT': 'f',
-    'READY': 'i',
-    'RUNNING': 'i',
-    'CANCELLING': 'w',
-    'FAILING': 'w',
-    'DEBUG': 'd',
-}
-
-
-class CommandStatus(Maskbit):
-
-    DONE = enum.auto()
-    CANCELLED = enum.auto()
-    FAILED = enum.auto()
-    TIMEDOUT = enum.auto()
-    READY = enum.auto()
-    RUNNING = enum.auto()
-    CANCELLING = enum.auto()
-    FAILING = enum.auto()
-    DEBUG = enum.auto()
-
-    ACTIVE_STATES = RUNNING | CANCELLING | FAILING
-    FAILED_STATES = CANCELLED | FAILED | TIMEDOUT
-    FAILING_STATES = CANCELLING | FAILING
-    DONE_STATES = DONE | FAILED_STATES
-    ALL_STATES = READY | ACTIVE_STATES | DONE_STATES
-
-    def __init__(self, *args):
-
-        if self.name.upper() in COMMAND_STATUS_TO_CODE:
-            self.code = COMMAND_STATUS_TO_CODE[self.name.upper()]
-        else:
-            self.code = None
-
-    @property
-    def is_combination(self):
-        """Returns True if a flag is a combination."""
-
-        if bin(self).count('1') > 1:
-            return True
-        return False
-
-    @property
-    def did_fail(self):
-        """Command failed or was cancelled."""
-
-        return self in self.FAILED_STATES
-
-    @property
-    def did_succeed(self):
-        """Command finished with DONE status."""
-
-        return self == self.DONE
-
-    @property
-    def is_active(self):
-        """Command is running, cancelling or failing."""
-
-        return self in self.ACTIVE_STATES
-
-    @property
-    def is_done(self):
-        """Command is done (whether successfully or not)."""
-
-        return self in self.DONE_STATES
-
-    @property
-    def is_failing(self):
-        """Command is being cancelled or is failing."""
-
-        return self in self.FAILING_STATES
-
-    @staticmethod
-    def get_inverse_dict():
-        """Gets a reversed dictionary of code to status.
-
-        Note that the inverse dictionary is not unique and you can get
-        different statuses associated with the same code.
-
-        """
-
-        return dict((status.code, status) for status in CommandStatus if status.code)
-
-
-class StatusMixIn(object):
-    """A mixin that provides status tracking with callbacks.
-
-    Provides a status property that executes a list of callbacks when
-    the status changes.
+    Normally a new instance of a client or actor is created by passing a
+    configuration file path to `.from_config` which defines how the
+    client must be started.
 
     Parameters
     ----------
-    maskbit_flags : class
-        A class containing the available statuses as a series of maskbit
-        flags. Usually as subclass of `enum.Flag`.
-    initial_status : str
-        The initial status.
-    callback_func : function
-        The function to call if the status changes.
-    call_now : bool
-        Whether the callback function should be called when initialising.
-
-    Attributes
-    ----------
-    callbacks : list
-        A list of the callback functions to call.
+    name : str
+        The name of the actor.
+    version : str
+        The version of the actor.
+    loop
+        The event loop. If `None`, the current event loop will be used.
+    log_dir : str
+        The directory where to store the logs. Defaults to
+        ``/data/logs/actors/<name>`` where ``<name>`` is the name of the actor.
+        If ``log_dir=False``, only console and reply logging will be enabled.
+    log : ~logging.Logger
+        A `~logging.Logger` instance to be used for logging instead of creating
+        a new one.
 
     """
 
-    def __init__(self, maskbit_flags, initial_status=None,
-                 callback_func=None, call_now=False):
+    name = None
 
-        self.flags = maskbit_flags
-        self.callbacks = []
-        self._status = initial_status
-        self.watcher = None
-
-        if callback_func is not None:
-            if isinstance(callback_func, (list, tuple)):
-                self.callbacks = callback_func
-            else:
-                self.callbacks.append(callback_func)
-
-        if call_now is True:
-            self.do_callbacks()
-
-    def do_callbacks(self):
-        """Calls functions in ``callbacks``."""
-
-        assert hasattr(self, 'callbacks'), 'missing callbacks attribute.'
-
-        loop = self.loop if hasattr(self, 'loop') else asyncio.get_event_loop()
-
-        for func in self.callbacks:
-            loop.call_soon(func)
-
-    @property
-    def status(self):
-        """Returns the status."""
-
-        return self._status
-
-    @status.setter
-    def status(self, value):
-        """Sets the status."""
-
-        if value != self._status:
-            self._status = self.flags(value)
-            self.do_callbacks()
-            if self.watcher is not None:
-                self.watcher.set()
-
-    async def wait_for_status(self, value, loop=None):
-        """Awaits until the status matches ``value``."""
-
-        if self.status == value:
-            return
-
-        if loop is None:
-            if hasattr(self, 'loop') and self.loop is not None:
-                loop = self.loop
-            else:
-                loop = asyncio.get_event_loop()
-
-        self.watcher = asyncio.Event(loop=loop)
-
-        while self.status != value:
-            await self.watcher.wait()
-            if self.watcher is not None:
-                self.watcher.clear()
-
-        self.watcher = None
-
-
-class CallbackScheduler(object):
-    """A queue for executing callbacks."""
-
-    def __init__(self, loop=None):
+    def __init__(self, name, version=None, loop=None, log_dir=None, log=None):
 
         self.loop = loop or asyncio.get_event_loop()
-        self.queue = asyncio.Queue()
 
-        self.running = []  # Running callbacks
-        self._task = self.loop.create_task(self._process_queue())
+        self.name = name
+        assert self.name, 'name cannot be empty.'
 
-    async def stop(self):
-        """Stops processing callbacks and awaits currently running ones."""
+        self.log = None
+        self.setup_logger(log, log_dir)
 
-        self._task.cancel()
+        self.version = version or '?'
 
-        for cb in self.running:
-            if not cb.done():
-                cb.cancel()
+        # Internally store the original configuration used to start the client.
+        self._config = None
 
-        with contextlib.suppress(asyncio.CancelledError):
-            await self._task
-            for cb in self.running:
-                await cb
+    def __repr__(self):
 
-        self.running = []
+        return f'<{str(self)} (name={self.name!r})>'
 
-    def add_callback(self, cb, *args, **kwargs):
-        """Add a callback to the queue.
+    def __str__(self):
 
-        The callback will be called as ``cb(*args, **kwargs).
+        return self.__class__.__name__
+
+    @abc.abstractmethod
+    async def start(self):
+        """Runs the client."""
+
+        pass
+
+    async def shutdown(self):
+        """Shuts down all the remaining tasks."""
+
+        self.log.info('cancelling all pending tasks and shutting down.')
+
+        tasks = [task for task in asyncio.Task.all_tasks(loop=self.loop)
+                 if task is not asyncio.tasks.Task.current_task(loop=self.loop)]
+        list(map(lambda task: task.cancel(), tasks))
+
+        await asyncio.gather(*tasks, return_exceptions=True)
+
+        self.loop.stop()
+
+    @staticmethod
+    def _parse_config(config):
+
+        if not isinstance(config, dict):
+
+            config = pathlib.Path(config)
+            assert config.exists(), 'configuration path does not exist.'
+
+            config = read_yaml_file(str(config))
+
+        if 'actor' in config:
+            config = config['actor']
+
+        return config
+
+    @classmethod
+    def from_config(cls, config, *args, **kwargs):
+        """Parses a configuration file.
+
+        Parameters
+        ----------
+        config : dict or str
+            A configuration dictionary or the path to a YAML configuration
+            file that must contain a section ``'actor'`` (if the section is
+            not present, the whole file is assumed to be the actor
+            configuration).
 
         """
 
-        self.queue.put_nowait((cb, args, kwargs))
+        orig_config_dict = cls._parse_config(config)
+        config_dict = orig_config_dict.copy()
 
-    async def _process_queue(self):
-        """Processes new callbacks."""
+        # Decide what to do with the rest of the keyword arguments:
+        args_inspect = inspect.getfullargspec(cls)
 
-        while True:
+        if args_inspect.varkw is not None:
+            # If there is a catch-all kw variable, send everything and let the
+            # subclass handle it.
+            config_dict.update(kwargs)
+        else:
+            # Check the kw arguments in the subclass and pass only
+            # values from config_dict that match them.
+            kw_args = args_inspect.kwonlyargs
+            if len(args_inspect.defaults) > 0:
+                args_invert = args_inspect.args[::-1]
+                kw_args += args_invert[:len(args_inspect.defaults)]
+            for kw in kwargs:
+                if kw in kw_args:
+                    config_dict[kw] = kwargs[kw]
 
-            cb, args, kwargs = await self.queue.get()
+        # We also pass *args in case the actor has been subclassed
+        # and the subclass' __init__ accepts different arguments.
+        new_actor = cls(*args, **config_dict)
 
-            if asyncio.iscoroutinefunction(cb):
-                self.running.append(asyncio.create_task(cb(*args, **kwargs)))
+        # Store original config. This may not be complete since from_config
+        # may have been super'd from somewhere else.
+        new_actor._config = orig_config_dict
+        new_actor._config.update(kwargs)
+
+        return new_actor
+
+    def setup_logger(self, log, log_dir, file_level=REPLY, shell_level=20):
+        """Starts the file logger."""
+
+        if not log:
+            log = get_logger('actor:' + self.name)
+
+        if log_dir is not False:
+
+            if log_dir is None:
+                log_dir = pathlib.Path(f'/data/logs/actors/{self.name}/').expanduser()
             else:
-                self.loop.call_soon(functools.partial(cb, *args, **kwargs))
+                log_dir = pathlib.Path(log_dir).expanduser()
 
-            # Clean already done callbacks
-            done_cb = []
-            for task in self.running:
-                if task.done():
-                    done_cb.append(task)
+            if not log_dir.exists():
+                log_dir.mkdir(parents=True)
 
-            self.running = [task for task in self.running if task not in done_cb]
+            log.start_file_logger(log_dir / f'{self.name}.log')
+
+            log.fh.setLevel(file_level)
+
+        log.sh.setLevel(shell_level)
+
+        self.log = log
+        self.log.debug(f'{self.name}: logging system initiated.')
+
+        # Set the loop exception handler to be handled by the logger.
+        self.loop.set_exception_handler(self.log.asyncio_exception_handler)
+
+        return log
+
+    def send_command(self):
+        """Sends a command to an actor."""
+
+        raise NotImplementedError('Sending commands is not implemented '
+                                  'for this client.')
 
 
-def format_value(value):
-    """Formats messages in a way that is compatible with the parser.
+class BaseActor(BaseClient):
+    """An actor based on `asyncio`.
 
-    Parameters
-    ----------
-    value
-        The data to be formatted.
-
-    Returns
-    -------
-    formatted_text : `str`
-        A string with the escaped text.
+    This class expands `.BaseClient` with a parsing system for new commands
+    and placeholders for methods for handling new commands and writing replies,
+    which should be overridden by the specific actors.
 
     """
 
-    if isinstance(value, str):
-        if ' ' in value and not (value.startswith('\'') or value.startswith('"')):
-            value = json.dumps(value)
-    elif isinstance(value, bool):
-        value = 'T' if value else 'F'
-    elif isinstance(value, (tuple, list)):
-        value = ','.join([format_value(item) for item in value])
-    else:
-        value = str(value)
+    @abc.abstractmethod
+    async def start(self):
+        """Starts the server. Must be overridden by the subclasses."""
 
-    return value
+        pass
 
+    @abc.abstractmethod
+    def new_command(self):
+        """Handles a new command.
 
-def escape(value):
-    """Escapes a text using `json.dumps`."""
+        Must be overridden by the subclass and call `.parse_command`
+        with a `.Command` object.
 
-    return json.dumps(value)
+        """
 
+        pass
 
-class CaseInsensitiveDict(collections.OrderedDict):
-    """A dictionary that performs case-insensitive operations."""
+    @abc.abstractclassmethod
+    def parse_command(self, command):
+        """Parses and executes a `.Command`. Must be overridden."""
 
-    def __init__(self, values):
+        pass
 
-        self._lc = []
+    def send_command(self):
+        """Sends a command to another actor."""
 
-        collections.OrderedDict.__init__(self, values)
+        raise NotImplementedError('Sending commands is not implemented '
+                                  'for this actor.')
 
-        self._lc = [key.lower() for key in values]
-        assert len(set(self._lc)) == len(self._lc), 'the are duplicated items in the dict.'
+    @abc.abstractmethod
+    def write(self):
+        """Writes a message to user(s). To be overridden by the subclasses."""
 
-    def __get_key__(self, key):
-        """Returns the correct value of the key, regardless of its case."""
-
-        try:
-            idx = self._lc.index(key.lower())
-        except ValueError:
-            return key
-
-        return list(self)[idx]
-
-    def __getitem__(self, key):
-        return collections.OrderedDict.__getitem__(self, self.__get_key__(key))
-
-    def __setitem__(self, key, value):
-
-        if key.lower() not in self._lc:
-            self._lc.append(key.lower())
-            collections.OrderedDict.__setitem__(self, key, value)
-        else:
-            collections.OrderedDict.__setitem__(self, self.__get_key__(key), value)
-
-    def __contains__(self, key):
-        return collections.OrderedDict.__contains__(self, self.__get_key__(key))
-
-    def __eq__(self, key):
-        return collections.OrderedDict.__eq__(self, self.__get_key__(key))
-
-
-def cli_coro(f):
-    """Decorator function that allows defining coroutines with click."""
-
-    f = asyncio.coroutine(f)
-
-    def wrapper(*args, **kwargs):
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(f(*args, **kwargs))
-
-    return functools.update_wrapper(wrapper, f)
-
-
-async def as_complete_failer(aws, on_fail_callback=None, **kwargs):
-    """Similar to `~asyncio.as_complete` but cancels all the tasks
-    if any of them returns `False`.
-
-    Parameters
-    ----------
-    aws : list
-        A list of awaitable objects. If not a list, it will be wrapped in one.
-    on_fail_callback
-        A function or coroutine to call if any of the tasks failed.
-    kwargs : dict
-        A dictionary of keywords to be passed to `~asyncio.as_complete`.
-
-    Returns
-    -------
-    result_tuple : tuple
-        A tuple in which the first element is `True` if all the tasks
-        completed, `False` if any of them failed and the rest were cancelled.
-        If `False`, the second element is `None` if no exceptions were caught
-        during the execution of the tasks, otherwise it contains the error
-        message. If `True`, the second element is always `None`.
-
-    """
-
-    if not isinstance(aws, (list, tuple)):
-        aws = [aws]
-
-    loop = kwargs.get('loop', asyncio.get_event_loop())
-
-    tasks = [loop.create_task(aw) for aw in aws]
-
-    failed = False
-    error_message = None
-    for next_completed in asyncio.as_completed(tasks, **kwargs):
-        try:
-            result = await next_completed
-        except Exception as ee:
-            error_message = str(ee)
-            result = False
-
-        if not result:
-            failed = True
-            break
-
-    if failed:
-
-        # Cancel tasks
-        [task.cancel() for task in tasks]
-
-        with contextlib.suppress(asyncio.CancelledError):
-            await asyncio.gather(*[task for task in tasks])
-
-        if on_fail_callback:
-            if asyncio.iscoroutinefunction(on_fail_callback):
-                await on_fail_callback()
-            else:
-                on_fail_callback()
-
-        return (False, error_message)
-
-    return (True, None)
-
-
-def log_reply(log, message_code, message, use_message_code=False):
-    """Logs an actor message with the correct code."""
-
-    code_dict = {'f': logging.ERROR,
-                 'e': logging.ERROR,
-                 'w': logging.WARNING,
-                 'i': logging.INFO,
-                 ':': logging.INFO,
-                 'd': logging.DEBUG}
-
-    if use_message_code:
-        log.log(code_dict[message_code], message)
-    else:
-        # Sets the REPLY log level
-        log_level_no = REPLY
-        if log_level_no in logging._levelToName:
-            log_level = log_level_no
-        else:
-            log_level = logging.DEBUG
-
-        log.log(log_level, message)
+        pass

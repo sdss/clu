@@ -3,25 +3,23 @@
 #
 # @Author: José Sánchez-Gallego (gallegoj@uw.edu)
 # @Date: 2018-01-16
-# @Filename: command.py
+# @Filename: actor.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
-import abc
 import asyncio
 import json
 import re
 import time
 from contextlib import suppress
 
-import click
-
-from .base import log_reply
-from .client import AMQPClient, BaseClient
+from .base import BaseActor
+from .client import AMQPClient
 from .command import Command
 from .exceptions import CommandError
 from .model import ModelSet
-from .parser import CluGroup, command_parser, help_, ping
+from .parser import ClickParser
 from .protocol import TCPStreamServer
+from .tools import log_reply
 
 
 try:
@@ -30,191 +28,10 @@ except ImportError:
     apika = None
 
 
-__all__ = ['BaseActor', 'AMQPActor', 'JSONActor', 'TimerCommand', 'TimerCommandList']
+__all__ = ['AMQPActor', 'JSONActor', 'TimerCommand', 'TimerCommandList']
 
 
-class BaseActor(BaseClient):
-    """An actor based on `asyncio <https://docs.python.org/3/library/asyncio.html>`__.
-
-    This class expands `.BaseClient` with a parsing system for new commands
-    and placeholders for methods for handling new commands and writing replies,
-    which should be overridden by the specific actors.
-
-    In addition to the parameters to pass to `.BaseClient`, `.BaseActor`
-    accepts the following arguments:
-
-    Parameters
-    ----------
-    parser : ~clu.parser.CluGroup
-        A click command parser that is a subclass of `~clu.parser.CluGroup`.
-        If `None`, the active parser will be used.
-
-    """
-
-    #: list: Arguments to be passed to each command in the parser.
-    #: Note that the command is always passed first.
-    parser_args = []
-
-    def __init__(self, *args, parser=None, **kwargs):
-
-        self.command_parser = parser or command_parser
-        assert isinstance(self.command_parser, CluGroup), \
-            'the parser group must be an instance of clu.parser.CluGroup.'
-
-        if 'help' not in parser.commands:
-            parser.add_command(help_)
-        if 'ping' not in parser.commands:
-            parser.add_command(ping)
-
-        super().__init__(*args, **kwargs)
-
-    @abc.abstractmethod
-    async def start(self):
-        """Starts the server. Must be overridden by the subclasses."""
-
-        pass
-
-    @abc.abstractmethod
-    def new_command(self):
-        """Handles a new command.
-
-        Must be overridden by the subclass and call `.parse_command`
-        with a `.Command` object.
-
-        """
-
-        pass
-
-    def parse_command(self, command):
-        """Parses an user command with the default, Click-based parser.
-
-        This method can be overridden to use a custom parser.
-
-        """
-
-        # This will pass the command as the first argument for each command.
-        # If self.parser_args is defined, those arguments will be passed next.
-        parser_args = [command]
-        parser_args += self.parser_args
-
-        # Empty command. Just finish the command.
-        if not command.body:
-            command.done()
-            return command
-
-        command.set_status(command.status.RUNNING)
-
-        # If the command contains the --help flag, redirects it to the help command.
-        if '--help' in command.body:
-            command.body = 'help ' + command.body
-            command.body = command.body.replace(' --help', '')
-
-        if not command.body.startswith('help'):
-            command_args = command.body.split()
-        else:
-            command_args = ['help', '"{}"'.format(command.body[5:])]
-
-        # We call the command with a custom context to get around
-        # the default handling of exceptions in Click. This will force
-        # exceptions to be raised instead of redirected to the stdout.
-        # See http://click.palletsprojects.com/en/7.x/exceptions/
-        ctx = self.command_parser.make_context(
-            f'{self.name}-command-parser', command_args,
-            obj={'parser_args': parser_args,
-                 'log': self.log,
-                 'exception_handler': self._handle_command_exception})
-
-        # Makes sure this is the global context. This solves problems when
-        # the actor have been started from inside an existing context,
-        # for example when it's called from a CLI click application.
-        click.globals.push_context(ctx)
-
-        # Sets the context in the command.
-        command.ctx = ctx
-
-        with ctx:
-            try:
-                self.command_parser.invoke(ctx)
-            except Exception as exc:
-                self._handle_command_exception(command, exc)
-
-        return command
-
-    @staticmethod
-    def _handle_command_exception(command, exception, log=None):
-        """Handles an exception during parsing or execution of a command."""
-
-        try:
-
-            raise exception
-
-        except (click.ClickException, click.exceptions.Exit) as ee:
-
-            if not hasattr(ee, 'message'):
-                ee.message = None
-
-            ctx = command.ctx
-            message = ''
-
-            # If this is a command that cannot be parsed.
-            if ee.message is None and ctx:
-                message = f'{ee.__class__.__name__}:\n{ctx.get_help()}'
-            else:
-                message = f'{ee.__class__.__name__}: {ee.message}'
-
-            lines = message.splitlines()
-            for line in lines:
-                command.write('w', text=line)
-
-            msg = f'Command {command.body!r} failed.'
-
-            if not command.status.is_done:
-                command.fail(text=msg)
-            else:
-                command.write(text=msg)
-
-        except click.exceptions.Exit:
-
-            # This happens when using --help, although it should be handled
-            # in parse_command.
-            if command.status.is_done:
-                command.write(text='Use help [CMD]')
-            else:
-                command.fail(text='Use help [CMD]')
-
-        except click.exceptions.Abort:
-
-            if not command.status.is_done:
-                command.fail(text='Command was aborted.')
-
-        except Exception:
-
-            msg = (f'Command {command.command_id} failed because of an uncaught error. '
-                   'See traceback in the log for more information.')
-
-            if command.status.is_done:
-                command.write(text=msg)
-            else:
-                command.fail(text=msg)
-
-            log = log or getattr(command.ctx, 'log', None)
-            if log:
-                log.exception(f'Command {command.body!r} failed with error:')
-
-    @abc.abstractmethod
-    def send_command(self):
-        """Sends a command to another actor. Must be overridden."""
-
-        pass
-
-    @abc.abstractmethod
-    def write(self):
-        """Writes a message to user(s). To be overridden by the subclasses."""
-
-        pass
-
-
-class AMQPActor(AMQPClient, BaseActor):
+class AMQPActor(AMQPClient, BaseActor, ClickParser):
     """An actor class that uses AMQP message brokering.
 
     This class differs from `~clu.legacy.actor.LegacyActor` in that it uses
@@ -287,7 +104,8 @@ class AMQPActor(AMQPClient, BaseActor):
                               actor=self, loop=self.loop)
             command.actor = self  # Assign the actor
         except CommandError as ee:
-            await self.write('f', {'text': f'Could not parse the following as a command: {ee!r}'})
+            await self.write('f', {'text': f'Could not parse the '
+                                           f'following as a command: {ee!r}'})
             return
 
         return self.parse_command(command)
@@ -365,7 +183,7 @@ class AMQPActor(AMQPClient, BaseActor):
         log_reply(self.log, message_code, message_json)
 
 
-class JSONActor(BaseActor):
+class JSONActor(BaseActor, ClickParser):
     """A TCP actor that replies using JSON.
 
     This implementation of `.BaseActor` uses TCP as command/reply channel and
@@ -461,9 +279,12 @@ class JSONActor(BaseActor):
         if not command_string:
             return
         try:
-            command = Command(command_string=command_string, commander_id=commander_id,
-                              command_id=command_id, consumer_id=self.name,
-                              actor=self, loop=self.loop, transport=transport)
+            command = Command(command_string=command_string,
+                              commander_id=commander_id,
+                              command_id=command_id,
+                              consumer_id=self.name,
+                              actor=self, loop=self.loop,
+                              transport=transport)
         except CommandError as ee:
             self.write('f', {'text': f'Could not parse the following as a command: {ee!r}'})
             return
