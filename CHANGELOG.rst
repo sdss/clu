@@ -8,7 +8,7 @@ Changelog
 * :support:`-` *Breaking changes.* Improve modularity. Some files have been renamed. `.BaseActor` is now parser-agnostic and the Click-parsing functionality has been moved to `.ClickParser`. Similarly, `.BaseLegacyActor` does not include a parser, with the Click parser implemented in `.LegacyActor`. The logging system has been streamlined.
 
 * :release:`0.2.2 <2020-07-29>`
-* :bug:`-` Fix bug in `MockReplyList.parse_reply` when the value of the keyword contains multiple ``=``.
+* :bug:`-` Fix bug in `.MockReplyList.parse_reply` when the value of the keyword contains multiple ``=``.
 * :support:`-` Relax ``sdsstools`` version to allow ``jaeger`` to bump the minimum version.
 
 * :release:`0.2.1 <2020-01-24>`
