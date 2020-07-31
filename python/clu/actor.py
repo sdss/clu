@@ -254,7 +254,10 @@ class JSONActor(ClickParser, BaseActor):
 
         transport.user_id = user_id
 
-        self.transports[user_id] = transport
+        sock = transport.get_extra_info('socket')
+        if sock is not None:
+            peername = sock.getpeername()[0]
+            self.log.debug(f'user {user_id} connected from {peername}.')
 
         return
 
