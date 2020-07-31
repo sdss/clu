@@ -16,6 +16,9 @@ from click.decorators import group, pass_obj
 from . import actor
 
 
+__all__ = ['CluCommand', 'CluGroup', 'command_parser', 'ClickParser']
+
+
 class CluCommand(click.Command):
     """Override `click.Command` to pass the actor and command as arguments."""
 
@@ -194,9 +197,11 @@ def help_(ctx, *args, parser_command):
 
     command = args[0]
 
-    # The parser_command arrives wrapped in quotes to make sure is a single value.
-    # Strip it and unpack it in as many groups and commands as needed.
+    # The parser_command arrives wrapped in quotes to make sure is a single
+    # value. Strip it and unpack it in as many groups and commands as needed.
     parser_command = parser_command.strip('"').split()
+
+    help_lines = ''
 
     # Gets the help lines for the command group or for a specific command.
     if len(parser_command) > 0:
@@ -234,3 +239,129 @@ def help_(ctx, *args, parser_command):
         for line in message:
             command.warning(help=line)
         return command.finish()
+
+
+class ClickParser:
+    """A command parser that uses Click at its base."""
+
+    parser = command_parser
+
+    def parse_command(self, command):
+        """Parses an user command using the Click internals."""
+
+        # Makes sure we have the ping and help commands available
+        if 'help' not in self.parser.commands:
+            self.parser.add_command(help_)
+        if 'ping' not in self.parser.commands:
+            self.parser.add_command(ping)
+
+        # This will pass the command as the first argument for each command.
+        # If self.parser_args is defined, those arguments will be passed next.
+        parser_args = [command]
+        parser_args += self.parser_args
+
+        # Empty command. Just finish the command.
+        if not command.body:
+            command.done()
+            return command
+
+        command.set_status(command.status.RUNNING)
+
+        # If the command contains the --help flag,
+        # redirects it to the help command.
+        if '--help' in command.body:
+            command.body = 'help ' + command.body
+            command.body = command.body.replace(' --help', '')
+
+        if not command.body.startswith('help'):
+            command_args = command.body.split()
+        else:
+            command_args = ['help', '"{}"'.format(command.body[5:])]
+
+        # We call the command with a custom context to get around
+        # the default handling of exceptions in Click. This will force
+        # exceptions to be raised instead of redirected to the stdout.
+        # See http://click.palletsprojects.com/en/7.x/exceptions/
+        ctx = self.command_parser.make_context(
+            f'{self.name}-command-parser', command_args,
+            obj={'parser_args': parser_args,
+                 'log': self.log,
+                 'exception_handler': self._handle_command_exception})
+
+        # Makes sure this is the global context. This solves problems when
+        # the actor have been started from inside an existing context,
+        # for example when it's called from a CLI click application.
+        click.globals.push_context(ctx)
+
+        # Sets the context in the command.
+        command.ctx = ctx
+
+        with ctx:
+            try:
+                self.command_parser.invoke(ctx)
+            except Exception as exc:
+                self._handle_command_exception(command, exc)
+
+        return command
+
+    @staticmethod
+    def _handle_command_exception(command, exception, log=None):
+        """Handles an exception during parsing or execution of a command."""
+
+        try:
+
+            raise exception
+
+        except (click.ClickException, click.exceptions.Exit) as ee:
+
+            if not hasattr(ee, 'message'):
+                ee.message = None
+
+            ctx = command.ctx
+            message = ''
+
+            # If this is a command that cannot be parsed.
+            if ee.message is None and ctx:
+                message = f'{ee.__class__.__name__}:\n{ctx.get_help()}'
+            else:
+                message = f'{ee.__class__.__name__}: {ee.message}'
+
+            lines = message.splitlines()
+            for line in lines:
+                command.write('w', text=line)
+
+            msg = f'Command {command.body!r} failed.'
+
+            if not command.status.is_done:
+                command.fail(text=msg)
+            else:
+                command.write(text=msg)
+
+        except click.exceptions.Exit:
+
+            # This happens when using --help, although it should be handled
+            # in parse_command.
+            if command.status.is_done:
+                command.write(text='Use help [CMD]')
+            else:
+                command.fail(text='Use help [CMD]')
+
+        except click.exceptions.Abort:
+
+            if not command.status.is_done:
+                command.fail(text='Command was aborted.')
+
+        except Exception:
+
+            msg = (f'Command {command.command_id} failed because '
+                   'of an uncaught error. See traceback in the log '
+                   'for more information.')
+
+            if command.status.is_done:
+                command.write(text=msg)
+            else:
+                command.fail(text=msg)
+
+            log = log or getattr(command.ctx, 'log', None)
+            if log:
+                log.exception(f'Command {command.body!r} failed with error:')
