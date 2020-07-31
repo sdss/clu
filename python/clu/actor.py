@@ -178,9 +178,9 @@ class BaseActor(BaseClient):
             # This happens when using --help, although it should be handled
             # in parse_command.
             if command.status.is_done:
-                command.write(text=f'Use help [CMD]')
+                command.write(text='Use help [CMD]')
             else:
-                command.fail(text=f'Use help [CMD]')
+                command.fail(text='Use help [CMD]')
 
         except click.exceptions.Abort:
 
@@ -351,7 +351,7 @@ class AMQPActor(AMQPClient, BaseActor):
                    'sender': self.name}
 
         if broadcast:
-            routing_key = f'reply.broadcast'
+            routing_key = 'reply.broadcast'
         else:
             routing_key = f'reply.{command.commander_id}'
 
@@ -366,12 +366,13 @@ class AMQPActor(AMQPClient, BaseActor):
 
 
 class JSONActor(BaseActor):
-    """An actor class that replies using JSON.
+    """A TCP actor that replies using JSON.
 
-    This implementation of `.BaseActor` replies to the user by sending
-    a JSON-valid string. This makes it useful as a "device" actor that
-    is not connected to the central message parsing system but that we
-    still want to accept commands and send easily parseable replies.
+    This implementation of `.BaseActor` uses TCP as command/reply channel and
+    replies to the user by sending a JSON-valid string. This makes it useful
+    as a "device" actor that is not connected to the central message parsing
+    system but that we still want to accept commands and reply with easily
+    parseable messages.
 
     Commands received by this actor must be in the format
     ``[<uid>] <command string>``, where ``<uid>`` is any integer unique
@@ -379,10 +380,14 @@ class JSONActor(BaseActor):
 
     Parameters
     ----------
+    name : str
+        The actor name.
     host : str
         The host where the TCP server will run.
     port : int
         The port of the TCP server.
+    args,kwargs
+        Arguments to be passed to `.BaseActor`.
 
     """
 
@@ -404,7 +409,7 @@ class JSONActor(BaseActor):
         self.timer_commands = TimerCommandList(self)
 
     async def start(self):
-        """Starts the server and the Tron client connection."""
+        """Starts the TCP server."""
 
         await self.server.start_server()
         self.log.info(f'running TCP server on {self.host}:{self.port}')

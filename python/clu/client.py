@@ -281,7 +281,7 @@ class AMQPClient(BaseClient):
         # Binds the replies queue.
         self.replies_queue = await self.connection.add_queue(
             f'{self.name}_replies', callback=self.handle_reply,
-            bindings=[f'reply.#'])
+            bindings=['reply.#'])
 
         self.log.info(f'replies queue {self.replies_queue.name!r} '
                       f'bound to {self.connection.connection.url!s}')
