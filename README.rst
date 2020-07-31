@@ -70,9 +70,9 @@ Say whatever you want about it, the `current SDSS message passing protocol <http
 - CLU uses `click <https://click.palletsprojects.com/en/7.x>`__ for parsing commands, providing a well-defined, easy to use parser.
 
 
-.. |Build Status| image:: https://travis-ci.org/sdss/clu.svg?branch=master
+.. |Build Status| image:: https://img.shields.io/github/workflow/status/sdss/drift/Test
     :alt: Build Status
-    :target: https://travis-ci.org/sdss/clu
+    :target: https://github.com/sdss/clu/actions
 
 .. |Coverage Status| image:: https://codecov.io/gh/sdss/clu/branch/master/graph/badge.svg
     :alt: Coverage Status

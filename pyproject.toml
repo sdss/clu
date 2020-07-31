@@ -21,7 +21,7 @@ packages = [
     { include = "clu", from = "python" }
 ]
 include = ["README.md"]
-exclude = ["python/clu/tests/*"]
+exclude = []
 
 [tool.poetry.dependencies]
 python = "^3.7"
@@ -63,6 +63,9 @@ balanced_wrapping = true
 include_trailing_comma = false
 lines_after_imports = 2
 
+[tool.pytest.ini_options]
+addopts = "--cov clu --cov-report xml --cov-report html --cov-report term -W ignore"
+
 [tool.coverage.run]
 branch = true
 include = ["python/clu/*"]
@@ -76,5 +79,5 @@ exclude_lines = [
 ]
 
 [build-system]
-requires = ["poetry>=1.0.0"]
-build-backend = "poetry.masonry.api"
+requires = ["poetry-core>=1.0.0a9"]
+build-backend = "poetry.core.masonry.api"
