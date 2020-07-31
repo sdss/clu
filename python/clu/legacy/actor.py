@@ -19,18 +19,18 @@ from ..tools import log_reply
 from .tron import TronConnection
 
 
-__all__ = ['LegacyActor']
+__all__ = ['LegacyActor', 'BaseLegacyActor']
 
 
-class LegacyActor(BaseActor, ClickParser):
+class BaseLegacyActor(BaseActor):
     """An actor that provides compatibility with the SDSS opscore protocol.
 
-    The TCP servers need to be started by awaiting the coroutine `.run`.
-    Note that `.run` does not block so you will need to use asyncio's
-    ``run_forever`` or a similar system ::
+    The TCP servers need to be started by awaiting the coroutine `.start`.
+    Note that `.start` does not block so you will need to use asyncio's
+    `.run_forever` or a similar system ::
 
         >>> loop = asyncio.get_event_loop()
-        >>> my_actor = await LegacyActor('my_actor', '127.0.0.1', 9999, loop=loop).run()
+        >>> my_actor = await LegacyActor('my_actor', '127.0.0.1', 9999, loop=loop).start()
         >>> loop.run_forever()
 
     Parameters
@@ -337,3 +337,7 @@ class LegacyActor(BaseActor, ClickParser):
                 transport.write(msg)
 
             log_reply(self.log, message_code, full_msg_str)
+
+
+class LegacyActor(ClickParser, BaseLegacyActor):
+    """A legacy actor that uses the `.ClickParser`."""

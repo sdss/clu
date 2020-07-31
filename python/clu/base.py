@@ -217,7 +217,7 @@ class BaseActor(BaseClient):
 
         pass
 
-    @abc.abstractclassmethod
+    @abc.abstractmethod
     def parse_command(self, command):
         """Parses and executes a `.Command`. Must be overridden."""
 

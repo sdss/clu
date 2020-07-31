@@ -16,7 +16,8 @@ from click.decorators import group, pass_obj
 from . import actor
 
 
-__all__ = ['CluCommand', 'CluGroup', 'command_parser', 'ClickParser']
+__all__ = ['CluCommand', 'CluGroup', 'command_parser',
+           'ClickParser', 'timeout']
 
 
 class CluCommand(click.Command):
@@ -95,10 +96,10 @@ class CluCommand(click.Command):
 
 
 class CluGroup(click.Group):
-    """Override `click.Group` to make all child commands instances of `.ClickCommand`."""
+    """Override `click.Group` to make all child commands instances of `.CluCommand`."""
 
     def command(self, *args, **kwargs):
-        """Override `click.Group` to use `Command` as class by default."""
+        """Override `click.Group` to use `.CluCommand` as class by default."""
 
         if 'cls' in kwargs:
             pass
@@ -286,7 +287,7 @@ class ClickParser:
         # the default handling of exceptions in Click. This will force
         # exceptions to be raised instead of redirected to the stdout.
         # See http://click.palletsprojects.com/en/7.x/exceptions/
-        ctx = self.command_parser.make_context(
+        ctx = self.parser.make_context(
             f'{self.name}-command-parser', command_args,
             obj={'parser_args': parser_args,
                  'log': self.log,
@@ -302,7 +303,7 @@ class ClickParser:
 
         with ctx:
             try:
-                self.command_parser.invoke(ctx)
+                self.parser.invoke(ctx)
             except Exception as exc:
                 self._handle_command_exception(command, exc)
 

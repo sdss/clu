@@ -31,7 +31,7 @@ except ImportError:
 __all__ = ['AMQPActor', 'JSONActor', 'TimerCommand', 'TimerCommandList']
 
 
-class AMQPActor(AMQPClient, BaseActor, ClickParser):
+class AMQPActor(AMQPClient, ClickParser, BaseActor):
     """An actor class that uses AMQP message brokering.
 
     This class differs from `~clu.legacy.actor.LegacyActor` in that it uses
@@ -183,7 +183,7 @@ class AMQPActor(AMQPClient, BaseActor, ClickParser):
         log_reply(self.log, message_code, message_json)
 
 
-class JSONActor(BaseActor, ClickParser):
+class JSONActor(ClickParser, BaseActor):
     """A TCP actor that replies using JSON.
 
     This implementation of `.BaseActor` uses TCP as command/reply channel and

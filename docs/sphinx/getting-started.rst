@@ -28,11 +28,11 @@ A new actor can be created by simply instantiating the `.AMQPActor` class ::
     from clu import AMQPActor
     my_actor = AMQPActor('my_actor', 'guest', 'localhost', version='0.1.0')
 
-This will create the instance but will not start the actor yet. For that you need to ``await`` the coroutine `~.AMQPActor.run` ::
+This will create the instance but will not start the actor yet. For that you need to ``await`` the coroutine `~.AMQPActor.start` ::
 
-    await my_actor.run()
+    await my_actor.start()
 
-which will create the connection to RabbitMQ, set up the exchanges and queues, and get the actor ready to receive commands. Note that awaiting `~.AMQPActor.run` does not block the event loop so you will need to run the loop forever. A simple implementation is ::
+which will create the connection to RabbitMQ, set up the exchanges and queues, and get the actor ready to receive commands. Note that awaiting `~.AMQPActor.start` does not block the event loop so you will need to run the loop forever. A simple implementation is ::
 
     import asyncio
     from clu import AMQPActor
@@ -40,7 +40,7 @@ which will create the connection to RabbitMQ, set up the exchanges and queues, a
     def main(loop):
         # run() returns the actor so we can declare and run the actor more compactly.
         my_actor = await AMQPActor('my_actor', 'guest', 'localhost',
-                                   version='0.1.0', loop=loop).run()
+                                   version='0.1.0', loop=loop).start()
 
     loop = asyncio.get_event_loop()
     loop.create_task(main(loop))
@@ -54,11 +54,11 @@ In these examples we have used the new-style `.AMQPActor` class, but it's trivia
 Configuration files
 ~~~~~~~~~~~~~~~~~~~
 
-In general the parameters to start a new actor are stored in a configuration file. We can instantiate a new actor from it with the `~.AMQPActor.from_config` classmethod ::
+In general the parameters to start a new actor are stored in a configuration file. We can instantiate a new actor from it with the `~.BaseClient.from_config` classmethod ::
 
     actor = Actor.from_config('~/config_files/actor.yaml')
 
-The parameter passed to `~.AMQPActor.from_config` must be a YAML file with the configuration. If the configuration file has a section called ``actor``, that subsection will be used. Alternatively, a dictionary with the configuration already parsed can be passed to `~.AMQPActor.from_config`. The parameter names in the configuration files must be the same as those of the arguments and keyword arguments used to instantiate `.AMQPActor`. The following is an example of a valid configuration file
+The parameter passed to `~.BaseClient.from_config` must be a YAML file with the configuration. If the configuration file has a section called ``actor``, that subsection will be used. Alternatively, a dictionary with the configuration already parsed can be passed to `~.BaseClient.from_config`. The parameter names in the configuration files must be the same as those of the arguments and keyword arguments used to instantiate `.AMQPActor`. The following is an example of a valid configuration file
 
     .. code-block:: yaml
 
@@ -84,7 +84,7 @@ The behaviour for `.LegacyActor` is the same but note that the parameters for tr
                 models: ['tcc']
             log_dir: '/data/logs/actors/jaeger'
 
-Overriding `~.AMQPActor.from_config` when subclassing the actor can be a bit tricky if you have added new parameters. Here is an example of how to correctly do so ::
+Overriding `~.BaseClient.from_config` when subclassing the actor can be a bit tricky if you have added new parameters. Here is an example of how to correctly do so ::
 
     class JaegerActor(clu.LegacyActor):
 
@@ -265,7 +265,7 @@ The name of the file must be ``<actor>.json`` with ``<actor>`` being the name of
 
     my_actor = await AMQPActor('my_actor', 'guest', 'localhost',
                                model_path='~/my_models/', model_names=['sop', 'guider'],
-                               version='0.1.0', loop=loop).run()
+                               version='0.1.0', loop=loop).start()
 
 This will load and keep track of the models for the ``sop`` and ``guider`` actors. The model for the own actor, ``my_actor``, is always loaded if available. If one or more of the model schemas cannot be found, a warning will be issued.
 
@@ -327,7 +327,7 @@ Devices are usually instantiated and started with the actor by subclassing `.AMQ
         async def run():
 
             await self.device.start()
-            await super().run()
+            await super().start()
 
         async def process_device(self, line):
 
