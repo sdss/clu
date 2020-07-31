@@ -175,7 +175,7 @@ class BaseClient(metaclass=abc.ABCMeta):
 
             log.start_file_logger(log_dir / f'{self.name}.log')
 
-            log.fh.setLevel(file_level)
+            log.fh.formatter.converter = time.gmtime
 
         log.sh.setLevel(logging.INFO)
         if verbose:
