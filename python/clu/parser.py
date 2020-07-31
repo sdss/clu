@@ -244,6 +244,10 @@ def help_(ctx, *args, parser_command):
 class ClickParser:
     """A command parser that uses Click at its base."""
 
+    #: list: Arguments to be passed to each command in the parser.
+    #: Note that the command is always passed first.
+    parser_args = []
+
     parser = command_parser
 
     def parse_command(self, command):
