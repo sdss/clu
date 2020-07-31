@@ -11,9 +11,9 @@ import asyncio
 import inspect
 import pathlib
 
-from sdsstools import read_yaml_file
+from sdsstools import get_logger, read_yaml_file
 
-from .misc.logger import REPLY, get_logger
+from .tools import REPLY
 
 
 __all__ = ['BaseClient', 'BaseActor']

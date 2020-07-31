@@ -13,13 +13,16 @@ import enum
 import functools
 import json
 import logging
+import re
 
-from .misc.logger import REPLY
+
+REPLY = 5  # REPLY logging level
+WARNING_REGEX = r'^.*?\s*?(\w*?Warning): (.*)'
 
 
 __ALL__ = ['CommandStatus', 'StatusMixIn', 'format_value', 'CallbackScheduler',
            'CaseInsensitiveDict', 'cli_coro', 'value', 'as_complete_failer',
-           'log_reply']
+           'log_reply', 'ActorHandler']
 
 
 class Maskbit(enum.Flag):
@@ -437,3 +440,88 @@ def log_reply(log, message_code, message, use_message_code=False):
             log_level = logging.DEBUG
 
         log.log(log_level, message)
+
+
+class ActorHandler(logging.Handler):
+    """A handler that outputs log messages as actor keywords.
+
+    Parameters
+    ----------
+    actor
+        The actor instance.
+    level : int
+        The level above which records will be output in the actor.
+    keyword : str
+        The keyword around which the messages will be output.
+    code_mapping : dict
+        A mapping of logging levels to actor codes. The values provided
+        override the default mapping. For example, to make input log messages
+        with info level be output as debug,
+        ``code_mapping={logging.INFO: 'd'}``.
+    filter_warnings : list
+        A list of warning classes that will be issued to the actor. Subclasses
+        of the filter warning are accepted, any other warnings will be ignored.
+
+    """
+
+    def __init__(self, actor, level=logging.ERROR, keyword='text',
+                 code_mapping=None, filter_warnings=None):
+
+        self.actor = actor
+        self.keyword = keyword
+
+        self.code_mapping = {logging.DEBUG: 'd',
+                             logging.INFO: 'i',
+                             logging.WARNING: 'w',
+                             logging.ERROR: 'f'}
+
+        if code_mapping:
+            self.code_mapping.update(code_mapping)
+
+        self.filter_warnings = filter_warnings
+
+        super().__init__(level=level)
+
+    def emit(self, record):
+        """Emits the record."""
+
+        message = record.getMessage()
+        message_lines = message.splitlines()
+
+        if record.exc_info:
+            message_lines.append(f'{record.exc_info[0].__name__}: {record.exc_info[1]}')
+
+        if record.levelno <= logging.DEBUG:
+            code = self.code_mapping[logging.DEBUG]
+        elif record.levelno <= logging.INFO:
+            code = self.code_mapping[logging.INFO]
+        elif record.levelno <= logging.WARNING:
+            code = self.code_mapping[logging.WARNING]
+            warning_category_groups = re.match(WARNING_REGEX, message)
+            if warning_category_groups is not None:
+                message_lines = self._filter_warning(warning_category_groups)
+        elif record.levelno >= logging.ERROR:
+            code = self.code_mapping[logging.ERROR]
+        else:
+            code = 'w'
+
+        for line in message_lines:
+            result = self.actor.write(code, message={self.keyword: line})
+
+            if asyncio.iscoroutine(result):
+                asyncio.create_task(result)
+
+    def _filter_warning(self, warning_category_groups):
+
+        warning_category, warning_text = warning_category_groups.groups()
+        message_lines = [f'{warning_text} ({warning_category})']
+
+        try:
+            warning_class = eval(warning_category)
+            if self.filter_warnings:
+                for warning_filter in self.filter_warnings:
+                    if isinstance(warning_class, warning_filter):
+                        return message_lines
+            return []
+        except NameError:
+            return message_lines
