@@ -20,8 +20,8 @@ from .device import *
 from .exceptions import *
 from .legacy import LegacyActor
 from .parser import ClickParser, command_parser
-from .tools import (REPLY, CommandStatus, as_complete_failer,
-                    escape, format_value)
+from .tools import (REPLY, ActorHandler, CommandStatus,
+                    as_complete_failer, escape, format_value)
 
 
 # Add REPLY level to logging

@@ -84,6 +84,7 @@ Tools
 -----
 
 .. autofunction:: clu.escape
+.. autoclass:: clu.tools.ActorHandler
 
 
 .. _api-testing:
