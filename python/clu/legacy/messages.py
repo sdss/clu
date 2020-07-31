@@ -481,7 +481,7 @@ class CommandHeader(Canonized):
         return '%s %d %s' % (self.cmdrName, self.mid, self.actor)
 
     def tokenized(self):
-        return 'prog.user 123 actor %s' % code
+        return 'prog.user 123 actor %s' % self.actor
 
     def clone(self):
         return CommandHeader(self.cmdrName, self.mid, self.actor)

@@ -7,6 +7,9 @@
 # for that method is then used to create the other methods.   See the comments in
 # yacc.py for further details.
 
+# flake8:noqa
+# isort:skip_file
+
 import os.path
 import shutil
 

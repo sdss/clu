@@ -33,15 +33,19 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # -----------------------------------------------------------------------------
 
+# flake8:noqa
+# isort:skip_file
+
 __version__    = '3.11'
 __tabversion__ = '3.10'
 
+import copy
+import inspect
+import os
 import re
 import sys
 import types
-import copy
-import os
-import inspect
+
 
 # This tuple contains known string types
 try:

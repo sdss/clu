@@ -62,6 +62,10 @@ multi_line_output = 0
 balanced_wrapping = true
 include_trailing_comma = false
 lines_after_imports = 2
+skip_glob = [
+    "setup.py",
+    "*/__init__.py"
+]
 
 [tool.pytest.ini_options]
 addopts = "--cov clu --cov-report xml --cov-report html --cov-report term -W ignore"
