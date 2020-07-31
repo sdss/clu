@@ -1,0 +1,23 @@
+coverage:
+    status:
+        project:
+            default:
+                # basic
+                target: auto
+                threshold: 1%
+                base: auto
+                if_not_found: success
+                if_ci_failed: error
+                informational: false
+                only_pulls: true
+        patch:
+            default:
+                # basic
+                target: auto
+                threshold: 1%
+                base: auto
+                # advanced
+                if_no_uploads: error
+                if_not_found: success
+                if_ci_failed: error
+                only_pulls: true
