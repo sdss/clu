@@ -9,7 +9,9 @@
 import abc
 import asyncio
 import inspect
+import logging
 import pathlib
+import time
 
 from sdsstools import get_logger, read_yaml_file
 
@@ -40,9 +42,7 @@ class BaseClient(metaclass=abc.ABCMeta):
     loop
         The event loop. If `None`, the current event loop will be used.
     log_dir : str
-        The directory where to store the logs. Defaults to
-        ``/data/logs/actors/<name>`` where ``<name>`` is the name of the actor.
-        If ``log_dir=False``, only console and reply logging will be enabled.
+        The directory where to store the file logs.
     log : ~logging.Logger
         A `~logging.Logger` instance to be used for logging instead of creating
         a new one.
@@ -163,12 +163,9 @@ class BaseClient(metaclass=abc.ABCMeta):
         if not log:
             log = get_logger('actor:' + self.name)
 
-        if log_dir is not False:
+        if log_dir:
 
-            if log_dir is None:
-                log_dir = pathlib.Path(f'/data/logs/actors/{self.name}/').expanduser()
-            else:
-                log_dir = pathlib.Path(log_dir).expanduser()
+            log_dir = pathlib.Path(log_dir).expanduser()
 
             if not log_dir.exists():
                 log_dir.mkdir(parents=True)
@@ -176,6 +173,7 @@ class BaseClient(metaclass=abc.ABCMeta):
             log.start_file_logger(log_dir / f'{self.name}.log')
 
             log.fh.formatter.converter = time.gmtime
+            log.fh.setLevel(REPLY)
 
         log.sh.setLevel(logging.INFO)
         if verbose:
