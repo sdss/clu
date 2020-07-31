@@ -9,10 +9,11 @@
 import json
 import uuid
 
-from .base import BaseClient, CommandStatus
+from .base import BaseClient
 from .command import Command
 from .model import Reply
 from .protocol import TopicListener
+from .tools import CommandStatus
 
 
 try:

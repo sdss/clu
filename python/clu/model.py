@@ -11,7 +11,7 @@ import pathlib
 
 import jsonschema
 
-from .base import CallbackScheduler, CaseInsensitiveDict
+from .tools import CallbackScheduler, CaseInsensitiveDict
 
 
 __all__ = ['Reply', 'Property', 'BaseModel', 'Model', 'ModelSet']
