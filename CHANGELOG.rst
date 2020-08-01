@@ -4,6 +4,8 @@
 Changelog
 =========
 
+* :bug:`-` Log `StreamHandler` to `stderr` when the record level is `ERROR` or greater.
+
 * :release:`0.3.0 <2020-07-31>`
 * :support:`-` *Breaking changes.* Improve modularity. Some files have been renamed. `.BaseActor` is now parser-agnostic and the Click-parsing functionality has been moved to `.ClickParser`. Similarly, `.BaseLegacyActor` does not include a parser, with the Click parser implemented in `.LegacyActor`. The logging system has been streamlined.
 
