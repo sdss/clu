@@ -4,6 +4,7 @@
 Changelog
 =========
 
+* :release:`0.3.1 <2020-08-01>`
 * :bug:`-` Log `StreamHandler` to `stderr` when the record level is `ERROR` or greater.
 
 * :release:`0.3.0 <2020-07-31>`
