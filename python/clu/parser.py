@@ -8,6 +8,7 @@
 
 import asyncio
 import functools
+import inspect
 import re
 
 import click
@@ -18,6 +19,19 @@ from . import actor
 
 __all__ = ['CluCommand', 'CluGroup', 'command_parser',
            'ClickParser', 'timeout']
+
+
+def coroutine(fn):
+    """Create a coroutine. Avoids deprecation of asyncio.coroutine in 3.10."""
+
+    if inspect.iscoroutinefunction(fn):
+        return fn
+
+    @functools.wraps(fn)
+    async def _wrapper(*args, **kwargs):
+        return fn(*args, **kwargs)
+
+    return _wrapper
 
 
 class CluCommand(click.Command):
@@ -70,7 +84,7 @@ class CluCommand(click.Command):
 
                 # Makes sure the callback is a coroutine
                 if not asyncio.iscoroutinefunction(self.callback):
-                    self.callback = asyncio.coroutine(self.callback)
+                    self.callback = coroutine(self.callback)
 
                 # Check to see if there is a timeout value in the callback.
                 # If so, schedules a task to be cancelled after timeout.
