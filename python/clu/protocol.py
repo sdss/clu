@@ -228,7 +228,7 @@ class TCPStreamServer(object):
 
         return self._server
 
-    async def stop(self):
+    def stop(self):
         """Stops the server."""
 
         self._server.close()
