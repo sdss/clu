@@ -172,7 +172,9 @@ class BaseLegacyActor(BaseActor):
                               command_id=command_id, consumer_id=self.name,
                               actor=self, loop=self.loop, transport=transport)
         except clu.CommandError as ee:
-            self.write('f', {'text': f'Could not parse the following as a command: {ee!r}'})
+            self.write('f',
+                       {'text': f'Could not parse the command string: {ee!r}'},
+                       user_id=commander_id)
             return
 
         return self.parse_command(command)
@@ -309,7 +311,7 @@ class BaseLegacyActor(BaseActor):
         # For a reply, the commander ID is the user assigned to the transport
         # that issues this command.
         transport = command.transport if command else None
-        user_id = transport.user_id if transport else 0
+        user_id = (transport.user_id if transport else None) or user_id
 
         if broadcast:
             user_id = 0
