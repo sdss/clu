@@ -11,6 +11,7 @@ import asyncio
 import pytest
 
 from clu.command import CommandStatus
+from clu.exceptions import CluWarning
 from clu.legacy import LegacyActor
 
 
@@ -39,7 +40,8 @@ async def test_actor_no_tron(unused_tcp_port_factory):
                         unused_tcp_port_factory(),
                         version='0.1.0')
 
-    await actor.start()
+    with pytest.warns(CluWarning):
+        await actor.start()
 
     assert actor.tron is None
 

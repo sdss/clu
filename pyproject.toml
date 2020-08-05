@@ -69,12 +69,12 @@ skip_glob = [
 ]
 
 [tool.pytest.ini_options]
-addopts = "--cov clu --cov-report xml --cov-report html --cov-report term -W ignore"
+addopts = "--cov clu --cov-report xml --cov-report html --cov-report term"
 
 [tool.coverage.run]
 branch = true
 include = [
-    "python/clu/*"
+    "*/clu/*"
 ]
 omit = [
     "*/misc/*.py",
