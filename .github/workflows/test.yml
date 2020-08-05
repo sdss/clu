@@ -49,7 +49,7 @@ jobs:
 
     - name: Setup actorkeys
       run: |
-        git clone --depth=1 --branch apo https://github.com/sdss/actorkeys.git ../
+        git clone --depth=1 --branch apo https://github.com/sdss/actorkeys.git ../actorkeys
         export PYTHONPATH=$PWD/../actorkeys/python/:$PYTHONPATH
 
     - name: Lint with flake8
