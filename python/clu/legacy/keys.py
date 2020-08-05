@@ -427,7 +427,6 @@ class KeysDictionary(object):
         if not forceReload and dictname in KeysDictionary.registry:
             return KeysDictionary.registry[dictname]
         # try to find a corresponding file on the import search path
-        dictfile = None
         try:
             # get the path corresponding to the actorkeys package
             import actorkeys  # noqa
@@ -436,8 +435,9 @@ class KeysDictionary(object):
             raise KeysDictionaryError('no actorkeys package found')
         try:
             # open the file corresponding to the requested keys dictionary
-            (dictfile, name, description) = importlib.util.find_spec(dictname, keyspath)
-            # create a global symbol table for evaluating the keys dictionary expression
+            modulespec = importlib.util.find_spec('actorkeys.' + dictname, keyspath)
+            # create a global symbol table for evaluating the keys
+            # dictionary expression
             symbols = {
                 '__builtins__': __builtins__,
                 'Key': Key,
@@ -445,26 +445,27 @@ class KeysDictionary(object):
                 'ByName': protoTypes.ByName,
             }
             for (name, value) in protoTypes.__dict__.items():
-                if isinstance(value, type) and issubclass(
-                        value, (protoTypes.ValueType, protoTypes.CompoundValueType)):
+                if isinstance(value, type) and issubclass(value, (protoTypes.ValueType,
+                                                                  protoTypes.CompoundValueType)):
                     symbols[name] = value
             # evaluate the keys dictionary as a python expression
-            filedata = dictfile.read()
+            filedata = open(modulespec.origin).read()
             kdict = eval(filedata, symbols)
             # check that the dictionary filename and name match
             if not dictname == kdict.name:
-                raise KeysDictionaryError(
-                    'dictionary filename and name are different: %s, %s' % (dictname, kdict.name))
-            # do a checksum so that we can detect changes independently of versioning
+                raise KeysDictionaryError('dictionary filename and name '
+                                          'are different: %s, %s' %
+                                          (modulespec.name, kdict.name))
+            # do a checksum so that we can detect changes
+            # independently of versioning
             kdict.checksum = hashlib.md5(filedata.encode()).hexdigest()
             return kdict
         except ImportError as e:
-            raise KeysDictionaryError('no keys dictionary found for %s: %s' % (dictname, str(e)))
+            raise KeysDictionaryError('no keys dictionary found '
+                                      'for %s: %s' % (dictname, str(e)))
         except Exception as e:
             indent = '\n >> '
             description = indent + indent.join(str(e).split('\n'))
-            raise KeysDictionaryError(
-                'badly formatted keys dictionary in %s:%s' % (dictfile.name, description))
-        finally:
-            if dictfile:
-                dictfile.close()
+            raise KeysDictionaryError('badly formatted keys '
+                                      'dictionary in %s:%s' % (dictname,
+                                                               description))
