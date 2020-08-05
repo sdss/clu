@@ -51,6 +51,7 @@ jobs:
       run: |
         git clone --depth=1 --branch apo https://github.com/sdss/actorkeys.git ../actorkeys
         export PYTHONPATH=$PWD/../actorkeys/python/:$PYTHONPATH
+        echo $PYTHONPATH
 
     - name: Lint with flake8
       run: |
