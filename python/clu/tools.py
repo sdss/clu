@@ -203,7 +203,7 @@ class StatusMixIn(object):
             else:
                 loop = asyncio.get_event_loop()
 
-        self.watcher = asyncio.Event(loop=loop)
+        self.watcher = asyncio.Event()
 
         while self.status != value:
             await self.watcher.wait()
