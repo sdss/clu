@@ -127,7 +127,7 @@ class TronConnection(object):
 
         self._parser = None
 
-        self.connection = None
+        self._client = None
 
     async def start(self, get_keys=True):
         """Starts the connection to Tron.
@@ -139,12 +139,20 @@ class TronConnection(object):
 
         """
 
-        self.connection = await TCPStreamClient(self.host, self.port)
+        self._client = await open_connection(self.host, self.port)
 
         self._parser = asyncio.create_task(self._parse_tron())
 
         if get_keys:
             asyncio.create_task(self.get_keys())
+
+        return self
+
+    def stop(self):
+        """Closes the connection."""
+
+        self._client.close()
+        self._parser.cancel()
 
     def send_command(self, target, command_string, mid=None):
         """Sends a command through the hub.
@@ -209,8 +217,7 @@ class TronConnection(object):
 
         while True:
 
-            line = await self.connection.reader.readline()
-
+            line = await self._client.reader.readline()
             try:
                 line = line.decode()  # Do not strip here or that will cause parsing problems.
                 reply = rparser.parse(line)

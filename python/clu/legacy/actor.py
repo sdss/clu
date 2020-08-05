@@ -76,17 +76,17 @@ class BaseLegacyActor(BaseActor):
         self.host = host
         self.port = port
 
-        #: TCPStreamServer: The server to talk to this actor.
-        self.server = TCPStreamServer(host, port, loop=self.loop,
-                                      connection_callback=self.new_user,
-                                      data_received_callback=self.new_command)
+        # TCPStreamServer: The server to talk to this actor.
+        self._server = TCPStreamServer(host, port, loop=self.loop,
+                                       connection_callback=self.new_user,
+                                       data_received_callback=self.new_command)
 
         if tron_host and tron_port:
             #: TronConnection: The client connection to Tron.
-            self.tron = TronConnection(self.name, tron_host, tron_port,
+            self.tron = TronConnection(tron_host, tron_port, self,
                                        model_names=model_names, log=self.log)
         else:
-            self.tron = False
+            self.tron = None
 
         if self.tron:
             #: dict: Actor models.
@@ -101,7 +101,7 @@ class BaseLegacyActor(BaseActor):
     async def start(self):
         """Starts the server and the Tron client connection."""
 
-        await self.server.start_server()
+        await self._server.start()
         self.log.info(f'running TCP server on {self.host}:{self.port}')
 
         # Start tron connection
@@ -121,10 +121,21 @@ class BaseLegacyActor(BaseActor):
 
         return self
 
+    async def stop(self):
+        """Stops the client connection and running tasks."""
+
+        if self._server.is_serving():
+            self._server.stop()
+
+        await self.timer_commands.stop()
+
+        if self.tron:
+            self.tron.stop()
+
     async def run_forever(self):
         """Runs the actor forever, keeping the loop alive."""
 
-        await self.server.serve_forever()
+        await self._server.serve_forever()
 
     def new_user(self, transport):
         """Assigns userID to new client connection."""
@@ -257,7 +268,7 @@ class BaseLegacyActor(BaseActor):
 
         """
 
-        if self.tron.connection:
+        if self.tron:
             self.tron.send_command(target, command_string, mid=command_id)
         else:
             raise clu.CluError('cannot connect to tron.')
