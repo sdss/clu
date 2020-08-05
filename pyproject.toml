@@ -48,6 +48,7 @@ toml = ">=0.10.0"
 asynctest = ">=0.13.0"
 Sphinx = ">=2.3"
 isort = ">=5.2.2"
+pytest-mock = "^3.2.0"
 
 [tool.poetry.extras]
 docs = ["Sphinx"]
@@ -72,14 +73,27 @@ addopts = "--cov clu --cov-report xml --cov-report html --cov-report term -W ign
 
 [tool.coverage.run]
 branch = true
-include = ["python/clu/*"]
+include = [
+    "python/clu/*"
+]
 omit = [
     "*/misc/*.py",
     "*/__init__.py",
+    "python/clu/legacy/ply/*",
+    "python/clu/legacy/keys.py",
+    "python/clu/legacy/html.py",
+    "python/clu/legacy/messages.py",
+    "python/clu/legacy/parser.py",
+    "python/clu/legacy/pvt.py",
+    "python/clu/legacy/types.py",
 ]
 
 [tool.coverage.report]
 exclude_lines = [
+    "def __repr__",
+    "class TCPProtocol",
+    "class PeriodicTCPServer",
+    "class TCPStreamPeriodicServer"
 ]
 
 [build-system]

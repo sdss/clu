@@ -7,6 +7,7 @@ Changelog
 * :support:`-` Consolidated how stream servers and clients work. Renamed ``TCPStreamClient`` to `~.protocols.open_connection` and `TCPStreamClientContainer` to `.TCPStreamClient`. All servers and clients now start and stop with ``start`` and ``stop`` coroutines. The ``_server`` and ``_client`` attributes are now consistently named and not public.
 * :support:`-` Replace ``CallbackScheduler`` with `.CallbackMixIn`.
 * :bug:`-` Fixed parsing of ``KeyDictionary`` from ``actorkeys``.
+* :support:`-` Tests for legacy tools.
 
 * :release:`0.3.3 <2020-08-01>`
 * :bug:`-` In the previous release I set the level to ``ERRO`` instead of ``ERROR`` 😓.
