@@ -10,12 +10,13 @@ import asyncio
 import contextlib
 
 from .protocol import open_connection
+from .tools import CallbackMixIn
 
 
 __all__ = ['Device']
 
 
-class Device(object):
+class Device(CallbackMixIn):
     """A class that handles the TCP connection to a device.
 
     There are two ways to create a new device. You can create a subclass from
@@ -48,11 +49,8 @@ class Device(object):
     port : int
         The port on which the device is serving.
     callback
-        The coroutine to call when a new message is received. The coroutine
-        gets a single argument with all the buffer received from the client
-        until a newline arrives. If no callback is specified,
-        `.process_message` is called. The callback is always awaited and it is
-        the user's responsibility to handle long tasks appropriately. If the
+        The callback to call with each new message received from the client.
+        If no callback is specified, `.process_message` is called. If the
         callback is not a coroutine, it will be converted to one.
 
     """
@@ -66,9 +64,11 @@ class Device(object):
         self._client = None
         self.listener = None
 
-        self.callback = callback or self.process_message
-        if not asyncio.iscoroutinefunction(self.callback):
-            self.callback = asyncio.coroutine(self.callback)
+        callback = callback or self.process_message
+        if not asyncio.iscoroutinefunction(callback):
+            callback = asyncio.coroutine(callback)
+
+        CallbackMixIn.__init__(callbacks=[callback])
 
     async def start(self):
         """Opens the connection and starts the listener."""

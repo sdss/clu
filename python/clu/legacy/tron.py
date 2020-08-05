@@ -9,7 +9,7 @@
 import asyncio
 
 from clu.model import BaseModel, Property
-from clu.protocol import TCPStreamClient
+from clu.protocol import open_connection
 
 from .keys import KeysDictionary
 from .parser import ParseError, ReplyParser
@@ -27,8 +27,14 @@ class TronKey(Property):
 
     """
 
+    def to_json(self):
+        """Returns a JSON-valid ``{key: value}`` dictionary."""
+
+        return {self.key.name: ([v.native for v in self.value]
+                                if self.value else None)}
+
     def __repr__(self):
-        return f'<{self.__class__.__name__!s} ({self.key.name}): {self.value}>'
+        return (f'<TronKey ({self.key.name}): {self.to_json()[self.key.name]}>')
 
 
 class TronModel(BaseModel):
@@ -40,8 +46,9 @@ class TronModel(BaseModel):
         A dictionary of keys that define the datamodel.
     callback
         A function or coroutine to call when the datamodel changes. The
-        function is called with the instance of `TronModel` as the only
-        parameter. If the callback is a coroutine, it is scheduled as a task.
+        function is called with the instance of `.TronModel` and the
+        `.TronKey` that has changed. If the callback is a coroutine,
+        it is scheduled as a task.
     log : ~logging.Logger
         Where to log messages.
 
@@ -49,7 +56,7 @@ class TronModel(BaseModel):
 
     def __init__(self, keydict, callback=None, log=None):
 
-        super().__init__(keydict.name, callback, log=log)
+        super().__init__(keydict.name, callback=callback, log=log)
 
         self.keydict = keydict
 
@@ -79,10 +86,9 @@ class TronModel(BaseModel):
                                      f'{self.name}.{reply_key.name}.')
                 continue
 
-            self[reply_key.name].value = [value.native for value in reply_key.values]
+            self[reply_key.name].value = [value for value in reply_key.values]
 
-            if self.callback:
-                self.scheduler.add_callback(self.callback, self)
+            self.notify(self, self[reply_key.name])
 
 
 class TronConnection(object):
@@ -90,13 +96,14 @@ class TronConnection(object):
 
     Parameters
     ----------
-    actor : str
-        The actor that is connecting to Tron. Used as the commander when
-        sending commands through the hub.
     host : str
         The host on which Tron is running.
     port : int
         The port on which Tron is running.
+    actor : str
+        The actor that is connecting to Tron. Used as the commander when
+        sending commands through the hub. If not specified the placeholder
+        ``client`` will be used.
     model_names : list
         A list of strings with the actors whose models will be tracked.
     log : ~logging.Logger
@@ -104,7 +111,7 @@ class TronConnection(object):
 
     """
 
-    def __init__(self, actor, host, port, model_names=None, log=None):
+    def __init__(self, host, port=6093, actor=None, model_names=None, log=None):
 
         self.actor = actor
 
@@ -126,6 +133,7 @@ class TronConnection(object):
                        for actor in model_names}
 
         self._parser = None
+        self.rparser = ReplyParser()
 
         self._client = None
 
@@ -180,9 +188,12 @@ class TronConnection(object):
         # where commander needs to start with a letter and have a program and
         # a user joined by a dot. Otherwise the command will be accepted but
         # the reply will fail to parse.
-        command = f'{self.actor}.{self.actor} {mid} {target} {command_string}\n'
 
-        self.connection.writer.write(command.encode())
+        commander = self.actor.name if self.actor else 'client'
+
+        command = (f'{commander}.{commander} {mid} {target} {command_string}\n')
+
+        self._client.writer.write(command.encode())
 
         self._mid += 1
 
@@ -213,17 +224,15 @@ class TronConnection(object):
     async def _parse_tron(self):
         """Tracks new replies from Tron and updates the model."""
 
-        rparser = ReplyParser()
-
         while True:
 
             line = await self._client.reader.readline()
             try:
                 line = line.decode()  # Do not strip here or that will cause parsing problems.
-                reply = rparser.parse(line)
+                reply = self.rparser.parse(line)
             except ParseError:
                 if self.log:
-                    self.log.debug(f'failed parsing reply {line}.')
+                    self.log.debug(f'failed parsing reply {line.strip()}.')
                 continue
 
             actor = reply.header.actor

@@ -11,7 +11,7 @@ import pathlib
 
 import jsonschema
 
-from .tools import CallbackScheduler, CaseInsensitiveDict
+from .tools import CallbackMixIn, CaseInsensitiveDict
 
 
 __all__ = ['Reply', 'Property', 'BaseModel', 'Model', 'ModelSet']
@@ -87,7 +87,7 @@ class Reply(object):
         self.body = json.loads(self.message.body.decode())
 
 
-class Property(object):
+class Property(CallbackMixIn):
     """A model property with callbacks.
 
     Parameters
@@ -98,9 +98,9 @@ class Property(object):
         The parent model.
     callback
         The function or coroutine that will be called if the value of the key
-        if modified. The callback is called with the instance of `BaseProperty`
+        if updated. The callback is called with the instance of `Property`
         as the only argument. Note that the callback will be scheduled even
-        if the new value is the same as the previous one.
+        if the value does not change.
 
     """
 
@@ -111,8 +111,7 @@ class Property(object):
 
         self.model = model
 
-        self.scheduler = CallbackScheduler()
-        self.callback = callback
+        CallbackMixIn.__init__(self, [callback] if callback else [])
 
     def __repr__(self):
         return f'<{self.__class__.__name__!s} ({self.key}): {self.value}>'
@@ -131,12 +130,15 @@ class Property(object):
         """Sets the value of the key and schedules the callback."""
 
         self._value = new_value
+        self.notify(self)
 
-        if self.callback:
-            self.scheduler.add_callback(self.callback, self)
+    def to_json(self):
+        """Returns a JSON-valid ``{key: value}`` dictionary."""
+
+        return {self.key: self.value}
 
 
-class BaseModel(CaseInsensitiveDict):
+class BaseModel(CaseInsensitiveDict, CallbackMixIn):
     """A JSON-compliant model.
 
     Parameters
@@ -145,8 +147,8 @@ class BaseModel(CaseInsensitiveDict):
         The name of the model.
     callback
         A function or coroutine to call when the datamodel changes. The
-        function is called with the instance of `BaseModel` as the only
-        parameter. If the callback is a coroutine, it is scheduled as a task.
+        function is called with the instance of `BaseModel` and the key that
+        changed.
     log : ~logging.Logger
         Where to log messages.
 
@@ -157,11 +159,11 @@ class BaseModel(CaseInsensitiveDict):
         self.name = name
 
         self.callback = callback
-        self.scheduler = CallbackScheduler()
 
         self.log = log
 
         CaseInsensitiveDict.__init__(self, {})
+        CallbackMixIn.__init__(self, [callback] if callback else [])
 
     def __repr__(self):
         return f'<Model ({self.name})>'
@@ -177,7 +179,7 @@ class BaseModel(CaseInsensitiveDict):
 
         """
 
-        return {key: self[key].value for key in self}
+        return {key: self[key].to_json() for key in self}
 
     def jsonify(self):
         """Returns a JSON string with the model."""
