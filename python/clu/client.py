@@ -28,8 +28,8 @@ __all__ = ['AMQPClient']
 class AMQPClient(BaseClient):
     """Defines a new client based on the AMQP standard.
 
-    To start a new client first instantiate the class and then run `.run` as
-    a coroutine. Note that `.run` does not block so you will need to use
+    To start a new client first instantiate the class and then run `.start` as
+    a coroutine. Note that `.start` does not block so you will need to use
     asyncio's ``run_forever`` or a similar system ::
 
         >>> loop = asyncio.get_event_loop()

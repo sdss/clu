@@ -21,7 +21,7 @@ __all__ = ['CluCommand', 'CluGroup', 'command_parser',
 
 
 class CluCommand(click.Command):
-    """Override `click.Command` to pass the actor and command as arguments."""
+    """Override :py:class:`click.Command` to pass the actor and command."""
 
     def done_callback(self, task, exception_handler=None):
         """Checks if the command task has been successfully done."""
@@ -58,7 +58,7 @@ class CluCommand(click.Command):
         return True
 
     def invoke(self, ctx):
-        """Same as `click.Command.invoke` but passes the actor and command."""
+        """As :py:class:`click.Command.invoke` but passes the actor and command."""
 
         click.core._maybe_show_deprecated_notice(self)
 
@@ -96,10 +96,14 @@ class CluCommand(click.Command):
 
 
 class CluGroup(click.Group):
-    """Override `click.Group` to make all child commands instances of `.CluCommand`."""
+    """Override :py:class:`click.Group`.
+
+    Makes all child commands instances of `.CluCommand`.
+
+    """
 
     def command(self, *args, **kwargs):
-        """Override `click.Group` to use `.CluCommand` as class by default."""
+        """Override :py:class:`click.Group` to use `.CluCommand` by default."""
 
         if 'cls' in kwargs:
             pass

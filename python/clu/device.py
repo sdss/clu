@@ -9,14 +9,14 @@
 import asyncio
 import contextlib
 
-from .protocol import TCPStreamClient
-from .tools import CallbackScheduler
+from .protocol import open_connection
+from .tools import CallbackMixIn
 
 
 __all__ = ['Device']
 
 
-class Device(object):
+class Device(CallbackMixIn):
     """A class that handles the TCP connection to a device.
 
     There are two ways to create a new device. You can create a subclass from
@@ -49,11 +49,8 @@ class Device(object):
     port : int
         The port on which the device is serving.
     callback
-        The coroutine to call when a new message is received. The coroutine
-        gets a single argument with all the buffer received from the client
-        until a newline arrives. If no callback is specified,
-        `.process_message` is called. The callback is always awaited and it is
-        the user's responsibility to handle long tasks appropriately. If the
+        The callback to call with each new message received from the client.
+        If no callback is specified, `.process_message` is called. If the
         callback is not a coroutine, it will be converted to one.
 
     """
@@ -63,14 +60,15 @@ class Device(object):
         self.host = host
         self.port = port
 
-        #: TCPStreamClientContainer: the connection to the device.
-        self.connection = None
+        # TCPStreamClient: the connection to the device.
+        self._client = None
         self.listener = None
-        self.scheduler = CallbackScheduler()
 
-        self.callback = callback or self.process_message
-        if not asyncio.iscoroutinefunction(self.callback):
-            self.callback = asyncio.coroutine(self.callback)
+        callback = callback or self.process_message
+        if not asyncio.iscoroutinefunction(callback):
+            callback = asyncio.coroutine(callback)
+
+        CallbackMixIn.__init__(callbacks=[callback])
 
     async def start(self):
         """Opens the connection and starts the listener."""
@@ -78,14 +76,14 @@ class Device(object):
         if self.is_connected():
             raise RuntimeError('connection is already running.')
 
-        self.connection = await TCPStreamClient(self.host, self.port)
+        self._client = await open_connection(self.host, self.port)
         self.listener = asyncio.create_task(self._listen())
 
     async def stop(self):
         """Closes the connection and stops the listener."""
 
-        self.connection.close()
-        await self.connection.writer.wait_closed()  # Waits until it's really closed.
+        self._client.close()
+        await self._client.writer.wait_closed()  # Waits until it's really closed.
 
         with contextlib.suppress(asyncio.CancelledError):
             self.listener.cancel()
@@ -94,29 +92,29 @@ class Device(object):
     def is_connected(self):
         """Returns `True` if the connection is open."""
 
-        if self.connection is None:
+        if self._client is None:
             return False
 
-        return not self.connection.writer.is_closing()
+        return not self._client.writer.is_closing()
 
     def write(self, message, newline='\n'):
         """Write to the device. The message is encoded and a new line added."""
 
-        assert self.is_connected() and self.connection.writer, 'device is not connected'
+        assert self.is_connected() and self._client.writer, 'device is not connected'
 
         message = message.strip() + newline
-        self.connection.writer.write(message.encode())
+        self._client.writer.write(message.encode())
 
     async def _listen(self):
         """Listens to the reader stream and callbacks on message received."""
 
-        if not self.connection:
+        if not self._client:
             raise RuntimeError('connection is not open.')
 
         while True:
-            line = await self.connection.reader.readline()
+            line = await self._client.reader.readline()
             line = line.decode().strip()
-            await self.callback(line)
+            await self.notify(line)
 
     async def process_message(self, line):
         """Processes a newly received message."""

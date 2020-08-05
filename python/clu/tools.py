@@ -20,7 +20,7 @@ REPLY = 5  # REPLY logging level
 WARNING_REGEX = r'^.*?\s*?(\w*?Warning): (.*)'
 
 
-__ALL__ = ['CommandStatus', 'StatusMixIn', 'format_value', 'CallbackScheduler',
+__ALL__ = ['CommandStatus', 'StatusMixIn', 'format_value', 'CallbackMixIn',
            'CaseInsensitiveDict', 'cli_coro', 'value', 'as_complete_failer',
            'log_reply', 'ActorHandler']
 
@@ -213,61 +213,71 @@ class StatusMixIn(object):
         self.watcher = None
 
 
-class CallbackScheduler(object):
-    """A queue for executing callbacks."""
+class CallbackMixIn(object):
+    """A mixin for executing callbacks.
 
-    def __init__(self, loop=None):
+    Parameters
+    ----------
+    callbacks : list
+        A list of functions or coroutines to be called.
+
+    """
+
+    def __init__(self, callbacks=[], loop=None):
+
+        self._callbacks = []
+        for cb in callbacks:
+            self.register_callback(cb)
+
+        self._running = []  # Running callbacks
 
         self.loop = loop or asyncio.get_event_loop()
-        self.queue = asyncio.Queue()
 
-        self.running = []  # Running callbacks
-        self._task = self.loop.create_task(self._process_queue())
+    async def stop_callbacks(self):
+        """Cancels any running callback task."""
 
-    async def stop(self):
-        """Stops processing callbacks and awaits currently running ones."""
-
-        self._task.cancel()
-
-        for cb in self.running:
+        for cb in self._running:
             if not cb.done():
                 cb.cancel()
 
         with contextlib.suppress(asyncio.CancelledError):
-            await self._task
-            for cb in self.running:
+            for cb in self._running:
                 await cb
 
-        self.running = []
+        self._running = []
 
-    def add_callback(self, cb, *args, **kwargs):
-        """Add a callback to the queue.
+    def register_callback(self, callback_func):
+        """Adds a callback function or coroutine function."""
 
-        The callback will be called as ``cb(*args, **kwargs).
+        assert callable(callback_func), 'callback_func must be a callable.'
+        self._callbacks.append(callback_func)
+
+    def remove_callback(self, callback_func):
+        """Removes a callback function."""
+
+        assert callback_func in self._callbacks, \
+            'callback_func is not in the list of callbacks.'
+        self._callbacks.remove(callback_func)
+
+    def notify(self, *args):
+        """Calls the callback functions with some arguments.
+
+        Coroutine callbacks are scheduled as a task. Synchronous callbacks
+        are scheduled with ``call_soon``.
 
         """
 
-        self.queue.put_nowait((cb, args, kwargs))
+        if self._callbacks is None:
+            return
 
-    async def _process_queue(self):
-        """Processes new callbacks."""
-
-        while True:
-
-            cb, args, kwargs = await self.queue.get()
-
+        for cb in self._callbacks:
             if asyncio.iscoroutinefunction(cb):
-                self.running.append(asyncio.create_task(cb(*args, **kwargs)))
+                task = self.loop.create_task(cb(*args))
+                self._running.append(task)
+                # Auto-dispose of the task once it completes
+                task.add_done_callback(self._running.remove)
             else:
-                self.loop.call_soon(functools.partial(cb, *args, **kwargs))
-
-            # Clean already done callbacks
-            done_cb = []
-            for task in self.running:
-                if task.done():
-                    done_cb.append(task)
-
-            self.running = [task for task in self.running if task not in done_cb]
+                task = self.loop.call_soon(cb, *args)
 
 
 def format_value(value):

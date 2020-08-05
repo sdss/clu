@@ -77,6 +77,8 @@ Sockets
 -------
 
 .. automodule:: clu.protocol
+    :member-order: bysource
+
 .. automodule:: clu.device
 
 
@@ -85,6 +87,7 @@ Tools
 
 .. autofunction:: clu.escape
 .. autoclass:: clu.tools.ActorHandler
+.. autoclass:: clu.tools.CallbackMixIn
 
 
 .. _api-testing:

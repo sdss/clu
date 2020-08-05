@@ -20,7 +20,7 @@ except ImportError:
 
 __all__ = ['TCPProtocol', 'PeriodicTCPServer',
            'TCPStreamServer', 'TCPStreamPeriodicServer',
-           'TCPStreamClient', 'TCPStreamClientContainer',
+           'TCPStreamClient', 'open_connection',
            'TopicListener']
 
 
@@ -217,21 +217,29 @@ class TCPStreamServer(object):
         self.connection_callback = connection_callback
         self.data_received_callback = data_received_callback
 
-        #: The `asyncio.Server`. Created when `.start_server` is run.
-        self.server = None
+        # The `asyncio.Server`. Created when `.start_server` is run.
+        self._server = None
 
-    async def start_server(self):
+    async def start(self):
         """Starts the server and returns a `~asyncio.Server` connection."""
 
-        self.server = await asyncio.start_server(self.connection_made,
-                                                 self.host, self.port)
+        self._server = await asyncio.start_server(self.connection_made,
+                                                  self.host, self.port)
 
-        return self.server
+        return self._server
+
+    async def stop(self):
+        """Stops the server."""
+
+        self._server.close()
 
     def serve_forever(self):
         """Exposes ``TCPStreamServer.server.serve_forever``."""
 
-        return self.server.serve_forever()
+        return self._server.serve_forever()
+
+    def is_serving(self):
+        return self._server.is_serving()
 
     async def _do_callback(self, cb, *args, **kwargs):
         """Calls a function or coroutine callback."""
@@ -274,7 +282,7 @@ class TCPStreamServer(object):
                                         writer.transport, data)
 
 
-class TCPStreamClientContainer(object):
+class TCPStreamClient:
     """An object containing a writer and reader stream to a TCP server."""
 
     def __init__(self, host, port):
@@ -288,7 +296,8 @@ class TCPStreamClientContainer(object):
     async def open_connection(self):
         """Creates the connection."""
 
-        self.reader, self.writer = await asyncio.open_connection(self.host, self.port)
+        self.reader, self.writer = await asyncio.open_connection(self.host,
+                                                                 self.port)
 
     def close(self):
         """Closes the stream."""
@@ -296,15 +305,16 @@ class TCPStreamClientContainer(object):
         if self.writer:
             self.writer.close()
         else:
-            raise RuntimeError('connection cannot be closed because it is not open.')
+            raise RuntimeError('connection cannot be closed '
+                               'because it is not open.')
 
 
-async def TCPStreamClient(host, port):
+async def open_connection(host, port):
     """Returns a TCP stream connection with a writer and reader.
 
-    This function is more convenient than doing ::
+    This function is equivalent to doing ::
 
-        >>> client = TCPStreamClientContainer('127.0.0.1', 5555)
+        >>> client = TCPStreamClient('127.0.0.1', 5555)
         >>> await client.open_connection()
 
     Instead just do ::
@@ -321,12 +331,12 @@ async def TCPStreamClient(host, port):
 
     Returns
     -------
-    client : `.TCPStreamClientContainer`
+    client : `.TCPStreamClient`
         A container for the stream reader and writer.
 
     """
 
-    client = TCPStreamClientContainer(host, port)
+    client = TCPStreamClient(host, port)
     await client.open_connection()
 
     return client
@@ -360,14 +370,14 @@ class TCPStreamPeriodicServer(TCPStreamServer):
 
         super().__init__(host, port, **kwargs)
 
-    async def start_server(self):
+    async def start(self):
         """Starts the server and returns a `~asyncio.Server` connection."""
 
-        server = await super().start_server()
+        self._server = await super().start_server()
 
         self.periodic_task = asyncio.create_task(self._emit_periodic())
 
-        return server
+        return self._server
 
     @property
     def periodic_callback(self):
@@ -385,7 +395,7 @@ class TCPStreamPeriodicServer(TCPStreamServer):
 
         while True:
 
-            if self.server and self.periodic_callback:
+            if self._server and self.periodic_callback:
                 for transport in self.transports:
                     await self._do_callback(self.periodic_callback, transport)
 
