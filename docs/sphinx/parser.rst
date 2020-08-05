@@ -30,7 +30,10 @@ API
 ---
 
 .. autoclass:: clu.parser.ClickParser
+    :noindex:
 .. autoclass:: clu.parser.CluCommand
+    :noindex:
 .. autoclass:: clu.parser.CluGroup
-
+    :noindex:
 .. autofunction:: clu.parser.timeout
+    :noindex:

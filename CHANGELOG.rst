@@ -4,16 +4,16 @@
 Changelog
 =========
 
-* :support:`-` Consolidated how stream servers and clients work. Renamed ``TCPStreamClient`` to `~.protocols.open_connection` and `TCPStreamClientContainer` to `.TCPStreamClient`. All servers and clients now start and stop with ``start`` and ``stop`` coroutines. The ``_server`` and ``_client`` attributes are now consistently named and not public.
-* :support:`-` Replace ``CallbackScheduler`` with `.CallbackMixIn`.
-* :bug:`-` Fixed parsing of ``KeyDictionary`` from ``actorkeys``.
-* :support:`-` Tests for legacy tools.
+* :support:`27` Consolidated how stream servers and clients work. Renamed ``TCPStreamClient`` to `~clu.protocol.open_connection` and `TCPStreamClientContainer` to `.TCPStreamClient`. All servers and clients now start and stop with ``start`` and ``stop`` coroutines. The ``_server`` and ``_client`` attributes are now consistently named and not public.
+* :support:`27` Replace ``CallbackScheduler`` with `.CallbackMixIn`.
+* :bug:`27` Fixed parsing of ``KeyDictionary`` from ``actorkeys``.
+* :support:`27` Tests for legacy tools.
 
 * :release:`0.3.3 <2020-08-01>`
 * :bug:`-` In the previous release I set the level to ``ERRO`` instead of ``ERROR`` 😓.
 
 * :release:`0.3.1 <2020-08-01>`
-* :bug:`-` Log ``StreamHandler`` to `stderr` when the record level is ``ERROR`` or greater.
+* :bug:`-` Log ``StreamHandler`` to ``stderr`` when the record level is ``ERROR`` or greater.
 
 * :release:`0.3.0 <2020-07-31>`
 * :support:`-` *Breaking changes.* Improve modularity. Some files have been renamed. `.BaseActor` is now parser-agnostic and the Click-parsing functionality has been moved to `.ClickParser`. Similarly, `.BaseLegacyActor` does not include a parser, with the Click parser implemented in `.LegacyActor`. The logging system has been streamlined.

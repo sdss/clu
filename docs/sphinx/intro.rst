@@ -9,7 +9,7 @@ Features
 
 - Asynchronous API based on `asyncio <https://docs.python.org/3/library/asyncio.html>`_.
 - New-style `actor <clu.actor.AMQPActor>` with message passing based on `AMQP <https://www.amqp.org/>`_ and `RabbitMQ <https://rabbitmq.com>`_.
-- Legacy-style `actor <clu.legacy.actor.LegacyActor>` for TCP socket communication through `Tron <clu.legacy.tron.TronConnection>`.
+- Legacy-style `actor <clu.legacy.actor.LegacyActor>` for TCP socket communication through `Tron <cl.legacy.tron.TronConnection>`.
 - Tools for device handling.
 - Messages are validated JSON strings.
 - `click <https://click.palletsprojects.com/en/7.x/>`__-enabled command parser.
@@ -63,7 +63,6 @@ Next, head to the :ref:`getting-started` section for more information about usin
 
 .. |Coverage Status| image:: https://codecov.io/gh/sdss/clu/branch/master/graph/badge.svg
     :alt: Coverage Status
-    :scale: 100%
     :target: https://codecov.io/gh/sdss/clu
 
 .. |py37| image:: https://img.shields.io/badge/python-3.7-blue.svg

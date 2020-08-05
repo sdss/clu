@@ -34,7 +34,7 @@ class MockReply(dict):
 
     The data of the message is stored as part of the dictionary.
 
-    Attributes
+    Parameters
     ----------
     user_id : int
         The user ID of the client to which the reply was sent.
