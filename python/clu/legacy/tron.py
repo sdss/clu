@@ -21,20 +21,16 @@ __all__ = ['TronConnection', 'TronModel', 'TronKey']
 class TronKey(Property):
     """A Tron model key with callbacks.
 
-    Differs from `.Property` in that it is usually instantiated by
-    `.TronModel` with a ``key`` that is of type ``clu.legacy.keys.Key``
-    instead of a string.
+    Similar to `.Property` but stores the original key with the keyword
+    datamodel.
 
     """
 
-    def to_json(self):
-        """Returns a JSON-valid ``{key: value}`` dictionary."""
+    def __init__(self, name, value=[], key=None, model=None, callback=None):
 
-        return {self.key.name: ([v.native for v in self.value]
-                                if self.value else None)}
+        super().__init__(name, value=value, model=model, callback=callback)
 
-    def __repr__(self):
-        return (f'<TronKey ({self.key.name}): {self.to_json()[self.key.name]}>')
+        self.key = key
 
 
 class TronModel(BaseModel):
@@ -62,7 +58,7 @@ class TronModel(BaseModel):
 
         for key in self.keydict.keys:
             key = self.keydict.keys[key]
-            self[key.name] = TronKey(key, model=self)
+            self[key.name] = TronKey(key.name, key=key, model=self)
 
     def parse_reply(self, reply):
         """Parses a reply and updates the datamodel."""
@@ -86,9 +82,10 @@ class TronModel(BaseModel):
                                      f'{self.name}.{reply_key.name}.')
                 continue
 
-            self[reply_key.name].value = [value for value in reply_key.values]
+            self[key_name].value = [value.native for value in reply_key.values]
+            self[key_name].key = reply_key
 
-            self.notify(self, self[reply_key.name])
+            self.notify(self, self[key_name])
 
 
 class TronConnection(object):

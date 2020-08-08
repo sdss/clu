@@ -92,8 +92,10 @@ class Property(CallbackMixIn):
 
     Parameters
     ----------
-    key
-        The property to be represented.
+    name
+        The name of the property.
+    value
+        The value of the property.
     model : BaseModel
         The parent model.
     callback
@@ -104,17 +106,17 @@ class Property(CallbackMixIn):
 
     """
 
-    def __init__(self, key, model=None, callback=None):
+    def __init__(self, name, value=None, model=None, callback=None):
 
-        self.key = key
-        self._value = None
+        self.name = name
+        self._value = value
 
         self.model = model
 
         CallbackMixIn.__init__(self, [callback] if callback else [])
 
     def __repr__(self):
-        return f'<{self.__class__.__name__!s} ({self.key}): {self.value}>'
+        return f'<{self.__class__.__name__!s} ({self.name}): {self.value}>'
 
     def __str__(self):
         return str(self.value)
@@ -135,7 +137,7 @@ class Property(CallbackMixIn):
     def to_json(self):
         """Returns a JSON-valid ``{key: value}`` dictionary."""
 
-        return {self.key: self.value}
+        return {self.name: self.value}
 
 
 class BaseModel(CaseInsensitiveDict, CallbackMixIn):
@@ -213,8 +215,8 @@ class Model(BaseModel):
 
         super().__init__(name, **kwargs)
 
-        for key in self.schema['properties']:
-            self[key] = Property(key, model=self)
+        for name in self.schema['properties']:
+            self[name] = Property(name, model=self)
 
     @staticmethod
     def check_schema(schema, is_file=False):

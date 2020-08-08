@@ -31,7 +31,7 @@ async def test_actor(actor, actor_client):
 
 async def test_tron(actor):
 
-    assert actor.models['alerts']['version'].value[0].native == '2.0.1'
+    assert actor.models['alerts']['version'].value[0] == '2.0.1'
 
 
 async def test_actor_no_tron(unused_tcp_port_factory):

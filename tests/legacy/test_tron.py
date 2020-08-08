@@ -20,7 +20,7 @@ pytestmark = pytest.mark.asyncio
 async def test_get_keys(tron_client):
 
     assert tron_client.models['alerts']['version'].value is not None
-    assert tron_client.models['alerts']['version'].value[0].native == '2.0.1'
+    assert tron_client.models['alerts']['version'].value[0] == '2.0.1'
 
 
 async def test_update_model(tron_client):
@@ -35,11 +35,11 @@ async def test_update_model(tron_client):
 
     assert act_alert.value is not None
 
-    assert act_alert.value[0].native == 'Alert1'
-    assert act_alert.value[0].name == 'alertID'
+    assert act_alert.value[0] == 'Alert1'
+    assert act_alert.key[0].name == 'alertID'
 
-    assert act_alert.value[1].native == 'Alert2'
-    assert act_alert.value[1].name == 'alertID'
+    assert act_alert.value[1] == 'Alert2'
+    assert act_alert.key[1].name == 'alertID'
 
     assert repr(act_alert) == ("<TronKey (activeAlerts): "
                                "['Alert1', 'Alert2']>")
