@@ -4,48 +4,60 @@
     color: red;
   }
 
-  .green {
-    color: green;
-  }
+.green {
+  color: green;
+}
 
-  .pink {
-    color: pink;
-  }
+.pink {
+  color: pink;
+}
 
-  .orange {
-    color: orange;
-  }
+.orange {
+  color: orange;
+}
 
-  .purple {
-    color: purple;
-  }
+.purple {
+  color: purple;
+}
 
-  a.reference > em {
+a.reference > em {
+  font-style: normal !important;
+}
+
+a.reference > code {
+  font-weight: inherit !important;
+  color: inherit;
+  background-color: inherit;
+}
+
+ul, ol {
+  margin: 0px 0 0px 30px;
+}
+
+a.reference {
+  border-bottom: 0px;
+}
+
+td.field-body > ul > li > em {
     font-style: normal !important;
-  }
+}
 
-  a.reference > code {
-    font-weight: inherit !important;
-    color: inherit;
-    background-color: inherit;
-  }
+.underline{
+  text-decoration: underline;
+}
 
-  ul, ol {
-    margin: 0px 0 0px 30px;
-  }
+dl + .class, dl + .function, span + .class, span + .function {
+  padding-top: 40px;
+}
 
-  a.reference {
-    border-bottom: 0px;
-  }
+dl.py.method, dl.py.attribute {
+  padding-top: 10px;
+}
 
-  td.field-body > ul > li > em {
-      font-style: normal !important;
-  }
+dl.method > dt > code.descname {
+  font-weight: normal;
+}
 
-  .underline{
-    text-decoration: underline;
-  }
-
-  dl + .class, dl + .function, span + .class, span + .function {
-    padding-top: 40px;
-  }
+code.sig-name.descname {
+  color: rgba(140, 42, 42);
+}
