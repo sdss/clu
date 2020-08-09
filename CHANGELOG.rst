@@ -4,6 +4,7 @@
 Changelog
 =========
 
+* :release:`0.4.0 <2020-08-09>`
 * :support:`27` Consolidated how stream servers and clients work. Renamed ``TCPStreamClient`` to `~clu.protocol.open_connection` and `TCPStreamClientContainer` to `.TCPStreamClient`. All servers and clients now start and stop with ``start`` and ``stop`` coroutines. The ``_server`` and ``_client`` attributes are now consistently named and not public.
 * :support:`27` Replace ``CallbackScheduler`` with `.CallbackMixIn`.
 * :bug:`27` Fixed parsing of ``KeyDictionary`` from ``actorkeys``.
