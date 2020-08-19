@@ -373,7 +373,7 @@ class TCPStreamPeriodicServer(TCPStreamServer):
     async def start(self):
         """Starts the server and returns a `~asyncio.Server` connection."""
 
-        self._server = await super().start_server()
+        self._server = await super().start()
 
         self.periodic_task = asyncio.create_task(self._emit_periodic())
 
