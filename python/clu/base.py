@@ -179,7 +179,7 @@ class BaseClient(metaclass=abc.ABCMeta):
         if verbose:
             log.sh.setLevel(int(verbose))
         else:
-            log.sh.setLevel(logging.ERROR)
+            log.sh.setLevel(logging.WARNING)
 
         self.log = log
         self.log.debug(f'{self.name}: logging system initiated.')
