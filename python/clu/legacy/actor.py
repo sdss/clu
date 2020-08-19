@@ -65,10 +65,10 @@ class BaseLegacyActor(BaseActor):
 
     def __init__(self, name, host, port, tron_host=None, tron_port=None,
                  model_names=None, version=None, loop=None, log_dir=None,
-                 log=None):
+                 log=None, verbose=False):
 
         super().__init__(name, version=version, loop=loop,
-                         log_dir=log_dir, log=log)
+                         log_dir=log_dir, log=log, verbose=verbose)
 
         #: Mapping of user_id to transport
         self.transports = dict()
