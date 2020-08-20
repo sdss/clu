@@ -90,4 +90,4 @@ Say whatever you want about it, the `current SDSS message passing protocol <http
 
 .. |pypi| image:: https://badge.fury.io/py/sdss-clu.svg
     :alt: PyPI version
-    :target: https://badge.fury.io/py/sdsstools
+    :target: https://badge.fury.io/py/sdss-clu
