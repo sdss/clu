@@ -4,6 +4,7 @@
 Changelog
 =========
 
+* :release:`0.4.1 <2020-08-19>`
 * :support:`-` Set default logging level to warning for stdout/stderr.
 * :bug:`-` Fix starting server in `.TCPStreamPeriodicServer`.
 
