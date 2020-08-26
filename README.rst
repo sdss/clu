@@ -12,7 +12,7 @@ Features
 
 - Asynchronous API based on `asyncio <https://docs.python.org/3/library/asyncio.html>`_.
 - New-style actor with message passing based on `AMQP <https://www.amqp.org/>`_ and `RabbitMQ <https://rabbitmq.com>`_.
-- Legacy-style actor for TCP socket communication through ``Tron``.
+- Legacy-style actor for TCP socket communication via `tron <https://github.com/sdss/tron>`__.
 - Tools for device handling.
 - Messages are validated JSON strings.
 - `click <https://click.palletsprojects.com/en/7.x/>`__-enabled command parser.
@@ -70,7 +70,7 @@ Say whatever you want about it, the `current SDSS message passing protocol <http
 - CLU uses `click <https://click.palletsprojects.com/en/7.x>`__ for parsing commands, providing a well-defined, easy to use parser.
 
 
-.. |Build Status| image:: https://img.shields.io/github/workflow/status/sdss/drift/Test
+.. |Build Status| image:: https://img.shields.io/github/workflow/status/sdss/clu/Test
     :alt: Build Status
     :target: https://github.com/sdss/clu/actions
 

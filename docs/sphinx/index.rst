@@ -2,7 +2,8 @@
 CLU's documentation
 ===================
 
-.. include:: intro.rst
+.. include:: ../../README.rst
+  :start-line: 2
 
 
 Contents
