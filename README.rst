@@ -33,10 +33,6 @@ or from source ::
     cd clu
     pip install .
 
-If you want to install it using `modules <http://modules.sourceforge.net/>`_ you can use `sdss_install <https://github.com/sdss/sdss_install>`_ ::
-
-    sdss_install clu
-
 
 Quick start
 -----------
