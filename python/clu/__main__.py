@@ -3,7 +3,7 @@
 #
 # @Author: José Sánchez-Gallego (gallegoj@uw.edu)
 # @Date: 2019-05-20
-# @Filename: cmd_interpreter.py
+# @Filename: __main__.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
 import asyncio
@@ -52,18 +52,12 @@ class ShellClient(clu.AMQPClient):
 
         message_code = headers.get('message_code', b'').decode()
         sender = headers.get('sender', b'').decode()
-        # command_id = message.correlation_id or ''
 
         message_code_formatted = prompt_toolkit.formatted_text.HTML(
-            f'<style font-weight="bold" fg="{color_codes[message_code]}">{message_code}</style>')
-
-        # header_string = ' '.join([part for part in [sender, message_code] if part])
+            f'<style font-weight="bold" '
+            f'fg="{color_codes[message_code]}">{message_code}</style>')
 
         body = message.body.decode()
-        # if len(body) > 0:
-        #     body = json.dumps(body, indent=4)
-        #     if len(header_string) > 0:
-        #         body = textwrap.indent(body, (len(header_string) + 1) * ' ')
 
         body_tokens = list(pygments.lex(body, lexer=JsonLexer()))
 
@@ -80,7 +74,9 @@ class ShellClient(clu.AMQPClient):
 
 async def shell_client_prompt(user=None, host=None, port=None):
 
-    client = await ShellClient('shell_client', user=user, host=host, log=False).run()
+    client = await ShellClient('shell_client',
+                               user=user, host=host,
+                               log=False).run()
 
     history = FileHistory(os.path.expanduser('~/.clu_history'))
 
@@ -123,10 +119,15 @@ def clu_cli(user=None, host=None, port=None):
 
     with patch_stdout():
 
-        shell_task = loop.create_task(shell_client_prompt(user=user, host=host, port=port))
+        shell_task = loop.create_task(shell_client_prompt(user=user,
+                                                          host=host,
+                                                          port=port))
         loop.run_until_complete(shell_task)
 
 
-if __name__ == '__main__':
-
+def main():
     clu_cli(obj={})
+
+
+if __name__ == '__main__':
+    main()
