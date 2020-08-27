@@ -8,6 +8,7 @@
 
 
 import asyncio
+import os
 
 import pytest
 
@@ -63,8 +64,10 @@ async def tron_client(tron_server):
 
     log = get_logger('tron-test')
 
+    model_names = ['alerts'] if 'ACTORKEYS_DIR' in os.environ else None
+
     _tron = TronConnection('localhost', tron_server.port,
-                           model_names=['alerts'], log=log)
+                           model_names=model_names, log=log)
 
     await _tron.start()
     await asyncio.sleep(0.01)
@@ -78,11 +81,13 @@ async def tron_client(tron_server):
 @pytest.fixture
 async def actor(tron_server, unused_tcp_port_factory, tmp_path):
 
+    model_names = ['alerts'] if 'ACTORKEYS_DIR' in os.environ else None
+
     _actor = LegacyActor('test_actor', 'localhost',
                          unused_tcp_port_factory(),
                          tron_host=tron_server.host,
                          tron_port=tron_server.port,
-                         model_names=['alerts'],
+                         model_names=model_names,
                          version='0.1.0', log_dir=tmp_path)
 
     await _actor.start()

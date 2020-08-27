@@ -8,13 +8,16 @@
 
 import asyncio
 import logging
+import os
 
 import pytest
 
 from clu.legacy.parser import ParseError
 
 
-pytestmark = pytest.mark.asyncio
+pytestmark = [pytest.mark.asyncio,
+              pytest.mark.xfail('ACTORKEYS_DIR' not in os.environ,
+                                reason='Actorkeys not present.')]
 
 
 async def test_get_keys(tron_client):

@@ -7,6 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
 import asyncio
+import os
 
 import pytest
 
@@ -15,7 +16,7 @@ from clu.exceptions import CluWarning
 from clu.legacy import LegacyActor
 
 
-pytestmark = pytest.mark.asyncio
+pytestmark = [pytest.mark.asyncio]
 
 
 async def test_actor(actor, actor_client):
@@ -29,6 +30,8 @@ async def test_actor(actor, actor_client):
     assert len(actor.transports) == 1
 
 
+@pytest.mark.xfail('ACTORKEYS_DIR' not in os.environ,
+                   reason='Actorkeys not present.')
 async def test_tron(actor):
 
     assert actor.models['alerts']['version'].value[0] == '2.0.1'
