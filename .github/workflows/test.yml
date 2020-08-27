@@ -41,6 +41,8 @@ jobs:
     - name: Setup RabbitMQ
       run: |
         sudo apt-get install --assume-yes rabbitmq-server
+        # Stop the service. pytest-rabbitmq will spawn a new server.
+        sudo service rabbitmq-server stop
 
     - name: Set up Python
       uses: actions/setup-python@v2
@@ -71,8 +73,6 @@ jobs:
       run: |
         pip install pytest pytest-cov pytest-asyncio pytest-mock pytest-rabbitmq
         pip install coverage[toml]
-        # pytest-rabbitmq needs to be root to start new servers
-        sudo su - root
         pytest
 
     - name: Upload coverage to Codecov
