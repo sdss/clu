@@ -7,13 +7,15 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
 import os
+import pathlib
 
 import pytest
 from pytest_rabbitmq import factories
 
-from clu import AMQPActor
+from clu import AMQPActor, AMQPClient
 
 
+DATA_DIR = pathlib.Path(os.path.dirname(__file__)) / 'data'
 RMQ_PORT = 8888
 
 
@@ -43,3 +45,24 @@ async def amqp_actor(rabbitmq, event_loop):
     yield actor
 
     await actor.shutdown()
+
+
+@pytest.fixture
+async def amqp_client(rabbitmq, event_loop):
+
+    class AMQPClientTester(AMQPClient):
+
+        replies = []
+
+        async def handle_reply(self, message):
+            reply = await super().handle_reply(message)
+            self.replies.append(reply)
+
+    client = AMQPClientTester(name='amqp_client', port=RMQ_PORT,
+                              model_path=DATA_DIR, model_names=['amqp_actor'])
+    await client.start()
+
+    yield client
+
+    await client.shutdown()
+    client.replies = []

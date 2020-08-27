@@ -8,14 +8,10 @@
 
 import asyncio
 
+import aio_pika as apika
+import aiormq
+
 from .exceptions import CluError
-
-
-try:
-    import aio_pika as apika
-    import aiormq
-except ImportError:
-    apika = None
 
 
 __all__ = ['TCPProtocol', 'PeriodicTCPServer',
@@ -418,13 +414,9 @@ class TopicListener(object):
 
     def __init__(self, user=None, host=None, port=None):
 
-        if not apika:
-            raise ImportError('cannot use TopicListener without aoi_pika.')
-
         self.user = user
         self.host = host
         self.port = port
-        print(self.port)
 
         self.connection = None
         self.channel = None
@@ -510,9 +502,19 @@ class TopicListener(object):
         for binding in bindings:
             await queue.bind(self.exchange, routing_key=binding)
 
-        self.queues.append(queue)
-
         if callback:
             queue.consumer_tag = await queue.consume(callback)
 
+        self.queues.append(queue)
+
         return queue
+
+    async def stop(self):
+        """Cancels queues and closes the connection."""
+
+        for queue in self.queues:
+
+            if hasattr(queue, 'consumer_tag') and queue.consumer_tag is not None:
+                await queue.cancel(queue.consumer_tag)
+
+        await self.connection.close()

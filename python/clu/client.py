@@ -90,10 +90,6 @@ class AMQPClient(BaseClient):
         if model_path:
 
             model_names = model_names or []
-
-            if self.name not in model_names:
-                model_names.append(self.name)
-
             self.models = ModelSet(model_path, model_names=model_names,
                                    raise_exception=False, log=self.log)
 
@@ -130,24 +126,7 @@ class AMQPClient(BaseClient):
     async def shutdown(self):
         """Cancels queues and closes the connection."""
 
-        await self.replies_queue.cancel(self.replies_queue.consumer_tag)
-        await self.connection.connection.close()
-
-    # @classmethod
-    # def from_config(cls, config, *args, **kwargs):
-    #     """Starts a new client from a configuration file.
-
-    #     Refer to `.BaseClient.from_config`.
-
-    #     """
-
-    #     config_dict = cls._parse_config(config)
-
-    #     args = list(args) + [config_dict.pop('name'),
-    #                          config_dict.pop('user'),
-    #                          config_dict.pop('host')]
-
-    #     return super().from_config(config_dict, *args, **kwargs)
+        await self.connection.stop()
 
     async def handle_reply(self, message):
         """Handles a reply received from the exchange.
@@ -168,6 +147,7 @@ class AMQPClient(BaseClient):
         """
 
         reply = Reply(message, ack=True)
+
         if not reply.is_valid:
             self.log.error('invalid message.')
             return reply

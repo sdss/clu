@@ -63,18 +63,10 @@ class AMQPActor(AMQPClient, ClickParser, BaseActor):
 
         return self
 
-    async def shutdown(self):
-        """Cancels queues and stops timed commands."""
-
-        await self.commands_queue.cancel(self.commands_queue.consumer_tag)
-        await self.timed_commands.stop()
-
-        await super().shutdown()
-
     async def new_command(self, message):
         """Handles a new command received by the actor."""
 
-        with message.process():
+        async with message.process():
 
             headers = message.info()['headers']
             command_body = json.loads(message.body.decode())

@@ -134,8 +134,8 @@ class Property(CallbackMixIn):
         self._value = new_value
         self.notify(self)
 
-    def to_json(self):
-        """Returns a JSON-valid ``{key: value}`` dictionary."""
+    def flatten(self):
+        """Returns a dictionary with the name and value of the property."""
 
         return {self.name: self.value}
 
@@ -181,12 +181,12 @@ class BaseModel(CaseInsensitiveDict, CallbackMixIn):
 
         """
 
-        return {key: self[key].to_json() for key in self}
+        return {key: prop.value for key, prop in self.items()}
 
     def jsonify(self):
         """Returns a JSON string with the model."""
 
-        return json.dumps(self.unkey())
+        return json.dumps(self.flatten())
 
 
 class Model(BaseModel):

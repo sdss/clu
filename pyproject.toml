@@ -34,6 +34,7 @@ jsonschema = "^3.0.1"
 sdsstools = ">=0.2.0"
 Sphinx = {version = ">=2.3", optional = true}
 prompt_toolkit = "^3.0.6"
+aiormq = "^3.2.0"
 
 [tool.poetry.dev-dependencies]
 ipython = ">=7.9.0"
