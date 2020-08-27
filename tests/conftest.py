@@ -12,8 +12,8 @@ from pytest_rabbitmq import factories
 
 # If CI is true we are in a GitHub workflow and need to use the Ubuntu paths.
 if 'CI' in os.environ and os.environ['CI'] == 'true':
-    ctl = '/usr/sbin/rabbitmqctl'
-    server = '/usr/sbin/rabbitmq-server'
+    ctl = ' /usr/lib/rabbitmq/bin/rabbitmqctl'
+    server = ' /usr/lib/rabbitmq/bin/rabbitmq-server'
 else:
     ctl = server = None
 
