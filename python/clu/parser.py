@@ -171,23 +171,6 @@ def timeout(seconds):
         # we add the timeout directly to the callback function.
         f.timeout = seconds
 
-        @functools.wraps(f)
-        def new_func(*args, **kwargs):
-            return f(*args, **kwargs)
-        return functools.update_wrapper(new_func, f)
-
-    return decorator
-
-
-def timeout(seconds):
-    """A decorator to timeout the command after a number of ``seconds``."""
-
-    def decorator(f):
-
-        # This is a bit of a hack but we cannot access the context here so
-        # we add the timeout directly to the callback function.
-        f.timeout = seconds
-
         async def helper(f, *args, **kwargs):
             if asyncio.iscoroutinefunction(f):
                 return await f(*args, **kwargs)
