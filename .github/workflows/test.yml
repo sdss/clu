@@ -18,15 +18,7 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
-
-    services:
-      rabbitmq:
-        image: rabbitmq:latest
-        ports:
-          - 5672/tcp
-        # needed because the rabbitmq container does not provide a healthcheck
-        options: --health-cmd "rabbitmqctl node_health_check" --health-interval 10s --health-timeout 5s --health-retries 5
+    runs-on: ubuntu-20.04
 
     strategy:
       fail-fast: false
@@ -44,9 +36,11 @@ jobs:
       uses: actions/cache@v2
       with:
         path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-        restore-keys: |
-            ${{ runner.os }}-pip-
+        key: ${{ runner.os }}-pip
+
+    - name: Setup RabbitMQ
+      run: |
+      sudo apt-get install --assume-yes rabbitmq-server
 
     - name: Set up Python
       uses: actions/setup-python@v2
