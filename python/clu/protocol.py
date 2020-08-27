@@ -348,7 +348,8 @@ class TCPStreamPeriodicServer(TCPStreamServer):
     port : int
         The server port.
     period_callback
-        Callback to run every iteration.
+        Callback to run every iteration. It is called for each transport
+        that is connected to the server and receives the transport object.
     sleep_time : float
         The delay between two calls to ``periodic_callback``.
     kwargs : dict
@@ -374,6 +375,11 @@ class TCPStreamPeriodicServer(TCPStreamServer):
         self.periodic_task = asyncio.create_task(self._emit_periodic())
 
         return self._server
+
+    def stop(self):
+
+        self.periodic_task.cancel()
+        super().stop()
 
     @property
     def periodic_callback(self):

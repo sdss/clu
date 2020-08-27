@@ -68,7 +68,7 @@ class Device(CallbackMixIn):
         if not asyncio.iscoroutinefunction(callback):
             callback = asyncio.coroutine(callback)
 
-        CallbackMixIn.__init__(callbacks=[callback])
+        CallbackMixIn.__init__(self, callbacks=[callback])
 
     async def start(self):
         """Opens the connection and starts the listener."""
@@ -83,7 +83,6 @@ class Device(CallbackMixIn):
         """Closes the connection and stops the listener."""
 
         self._client.close()
-        await self._client.writer.wait_closed()  # Waits until it's really closed.
 
         with contextlib.suppress(asyncio.CancelledError):
             self.listener.cancel()
@@ -114,7 +113,7 @@ class Device(CallbackMixIn):
         while True:
             line = await self._client.reader.readline()
             line = line.decode().strip()
-            await self.notify(line)
+            self.notify(line)
 
     async def process_message(self, line):
         """Processes a newly received message."""

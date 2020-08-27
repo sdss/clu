@@ -105,7 +105,6 @@ exclude_lines = [
     "@abc.abstractmethod",
     "class TCPProtocol",
     "class PeriodicTCPServer",
-    "class TCPStreamPeriodicServer",
     "class CaseInsensitiveDict",
     "def cli_coro",
     "async def as_complete_failer"
