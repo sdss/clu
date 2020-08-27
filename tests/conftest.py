@@ -72,10 +72,11 @@ async def amqp_client(rabbitmq, event_loop):
 
 
 @pytest.fixture
-async def json_actor(unused_tcp_port_factory, event_loop):
+async def json_actor(unused_tcp_port_factory, event_loop, tmpdir):
 
     actor = JSONActor('json_actor', host='localhost',
-                      port=unused_tcp_port_factory())
+                      port=unused_tcp_port_factory(),
+                      log_dir=tmpdir)
 
     await actor.start()
     await asyncio.sleep(0.01)

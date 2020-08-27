@@ -351,21 +351,12 @@ class ClickParser:
             if not command.status.is_done:
                 command.fail(text=msg)
             else:
-                command.write(text=msg)
-
-        except click.exceptions.Exit:
-
-            # This happens when using --help, although it should be handled
-            # in parse_command.
-            if command.status.is_done:
-                command.write(text='Use help [CMD]')
-            else:
-                command.fail(text='Use help [CMD]')
+                command.write('e', text=msg)
 
         except click.exceptions.Abort:
 
             if not command.status.is_done:
-                command.fail(text='Command was aborted.')
+                command.fail(text=f'Command {command.body!r} was aborted.')
 
         except Exception:
 
