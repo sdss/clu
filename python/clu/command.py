@@ -214,7 +214,7 @@ class Command(BaseCommand):
     ----------
     command_string : str
         The string that defines the body of the command.
-    actor : ~clu.actor.BaseActor
+    actor : .BaseActor
         The actor instance associated to this command.
     transport
         The TCP transport associated with this command (only relevant

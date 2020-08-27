@@ -49,7 +49,7 @@ Creating a new actor with ``CLU`` is easy. To instantiate and run an actor you c
     loop.create_task(main(loop))
     loop.run_forever()
 
-Next, head to the `Getting started <https://clu.readthedocs.io/en/latest/getting-started.html>`_ section for more information about using actors.
+Next, head to the `Getting started <https://clu.readthedocs.io/en/latest/getting-started.html>`__ section for more information about using actors.
 
 
 Why a new messaging protocol for SDSS?

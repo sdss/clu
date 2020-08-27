@@ -88,7 +88,8 @@ Tools
 .. autofunction:: clu.escape
 .. autoclass:: clu.tools.ActorHandler
 .. autoclass:: clu.tools.CallbackMixIn
-
+.. autoclass:: clu.tools.TimedCommand
+.. autoclass:: clu.tools.TimedCommandList
 
 .. _api-testing:
 
