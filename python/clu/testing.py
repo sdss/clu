@@ -26,7 +26,7 @@ else:
         raise ImportError('clu.testing requires asynctest if Python < 3.8.')
 
 
-__all__ = ['MockReply', 'MockReplyList', 'setup_test_actor', 'TestCommand']
+__all__ = ['MockReply', 'MockReplyList', 'setup_test_actor']
 
 
 class MockReply(dict):
@@ -146,7 +146,7 @@ async def setup_test_actor(actor, user_id=1):
         full_command = f' {command_id} '.encode('utf-8') + command_str
         return self.new_command(actor.transports['mock_user'], full_command)
 
-    actor.run = CoroutineMock(return_value=actor)
+    actor.start = CoroutineMock(return_value=actor)
 
     # Adds an invoke_mock_command method.
     # We use types.MethodType to bind a method to an existing instance
@@ -162,12 +162,12 @@ async def setup_test_actor(actor, user_id=1):
 
     actor.transports['mock_user'] = mock_transport
 
-    actor = await actor.run()
+    actor = await actor.start()
 
     return actor
 
 
-class TestCommand(Command):
+class TestCommand(Command):  # pragma: no cover
     """A `.Command` that can be reset."""
 
     def reset(self):

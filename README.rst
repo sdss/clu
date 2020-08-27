@@ -72,7 +72,6 @@ Say whatever you want about it, the `current SDSS message passing protocol <http
 
 .. |Coverage Status| image:: https://codecov.io/gh/sdss/clu/branch/master/graph/badge.svg
     :alt: Coverage Status
-    :scale: 100%
     :target: https://codecov.io/gh/sdss/clu
 
 .. |py| image:: https://img.shields.io/badge/python-3.7%20|%203.8-blue
@@ -81,7 +80,6 @@ Say whatever you want about it, the `current SDSS message passing protocol <http
 
 .. |docs| image:: https://readthedocs.org/projects/docs/badge/?version=latest
     :alt: Documentation Status
-    :scale: 100%
     :target: https://clu.readthedocs.io/en/latest/?badge=latest
 
 .. |pypi| image:: https://badge.fury.io/py/sdss-clu.svg

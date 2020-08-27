@@ -6,5 +6,5 @@ API
 ---
 
 .. automodule:: clu.testing
-    :members: setup_test_actor, MockReplyList, MockReply, TestCommand
+    :members: setup_test_actor, MockReplyList, MockReply
     :noindex:

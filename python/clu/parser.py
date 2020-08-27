@@ -12,13 +12,12 @@ import inspect
 import re
 
 import click
-from click.decorators import group, pass_obj
+from click.decorators import group
 
 from . import actor
 
 
-__all__ = ['CluCommand', 'CluGroup', 'command_parser',
-           'ClickParser', 'timeout']
+__all__ = ['CluCommand', 'CluGroup', 'command_parser', 'ClickParser', 'timeout']
 
 
 def coroutine(fn):
@@ -180,15 +179,26 @@ def timeout(seconds):
     return decorator
 
 
-def pass_args():
-    """Thing wrapper around pass_obj to pass the command and parser_args."""
+def timeout(seconds):
+    """A decorator to timeout the command after a number of ``seconds``."""
 
     def decorator(f):
+
+        # This is a bit of a hack but we cannot access the context here so
+        # we add the timeout directly to the callback function.
+        f.timeout = seconds
+
+        async def helper(f, *args, **kwargs):
+            if asyncio.iscoroutinefunction(f):
+                return await f(*args, **kwargs)
+            else:
+                return f(*args, **kwargs)
+
         @functools.wraps(f)
-        @pass_obj
-        def new_func(obj, *args, **kwargs):
-            return f(*obj['parser_args'], *args, **kwargs)
-        return functools.update_wrapper(new_func, f)
+        async def wrapper(*args, **kwargs):
+            return await helper(f, *args, **kwargs)
+
+        return functools.update_wrapper(wrapper, f)
 
     return decorator
 
