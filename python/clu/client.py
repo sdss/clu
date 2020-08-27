@@ -9,17 +9,13 @@
 import json
 import uuid
 
+import aio_pika as apika
+
 from .base import BaseClient
 from .command import Command
-from .model import Reply
+from .model import ModelSet, Reply
 from .protocol import TopicListener
 from .tools import CommandStatus
-
-
-try:
-    import aio_pika as apika
-except ImportError:
-    apika = None
 
 
 __all__ = ['AMQPClient']
@@ -33,7 +29,7 @@ class AMQPClient(BaseClient):
     asyncio's ``run_forever`` or a similar system ::
 
         >>> loop = asyncio.get_event_loop()
-        >>> client = await Client('my_client', 'guest', 'localhost', loop=loop).start()
+        >>> client = await Client('my_client', 'guest', 'localhost').start()
         >>> loop.run_forever()
 
     Parameters
@@ -41,9 +37,11 @@ class AMQPClient(BaseClient):
     name : str
         The name of the actor.
     user : str
-        The user to connect to the AMQP broker.
+        The user to connect to the AMQP broker. Defaults to ``guest``.
     host : str
-        The host where the AMQP message broker lives.
+        The host where the AMQP message broker runs. Defaults to ``localhost``.
+    port : int
+        The port on which the AMQP broker is running. Defaults to 5672.
     version : str
         The version of the actor.
     loop
@@ -52,38 +50,53 @@ class AMQPClient(BaseClient):
         The directory where to store the logs. Defaults to
         ``$HOME/logs/<name>`` where ``<name>`` is the name of the actor.
     log : ~logging.Logger
-        A `~logging.Logger` instance to be used for logging instead of creating
-        a new one.
+        A `~logging.Logger` instance to be used for logging instead of
+        creating a new one.
     parser : ~clu.parser.CluGroup
         A click command parser that is a subclass of `~clu.parser.CluGroup`.
         If `None`, the active parser will be used.
+    model_path : str or pathlib.Path
+        The path to the directory containing the schema files. Each schema
+        file must be named as the model and have extension ``.json``
+        (e.g., ``sop.json``).
+    model_names : list
+        A list of models whose schemas will be loaded.
 
     """
 
-    __EXCHANGE_NAME__ = 'actor_exchange'
+    __EXCHANGE_NAME__ = 'clu_exchange'
 
     connection = None
 
-    def __init__(self, name, user, host, version=None,
-                 loop=None, log_dir=None, log=None, parser=None):
-
-        if not apika:
-            raise ImportError('to instantiate a new Client class '
-                              'you need to have aio_pika installed.')
+    def __init__(self, name, user=None, host=None, port=None, version=None,
+                 loop=None, log_dir=None, log=None, model_path=None,
+                 model_names=None):
 
         super().__init__(name, version=version, loop=loop,
-                         log_dir=log_dir, log=log, parser=parser)
+                         log_dir=log_dir, log=log)
 
-        self.user = user
-        self.host = host
+        self.user = user or 'guest'
+        self.host = host or 'localhost'
+        self.port = port or 5672
 
         self.replies_queue = None
 
         # Creates the connection to the AMQP broker
-        self.connection = TopicListener(self.user, self.host)
+        self.connection = TopicListener(self.user, self.host, port=self.port)
 
         #: dict: External commands currently running.
         self.running_commands = {}
+
+        if model_path:
+
+            model_names = model_names or []
+            self.models = ModelSet(model_path, model_names=model_names,
+                                   raise_exception=False, log=self.log)
+
+        else:
+
+            self.log.warning('no models loaded.')
+            self.models = None
 
     def __repr__(self):
 
@@ -110,21 +123,10 @@ class AMQPClient(BaseClient):
 
         return self
 
-    @classmethod
-    def from_config(cls, config, *args, **kwargs):
-        """Starts a new client from a configuration file.
+    async def shutdown(self):
+        """Cancels queues and closes the connection."""
 
-        Refer to `.BaseClient.from_config`.
-
-        """
-
-        config_dict = cls._parse_config(config)
-
-        args = list(args) + [config_dict.pop('name'),
-                             config_dict.pop('user'),
-                             config_dict.pop('host')]
-
-        return super().from_config(config_dict, *args, **kwargs)
+        await self.connection.stop()
 
     async def handle_reply(self, message):
         """Handles a reply received from the exchange.
@@ -145,6 +147,7 @@ class AMQPClient(BaseClient):
         """
 
         reply = Reply(message, ack=True)
+
         if not reply.is_valid:
             self.log.error('invalid message.')
             return reply
@@ -156,11 +159,15 @@ class AMQPClient(BaseClient):
         # If the command is running we check if the message code indicates
         # the command is done and, if so, sets the result in the Future.
         if reply.command_id in self.running_commands:
-            is_done = CommandStatus.get_inverse_dict()[reply.message_code].is_done
-            if is_done:
+            status = CommandStatus.get_inverse_dict()[reply.message_code]
+            if status.is_done:
                 command = self.running_commands.pop(reply.command_id)
                 if not command.done():
                     command.set_result(command)
+
+        # Update the models
+        if self.models and reply.sender in self.models:
+            self.models[reply.sender].update_model(reply.body)
 
         return reply
 
@@ -193,7 +200,8 @@ class AMQPClient(BaseClient):
         headers = {'command_id': command_id,
                    'commander_id': self.name}
 
-        # The routing key has the topic command and the name of the commanded actor.
+        # The routing key has the topic command and the name of
+        # the commanded actor.
         routing_key = f'command.{consumer}'
 
         message_body = {'command_string': command_string}

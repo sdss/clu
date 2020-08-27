@@ -6,30 +6,22 @@
 # @Filename: actor.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
-import asyncio
 import json
 import re
-import time
 import uuid
-from contextlib import suppress
+
+import aio_pika as apika
 
 from .base import BaseActor
 from .client import AMQPClient
-from .command import Command
+from .command import Command, TimedCommandList
 from .exceptions import CommandError
-from .model import ModelSet
 from .parser import ClickParser
 from .protocol import TCPStreamServer
 from .tools import log_reply
 
 
-try:
-    import aio_pika as apika
-except ImportError:
-    apika = None
-
-
-__all__ = ['AMQPActor', 'JSONActor', 'TimerCommand', 'TimerCommandList']
+__all__ = ['AMQPActor', 'JSONActor']
 
 
 class AMQPActor(AMQPClient, ClickParser, BaseActor):
@@ -45,28 +37,13 @@ class AMQPActor(AMQPClient, ClickParser, BaseActor):
 
     """
 
-    def __init__(self, *args, model_path=None, model_names=None, **kwargs):
+    def __init__(self, *args, **kwargs):
 
         AMQPClient.__init__(self, *args, **kwargs)
 
         self.commands_queue = None
 
-        if model_path:
-
-            model_names = model_names or []
-
-            if self.name not in model_names:
-                model_names.append(self.name)
-
-            self.models = ModelSet(model_path, model_names=model_names,
-                                   raise_exception=False, log=self.log)
-
-        else:
-
-            self.log.warning('no models loaded.')
-            self.models = None
-
-        self.timer_commands = TimerCommandList(self)
+        self.timed_commands = TimedCommandList(self)
 
     async def start(self, **kwargs):
         """Starts the connection to the AMQP broker."""
@@ -82,14 +59,14 @@ class AMQPActor(AMQPClient, ClickParser, BaseActor):
         self.log.info(f'commands queue {self.commands_queue.name!r} '
                       f'bound to {self.connection.connection.url!s}')
 
-        self.timer_commands.start()
+        self.timed_commands.start()
 
         return self
 
     async def new_command(self, message):
         """Handles a new command received by the actor."""
 
-        with message.process():
+        async with message.process():
 
             headers = message.info()['headers']
             command_body = json.loads(message.body.decode())
@@ -110,23 +87,6 @@ class AMQPActor(AMQPClient, ClickParser, BaseActor):
             return
 
         return self.parse_command(command)
-
-    async def handle_reply(self, message):
-        """Handles a reply received by the message and updates the models.
-
-        Parameters
-        ----------
-        message : aio_pika.IncomingMessage
-            The message received.
-
-        """
-
-        reply = await AMQPClient.handle_reply(self, message)
-
-        if self.models and reply.sender in self.models:
-            self.models[reply.sender].update_model(reply.body)
-
-        return
 
     async def write(self, message_code='i', message=None, command=None,
                     broadcast=False, **kwargs):
@@ -225,7 +185,7 @@ class JSONActor(ClickParser, BaseActor):
                                       connection_callback=self.new_user,
                                       data_received_callback=self.new_command)
 
-        self.timer_commands = TimerCommandList(self)
+        self.timed_commands = TimedCommandList(self)
 
     async def start(self):
         """Starts the TCP server."""
@@ -233,7 +193,7 @@ class JSONActor(ClickParser, BaseActor):
         await self.server.start_server()
         self.log.info(f'running TCP server on {self.host}:{self.port}')
 
-        self.timer_commands.start()
+        self.timed_commands.start()
 
         return self
 
@@ -381,109 +341,3 @@ class JSONActor(ClickParser, BaseActor):
             transport.write(message_json.encode())
 
         log_reply(self.log, message_code, message_json)
-
-
-class TimerCommandList(list):
-    """A list of `.TimerCommand` objects that will be executed on a loop.
-
-    Parameters
-    ----------
-    actor
-        The actor in which the commands are to be run.
-    resolution : float
-        In seconds, how frequently to check if any of the `.TimerCommand` must
-        be executed.
-
-    """
-
-    def __init__(self, actor, resolution=0.5, loop=None):
-
-        self.resolution = resolution
-        self.actor = actor
-        self._task = None
-        self.loop = loop or asyncio.get_event_loop()
-
-        list.__init__(self, [])
-
-    def add_command(self, command_string, **kwargs):
-        """Adds a new `.TimerCommand`."""
-
-        self.append(TimerCommand(command_string, **kwargs))
-
-    async def poller(self):
-        """The polling loop."""
-
-        current_time = time.time()
-
-        while True:
-
-            for timer_command in self:
-                elapsed = current_time - timer_command.last_run
-                if elapsed > timer_command.delay:
-                    timer_command_task = self.loop.create_task(timer_command.run(self.actor))
-                    timer_command_task.add_done_callback(timer_command.done)
-
-            self._sleep_task = self.loop.create_task(asyncio.sleep(self.resolution))
-
-            await self._sleep_task
-            current_time += self.resolution
-
-    def start(self):
-        """Starts the loop."""
-
-        if self.running:
-            raise RuntimeError('poller is already running.')
-
-        self._task = self.loop.create_task(self.poller())
-
-        return self
-
-    async def stop(self):
-        """Cancel the poller."""
-
-        if not self.running:
-            return
-
-        self._task.cancel()
-
-        with suppress(asyncio.CancelledError):
-            await self._task
-
-    @property
-    def running(self):
-        """Returns `True` if the poller is running."""
-
-        if self._task and not self._task.cancelled():
-            return True
-
-        return False
-
-
-class TimerCommand(object):
-    """A command to be executed on a loop.
-
-    Parameters
-    ----------
-    command_string : str
-        The command string to run.
-    delay : float
-        How many seconds to wait between repeated calls.
-
-    """
-
-    def __init__(self, command_string, delay=1):
-
-        self.command_string = command_string
-        self.delay = delay
-
-        self.last_run = 0.0
-
-    async def run(self, actor):
-        """Run the command."""
-
-        await Command(self.command_string, actor=actor).parse()
-
-    def done(self, task):
-        """Marks the execution of a command."""
-
-        self.last_run = time.time()

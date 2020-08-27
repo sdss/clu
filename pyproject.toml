@@ -34,6 +34,7 @@ jsonschema = "^3.0.1"
 sdsstools = ">=0.2.0"
 Sphinx = {version = ">=2.3", optional = true}
 prompt_toolkit = "^3.0.6"
+aiormq = "^3.2.0"
 
 [tool.poetry.dev-dependencies]
 ipython = ">=7.9.0"
@@ -54,6 +55,7 @@ Sphinx = ">=2.3"
 isort = ">=5.2.2"
 pytest-mock = "^3.2.0"
 ipdb = "^0.13.3"
+pytest-rabbitmq = "^2.0.1"
 
 [tool.poetry.extras]
 docs = ["Sphinx"]
@@ -75,6 +77,8 @@ skip_glob = [
 
 [tool.pytest.ini_options]
 addopts = "--cov clu --cov-report xml --cov-report html --cov-report term"
+rabbitmq_ctl = "/usr/local/sbin/rabbitmqctl"
+rabbitmq_server = "/usr/local/sbin/rabbitmq-server"
 
 [tool.coverage.run]
 branch = true

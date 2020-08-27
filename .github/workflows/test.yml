@@ -18,7 +18,7 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     strategy:
       fail-fast: false
@@ -36,9 +36,16 @@ jobs:
       uses: actions/cache@v2
       with:
         path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-        restore-keys: |
-            ${{ runner.os }}-pip-
+        key: ${{ runner.os }}-pip
+
+    - name: Setup RabbitMQ
+      run: |
+        sudo apt-get install --assume-yes rabbitmq-server
+        # Stop the service. pytest-rabbitmq will spawn a new server.
+        sudo service rabbitmq-server stop
+        # Give permissions to user
+        sudo chown -R $USER:$USER /var/lib/rabbitmq
+        sudo chown -R $USER:$USER /var/log/rabbitmq
 
     - name: Set up Python
       uses: actions/setup-python@v2
@@ -67,7 +74,7 @@ jobs:
 
     - name: Test with pytest
       run: |
-        pip install pytest pytest-cov pytest-asyncio pytest-mock
+        pip install pytest pytest-cov pytest-asyncio pytest-mock pytest-rabbitmq
         pip install coverage[toml]
         pytest
 

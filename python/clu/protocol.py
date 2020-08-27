@@ -8,14 +8,10 @@
 
 import asyncio
 
+import aio_pika as apika
+import aiormq
+
 from .exceptions import CluError
-
-
-try:
-    import aio_pika as apika
-    import aiormq
-except ImportError:
-    apika = None
 
 
 __all__ = ['TCPProtocol', 'PeriodicTCPServer',
@@ -410,17 +406,17 @@ class TopicListener(object):
     user : str
         The user to connect to the RabbitMQ broker.
     host : str
-        The host where the RabbitMQ message broker lives.
+        The host where the RabbitMQ message broker runs.
+    port : int
+        The port on which the RabbitMQ message broker is running.
 
     """
 
-    def __init__(self, user=None, host=None):
-
-        if not apika:
-            raise ImportError('cannot use TopicListener without aoi_pika.')
+    def __init__(self, user=None, host=None, port=None):
 
         self.user = user
         self.host = host
+        self.port = port
 
         self.connection = None
         self.channel = None
@@ -453,6 +449,7 @@ class TopicListener(object):
 
             self.connection = await apika.connect_robust(user=self.user,
                                                          host=self.host,
+                                                         port=self.port,
                                                          loop=self.loop)
 
             self.channel = await self.connection.channel()
@@ -493,7 +490,7 @@ class TopicListener(object):
         elif isinstance(bindings, (list, tuple)):
             bindings = list(bindings)
         else:
-            raise TypeError('invalid type for bindings {bindings!r}.')
+            raise TypeError(f'invalid type for bindings {bindings!r}.')
 
         try:
             queue = await self.channel.declare_queue(queue_name, exclusive=True)
@@ -505,9 +502,19 @@ class TopicListener(object):
         for binding in bindings:
             await queue.bind(self.exchange, routing_key=binding)
 
+        if callback:
+            queue.consumer_tag = await queue.consume(callback)
+
         self.queues.append(queue)
 
-        if callback:
-            queue.consumer_task = self.loop.create_task(queue.consume(callback))
-
         return queue
+
+    async def stop(self):
+        """Cancels queues and closes the connection."""
+
+        for queue in self.queues:
+
+            if hasattr(queue, 'consumer_tag') and queue.consumer_tag is not None:
+                await queue.cancel(queue.consumer_tag)
+
+        await self.connection.close()

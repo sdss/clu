@@ -151,14 +151,14 @@ class BaseClient(metaclass=abc.ABCMeta):
 
         # We also pass *args in case the actor has been subclassed
         # and the subclass' __init__ accepts different arguments.
-        new_actor = cls(*args, **config_dict)
+        new_client = cls(*args, **config_dict)
 
         # Store original config. This may not be complete since from_config
         # may have been super'd from somewhere else.
-        new_actor._config = orig_config_dict
-        new_actor._config.update(kwargs)
+        new_client._config = orig_config_dict
+        new_client._config.update(kwargs)
 
-        return new_actor
+        return new_client
 
     def setup_logger(self, log, log_dir, verbose=False):
         """Starts the file logger."""
