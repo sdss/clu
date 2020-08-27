@@ -10,9 +10,8 @@ import warnings
 
 import clu
 
-from ..actor import TimerCommandList
 from ..base import BaseActor
-from ..command import Command, parse_legacy_command
+from ..command import Command, TimedCommandList, parse_legacy_command
 from ..parser import ClickParser
 from ..protocol import TCPStreamServer
 from ..tools import log_reply
@@ -92,7 +91,7 @@ class BaseLegacyActor(BaseActor):
             #: dict: Actor models.
             self.models = self.tron.models
 
-        self.timer_commands = TimerCommandList(self)
+        self.timed_commands = TimedCommandList(self)
 
     def __repr__(self):
 
@@ -117,7 +116,7 @@ class BaseLegacyActor(BaseActor):
             warnings.warn(f'connection to tron was refused: {ee}. '
                           'Some functionality will be limited.', clu.CluWarning)
 
-        self.timer_commands.start()
+        self.timed_commands.start()
 
         return self
 
@@ -127,7 +126,7 @@ class BaseLegacyActor(BaseActor):
         if self._server.is_serving():
             self._server.stop()
 
-        await self.timer_commands.stop()
+        await self.timed_commands.stop()
 
         if self.tron:
             self.tron.stop()

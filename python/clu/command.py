@@ -8,12 +8,15 @@
 
 import asyncio
 import re
+import time
+from contextlib import suppress
 
 import clu
 from clu.tools import CommandStatus, StatusMixIn
 
 
-__all__ = ['BaseCommand', 'Command', 'parse_legacy_command']
+__all__ = ['BaseCommand', 'Command', 'parse_legacy_command',
+           'TimedCommand', 'TimedCommandList']
 
 
 class BaseCommand(asyncio.Future, StatusMixIn):
@@ -290,3 +293,109 @@ def parse_legacy_command(command_string):
     command_body = command_dict.get('cmdBody', '').strip()
 
     return command_id, command_body
+
+
+class TimedCommandList(list):
+    """A list of `.TimedCommand` objects that will be executed on a loop.
+
+    Parameters
+    ----------
+    actor
+        The actor in which the commands are to be run.
+    resolution : float
+        In seconds, how frequently to check if any of the `.TimedCommand` must
+        be executed.
+
+    """
+
+    def __init__(self, actor, resolution=0.5, loop=None):
+
+        self.resolution = resolution
+        self.actor = actor
+        self._task = None
+        self.loop = loop or asyncio.get_event_loop()
+
+        list.__init__(self, [])
+
+    def add_command(self, command_string, **kwargs):
+        """Adds a new `.TimedCommand`."""
+
+        self.append(TimedCommand(command_string, **kwargs))
+
+    async def poller(self):
+        """The polling loop."""
+
+        current_time = time.time()
+
+        while True:
+
+            for timed_command in self:
+                elapsed = current_time - timed_command.last_run
+                if elapsed > timed_command.delay:
+                    timed_command_task = self.loop.create_task(timed_command.run(self.actor))
+                    timed_command_task.add_done_callback(timed_command.done)
+
+            self._sleep_task = self.loop.create_task(asyncio.sleep(self.resolution))
+
+            await self._sleep_task
+            current_time += self.resolution
+
+    def start(self):
+        """Starts the loop."""
+
+        if self.running:
+            raise RuntimeError('poller is already running.')
+
+        self._task = self.loop.create_task(self.poller())
+
+        return self
+
+    async def stop(self):
+        """Cancel the poller."""
+
+        if not self.running:
+            return
+
+        self._task.cancel()
+
+        with suppress(asyncio.CancelledError):
+            await self._task
+
+    @property
+    def running(self):
+        """Returns `True` if the poller is running."""
+
+        if self._task and not self._task.cancelled():
+            return True
+
+        return False
+
+
+class TimedCommand(object):
+    """A command to be executed on a loop.
+
+    Parameters
+    ----------
+    command_string : str
+        The command string to run.
+    delay : float
+        How many seconds to wait between repeated calls.
+
+    """
+
+    def __init__(self, command_string, delay=1):
+
+        self.command_string = command_string
+        self.delay = delay
+
+        self.last_run = 0.0
+
+    async def run(self, actor):
+        """Run the command."""
+
+        await Command(self.command_string, actor=actor).parse()
+
+    def done(self, task):
+        """Marks the execution of a command."""
+
+        self.last_run = time.time()

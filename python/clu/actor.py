@@ -6,27 +6,20 @@
 # @Filename: actor.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
-import asyncio
 import json
 import re
-import time
 import uuid
-from contextlib import suppress
 
 from .base import BaseActor
 from .client import AMQPClient
-from .command import Command
+from .command import Command, TimedCommandList
 from .exceptions import CommandError
-from .model import ModelSet
 from .parser import ClickParser
 from .protocol import TCPStreamServer
 from .tools import log_reply
 
 
-try:
-    import aio_pika as apika
-except ImportError:
-    apika = None
+__all__ = ['AMQPActor', 'JSONActor']
 
 
 __all__ = ['AMQPActor', 'JSONActor', 'TimerCommand', 'TimerCommandList']
@@ -51,7 +44,7 @@ class AMQPActor(AMQPClient, ClickParser, BaseActor):
 
         self.commands_queue = None
 
-        if model_path:
+        self.timed_commands = TimedCommandList(self)
 
             model_names = model_names or []
 
@@ -82,7 +75,7 @@ class AMQPActor(AMQPClient, ClickParser, BaseActor):
         self.log.info(f'commands queue {self.commands_queue.name!r} '
                       f'bound to {self.connection.connection.url!s}')
 
-        self.timer_commands.start()
+        self.timed_commands.start()
 
         return self
 
@@ -225,7 +218,7 @@ class JSONActor(ClickParser, BaseActor):
                                       connection_callback=self.new_user,
                                       data_received_callback=self.new_command)
 
-        self.timer_commands = TimerCommandList(self)
+        self.timed_commands = TimedCommandList(self)
 
     async def start(self):
         """Starts the TCP server."""
@@ -233,7 +226,7 @@ class JSONActor(ClickParser, BaseActor):
         await self.server.start_server()
         self.log.info(f'running TCP server on {self.host}:{self.port}')
 
-        self.timer_commands.start()
+        self.timed_commands.start()
 
         return self
 
@@ -381,109 +374,3 @@ class JSONActor(ClickParser, BaseActor):
             transport.write(message_json.encode())
 
         log_reply(self.log, message_code, message_json)
-
-
-class TimerCommandList(list):
-    """A list of `.TimerCommand` objects that will be executed on a loop.
-
-    Parameters
-    ----------
-    actor
-        The actor in which the commands are to be run.
-    resolution : float
-        In seconds, how frequently to check if any of the `.TimerCommand` must
-        be executed.
-
-    """
-
-    def __init__(self, actor, resolution=0.5, loop=None):
-
-        self.resolution = resolution
-        self.actor = actor
-        self._task = None
-        self.loop = loop or asyncio.get_event_loop()
-
-        list.__init__(self, [])
-
-    def add_command(self, command_string, **kwargs):
-        """Adds a new `.TimerCommand`."""
-
-        self.append(TimerCommand(command_string, **kwargs))
-
-    async def poller(self):
-        """The polling loop."""
-
-        current_time = time.time()
-
-        while True:
-
-            for timer_command in self:
-                elapsed = current_time - timer_command.last_run
-                if elapsed > timer_command.delay:
-                    timer_command_task = self.loop.create_task(timer_command.run(self.actor))
-                    timer_command_task.add_done_callback(timer_command.done)
-
-            self._sleep_task = self.loop.create_task(asyncio.sleep(self.resolution))
-
-            await self._sleep_task
-            current_time += self.resolution
-
-    def start(self):
-        """Starts the loop."""
-
-        if self.running:
-            raise RuntimeError('poller is already running.')
-
-        self._task = self.loop.create_task(self.poller())
-
-        return self
-
-    async def stop(self):
-        """Cancel the poller."""
-
-        if not self.running:
-            return
-
-        self._task.cancel()
-
-        with suppress(asyncio.CancelledError):
-            await self._task
-
-    @property
-    def running(self):
-        """Returns `True` if the poller is running."""
-
-        if self._task and not self._task.cancelled():
-            return True
-
-        return False
-
-
-class TimerCommand(object):
-    """A command to be executed on a loop.
-
-    Parameters
-    ----------
-    command_string : str
-        The command string to run.
-    delay : float
-        How many seconds to wait between repeated calls.
-
-    """
-
-    def __init__(self, command_string, delay=1):
-
-        self.command_string = command_string
-        self.delay = delay
-
-        self.last_run = 0.0
-
-    async def run(self, actor):
-        """Run the command."""
-
-        await Command(self.command_string, actor=actor).parse()
-
-    def done(self, task):
-        """Marks the execution of a command."""
-
-        self.last_run = time.time()
