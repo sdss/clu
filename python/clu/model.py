@@ -273,7 +273,7 @@ class Model(BaseModel):
 
 
 class ModelSet(dict):
-    """A dictionary of `Model` instances from files.
+    """A dictionary of `.Model` instances from files.
 
     Reads model schemas from files and creates a dictionary of `Model`
     instances.
@@ -313,7 +313,7 @@ class ModelSet(dict):
             try:
 
                 schema_path = self.model_path / f'{name}.json'
-                assert schema_path.exists(), f'model path {schema_path} does not exist.'
+                assert schema_path.exists(), f'Model path {schema_path} does not exist.'
 
                 schema = json.load(open(schema_path))
 
@@ -323,6 +323,6 @@ class ModelSet(dict):
 
                 if not raise_exception:
                     if self.log:
-                        self.log.warning(f'cannot load model for actor {name!r}: {ee}')
+                        self.log.warning(f'Cannot load model {name!r}: {ee}')
                     continue
                 raise

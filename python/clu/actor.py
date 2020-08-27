@@ -10,6 +10,8 @@ import json
 import re
 import uuid
 
+import aio_pika as apika
+
 from .base import BaseActor
 from .client import AMQPClient
 from .command import Command, TimedCommandList
@@ -20,9 +22,6 @@ from .tools import log_reply
 
 
 __all__ = ['AMQPActor', 'JSONActor']
-
-
-__all__ = ['AMQPActor', 'JSONActor', 'TimerCommand', 'TimerCommandList']
 
 
 class AMQPActor(AMQPClient, ClickParser, BaseActor):
@@ -38,28 +37,13 @@ class AMQPActor(AMQPClient, ClickParser, BaseActor):
 
     """
 
-    def __init__(self, *args, model_path=None, model_names=None, **kwargs):
+    def __init__(self, *args, **kwargs):
 
         AMQPClient.__init__(self, *args, **kwargs)
 
         self.commands_queue = None
 
         self.timed_commands = TimedCommandList(self)
-
-            model_names = model_names or []
-
-            if self.name not in model_names:
-                model_names.append(self.name)
-
-            self.models = ModelSet(model_path, model_names=model_names,
-                                   raise_exception=False, log=self.log)
-
-        else:
-
-            self.log.warning('no models loaded.')
-            self.models = None
-
-        self.timer_commands = TimerCommandList(self)
 
     async def start(self, **kwargs):
         """Starts the connection to the AMQP broker."""
@@ -78,6 +62,14 @@ class AMQPActor(AMQPClient, ClickParser, BaseActor):
         self.timed_commands.start()
 
         return self
+
+    async def shutdown(self):
+        """Cancels queues and stops timed commands."""
+
+        await self.commands_queue.cancel(self.commands_queue.consumer_tag)
+        await self.timed_commands.stop()
+
+        await super().shutdown()
 
     async def new_command(self, message):
         """Handles a new command received by the actor."""
@@ -103,23 +95,6 @@ class AMQPActor(AMQPClient, ClickParser, BaseActor):
             return
 
         return self.parse_command(command)
-
-    async def handle_reply(self, message):
-        """Handles a reply received by the message and updates the models.
-
-        Parameters
-        ----------
-        message : aio_pika.IncomingMessage
-            The message received.
-
-        """
-
-        reply = await AMQPClient.handle_reply(self, message)
-
-        if self.models and reply.sender in self.models:
-            self.models[reply.sender].update_model(reply.body)
-
-        return
 
     async def write(self, message_code='i', message=None, command=None,
                     broadcast=False, **kwargs):

@@ -7,6 +7,6 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
 
-def test_actor_amqp(rabbitmq):
+def test_actor(amqp_actor):
 
-    assert True
+    assert amqp_actor.name == 'amqp_actor'

@@ -23,7 +23,7 @@ else:
     try:
         from asynctest import CoroutineMock
     except ImportError:
-        raise ImportError('clu.testing requires asynctest with Python < 3.8.')
+        raise ImportError('clu.testing requires asynctest if Python < 3.8.')
 
 
 __all__ = ['MockReply', 'MockReplyList', 'setup_test_actor', 'TestCommand']

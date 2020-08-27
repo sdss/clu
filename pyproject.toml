@@ -76,7 +76,6 @@ skip_glob = [
 
 [tool.pytest.ini_options]
 addopts = "--cov clu --cov-report xml --cov-report html --cov-report term"
-rabbitmq_port = 8888
 rabbitmq_ctl = "/usr/local/sbin/rabbitmqctl"
 rabbitmq_server = "/usr/local/sbin/rabbitmq-server"
 
