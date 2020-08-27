@@ -6,13 +6,15 @@
 # @Filename: conftest.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
+import asyncio
 import os
 import pathlib
 
 import pytest
 from pytest_rabbitmq import factories
 
-from clu import AMQPActor, AMQPClient
+from clu import AMQPActor, AMQPClient, JSONActor
+from clu.protocol import open_connection
 
 
 DATA_DIR = pathlib.Path(os.path.dirname(__file__)) / 'data'
@@ -40,6 +42,7 @@ rabbitmq = factories.rabbitmq('rabbitmq_proc')
 async def amqp_actor(rabbitmq, event_loop):
 
     actor = AMQPActor(name='amqp_actor', port=RMQ_PORT)
+
     await actor.start()
 
     yield actor
@@ -66,3 +69,28 @@ async def amqp_client(rabbitmq, event_loop):
 
     await client.shutdown()
     client.replies = []
+
+
+@pytest.fixture
+async def json_actor(unused_tcp_port_factory, event_loop):
+
+    actor = JSONActor('json_actor', host='localhost',
+                      port=unused_tcp_port_factory())
+
+    await actor.start()
+    await asyncio.sleep(0.01)
+
+    yield actor
+
+    await actor.stop()
+
+
+@pytest.fixture
+async def json_client(json_actor):
+
+    client = await open_connection(json_actor.host, json_actor.port)
+    client.actor = json_actor
+
+    yield client
+
+    client.close()

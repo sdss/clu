@@ -7,9 +7,13 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
 import asyncio
+import json
+import logging
+import warnings
 
 import pytest
 
+from clu import ActorHandler, CluWarning
 from clu.tools import CallbackMixIn
 
 
@@ -95,3 +99,43 @@ def test_callback_none(callback_object):
     callback_object.notify(42)
 
     assert results == []
+
+
+@pytest.mark.parametrize('level', (logging.DEBUG, logging.INFO,
+                                   logging.WARNING, logging.ERROR))
+@pytest.mark.asyncio
+async def test_actorhandler(json_client, json_actor, level):
+
+    json_actor.log.addHandler(ActorHandler(json_actor, level=logging.DEBUG))
+
+    json_actor.log.log(level, 'This is a log message.')
+
+    msg_code = {logging.DEBUG: 'd', logging.INFO: 'i',
+                logging.WARNING: 'w', logging.ERROR: 'f'}
+
+    data = await json_client.reader.readline()
+    data_json = json.loads(data.decode())
+    assert data_json['header']['message_code'] == msg_code[level]
+    assert data_json['header']['sender'] == 'json_actor'
+    assert data_json['data'] == {'text': 'This is a log message.'}
+
+
+@pytest.mark.asyncio
+async def test_actorhandler_warning(json_client, json_actor):
+
+    handler = ActorHandler(json_actor, level=logging.WARNING,
+                           filter_warnings=[CluWarning])
+    json_actor.log.addHandler(handler)
+    json_actor.log.warnings_logger.addHandler(handler)
+
+    with pytest.raises(asyncio.TimeoutError):
+        warnings.warn('A deprecation warning', DeprecationWarning)
+        data = await asyncio.wait_for(json_client.reader.read(100), timeout=1)
+
+    warnings.warn('A CLU warning', CluWarning)
+
+    data = await asyncio.wait_for(json_client.reader.readline(), timeout=0.1)
+    data_json = json.loads(data.decode())
+    assert data_json['header']['message_code'] == 'w'
+    assert data_json['header']['sender'] == 'json_actor'
+    assert data_json['data'] == {'text': 'A CLU warning (CluWarning)'}

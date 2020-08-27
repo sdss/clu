@@ -170,12 +170,15 @@ class JSONActor(ClickParser, BaseActor):
 
     """
 
-    def __init__(self, name, host, port, *args, **kwargs):
+    def __init__(self, name, host=None, port=None, *args, **kwargs):
 
         super().__init__(name, *args, **kwargs)
 
-        self.host = host
+        self.host = host or 'localhost'
         self.port = port
+
+        if self.port is None:
+            raise ValueError('port needs to be specified.')
 
         #: Mapping of commander_id to transport
         self.transports = dict()
@@ -190,12 +193,20 @@ class JSONActor(ClickParser, BaseActor):
     async def start(self):
         """Starts the TCP server."""
 
-        await self.server.start_server()
+        await self.server.start()
         self.log.info(f'running TCP server on {self.host}:{self.port}')
 
         self.timed_commands.start()
 
         return self
+
+    async def stop(self):
+        """Stops the client connection and running tasks."""
+
+        if self.server.is_serving():
+            self.server.stop()
+
+        await self.timed_commands.stop()
 
     async def run_forever(self):
         """Runs the actor forever, keeping the loop alive."""
@@ -254,7 +265,7 @@ class JSONActor(ClickParser, BaseActor):
 
         return self.parse_command(command)
 
-    def send_command(self):
+    def send_command(self, *args, **kwargs):
         """Not implemented for `.JSONActor`."""
 
         raise NotImplementedError('JSONActor cannot send commands to other actors.')
@@ -289,6 +300,9 @@ class JSONActor(ClickParser, BaseActor):
                 }
             }
 
+        Although the messsage is displayed here in multiple lines, it is
+        written as a single line to the TCP clients to facilitate parsing.
+
         Parameters
         ----------
         message_code : str
@@ -302,8 +316,6 @@ class JSONActor(ClickParser, BaseActor):
         broadcast : bool
             Whether to broadcast the message to all the users or only to the
             commander.
-        beautify : bool
-            Whether to format the JSON to make it more readable.
         kwargs
             Keyword arguments that will used to update the message.
 
@@ -327,11 +339,7 @@ class JSONActor(ClickParser, BaseActor):
         message_full.update(header)
         message_full.update({'data': message})
 
-        if beautify:
-            message_json = json.dumps(message_full, sort_keys=False, indent=4)
-        else:
-            message_json = json.dumps(message_full, sort_keys=False)
-
+        message_json = json.dumps(message_full, sort_keys=False)
         message_json += '\n'
 
         if broadcast or commander_id is None or transport is None:

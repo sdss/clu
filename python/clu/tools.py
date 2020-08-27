@@ -182,7 +182,7 @@ class StatusMixIn(object):
         return self._status
 
     @status.setter
-    def status(self, value):
+    def status(self, value):  # pragma: no cover
         """Sets the status."""
 
         if value != self._status:
@@ -527,10 +527,9 @@ class ActorHandler(logging.Handler):
         message_lines = [f'{warning_text} ({warning_category})']
 
         try:
-            warning_class = eval(warning_category)
             if self.filter_warnings:
                 for warning_filter in self.filter_warnings:
-                    if isinstance(warning_class, warning_filter):
+                    if warning_category == warning_filter.__name__:
                         return message_lines
             return []
         except NameError:
