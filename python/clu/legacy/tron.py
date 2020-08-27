@@ -239,9 +239,6 @@ class TronConnection(object):
             if actor.startswith('keys_'):
                 actor = actor.split('_')[1]
 
-            if actor not in self.models:
-                continue
-
             try:
                 self.models[actor].parse_reply(reply)
             except Exception as ee:
