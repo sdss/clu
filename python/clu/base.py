@@ -88,8 +88,8 @@ class BaseClient(metaclass=abc.ABCMeta):
 
         self.log.info('cancelling all pending tasks and shutting down.')
 
-        tasks = [task for task in asyncio.Task.all_tasks(loop=self.loop)
-                 if task is not asyncio.tasks.Task.current_task(loop=self.loop)]
+        tasks = [task for task in asyncio.all_tasks(loop=self.loop)
+                 if task is not asyncio.current_task(loop=self.loop)]
         list(map(lambda task: task.cancel(), tasks))
 
         await asyncio.gather(*tasks, return_exceptions=True)
@@ -164,7 +164,7 @@ class BaseClient(metaclass=abc.ABCMeta):
         """Starts the file logger."""
 
         if not log:
-            log = get_logger('actor:' + self.name)
+            log = get_logger('clu:' + self.name)
 
         if log_dir:
 
@@ -192,7 +192,7 @@ class BaseClient(metaclass=abc.ABCMeta):
 
         return log
 
-    def send_command(self):
+    def send_command(self):  # pragma: no cover
         """Sends a command to an actor."""
 
         raise NotImplementedError('Sending commands is not implemented '
