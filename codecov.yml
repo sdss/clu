@@ -1,4 +1,7 @@
 coverage:
+    range: 70..100
+    round: up
+    precision: 1
     status:
         project:
             default:
@@ -14,7 +17,7 @@ coverage:
             default:
                 # basic
                 target: auto
-                threshold: 70%
+                threshold: 5%
                 base: auto
                 # advanced
                 if_no_uploads: error
