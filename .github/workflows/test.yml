@@ -43,6 +43,9 @@ jobs:
         sudo apt-get install --assume-yes rabbitmq-server
         # Stop the service. pytest-rabbitmq will spawn a new server.
         sudo service rabbitmq-server stop
+        # Give permissions to user
+        sudo chown -R $USER:$USER /var/lib/rabbitmq
+        sudo chown -R $USER: $USER /var/log/rabbitmq
 
     - name: Set up Python
       uses: actions/setup-python@v2
