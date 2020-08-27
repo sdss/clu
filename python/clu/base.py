@@ -108,6 +108,8 @@ class BaseClient(metaclass=abc.ABCMeta):
 
         if 'actor' in config:
             config = config['actor']
+        elif 'client' in config:
+            config = config['client']
 
         return config
 
@@ -119,14 +121,16 @@ class BaseClient(metaclass=abc.ABCMeta):
         ----------
         config : dict or str
             A configuration dictionary or the path to a YAML configuration
-            file that must contain a section ``'actor'`` (if the section is
-            not present, the whole file is assumed to be the actor
-            configuration).
+            file. If the file contains a section called ``'actor'`` or
+            ``'client'``, that section will be used instead of the whole
+            file.
 
         """
 
         orig_config_dict = cls._parse_config(config)
+
         config_dict = orig_config_dict.copy()
+        config_dict.update(kwargs)
 
         # Decide what to do with the rest of the keyword arguments:
         args_inspect = inspect.getfullargspec(cls)
@@ -138,13 +142,12 @@ class BaseClient(metaclass=abc.ABCMeta):
         else:
             # Check the kw arguments in the subclass and pass only
             # values from config_dict that match them.
-            kw_args = args_inspect.kwonlyargs
-            if len(args_inspect.defaults) > 0:
-                args_invert = args_inspect.args[::-1]
-                kw_args += args_invert[:len(args_inspect.defaults)]
-            for kw in kwargs:
-                if kw in kw_args:
-                    config_dict[kw] = kwargs[kw]
+            class_kwargs = args_inspect.args
+            class_kwargs.remove('self')
+
+            # Remove keys that are not in the signature.
+            config_dict = {key: value for key, value in config_dict.items()
+                           if key in class_kwargs}
 
         # We also pass *args in case the actor has been subclassed
         # and the subclass' __init__ accepts different arguments.
