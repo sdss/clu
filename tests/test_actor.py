@@ -3,10 +3,10 @@
 #
 # @Author: José Sánchez-Gallego (gallegoj@uw.edu)
 # @Date: 2020-08-26
-# @Filename: conftest.py
+# @Filename: test_actor.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
-from pytest_rabbitmq import factories
 
-rabbitmq_proc = factories.rabbitmq_proc(port=None)
-rabbitmq = factories.rabbitmq('rabbitmq_proc')
+def test_actor_amqp(rabbitmq):
+
+    assert True
