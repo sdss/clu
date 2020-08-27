@@ -40,7 +40,7 @@ jobs:
 
     - name: Setup RabbitMQ
       run: |
-      sudo apt-get install --assume-yes rabbitmq-server
+        sudo apt-get install --assume-yes rabbitmq-server
 
     - name: Set up Python
       uses: actions/setup-python@v2
