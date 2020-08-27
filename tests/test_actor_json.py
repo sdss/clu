@@ -6,6 +6,7 @@
 # @Filename: test_actor_json.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
+import asyncio
 import json
 
 import pytest
@@ -56,3 +57,22 @@ async def test_json_actor_send_command(json_actor):
         json_actor.send_command('a_command')
 
     assert 'JSONActor cannot send commands to other actors.' in str(error)
+
+
+async def test_timed_command(json_actor, json_client):
+
+    json_actor.timed_commands.add_command('ping', delay=0.5)
+
+    await asyncio.sleep(1.6)
+
+    data = (await json_client.reader.read(10000)).splitlines()
+
+    assert len(data) == 4  # Two commands, each with a running and a done msg
+
+    data_json = json.loads(data[1])
+    assert data_json['header']['message_code'] == ':'
+    assert data_json['data'] == {'text': 'Pong.'}
+
+    data_json = json.loads(data[3])
+    assert data_json['header']['message_code'] == ':'
+    assert data_json['data'] == {'text': 'Pong.'}
