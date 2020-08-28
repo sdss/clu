@@ -266,8 +266,7 @@ class Model(BaseModel):
         for key, value in instance.items():
             self[key].value = value
 
-        if self.callback:
-            self.scheduler.add_callback(self.callback, self)
+        self.notify(self)
 
         return True
 

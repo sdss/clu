@@ -227,7 +227,7 @@ It is also possible to call `~.BaseCommand.write` with keywords in the form of p
 
     command.write('i', lamp_on=True, ffs='closed')
 
-By default the command will reply only to the commander, but in some cases we want to broadcast a message to *all* the clients in the actor network. This is useful for status commands or :ref:`internal periodic commands <periodic-command-pattern>`. In that case with can pass a ``broadcast=True`` to  `~.BaseCommand.write`.
+By default the command will reply only to the commander, but in some cases we want to broadcast a message to *all* the clients in the actor network. This is useful for status commands or `internal periodic commands <.TimedCommand>`. In that case with can pass a ``broadcast=True`` to  `~.BaseCommand.write`.
 
 
 Commanding other actors

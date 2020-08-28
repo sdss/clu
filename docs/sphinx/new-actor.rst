@@ -129,7 +129,7 @@ In this section we'll have a quick look at how CLU implements the protocol we ju
 
 For handling the connection to the RabbitMQ server while allowing asynchronous programming we use `aio_pika <https://aio-pika.readthedocs.io>`_, a wrapper around the `Pika <https://pika.readthedocs.io/en/stable/>`_ with support for asyncio.
 
-When an `.AMQPActor` is instantiated and we await `~.AMQPActor.start`, a new instance of `.TopicListener` is created, connects to the RabbitMQ server, and creates a channel and the topic exchange (or connects to it, if it already exists). We then add the ``commands_<actor>`` and ``replies_<actor>`` queues. When a new message is received by the command queue a callback to `~.AMQPActor.new_command` is scheduled. When a new reply is received, we deal with it in `~.AMQPActor.handle_reply` and use it to update the :ref:`internal keyword model <keyword-model>`.
+When an `.AMQPActor` is instantiated and we await `~.AMQPActor.start`, a new instance of `.TopicListener` is created, connects to the RabbitMQ server, and creates a channel and the topic exchange (or connects to it, if it already exists). We then add the ``commands_<actor>`` and ``replies_<actor>`` queues. When a new message is received by the command queue a callback to `~.AMQPActor.new_command` is scheduled. When a new reply is received, we deal with it in `~.AMQPClient.handle_reply` and use it to update the :ref:`internal keyword model <keyword-model>`.
 
 When a new message is received by `~.AMQPActor.new_command` it unpacks the command ID and command string and creates a new instance of `.Command` which is then passed to `~.BaseActor.parse_command`. This method is the one that invokes the click parser with the command string and calls the command function.
 
