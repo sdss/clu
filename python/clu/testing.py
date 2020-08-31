@@ -132,7 +132,7 @@ async def setup_test_actor(actor, user_id=1):
       `.MockReplyList` that is accessible via a new ``actor.mock_replies``
       attribute.
 
-    The actor is modified in place and also returned.
+    The actor is modified in place and returned.
 
     """
 
