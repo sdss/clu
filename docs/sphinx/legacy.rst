@@ -39,7 +39,7 @@ Tron receives the message, reformats the header and sends it to the actor as ::
 
     commander_id message_id command_string
 
-where ``commander_id`` is a number identifying the commander and``message_id`` is a message ID that does not need to be the same as the commanded ``message_id``.
+where ``commander_id`` is a number identifying the commander and ``message_id`` is a message ID that does not need to be the same as the commanded ``message_id``.
 
 Replies
 ~~~~~~~
@@ -51,16 +51,20 @@ While processing the command, the actor will usually have to output replies back
 where:
 
 - Messages are ASCII.
-- ``user_id`` is the ID number of the user that sent the command that triggered this reply. Note that this is not the same as the ``commander_id`` from the command, but the internal ID assigned to the connection socket from which the command came. In most cases where there is a single connection to the actor this is irrelevant.
+- ``user_id`` is the ID number of the user that sent the command that triggered this reply. Note that this is not the same as the ``commander_id`` from the command, but the internal ID assigned to the connection socket from which the command came. In most cases where there is a single connection to the actor this is irrelevant. Use 0 to broadcast to all connected users.
 - ``message_id`` is the ID number of the message that triggered this reply. Use 0 if the reply is unsolicited (i.e. not in response to any command).
 - ``message_code`` is a one-character :ref:`message type code <message-codes>`.
 - ``reply_data`` is the message data in keyword-value format. Multiple keywords can be output in the same reply as long as they are separated by semi-colons.
 
-For example, if we are replying to ``OBSERVER.john 17 sop status`` from Tron, and assuming that Tron is connected to ``sop`` with ``user_id=1``, we can reply ::
+For example, if SOP is replying to ``OBSERVER.john 17 sop status`` from Tron, and assuming that Tron is connected to ``sop`` with ``user_id=1``, it could say ::
 
-    1 17 i lamps_on=true; ffs="closed"
+    1 78 i lamps_on=true; ffs="closed"
 
-Tron receives the reply, changes the header to match the original format and then sends it back to all the connected users.
+Note that the ``message_id=78`` does not match the original ``message_id=17``. This is an internally assigned, unique ``message_id`` that Tron uses to communicate with the actor.
+
+Tron then receives the reply, changes the header to match the original format and then sends it back to *all* the connected users ::
+
+    OBSERVER.john 17 sop i lamps_on=true; ffs="closed"
 
 A note of caution
 ~~~~~~~~~~~~~~~~~
@@ -108,7 +112,7 @@ CLU Legacy actor
 
 CLU provides its own implementation of the above protocol via the `.BaseLegacyActor` class. Although the internals are different, the behaviour for the user should be exactly the same as with the new-style `.AMQPActor` class (e.g., `~.BaseLegacyActor.write` and `~.BaseLegacyActor.send_command` have the same interface). The `.LegacyActor` class provides the actor functionality along with the usual :ref:`Click-based parsing <parser>`.
 
-When the actor is run, it starts a `~.BaseLegacyActor.server` which is an instance of `.TCPStreamServer`. Similarly, it creates a client connection to Tron that can be accessed over the `~.BaseLegacyActor.tron` attribute. When a new user connects to the server, a callback is issued to `~.BaseLegacyActor.new_user`, which adds the transport to the list of users and outputs some information to the new user. New commands are handled by the `~.BaseLegacyActor.new_command` callback, which parses the command and creates a `.Command` instance which is then sent to `~.BaseActor.parse_command`.
+When the actor is run, it starts a server which is an instance of `.TCPStreamServer`. Optionally, it creates a client connection to Tron that can be accessed over the `~.BaseLegacyActor.tron` attribute. When a new user connects to the server, a callback is issued to `~.BaseLegacyActor.new_user`, which adds the transport to the list of users and outputs some information to the new user. New commands are handled by the `~.BaseLegacyActor.new_command` callback, which parses the command and creates a `.Command` instance which is then sent to `~.BaseActor.parse_command`.
 
 Keyword parsing
 ~~~~~~~~~~~~~~~
@@ -118,3 +122,9 @@ CLU provides tracking of actor models through Tron. The actors for which models 
 Internally the parsing of the keywords received from Tron uses the opscore code (opscore does not need to be installed, the code is now part of CLU and migrated to Python 3) and the model must be defined as part of the ``actorkeys`` product.
 
 Although the internals of parsing and validation are significantly different, the `.TronModel` class behaves exactly as `.Model` and the models follows the same structure described in :ref:`keyword-model`.
+
+
+JSONActor
+---------
+
+CLU also provides a simple `.JSONActor` which accepts commands following the same format as legacy actors but replies with a JSON string. This makes the replies more verbose and less human-readable but much more easy to parse, since they can be interpreted by just calling `json.loads` or the equivalent JSON loading routing for any programming language. `.JSONActor` is thus useful for devices that will be commanded by an actor but not directly replying to Tron or a user.
