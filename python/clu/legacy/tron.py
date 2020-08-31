@@ -159,6 +159,11 @@ class TronConnection(object):
         self._client.close()
         self._parser.cancel()
 
+    async def run_forever(self):
+
+        # Keep alive until the connection is closed.
+        await self._client.writer.wait_closed()
+
     def send_command(self, target, command_string, mid=None):
         """Sends a command through the hub.
 
