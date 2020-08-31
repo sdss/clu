@@ -18,6 +18,7 @@ Contents
   keyword-model
   parser
   testing
+  examples
   api
   changelog
 
