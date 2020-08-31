@@ -7,6 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
 import asyncio
+import json
 import os
 
 import click
@@ -22,7 +23,6 @@ import clu
 
 
 loop = asyncio.get_event_loop()
-prompt_toolkit.eventloop.use_asyncio_event_loop()
 
 
 style = prompt_toolkit.styles.style_from_pygments_cls(
@@ -47,19 +47,20 @@ class ShellClient(clu.AMQPClient):
         if message is None:
             return
 
-        message_info = message.info()
+        message_info = message.info
         headers = message_info['headers']
 
-        message_code = headers.get('message_code', b'').decode()
-        sender = headers.get('sender', b'').decode()
+        message_code = headers.get('message_code', '')
+        sender = headers.get('sender', '')
 
         message_code_formatted = prompt_toolkit.formatted_text.HTML(
             f'<style font-weight="bold" '
             f'fg="{color_codes[message_code]}">{message_code}</style>')
 
-        body = message.body.decode()
+        body = message.body
 
-        body_tokens = list(pygments.lex(body, lexer=JsonLexer()))
+        body_tokens = list(pygments.lex(json.dumps(body, indent=True),
+                                        lexer=JsonLexer()))
 
         if sender:
             print(f'{sender} ', end='')
@@ -70,13 +71,16 @@ class ShellClient(clu.AMQPClient):
 
         if body:
             print(PygmentsTokens(body_tokens), end='', style=style)
+        else:
+            print()  # Newline
 
 
-async def shell_client_prompt(user=None, host=None, port=None):
+async def shell_client_prompt(user=None, password=None, host=None, port=None):
 
     client = await ShellClient('shell_client',
-                               user=user, host=host,
-                               log=False).run()
+                               user=user, password=password,
+                               host=host, port=port,
+                               log=False).start()
 
     history = FileHistory(os.path.expanduser('~/.clu_history'))
 
@@ -84,9 +88,9 @@ async def shell_client_prompt(user=None, host=None, port=None):
 
     while True:
         try:
-            text = await session.prompt(async_=True)
+            text = await session.prompt_async()
         except KeyboardInterrupt:
-            continue
+            break
         except EOFError:
             break
         else:
@@ -109,17 +113,20 @@ async def shell_client_prompt(user=None, host=None, port=None):
 
 @click.command(name='clu')
 @click.option('--user', '-U', type=str, show_default=True, default='guest',
-              help='the AMQP username.')
+              help='The AMQP username.')
+@click.option('--password', '-U', type=str, show_default=True, default='guest',
+              help='The AMQP password.')
 @click.option('--host', '-H', type=str, show_default=True, default='localhost',
-              help='the host running the AMQP server.')
+              help='The host running the AMQP server.')
 @click.option('--port', '-P', type=int, show_default=True, default=5672,
-              help='the port on which the server is running')
-def clu_cli(user=None, host=None, port=None):
+              help='The port on which the server is running')
+def clu_cli(user, password, host, port):
     """Runs the AMQP command line interpreter."""
 
     with patch_stdout():
 
         shell_task = loop.create_task(shell_client_prompt(user=user,
+                                                          password=password,
                                                           host=host,
                                                           port=port))
         loop.run_until_complete(shell_task)
