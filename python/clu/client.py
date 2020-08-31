@@ -128,6 +128,12 @@ class AMQPClient(BaseClient):
 
         await self.connection.stop()
 
+    async def run_forever(self):
+        """Runs the event loop forever."""
+
+        while not self.connection.connection.is_closed:
+            await asyncio.sleep(1)
+
     async def handle_reply(self, message):
         """Handles a reply received from the exchange.
 
