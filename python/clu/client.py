@@ -123,7 +123,7 @@ class AMQPClient(BaseClient):
 
         return self
 
-    async def shutdown(self):
+    async def stop(self):
         """Cancels queues and closes the connection."""
 
         await self.connection.stop()

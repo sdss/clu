@@ -49,7 +49,7 @@ async def test_queue_locked(amqp_actor):
 
     assert 'This may indicate that another instance' in str(error)
 
-    await actor2.shutdown()
+    await actor2.stop()
 
 
 async def test_model_callback(amqp_client, amqp_actor, mocker):

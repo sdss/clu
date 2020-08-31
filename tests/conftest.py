@@ -47,7 +47,7 @@ async def amqp_actor(rabbitmq, event_loop):
 
     yield actor
 
-    await actor.shutdown()
+    await actor.stop()
 
 
 @pytest.fixture
@@ -67,7 +67,7 @@ async def amqp_client(rabbitmq, event_loop):
 
     yield client
 
-    await client.shutdown()
+    await client.stop()
     client.replies = []
 
 
