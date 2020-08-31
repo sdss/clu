@@ -39,8 +39,8 @@ which will create the connection to RabbitMQ, set up the exchanges and queues, a
 
     def main(loop):
         # run() returns the actor so we can declare and run the actor more compactly.
-        my_actor = await AMQPActor('my_actor', 'guest', 'localhost',
-                                   version='0.1.0', loop=loop).start()
+        my_actor = await AMQPActor('my_actor', user='guest', password='guest',
+                                   host='localhost', version='0.1.0', loop=loop).start()
 
     loop = asyncio.get_event_loop()
     loop.create_task(main(loop))
@@ -48,8 +48,6 @@ which will create the connection to RabbitMQ, set up the exchanges and queues, a
 
 In these examples we have used the new-style `.AMQPActor` class, but it's trivial to replace it with the legacy actor class `.LegacyActor`. The parameters to start a `.LegacyActor` are the same with the exception that we pass the hostname and port where the actor will be serving, and we can provide the ``tron_host`` and ``tron_port`` to connect to an instance of ``Tron``. We'll talk more about legacy actor in a :ref:`following section <legacy-actors>`.
 
-.. note::
-    Right now it is assumed that the AMQP client can connect to the server without a password. This may change in the future.
 
 Configuration files
 ~~~~~~~~~~~~~~~~~~~
