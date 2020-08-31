@@ -411,6 +411,8 @@ class TopicListener(object):
     ----------
     user : str
         The user to connect to the RabbitMQ broker.
+    password : str
+        The password for the user.
     host : str
         The host where the RabbitMQ message broker runs.
     port : int
@@ -418,9 +420,11 @@ class TopicListener(object):
 
     """
 
-    def __init__(self, user=None, host=None, port=None):
+    def __init__(self, user='guest', password='guest',
+                 host='localhost', port=5672):
 
         self.user = user
+        self.password = password
         self.host = host
         self.port = port
 
@@ -450,8 +454,6 @@ class TopicListener(object):
         self.loop = loop or asyncio.get_event_loop()
 
         if not channel:
-
-            assert self.user and self.host, 'either user or host are not set.'
 
             self.connection = await apika.connect_robust(user=self.user,
                                                          host=self.host,

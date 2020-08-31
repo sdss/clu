@@ -6,6 +6,7 @@
 # @Filename: client.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
+import asyncio
 import json
 import uuid
 
@@ -38,6 +39,8 @@ class AMQPClient(BaseClient):
         The name of the actor.
     user : str
         The user to connect to the AMQP broker. Defaults to ``guest``.
+    password : str
+        The password for the user. Defaults to ``guest``.
     host : str
         The host where the AMQP message broker runs. Defaults to ``localhost``.
     port : int
@@ -68,21 +71,23 @@ class AMQPClient(BaseClient):
 
     connection = None
 
-    def __init__(self, name, user=None, host=None, port=None, version=None,
-                 loop=None, log_dir=None, log=None, model_path=None,
-                 model_names=None):
+    def __init__(self, name, user=None, password=None, host=None, port=None,
+                 version=None, loop=None, log_dir=None, log=None,
+                 model_path=None, model_names=None):
 
         super().__init__(name, version=version, loop=loop,
                          log_dir=log_dir, log=log)
 
         self.user = user or 'guest'
+        self.password = password or 'guest'
         self.host = host or 'localhost'
         self.port = port or 5672
 
         self.replies_queue = None
 
         # Creates the connection to the AMQP broker
-        self.connection = TopicListener(self.user, self.host, port=self.port)
+        self.connection = TopicListener(self.user, self.password,
+                                        self.host, port=self.port)
 
         #: dict: External commands currently running.
         self.running_commands = {}
@@ -95,8 +100,9 @@ class AMQPClient(BaseClient):
 
         else:
 
-            self.log.warning('no models loaded.')
             self.models = None
+
+        # self._run_forever_task = None
 
     def __repr__(self):
 
