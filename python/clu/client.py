@@ -63,7 +63,7 @@ class AMQPClient(BaseClient):
         file must be named as the model and have extension ``.json``
         (e.g., ``sop.json``).
     model_names : list
-        A list of models whose schemas will be loaded.
+        A list of models whose schemas will be monitored.
 
     """
 
