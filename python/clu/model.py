@@ -230,6 +230,7 @@ class Model(BaseModel):
         for default_prop in ['text', 'error', 'schema']:
             if default_prop not in self.schema['properties']:
                 self.schema['properties'][default_prop] = {'type': 'string'}
+        self.schema['properties']['help'] = {'type': 'array'}
 
         super().__init__(name, **kwargs)
 

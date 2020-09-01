@@ -64,7 +64,8 @@ class AMQPActor(AMQPClient, ClickParser, BaseActor):
 
         # Add the command to get the schema. This command is not added by
         # default because only AMQPActor should have it.
-        self.parser.add_command(get_schema)
+        if self.schema is not None:
+            self.parser.add_command(get_schema)
 
     async def start(self, **kwargs):
         """Starts the connection to the AMQP broker."""
