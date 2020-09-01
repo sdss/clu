@@ -214,7 +214,7 @@ def ping(*args):
     return
 
 
-@click.command(name='get_schema')
+@click.command(cls=CluCommand, name='get_schema')
 def get_schema(*args):
     """Returns the schema of the actor as a JSON schema."""
 
