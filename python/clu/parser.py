@@ -40,13 +40,12 @@ class CluCommand(click.Command):
     def done_callback(self, task, exception_handler=None):
         """Checks if the command task has been successfully done."""
 
-        log = getattr(task, 'log', None)
         ctx = task.ctx
 
         command = ctx.obj['parser_args'][0]
 
         if exception_handler and task.exception():
-            exception_handler(command, task.exception(), log=log)
+            exception_handler(command, task.exception())
 
     async def _schedule_callback(self, ctx, timeout=None):
         """Schedules the callback as a task with a timeout."""
@@ -346,8 +345,7 @@ class ClickParser:
 
         return command
 
-    @staticmethod
-    def _handle_command_exception(command, exception, log=None):
+    def _handle_command_exception(self, command, exception):
         """Handles an exception during parsing or execution of a command."""
 
         try:
@@ -395,6 +393,6 @@ class ClickParser:
             else:
                 command.fail(text=msg)
 
-            log = log or getattr(command.ctx, 'log', None)
+            log = self.log or command.ctx.obj.get('log', None)
             if log:
                 log.exception(f'Command {command.body!r} failed with error:')
