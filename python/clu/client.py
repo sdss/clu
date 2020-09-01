@@ -58,17 +58,8 @@ class AMQPClient(BaseClient):
     parser : ~clu.parser.CluGroup
         A click command parser that is a subclass of `~clu.parser.CluGroup`.
         If `None`, the active parser will be used.
-<<<<<<< HEAD
-    model_path : str or pathlib.Path
-        The path to the directory containing the schema files. Each schema
-        file must be named as the model and have extension ``.json``
-        (e.g., ``sop.json``).
-    model_names : list
-        A list of models whose schemas will be monitored.
-=======
     models : list
         A list of actor models whose schemas will be monitored.
->>>>>>> ef741bec9237bb7ed15f4abd181970a3eb14c7a9
 
     """
 

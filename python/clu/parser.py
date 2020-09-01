@@ -13,7 +13,7 @@ import json
 import re
 
 import click
-from click.decorators import group
+from click.decorators import group, pass_obj
 
 from . import actor
 
@@ -183,6 +183,19 @@ def timeout(seconds):
             return await helper(f, *args, **kwargs)
 
         return functools.update_wrapper(wrapper, f)
+
+    return decorator
+
+
+def pass_args():
+    """Thing wrapper around pass_obj to pass the command and parser_args."""
+
+    def decorator(f):
+        @functools.wraps(f)
+        @pass_obj
+        def new_func(obj, *args, **kwargs):
+            return f(*obj['parser_args'], *args, **kwargs)
+        return functools.update_wrapper(new_func, f)
 
     return decorator
 
