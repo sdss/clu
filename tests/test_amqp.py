@@ -32,6 +32,16 @@ async def test_client_send_command(amqp_client, amqp_actor):
     assert cmd.replies[-1].body['text'] == 'Pong.'
 
 
+async def test_get_version(amqp_client, amqp_actor):
+
+    cmd = await amqp_client.send_command('amqp_actor', 'version')
+    await cmd
+
+    assert len(cmd.replies) == 2
+    assert cmd.replies[-1].message_code == ':'
+    assert cmd.replies[-1].body['version'] == '?'
+
+
 async def test_bad_command(amqp_client, amqp_actor):
 
     cmd = await amqp_client.send_command('amqp_actor', 'bad_command')
@@ -71,9 +81,11 @@ async def test_model_callback(amqp_client, amqp_actor, mocker):
                                                           'error': None,
                                                           'schema': None,
                                                           'fwhm': None,
-                                                          'help': None}
+                                                          'help': None,
+                                                          'version': None}
 
-    json = '{"fwhm": null, "text": "Pong.", "error": null, "schema": null, "help": null}'
+    json = ('{"fwhm": null, "text": "Pong.", "error": null, '
+            '"schema": null, "version": null, "help": null}')
     assert amqp_client.models['amqp_actor'].jsonify() == json
 
 

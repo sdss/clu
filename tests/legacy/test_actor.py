@@ -79,6 +79,22 @@ async def test_new_command_client(actor, actor_client):
     assert lines[1] == '1 0 : text=Pong.'
 
 
+async def test_get_version(actor, actor_client):
+
+    actor_client.writer.write(b'0 version\n')
+
+    await asyncio.sleep(0.01)
+
+    data = await actor_client.reader.read(100)
+
+    assert data is not None
+
+    lines = data.decode().splitlines()
+
+    assert lines[0] == '1 0 i '
+    assert lines[1] == '1 0 : version=0.1.0'
+
+
 async def test_new_command(actor, actor_client):
 
     assert actor == actor_client.actor

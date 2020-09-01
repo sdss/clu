@@ -21,8 +21,7 @@ class HelloActor(AMQPActor):
     def __init__(self):
         super().__init__(name='hello_actor',
                          user='guest', password='guest',
-                         host='localhost', port=5672,
-                         version='0.1.0')
+                         host='localhost', port=5672)
 
 async def run_actor():
     hello_actor = await HelloActor().start()

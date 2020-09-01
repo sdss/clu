@@ -227,7 +227,7 @@ class Model(BaseModel):
             raise ValueError('Schema must be of type object.')
 
         # All model have these three keys.
-        for default_prop in ['text', 'error', 'schema']:
+        for default_prop in ['text', 'error', 'schema', 'version']:
             if default_prop not in self.schema['properties']:
                 self.schema['properties'][default_prop] = {'type': 'string'}
         self.schema['properties']['help'] = {'type': 'array'}

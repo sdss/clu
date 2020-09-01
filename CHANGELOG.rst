@@ -9,6 +9,7 @@ Changelog
 * :bug:`29` Fix the CLI application.
 * :feature:`4` `.AMQPActor` actors now self-validate their message. The schema can be requested as a command.
 * :bug:`34` Fix actor replies with level ``REPLY`` not being logged.
+* :feature:`32` Add default ``version`` command.
 
 * :release:`0.4.1 <2020-08-19>`
 * :support:`-` Set default logging level to warning for stdout/stderr.
