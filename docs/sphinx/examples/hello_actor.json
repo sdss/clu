@@ -1,0 +1,7 @@
+{
+    "type": "object",
+    "properties": {
+        "text": {"type": "string"}
+    },
+    "additionalProperties": false
+}

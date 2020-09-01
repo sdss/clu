@@ -266,13 +266,14 @@ class Model(BaseModel):
             self.validator.validate(instance)
         except jsonschema.exceptions.ValidationError as err:
             if self.log:
-                self.log.error(f'model {self.name} cannot be updated. '
+                self.log.error(f'Model {self.name} cannot be updated. '
                                f'Failed validating instance {instance}: '
                                f'{err}.')
             return False, err
 
         for key, value in instance.items():
-            self[key].value = value
+            if key in self:
+                self[key].value = value
 
         self.notify(self)
 

@@ -39,6 +39,33 @@ To test this code you can use the ``clu`` CLI command from a shell terminal. Thi
    }
 
 
+`hello_actor_schema.py <examples/hello_actor_schema.py>`__
+------------------------------------------------------
+
+Let's continue expanding our example. Now we define the same greeter actor but we provide it with a schema. We also add a command, ``say-goodbye``, that outputs a keyword that is not in the actor schema.
+
+.. literalinclude:: examples/hello_actor_schema.py
+   :language: python
+
+The schema file is :download:`hello_actor.json <examples/hello_actor.json>`
+
+.. literalinclude:: examples/hello_actor.json
+   :language: json
+
+If you run the code and try to invoke the ``say-goodbye`` command, you'll get an error because it's trying to use an invalid keyword
+
+.. code-block:: console
+
+   hello_actor say-goodbye
+   hello_actor i
+   hello_actor i {
+   "error": "Failed validating the reply: Additional properties are not allowed ('invalid_key' was unexpected)\n\nFailed validating 'additionalProperties' in schema:\n    {'additionalProperties': False,\n     'properties': {'error': {'type': 'string'},\n                    'schema': {'type': 'string'},\n                    'text': {'type': 'string'}},\n     'type': 'object'}\n\nOn instance:\n    {'invalid_key': 'Bye!'}"
+   }
+   hello_actor :
+
+Note that in the JSON schema we included the parameter ``"additionalProperties": false``. That is the line that actually enforces that outputting undefined keywords breaks the validation. Otherwise the schema will accept other undefined keywords but will still validate the type and format of those specified in the schema.
+
+
 `tron_connection.py <examples/tron_connection.py>`__
 ------------------------------------------------------
 
