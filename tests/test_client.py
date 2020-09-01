@@ -58,7 +58,7 @@ def test_client_file_log(tmpdir):
 
 
 @pytest.mark.asyncio
-async def test_client_shutdown(caplog):
+async def test_client_stop(caplog):
 
     async def test_task():
         asyncio.sleep(1)
@@ -67,7 +67,7 @@ async def test_client_shutdown(caplog):
 
     task = client.loop.create_task(test_task())
 
-    await client.shutdown()
+    await client.stop()
 
     assert client.loop.is_closed
     assert task.cancelled

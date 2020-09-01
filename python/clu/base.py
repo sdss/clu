@@ -83,7 +83,7 @@ class BaseClient(metaclass=abc.ABCMeta):
 
         pass
 
-    async def shutdown(self):
+    async def stop(self):
         """Shuts down all the remaining tasks."""
 
         self.log.info('cancelling all pending tasks and shutting down.')
@@ -207,12 +207,6 @@ class BaseActor(BaseClient):
     which should be overridden by the specific actors.
 
     """
-
-    @abc.abstractmethod
-    async def start(self):
-        """Starts the server. Must be overridden by the subclasses."""
-
-        pass
 
     @abc.abstractmethod
     def new_command(self):
