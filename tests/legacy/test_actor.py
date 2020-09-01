@@ -57,6 +57,11 @@ async def test_actor_write(actor, actor_client):
 
     assert (await actor_client.reader.readuntil()).strip().decode() == '0 0 i text=Hi!'
 
+    # Check the file log
+    file_log_data = open(actor.log.log_filename).read()
+
+    assert 'REPLY - 0 0 i text=Hi!' in file_log_data
+
 
 async def test_new_command_client(actor, actor_client):
 

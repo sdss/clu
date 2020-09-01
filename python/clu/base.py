@@ -166,6 +166,8 @@ class BaseClient(metaclass=abc.ABCMeta):
         if not log:
             log = get_logger('clu:' + self.name)
 
+        log.setLevel(REPLY)
+
         if log is not False and log_dir:
 
             log_dir = pathlib.Path(log_dir).expanduser()

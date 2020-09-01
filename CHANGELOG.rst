@@ -8,6 +8,7 @@ Changelog
 * :support:`-` Several changes to homogenise the API. All actors and clients now have ``start``, ``stop``, and ``run_forever`` methods.
 * :bug:`29` Fix the CLI application.
 * :feature:`4` `.AMQPActor` actors now self-validate their message. The schema can be requested as a command.
+* :bug:`34` Fix actor replies with level ``REPLY`` not being logged.
 
 * :release:`0.4.1 <2020-08-19>`
 * :support:`-` Set default logging level to warning for stdout/stderr.
