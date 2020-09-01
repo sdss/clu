@@ -11,6 +11,7 @@ import pathlib
 
 import jsonschema
 
+from .exceptions import CluError
 from .tools import CallbackMixIn, CaseInsensitiveDict
 
 
@@ -149,7 +150,7 @@ class BaseModel(CaseInsensitiveDict, CallbackMixIn):
         The name of the model.
     callback
         A function or coroutine to call when the datamodel changes. The
-        function is called with the instance of `BaseModel` and the key that
+        function is called with the instance of `.BaseModel` and the key that
         changed.
     log : ~logging.Logger
         Where to log messages.
@@ -159,8 +160,6 @@ class BaseModel(CaseInsensitiveDict, CallbackMixIn):
     def __init__(self, name, callback=None, log=None):
 
         self.name = name
-
-        self.callback = callback
 
         self.log = log
 
@@ -199,19 +198,38 @@ class Model(BaseModel):
     ----------
     schema : dict
         A valid JSON schema, to be used for validation.
+    is_file : bool
+        Whether the input schema is a filepath or a dictionary.
 
     """
 
     VALIDATOR = jsonschema.Draft7Validator
 
-    def __init__(self, name, schema, **kwargs):
+    def __init__(self, name, schema, is_file=False, **kwargs):
+
+        if is_file:
+            schema = open(pathlib.Path(schema).expanduser(), 'r').read()
+
+        if isinstance(schema, str):
+            try:
+                schema = json.loads(schema)
+            except json.JSONDecodeError:
+                raise ValueError('cannot parse input schema.')
 
         self.schema = schema
 
-        if not self.check_schema(schema, is_file=False):
+        if not self.check_schema(self.schema):
             raise ValueError(f'schema {name!r} is invalid.')
 
         self.validator = self.VALIDATOR(self.schema)
+
+        if self.schema['type'] != 'object' or 'properties' not in self.schema:
+            raise ValueError('Schema must be of type object.')
+
+        # All model have these three keys.
+        for default_prop in ['text', 'error', 'schema']:
+            if default_prop not in self.schema['properties']:
+                self.schema['properties'][default_prop] = {'type': 'string'}
 
         super().__init__(name, **kwargs)
 
@@ -219,16 +237,13 @@ class Model(BaseModel):
             self[name] = Property(name, model=self)
 
     @staticmethod
-    def check_schema(schema, is_file=False):
+    def check_schema(schema):
         """Checks whether a JSON schema is valid.
 
         Parameters
         ----------
-        schema : str or dict
-            The schema to check. It can be a JSON dictionary or the path to a
-            file.
-        is_file : bool
-            Whether the input schema is a filepath or not.
+        schema : dict
+            The schema to check as a dictionary.
 
         Returns
         -------
@@ -237,14 +252,6 @@ class Model(BaseModel):
             otherwise.
 
         """
-
-        if is_file:
-            schema = json.load(open(pathlib.Path(schema).expanduser(), 'r'))
-        elif not is_file and isinstance(schema, str):
-            try:
-                schema = json.loads(schema)
-            except json.JSONDecodeError:
-                raise ValueError('cannot parse input schema.')
 
         try:
             Model.VALIDATOR.check_schema(schema)
@@ -257,34 +264,38 @@ class Model(BaseModel):
 
         try:
             self.validator.validate(instance)
-        except jsonschema.exceptions.ValidationError:
+        except jsonschema.exceptions.ValidationError as err:
             if self.log:
                 self.log.error(f'model {self.name} cannot be updated. '
-                               f'Failed validating instance {instance}.')
-            return False
+                               f'Failed validating instance {instance}: '
+                               f'{err}.')
+            return False, err
 
         for key, value in instance.items():
             self[key].value = value
 
         self.notify(self)
 
-        return True
+        return True, None
 
 
 class ModelSet(dict):
-    """A dictionary of `.Model` instances from files.
+    """A dictionary of `.Model` instances.
 
-    Reads model schemas from files and creates a dictionary of `Model`
-    instances.
+    Given a list of ``actors``, queries each of the actors to return their
+    own schemas, which are then parsed and loaded as `.Model` instances.
+    Since obtaining the schema require sending a command to the actor, that
+    process happens when the coroutine `.load_schemas` is awaited, which
+    should usually occur when the client is started.
 
     Parameters
     ----------
-    model_path : str or pathlib.Path
-        The path to the directory containing the schema files. Each schema
-        file must be named as the model and have extension ``.json``
-        (e.g., ``sop.json``).
-    model_names : list
-        A list of models whose schemas will be loaded.
+    client : .BaseClient
+        A client with a connection to the actors to monitor.
+    actors : list
+        A list of actor models whose schemas will be loaded.
+    get_schema_command : str
+        The command to send to the actor to get it to return its own schema.
     raise_exception : bool
         Whether to raise an exception if any of the models cannot be loaded.
     kwargs
@@ -293,35 +304,55 @@ class ModelSet(dict):
     Example
     -------
 
-        >>> model_set = ModelSet('~/my_models', model_names=['sop', 'guider'])
+        >>> model_set = ModelSet(client, actors=['sop', 'guider'])
         >>> model_set['sop']
         <Model (name='sop')>
 
     """
 
-    def __init__(self, model_path, model_names, raise_exception=True, **kwargs):
+    def __init__(self, client, actors=None, get_schema_command='get_schema',
+                 raise_exception=True, **kwargs):
 
         dict.__init__(self, {})
 
+        self.client = client
+        self.actors = actors
+
         self.log = kwargs.get('log', None)
 
-        self.model_path = pathlib.Path(model_path).expanduser()
+        self.__raise_exception = raise_exception
+        self.__get_schema = get_schema_command
+        self.__kwargs = kwargs
 
-        for name in model_names:
+    async def load_schemas(self, actors=None):
+        """Loads the actor schames."""
+
+        actors = actors or self.actors or []
+        schema = None
+
+        for actor in actors:
 
             try:
 
-                schema_path = self.model_path / f'{name}.json'
-                assert schema_path.exists(), f'Model path {schema_path} does not exist.'
+                cmd = await self.client.send_command(actor, self.__get_schema)
+                await cmd
 
-                schema = json.load(open(schema_path))
+                if cmd.status.did_fail:
+                    raise CluError(f'Failed getting schema for {actor}.')
+                else:
+                    for reply in cmd.replies:
+                        if 'schema' in reply.body:
+                            schema = json.loads(reply.body['schema'])
+                            break
+                    if schema is None:
+                        raise CluError(f'{actor} did not reply with a model.')
 
-                self[name] = Model(name, schema, **kwargs)
+                self[actor] = Model(actor, schema, **self.__kwargs)
 
-            except Exception as ee:
+            except Exception as err:
 
-                if not raise_exception:
+                if not self.__raise_exception:
                     if self.log:
-                        self.log.warning(f'Cannot load model {name!r}: {ee}')
+                        self.log.warning(f'Cannot load model {actor!r}. {err}')
                     continue
                 raise

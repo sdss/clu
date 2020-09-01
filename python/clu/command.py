@@ -79,6 +79,9 @@ class BaseCommand(asyncio.Future, StatusMixIn):
         self.default_keyword = default_keyword
         self.loop = loop or asyncio.get_event_loop()
 
+        #: A list of replies this command has received.
+        self.replies = []
+
         asyncio.Future.__init__(self, loop=self.loop)
 
         StatusMixIn.__init__(self, CommandStatus, initial_status=CommandStatus.READY,
@@ -129,7 +132,8 @@ class BaseCommand(asyncio.Future, StatusMixIn):
 
             status_code = status.code
 
-            self.write(status_code, message, **kwargs)
+            if self.actor:
+                self.write(status_code, message, **kwargs)
 
             self._status = status
 

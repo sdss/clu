@@ -1,6 +1,7 @@
 {
     "type": "object",
     "properties": {
+        "fwhm": {"type": "number"},
         "text": {"type": "string"}
     }
 }
