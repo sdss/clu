@@ -193,7 +193,7 @@ class BaseClient(metaclass=abc.ABCMeta):
         return log
 
     def send_command(self):  # pragma: no cover
-        """Sends a command to an actor."""
+        """Sends a command to an actor and returns a `.Command` instance."""
 
         raise NotImplementedError('Sending commands is not implemented '
                                   'for this client.')

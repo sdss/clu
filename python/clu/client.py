@@ -58,12 +58,8 @@ class AMQPClient(BaseClient):
     parser : ~clu.parser.CluGroup
         A click command parser that is a subclass of `~clu.parser.CluGroup`.
         If `None`, the active parser will be used.
-    model_path : str or pathlib.Path
-        The path to the directory containing the schema files. Each schema
-        file must be named as the model and have extension ``.json``
-        (e.g., ``sop.json``).
-    model_names : list
-        A list of models whose schemas will be loaded.
+    models : list
+        A list of actor models whose schemas will be monitored.
 
     """
 
@@ -73,7 +69,7 @@ class AMQPClient(BaseClient):
 
     def __init__(self, name, user=None, password=None, host=None, port=None,
                  version=None, loop=None, log_dir=None, log=None,
-                 model_path=None, model_names=None):
+                 models=None):
 
         super().__init__(name, version=version, loop=loop,
                          log_dir=log_dir, log=log)
@@ -92,17 +88,8 @@ class AMQPClient(BaseClient):
         #: dict: External commands currently running.
         self.running_commands = {}
 
-        if model_path:
-
-            model_names = model_names or []
-            self.models = ModelSet(model_path, model_names=model_names,
-                                   raise_exception=False, log=self.log)
-
-        else:
-
-            self.models = None
-
-        # self._run_forever_task = None
+        self.models = ModelSet(self, actors=models,
+                               raise_exception=False, log=self.log)
 
     def __repr__(self):
 
@@ -126,6 +113,9 @@ class AMQPClient(BaseClient):
 
         self.log.info(f'replies queue {self.replies_queue.name!r} '
                       f'bound to {self.connection.connection.url!s}')
+
+        # Initialises the models.
+        await self.models.load_schemas()
 
         return self
 
@@ -164,22 +154,26 @@ class AMQPClient(BaseClient):
             self.log.error('invalid message.')
             return reply
 
-        # Ignores message from self.
+        # Ignores message from self, because actors are also clients and they
+        # receive their own messages.
         if reply.sender and self.name == reply.sender:
             return reply
-
-        # If the command is running we check if the message code indicates
-        # the command is done and, if so, sets the result in the Future.
-        if reply.command_id in self.running_commands:
-            status = CommandStatus.get_inverse_dict()[reply.message_code]
-            if status.is_done:
-                command = self.running_commands.pop(reply.command_id)
-                if not command.done():
-                    command.set_result(command)
 
         # Update the models
         if self.models and reply.sender in self.models:
             self.models[reply.sender].update_model(reply.body)
+
+        # If the command is running we check if the message code indicates
+        # the command is done and, if so, sets the result in the Future.
+        # Also, add the reply to the command list of replies.
+        if reply.command_id in self.running_commands:
+            self.running_commands[reply.command_id].replies.append(reply)
+            status = CommandStatus.get_inverse_dict()[reply.message_code]
+            if status.is_done:
+                command = self.running_commands.pop(reply.command_id)
+                command.set_status(status)
+                if not command.done():
+                    command.set_result(command)
 
         return reply
 
@@ -205,7 +199,7 @@ class AMQPClient(BaseClient):
                           command_id=command_id,
                           commander_id=self.name,
                           consumer_id=consumer,
-                          actor=self, loop=self.loop)
+                          actor=None, loop=self.loop)
 
         self.running_commands[command_id] = command
 

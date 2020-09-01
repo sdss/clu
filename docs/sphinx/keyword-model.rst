@@ -60,11 +60,23 @@ When we instantiate the model we create a dictionary with the current values of 
 In general, it's convenient to group all the models that we'll be monitoring in a `.ModelSet`. The `.ModelSet` is instantiated with the path to a directory that contains one or more schema definitions as JSON, an we indicate which ones we want to load ::
 
     >>> from clu.model import ModelSet
-    >>> model_set = ModelSet('./schemas', model_names=['sop', 'guider'])
+    >>> model_set = ModelSet(client, actors=['sop', 'guider'])
     >>> list(model_set)
     ['sop', 'guider']
     >>> model_set['guider']
     <Model (guider)>
+
+Where`` client`` is a client or actor that can send command. In the background, what happens is that `.ModelSet` commands each one of the actors to send their own schema as a string, parses it, and loads the model.
+
+
+Defining the actor's own model
+------------------------------
+
+Each actor should know its own model, which is defined in a JSON file that lives in the same repository as the actor. When the actor is instantiate we can then do ::
+
+    sop_actor = AMQPActor('sop', host='localhost', port=9999, schema='./sop_schema.json')
+
+This will load the schema as a `.Model` into the ``AMQPActor.schema`` attribute. Any reply the actor writes will be first validated against its own schema and if fails, the reply won't be emitted.
 
 
 Using a data model with an actor or client
@@ -73,7 +85,7 @@ Using a data model with an actor or client
 Frequently we have an actor or client that connects to the exchange or ``tron`` and we want to monitor a series of models, each one of them being updated by the replies received. When we instantiate a new actor or client we can pass ``model_path`` and ``model_names`` to automatically create a `.ModelSet` as we saw in the previous section ::
 
     >>> from clu.client import AMQPClient
-    >>> client = AMQPClient('my_client', host='localhost', port=5672, model_path='/home/me/schemas', model_names=['sop', 'guider'])
+    >>> client = AMQPClient('my_client', host='localhost', port=5672, models=['sop', 'guider'])
     >>> await client.start()
 
 The models can be accessed via the ``models`` attribute. From now on, when the client or actor receives a reply from ``sop`` or ``guider``, the keywords will be validated against the schema and, if valid, the values of the model will be updated. For example ::

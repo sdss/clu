@@ -6,8 +6,6 @@
 # @Filename: test_actor.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
-import asyncio
-
 import pytest
 
 from clu import AMQPActor, CluError
@@ -28,9 +26,9 @@ async def test_client_send_command(amqp_client, amqp_actor):
     cmd = await amqp_client.send_command('amqp_actor', 'ping')
     await cmd
 
-    assert len(amqp_client.replies) == 2
-    assert amqp_client.replies[-1].message_code == ':'
-    assert amqp_client.replies[-1].body['text'] == 'Pong.'
+    assert len(cmd.replies) == 2
+    assert cmd.replies[-1].message_code == ':'
+    assert cmd.replies[-1].body['text'] == 'Pong.'
 
 
 async def test_bad_command(amqp_client, amqp_actor):
@@ -38,7 +36,7 @@ async def test_bad_command(amqp_client, amqp_actor):
     cmd = await amqp_client.send_command('amqp_actor', 'bad_command')
     await cmd
 
-    assert "Command 'bad_command' failed." in amqp_client.replies[-1].body['text']
+    assert "Command 'bad_command' failed." in cmd.replies[-1].body['text']
 
 
 async def test_queue_locked(amqp_actor):
@@ -62,12 +60,31 @@ async def test_model_callback(amqp_client, amqp_actor, mocker):
 
     cmd = await amqp_client.send_command('amqp_actor', 'ping')
     await cmd
-    await asyncio.sleep(0.01)
 
     callback.assert_called()
 
     assert kw.value == 'Pong.'
     assert kw.flatten() == {'text': 'Pong.'}
 
-    assert amqp_client.models['amqp_actor'].flatten() == {'text': 'Pong.'}
-    assert amqp_client.models['amqp_actor'].jsonify() == '{"text": "Pong."}'
+    assert amqp_client.models['amqp_actor'].flatten() == {'text': 'Pong.',
+                                                          'error': None,
+                                                          'schema': None,
+                                                          'fwhm': None}
+
+    json = '{"fwhm": null, "text": "Pong.", "error": null, "schema": null}'
+    assert amqp_client.models['amqp_actor'].jsonify() == json
+
+
+async def test_client_get_schema_fails(amqp_actor, amqp_client, caplog):
+
+    # Remove actor knowledge of its own schema
+    amqp_actor.schema = None
+
+    # Restart models.
+    del amqp_client.models[amqp_actor.name]
+    await amqp_client.models.load_schemas()
+
+    assert amqp_client.models == {}
+
+    log_msg = caplog.record_tuples[-1]
+    assert 'Cannot load model' in log_msg[2]

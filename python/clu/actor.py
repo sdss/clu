@@ -16,7 +16,8 @@ from .base import BaseActor
 from .client import AMQPClient
 from .command import Command, TimedCommandList
 from .exceptions import CommandError
-from .parser import ClickParser
+from .model import Model
+from .parser import ClickParser, get_schema
 from .protocol import TCPStreamServer
 from .tools import log_reply
 
@@ -33,17 +34,37 @@ class AMQPActor(AMQPClient, ClickParser, BaseActor):
     internals and protocols are different the entry points and behaviour for
     both classes should be almost identical.
 
-    See the documentation for `.AMQPClient` for parameter information.
+    See the documentation for `.AMQPClient` for additional parameter
+    information.
+
+    Parameters
+    ----------
+    schema : str
+        The path to the datamodel schema for the actor, in JSON Schema format.
+        If the schema is provided all replies will be validated against it.
+        An invalid reply will fail and not be emitted. The schema can also be
+        set when subclassing by setting the class ``schema`` attribute.
 
     """
 
-    def __init__(self, *args, **kwargs):
+    schema = None
+
+    def __init__(self, *args, schema=None, **kwargs):
 
         AMQPClient.__init__(self, *args, **kwargs)
 
         self.commands_queue = None
 
         self.timed_commands = TimedCommandList(self)
+
+        # TODO: for now the AMQPActor is the only actor that may use the
+        # self-validating schema, but eventually this code should be moved
+        # to BaseActor or to a mixin.
+        self.schema = self._validate_schema(schema or self.schema)
+
+        # Add the command to get the schema. This command is not added by
+        # default because only AMQPActor should have it.
+        self.parser.add_command(get_schema)
 
     async def start(self, **kwargs):
         """Starts the connection to the AMQP broker."""
@@ -62,6 +83,16 @@ class AMQPActor(AMQPClient, ClickParser, BaseActor):
         self.timed_commands.start()
 
         return self
+
+    def _validate_schema(self, schema):
+        """Loads and validates the actor schema."""
+
+        if schema is None:
+            return None
+
+        model = Model(self.name, schema, is_file=True, log=self.log)
+
+        return model
 
     async def new_command(self, message):
         """Handles a new command received by the actor."""
@@ -89,7 +120,7 @@ class AMQPActor(AMQPClient, ClickParser, BaseActor):
         return self.parse_command(command)
 
     async def write(self, message_code='i', message=None, command=None,
-                    broadcast=False, **kwargs):
+                    broadcast=False, no_validate=False, **kwargs):
         """Writes a message to user(s).
 
         Parameters
@@ -105,6 +136,10 @@ class AMQPActor(AMQPClient, ClickParser, BaseActor):
         broadcast : bool
             Whether to broadcast the message to all the users or only to the
             commander.
+        no_validate : bool
+            Do not validate the reply against the actor schema. This is
+            ignored if the actor was not started with knowledge of its own
+            schema.
         kwargs
             Keyword arguments that will be added to the message.
 
@@ -115,6 +150,11 @@ class AMQPActor(AMQPClient, ClickParser, BaseActor):
         assert isinstance(message, dict), 'message must be a dictionary'
 
         message.update(kwargs)
+
+        if not no_validate and self.schema is not None:
+            result, err = self.schema.update_model(message)
+            if result is False:
+                message = {'error': f'Failed validating the reply: {err}'}
 
         message_json = json.dumps(message)
 
