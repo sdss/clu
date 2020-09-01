@@ -119,14 +119,19 @@ class BaseCommand(asyncio.Future, StatusMixIn):
 
         if not isinstance(status, self.flags):
             if isinstance(status, int):
-                status = self.flags(int)
+                status = self.flags(status)
             elif isinstance(status, str):
                 for bit in self.flags:
                     if status.lower() == bit.name.lower():
                         status = bit
                         break
-            else:
-                raise ValueError(f'status {status!r} is not a valid command status.')
+
+        try:
+            is_flag = status in self.flags
+            if not is_flag:
+                raise TypeError()
+        except TypeError:
+            raise TypeError(f'Status {status!r} is not a valid command status.')
 
         if status != self._status:
 
@@ -146,6 +151,8 @@ class BaseCommand(asyncio.Future, StatusMixIn):
             # Set the status watcher
             if self.watcher is not None:
                 self.watcher.set()
+
+        return self
 
     def finish(self, *args, **kwargs):
         """Convenience method to mark a command `~.CommandStatus.DONE`."""
