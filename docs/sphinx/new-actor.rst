@@ -49,7 +49,7 @@ With all of that in mind, here is a conceptual diagram of how communication happ
 This may look daunting so let's break it into smaller pieces:
 
 - We have two actors that are both producers (i.e., can send messages) and consumers (can receive messages). Messages can either be commands or replies.
-- There is a global exchange, ``actor_exchange`` used both to send commands and replies. The exchange is of type `topic <https://www.rabbitmq.com/tutorials/tutorial-five-python.html>`_, which  allow queues to subscribe to them and receive only messages that match a certain *routing key*.
+- There is a global exchange, ``clu_exchange`` used both to send commands and replies. The exchange is of type `topic <https://www.rabbitmq.com/tutorials/tutorial-five-python.html>`_, which  allow queues to subscribe to them and receive only messages that match a certain *routing key*.
 - Each actor has a queue for commands and another for replies. The command queue (``<actor>_commands``) only gets messages whose routing key contains the key ``command`` and the name of the actor, and ignores all other command messages. The replies queue, ``<actor>_replies``, receives all messages with topic ``reply`` in the routing key.
 
 More actors can be added to this picture, but they all share the same basic components. This enables us to create a slightly modified `RCP <https://www.rabbitmq.com/tutorials/tutorial-six-python.html>`_ pattern in which the callback queue is fixed and we use a topic exchange instead of a direct one.
@@ -65,7 +65,7 @@ Message brokering
 
 We use the `AMQP`_ standard for message queueing. The preferred implementation of the standard is `RabbitMQ`_ but any other broker that complies with the AMQP standard is acceptable.
 
-Communication happens through a single :underline:`topic exchange` called ``actor_exchange``. Actors and clients are both consumers and producers. There is not formal difference between an actor and a client (e.g., a command line interpreter or a GUI) although the latter is not expected to receive commands, only emit them.
+Communication happens through a single :underline:`topic exchange` called ``clu_exchange``. Actors and clients are both consumers and producers. There is not formal difference between an actor and a client (e.g., a command line interpreter or a GUI) although the latter is not expected to receive commands, only emit them.
 
 Each actor receives messages from two queues:
 
