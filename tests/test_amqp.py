@@ -8,7 +8,8 @@
 
 import pytest
 
-from clu import AMQPActor, CluError
+from clu import REPLY, AMQPActor, CluError
+from clu.model import Model
 
 from .conftest import RMQ_PORT
 
@@ -89,3 +90,22 @@ async def test_client_get_schema_fails(amqp_actor, amqp_client, caplog):
 
     log_msg = caplog.record_tuples[-1]
     assert 'Cannot load model' in log_msg[2]
+
+
+async def test_bad_keyword(amqp_actor, caplog):
+
+    schema = """{
+    "type": "object",
+    "properties": {
+        "text": {"type": "string"}
+    },
+    "additionalProperties": false
+}"""
+
+    # Replace actor schema
+    amqp_actor.schema = Model(amqp_actor.name, schema)
+
+    with caplog.at_level(REPLY, logger=f'clu:{amqp_actor.name}'):
+        await amqp_actor.write('i', {'bad_keyword': 'blah'}, broadcast=True)
+
+    assert 'Failed validating the reply' in caplog.record_tuples[-1][2]
