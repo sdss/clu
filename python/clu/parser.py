@@ -9,6 +9,7 @@
 import asyncio
 import functools
 import inspect
+import json
 import re
 
 import click
@@ -199,6 +200,18 @@ def ping(*args):
     command.set_status(command.status.DONE, 'Pong.')
 
     return
+
+
+@command_parser.command(name='get_schema')
+def get_schema(*args):
+    """Returns the schema of the actor as a JSON schema."""
+
+    command = args[0]
+
+    if command.actor.schema is None:
+        return command.fail(text='The actor does not know its own schema.')
+
+    return command.finish(schema=json.dumps(command.actor.schema.schema))
 
 
 @command_parser.command(name='help')

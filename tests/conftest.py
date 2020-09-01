@@ -41,7 +41,8 @@ rabbitmq = factories.rabbitmq('rabbitmq_proc')
 @pytest.fixture
 async def amqp_actor(rabbitmq, event_loop):
 
-    actor = AMQPActor(name='amqp_actor', port=RMQ_PORT)
+    actor = AMQPActor(name='amqp_actor', port=RMQ_PORT,
+                      schema=DATA_DIR / 'amqp_actor.json')
 
     await actor.start()
 
@@ -51,24 +52,15 @@ async def amqp_actor(rabbitmq, event_loop):
 
 
 @pytest.fixture
-async def amqp_client(rabbitmq, event_loop):
+async def amqp_client(rabbitmq, amqp_actor, event_loop):
 
-    class AMQPClientTester(AMQPClient):
-
-        replies = []
-
-        async def handle_reply(self, message):
-            reply = await super().handle_reply(message)
-            self.replies.append(reply)
-
-    client = AMQPClientTester(name='amqp_client', port=RMQ_PORT,
-                              model_path=DATA_DIR, model_names=['amqp_actor'])
+    client = AMQPClient(name='amqp_client', port=RMQ_PORT,
+                        models=['amqp_actor'])
     await client.start()
 
     yield client
 
     await client.stop()
-    client.replies = []
 
 
 @pytest.fixture
