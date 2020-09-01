@@ -49,7 +49,7 @@ A connection to tron that listens to the keywords from the guider actor and repo
 
 
 `jaeger_actor.py <examples/jaeger_actor.py>`__
-------------------------------------------------------
+----------------------------------------------
 
 The following code shows the real implementation of the `jaeger actor <https://github.com/sdss/jaeger>`__. There are a few interesting things to note.
 
