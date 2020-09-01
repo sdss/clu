@@ -6,6 +6,8 @@
 # @Filename: test_command.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
+import asyncio
+
 import pytest
 
 from clu import CluError, Command, CommandError, CommandStatus
@@ -27,6 +29,7 @@ def test_set_status(command):
 
     command.set_status(CommandStatus.DONE)
     assert command.status.is_done
+    assert command.status == CommandStatus.DONE
     assert command.done()
 
 
@@ -113,3 +116,34 @@ def test_write_no_actor(command):
 
     with pytest.raises(CommandError):
         command.write('i', 'hi')
+
+
+@pytest.mark.asyncio
+async def test_wait_for_status(command, event_loop):
+
+    async def mark_cancelled():
+        await asyncio.sleep(0.01)
+        command.set_status(CommandStatus.CANCELLED)
+
+    event_loop.create_task(mark_cancelled())
+
+    await command.wait_for_status(CommandStatus.CANCELLED)
+
+    assert True
+
+
+@pytest.mark.asyncio
+async def test_status_callback(command):
+
+    global result
+    result = 0
+
+    def callback():
+        global result
+        result = result + 1
+
+    command.callbacks.append(callback)
+    command.finish()
+    await asyncio.sleep(0.01)
+
+    assert result
