@@ -66,6 +66,15 @@ If you run the code and try to invoke the ``say-goodbye`` command, you'll get an
 Note that in the JSON schema we included the parameter ``"additionalProperties": false``. That is the line that actually enforces that outputting undefined keywords breaks the validation. Otherwise the schema will accept other undefined keywords but will still validate the type and format of those specified in the schema.
 
 
+`hello_actor_json.py <examples/hello_actor_json.py>`__
+------------------------------------------------------
+
+The same example, now using `.JSONActor`.
+
+.. literalinclude:: examples/hello_actor_json.py
+   :language: python
+
+
 `tron_connection.py <examples/tron_connection.py>`__
 ------------------------------------------------------
 

@@ -11,13 +11,14 @@ import re
 import uuid
 
 import aio_pika as apika
+import click
 
 from .base import BaseActor
 from .client import AMQPClient
 from .command import Command, TimedCommandList
 from .exceptions import CommandError
 from .model import Model
-from .parser import ClickParser, get_schema
+from .parser import ClickParser, CluCommand, get_schema
 from .protocol import TCPStreamServer
 from .tools import log_reply
 
@@ -231,6 +232,9 @@ class JSONActor(ClickParser, BaseActor):
 
         self.timed_commands = TimedCommandList(self)
 
+        # Add the multiline command
+        self.parser.add_command(multiline)
+
     async def start(self):
         """Starts the TCP server."""
 
@@ -264,6 +268,7 @@ class JSONActor(ClickParser, BaseActor):
 
         user_id = str(uuid.uuid4())
         transport.user_id = user_id
+        transport.multiline = False
         self.transports[user_id] = transport
 
         sock = transport.get_extra_info('socket')
@@ -312,7 +317,7 @@ class JSONActor(ClickParser, BaseActor):
         raise NotImplementedError('JSONActor cannot send commands to other actors.')
 
     def write(self, message_code='i', message=None, command=None,
-              broadcast=False, beautify=True, **kwargs):
+              broadcast=False, **kwargs):
         """Writes a message to user(s) as a JSON.
 
         A ``header`` keyword with the ``commander_id`` (i.e., the user id of
@@ -343,6 +348,8 @@ class JSONActor(ClickParser, BaseActor):
 
         Although the messsage is displayed here in multiple lines, it is
         written as a single line to the TCP clients to facilitate parsing.
+        For a multiline output, which is more human-readable, use the
+        ``multiline`` command.
 
         Parameters
         ----------
@@ -362,6 +369,14 @@ class JSONActor(ClickParser, BaseActor):
 
         """
 
+        def send_to_transport(transport, message):
+
+            if getattr(transport, 'multiline', False):
+                message_json = json.dumps(message, sort_keys=False, indent=4) + '\n'
+            else:
+                message_json = json.dumps(message, sort_keys=False) + '\n'
+            transport.write(message_json.encode())
+
         message = message or {}
         assert isinstance(message, dict), 'message must be a dictionary'
         message.update(kwargs)
@@ -374,19 +389,30 @@ class JSONActor(ClickParser, BaseActor):
         header = {'header': {'command_id': command_id,
                              'commander_id': commander_id,
                              'message_code': message_code,
-                             'sender': self.name}
-                  }
+                             'sender': self.name}}
 
         message_full.update(header)
         message_full.update({'data': message})
 
-        message_json = json.dumps(message_full, sort_keys=False)
-        message_json += '\n'
-
         if broadcast or commander_id is None or transport is None:
             for transport in self.transports.values():
-                transport.write(message_json.encode())
+                send_to_transport(transport, message_full)
         else:
-            transport.write(message_json.encode())
+            send_to_transport(transport, message_full)
 
+        message_json = json.dumps(message_full, sort_keys=False) + '\n'
         log_reply(self.log, message_code, message_json)
+
+
+@click.command(cls=CluCommand)
+@click.option('--on/--off', default=True, help='Turn multiline on/off.')
+async def multiline(command, on):
+    """Set multiline mode for the transport."""
+
+    transport = getattr(command, 'transport', None)
+    if not transport:
+        return command.fail('The command has no transport.')
+
+    transport.multiline = on
+
+    return command.finish('Multiline mode is {}'.format('on' if on else 'off'))

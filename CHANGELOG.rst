@@ -11,6 +11,7 @@ Changelog
 * :bug:`34` Fix actor replies with level ``REPLY`` not being logged.
 * :feature:`32` Add default ``version`` command.
 * :support:`35` `.TronConnection` now subclasses from `.BaseClient` and keeps track of running commands and replies.
+* :feature:`31` Add ``multiline`` command to `.JSONActor` to produce human-readable output.
 
 * :release:`0.4.1 <2020-08-19>`
 * :support:`-` Set default logging level to warning for stdout/stderr.

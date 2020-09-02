@@ -51,6 +51,28 @@ async def test_json_actor_broadcast(json_actor, json_client):
     assert data_json['data'] == {'my_key': 'hola'}
 
 
+async def test_multiline_on(json_actor, json_client):
+
+    json_client.writer.write(b'multiline\n')
+    await asyncio.sleep(0.01)
+
+    data = (await json_client.reader.read(1000)).splitlines()
+    assert len(data) > 10
+
+
+async def test_multiline_off(json_actor, json_client):
+
+    json_client.writer.write(b'multiline\n')
+    json_client.writer.write(b'multiline --off\n')
+    await asyncio.sleep(0.01)
+
+    data = (await json_client.reader.read(100000)).splitlines()
+    data_json = json.loads(data[-1].decode())
+    assert data_json['header']['message_code'] == ':'
+    assert data_json['header']['sender'] == 'json_actor'
+    assert data_json['data'] == {'text': 'Multiline mode is off'}
+
+
 async def test_json_actor_send_command(json_actor):
 
     with pytest.raises(NotImplementedError) as error:
