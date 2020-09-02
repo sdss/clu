@@ -12,6 +12,7 @@ import os
 
 import pytest
 
+from clu.legacy import TronConnection
 from clu.legacy.parser import ParseError
 
 
@@ -102,3 +103,11 @@ async def test_parse_reply_unknown_actor(tron_client, tron_server, caplog):
 
     # Ensure this reply didn't produce any warning.
     assert len(caplog.record_tuples) == 0
+
+
+async def test_tron_no_models():
+
+    tron = TronConnection(host='localhost', port=6093)
+
+    assert tron.models == {}
+    assert tron.keyword_dicts == {}

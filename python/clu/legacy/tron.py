@@ -113,9 +113,11 @@ class TronConnection(BaseClient):
 
         self._mid = 1
 
+        models = models or []
+
         #: dict: The `KeysDictionary` associated with each actor to track.
         self.keyword_dicts = {model: KeysDictionary.load(model)
-                              for model in models or []}
+                              for model in models}
 
         #: dict: The model and values of each actor being tracked.
         self.models = {model: TronModel(self.keyword_dicts[model],
