@@ -4,6 +4,7 @@
 Changelog
 =========
 
+* :release:`0.5.0 <2020-09-01>`
 * :support:`-` First version with >80% test coverage.
 * :support:`-` Several changes to homogenise the API. All actors and clients now have ``start``, ``stop``, and ``run_forever`` methods.
 * :bug:`29` Fix the CLI application.
