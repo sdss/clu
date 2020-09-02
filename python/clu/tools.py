@@ -112,15 +112,20 @@ class CommandStatus(Maskbit):
         return self in self.FAILING_STATES
 
     @staticmethod
-    def get_inverse_dict():
-        """Gets a reversed dictionary of code to status.
+    def code_to_status(code, default=None):
+        """Returns the status associated with a code.
 
-        Note that the inverse dictionary is not unique and you can get
-        different statuses associated with the same code.
+        If the code doesn't have an associated status, returns ``default``.
+        ``default`` defaults to `.CommandStatus.RUNNING`.
 
         """
 
-        return dict((status.code, status) for status in CommandStatus if status.code)
+        statuses = {':': CommandStatus.DONE,
+                    'f': CommandStatus.FAILED,
+                    'e': CommandStatus.FAILED,
+                    'i': CommandStatus.RUNNING}
+
+        return statuses.get(code, default or CommandStatus.RUNNING)
 
 
 class StatusMixIn(object):

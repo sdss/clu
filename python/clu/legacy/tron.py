@@ -252,7 +252,7 @@ class TronConnection(BaseClient):
                                          f'with error: {ee!s}')
 
             mid = reply.header.commandId
-            status = CommandStatus.get_inverse_dict()[reply.header.code.lower()]
+            status = CommandStatus.code_to_status(reply.header.code.lower())
 
             if mid in self.running_commands:
                 if status.is_done:

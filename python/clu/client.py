@@ -168,7 +168,7 @@ class AMQPClient(BaseClient):
         # Also, add the reply to the command list of replies.
         if reply.command_id in self.running_commands:
             self.running_commands[reply.command_id].replies.append(reply)
-            status = CommandStatus.get_inverse_dict()[reply.message_code]
+            status = CommandStatus.code_to_status(reply.message_code)
             if status.is_done:
                 command = self.running_commands.pop(reply.command_id)
                 command.set_status(status)
