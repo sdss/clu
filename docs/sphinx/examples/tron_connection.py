@@ -7,7 +7,7 @@ def report_fwhm(fwhm_key):
     print(f'The FWHM is {tmean} arcsec.')
 
 async def main():
-    tron = TronConnection('localhost', port=6093, model_names=['guider'])
+    tron = TronConnection(host='localhost', port=6093, models=['guider'])
     tron.models['guider']['fwhm'].register_callback(report_fwhm)
     await tron.start()
     await tron.run_forever()

@@ -91,3 +91,14 @@ async def test_send_command(actor, tron_server):
     assert b'alerts ping' in tron_server.received[-1]
 
     assert len(command.replies) == 1
+
+
+async def test_parse_reply_unknown_actor(tron_client, tron_server, caplog, mocker):
+
+    client_transport = list(tron_server.transports.values())[0]
+    client_transport.write('.sop 0 sop i version=1.0.0\n'.encode())
+
+    await asyncio.sleep(0.01)
+
+    # Ensure this reply didn't produce any warning.
+    assert len(caplog.record_tuples) == 0

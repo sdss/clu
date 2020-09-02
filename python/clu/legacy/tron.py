@@ -94,8 +94,7 @@ class TronConnection(BaseClient):
     name : str
         The name of the client.
     host : str
-        The host on which Tron is running. If `None`, no connection will be
-        established.
+        The host on which Tron is running.
     port : int
         The port on which Tron is running.
     models : list
@@ -105,7 +104,7 @@ class TronConnection(BaseClient):
 
     """
 
-    def __init__(self, name='tron', host=None, port=6093, models=None, **kwargs):
+    def __init__(self, host=None, port=6093, name='tron', models=None, **kwargs):
 
         super().__init__(name, **kwargs)
 
@@ -244,12 +243,13 @@ class TronConnection(BaseClient):
             if actor.startswith('keys_'):
                 actor = actor.split('_')[1]
 
-            try:
-                self.models[actor].parse_reply(reply)
-            except ParseError as ee:
-                if self.log:
-                    self.log.warning(f'Failed parsing reply {reply!r} '
-                                     f'with error: {ee!s}')
+            if actor in self.models:
+                try:
+                    self.models[actor].parse_reply(reply)
+                except ParseError as ee:
+                    if self.log:
+                        self.log.warning(f'Failed parsing reply {reply!r} '
+                                         f'with error: {ee!s}')
 
             mid = reply.header.commandId
             status = CommandStatus.get_inverse_dict()[reply.header.code.lower()]
