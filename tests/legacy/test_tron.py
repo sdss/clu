@@ -93,7 +93,7 @@ async def test_send_command(actor, tron_server):
     assert len(command.replies) == 1
 
 
-async def test_parse_reply_unknown_actor(tron_client, tron_server, caplog, mocker):
+async def test_parse_reply_unknown_actor(tron_client, tron_server, caplog):
 
     client_transport = list(tron_server.transports.values())[0]
     client_transport.write('.sop 0 sop i version=1.0.0\n'.encode())
