@@ -69,20 +69,16 @@ class TronModel(BaseModel):
 
             key_name = reply_key.name.lower()
             if key_name not in self.keydict:
-                if self.log:
-                    self.log.warning('cannot parse unknown keyword '
-                                     f'{self.name}.{reply_key.name}.')
-                continue
+                raise ParseError('Cannot parse unknown keyword '
+                                 f'{self.name}.{reply_key.name}.')
 
             # When parsed the values in reply_key are string. After consuming
             # it with the Key, the values become typed values.
             result = self.keydict.keys[key_name].consume(reply_key)
 
             if not result:
-                if self.log:
-                    self.log.warning('failed parsing keyword '
-                                     f'{self.name}.{reply_key.name}.')
-                continue
+                raise ParseError('Failed parsing keyword '
+                                 f'{self.name}.{reply_key.name}.')
 
             self[key_name].value = [value.native for value in reply_key.values]
             self[key_name].key = reply_key
@@ -250,10 +246,10 @@ class TronConnection(BaseClient):
 
             try:
                 self.models[actor].parse_reply(reply)
-            except Exception as ee:
+            except ParseError as ee:
                 if self.log:
-                    self.log.debug(f'failed parsing reply {reply!r} '
-                                   f'with error: {ee!s}')
+                    self.log.warning(f'Failed parsing reply {reply!r} '
+                                     f'with error: {ee!s}')
 
             mid = reply.header.commandId
             status = CommandStatus.get_inverse_dict()[reply.header.code.lower()]
