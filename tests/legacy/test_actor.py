@@ -171,13 +171,3 @@ async def test_command_failed_to_parse(actor, actor_client):
 
     assert b'UsageError' in data
     assert b'Command \'badcommand\' failed' in data
-
-
-async def test_send_command(actor, tron_server):
-
-    actor.send_command('alerts', 'ping')
-
-    await asyncio.sleep(0.01)
-
-    assert b'test_actor.test_actor' in tron_server.received[-1]
-    assert b'alerts ping' in tron_server.received[-1]

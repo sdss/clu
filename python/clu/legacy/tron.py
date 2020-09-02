@@ -8,6 +8,8 @@
 
 import asyncio
 
+from clu.base import BaseClient
+from clu.command import Command, CommandStatus
 from clu.model import BaseModel, Property
 from clu.protocol import open_connection
 
@@ -67,20 +69,16 @@ class TronModel(BaseModel):
 
             key_name = reply_key.name.lower()
             if key_name not in self.keydict:
-                if self.log:
-                    self.log.warning('cannot parse unknown keyword '
-                                     f'{self.name}.{reply_key.name}.')
-                continue
+                raise ParseError('Cannot parse unknown keyword '
+                                 f'{self.name}.{reply_key.name}.')
 
             # When parsed the values in reply_key are string. After consuming
             # it with the Key, the values become typed values.
             result = self.keydict.keys[key_name].consume(reply_key)
 
             if not result:
-                if self.log:
-                    self.log.warning('failed parsing keyword '
-                                     f'{self.name}.{reply_key.name}.')
-                continue
+                raise ParseError('Failed parsing keyword '
+                                 f'{self.name}.{reply_key.name}.')
 
             self[key_name].value = [value.native for value in reply_key.values]
             self[key_name].key = reply_key
@@ -88,51 +86,48 @@ class TronModel(BaseModel):
             self.notify(self, self[key_name])
 
 
-class TronConnection(object):
+class TronConnection(BaseClient):
     """Allows to send commands to Tron and manages the feed of replies.
 
     Parameters
     ----------
+    name : str
+        The name of the client.
     host : str
-        The host on which Tron is running.
+        The host on which Tron is running. If `None`, no connection will be
+        established.
     port : int
         The port on which Tron is running.
-    actor : str
-        The actor that is connecting to Tron. Used as the commander when
-        sending commands through the hub. If not specified the placeholder
-        ``client`` will be used.
-    model_names : list
+    models : list
         A list of strings with the actors whose models will be tracked.
-    log : ~logging.Logger
-        Where to log messages.
+    kwargs : dict
+        Arguments to be passed to `.BaseClient`.
 
     """
 
-    def __init__(self, host, port=6093, actor=None, model_names=None, log=None):
+    def __init__(self, name='tron', host=None, port=6093, models=None, **kwargs):
 
-        self.actor = actor
+        super().__init__(name, **kwargs)
 
         self.host = host
         self.port = port
 
-        self.log = log
-
         self._mid = 1
 
-        model_names = model_names or []
-
         #: dict: The `KeysDictionary` associated with each actor to track.
-        self.keyword_dicts = {actor: KeysDictionary.load(actor)
-                              for actor in model_names}
+        self.keyword_dicts = {model: KeysDictionary.load(model)
+                              for model in models or []}
 
-        #: dict: The `TronModel` instance holding the model and values of each actor being tracked.
-        self.models = {actor: TronModel(self.keyword_dicts[actor], log=log)
-                       for actor in model_names}
+        #: dict: The model and values of each actor being tracked.
+        self.models = {model: TronModel(self.keyword_dicts[model],
+                                        log=self.log)
+                       for model in models}
 
         self._parser = None
         self.rparser = ReplyParser()
 
         self._client = None
+        self.running_commands = {}
 
     async def start(self, get_keys=True):
         """Starts the connection to Tron.
@@ -146,7 +141,7 @@ class TronConnection(object):
 
         self._client = await open_connection(self.host, self.port)
 
-        self._parser = asyncio.create_task(self._parse_tron())
+        self._parser = asyncio.create_task(self._handle_reply())
 
         if get_keys:
             asyncio.create_task(self.get_keys())
@@ -164,7 +159,7 @@ class TronConnection(object):
         # Keep alive until the connection is closed.
         await self._client.writer.wait_closed()
 
-    def send_command(self, target, command_string, mid=None):
+    def send_command(self, target, command_string, commander='tron.tron', mid=None):
         """Sends a command through the hub.
 
         Parameters
@@ -173,6 +168,12 @@ class TronConnection(object):
             The actor to command.
         command_string : str
             The command to send.
+        commander : str
+            The actor or client sending the command. The format for Tron is
+            "commander message_id target command" where commander needs to
+            start with a letter and have a program and a user joined by a dot.
+            Otherwise the command will be accepted but the reply will fail
+            to parse.
         mid : int
             The message id. If `None`, a sequentially increasing value will
             be used. You should not specify a ``mid`` unless you really know
@@ -186,18 +187,17 @@ class TronConnection(object):
         if mid >= 2**32:
             self._mid = mid = 1
 
-        # The format for the SDSS Hub is "commander message_id target command"
-        # where commander needs to start with a letter and have a program and
-        # a user joined by a dot. Otherwise the command will be accepted but
-        # the reply will fail to parse.
+        command_string = (f'{commander} {mid} {target} {command_string}\n')
 
-        commander = self.actor.name if self.actor else 'client'
+        command = Command(command_string=command_string)
+        command.set_status('RUNNING')
+        self.running_commands[mid] = command
 
-        command = (f'{commander}.{commander} {mid} {target} {command_string}\n')
-
-        self._client.writer.write(command.encode())
+        self._client.writer.write(command_string.encode())
 
         self._mid += 1
+
+        return command
 
     async def get_keys(self):
         """Gets all the keys for the models being tracked."""
@@ -223,7 +223,7 @@ class TronConnection(object):
 
                 self.send_command('keys', command_string)
 
-    async def _parse_tron(self):
+    async def _handle_reply(self):
         """Tracks new replies from Tron and updates the model."""
 
         while True:
@@ -234,7 +234,7 @@ class TronConnection(object):
                 reply = self.rparser.parse(line)
             except ParseError:
                 if self.log:
-                    self.log.debug(f'failed parsing reply {line.strip()}.')
+                    self.log.warning(f'Failed parsing reply {line.strip()}.')
                 continue
 
             actor = reply.header.actor
@@ -246,6 +246,18 @@ class TronConnection(object):
 
             try:
                 self.models[actor].parse_reply(reply)
-            except Exception as ee:
+            except ParseError as ee:
                 if self.log:
-                    self.log.debug(f'failed parsing reply {reply!r} with error: {ee!s}')
+                    self.log.warning(f'Failed parsing reply {reply!r} '
+                                     f'with error: {ee!s}')
+
+            mid = reply.header.commandId
+            status = CommandStatus.get_inverse_dict()[reply.header.code.lower()]
+
+            if mid in self.running_commands:
+                if status.is_done:
+                    self.running_commands[mid].replies.append(reply)
+                    command = self.running_commands.pop(mid)
+                    command.set_status(status)
+                    if not command.done():
+                        command.set_result(command)
