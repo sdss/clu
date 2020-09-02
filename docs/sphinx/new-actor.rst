@@ -102,7 +102,7 @@ Replies
 The format for a reply to a command is as follows:
 
 - The routing key must be ``reply.<producer>`` where ``<producer>`` is the actor or client that sent the command we are replying to. If an actor wants to reply with a broadcast to all the actors connected to the exchanged, it may do so with the routing key ``reply.broadcast``. This is technically not necessary since all actors and clients receive all message with topic ``reply``, regardless of whether they have a secondary topic, but it allows finer filtering.
-- The header of the message must contain the keywords ``command_id`` set to the command ID of the command we are replying to, ``commander_id`` set to the name of the commander actor, ``sender`` set to the name of the actor replying, and ``message_code`` with the message type code, which must be one of :ref:`these <message-codes>`. ``commander_id`` and ``command_id`` can be null, if the reply is a broadcast.
+- The header of the message must contain the keywords ``command_id`` set to the command ID of the command we are replying to, ``commander_id`` set to the name of the commander actor, ``sender`` set to the name of the actor replying, and ``message_code`` with the message type code, which must be one of :ref:`these <message-codes>`. ``commander_id`` and ``command_id`` can be null, if the reply is unrequested (e.g., a status command that runs on a timer).
 - The ``correlation_id`` must be the same as the ``command_id`` (`None` for broadcasts).
 - The content type of the message must be ``text/json``.
 - The body of the message must be a JSON string with a series of keyword-value pairs that conform to the :ref:`keyword model <keyword-model>` of the actor that is replying.
