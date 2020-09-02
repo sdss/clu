@@ -26,11 +26,13 @@ async def test_get_keys(tron_client):
     assert tron_client.models['alerts']['version'].value[0] == '2.0.1'
 
 
-async def test_update_model(tron_client):
+async def test_update_model(tron_client, tron_server):
 
-    tron_client._client.writer.write('.alerts 0 alerts i '
-                                     'activeAlerts=Alert1,Alert2\n'
-                                     .encode())
+    # Get the tron_client transport and write to it as if coming from tron
+    client_transport = list(tron_server.transports.values())[0]
+
+    client_transport.write('.alerts 0 alerts i activeAlerts=Alert1,Alert2\n'
+                           .encode())
 
     await asyncio.sleep(0.01)
 
@@ -48,17 +50,28 @@ async def test_update_model(tron_client):
                                "['Alert1', 'Alert2']>")
 
 
-async def test_parser_fails(tron_client, caplog, mocker):
+async def test_parser_fails(tron_client, tron_server, caplog, mocker):
+
+    client_transport = list(tron_server.transports.values())[0]
 
     mocker.patch.object(tron_client.rparser, 'parse', side_effect=ParseError())
-    tron_client._client.writer.write('.alerts 0 alerts i '
-                                     'activeAlerts=Alert1\n'
-                                     .encode())
+    client_transport.write('.alerts 0 alerts i activeAlerts=Alert1\n'.encode())
 
     await asyncio.sleep(0.01)
 
     assert tron_client.models['alerts']['activeAlerts'].value[0] != 'Alert1'
 
-    assert caplog.record_tuples == [('tron-test', logging.DEBUG,
-                                     'failed parsing reply .alerts '
+    assert caplog.record_tuples == [('tron-test', logging.WARNING,
+                                     'Failed parsing reply .alerts '
                                      '0 alerts i activeAlerts=Alert1.')]
+
+
+async def test_send_command(actor, tron_server):
+
+    command = actor.send_command('alerts', 'ping')
+    await command
+
+    assert b'test_actor.test_actor' in tron_server.received[-1]
+    assert b'alerts ping' in tron_server.received[-1]
+
+    assert len(command.replies) == 1

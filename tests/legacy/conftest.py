@@ -20,7 +20,7 @@ from clu.protocol import TCPStreamServer, open_connection
 
 
 get_keys_reply = (
-    'client.client 1 keys_alerts i version="2.0.1"; '
+    'client.client 1 keys_alerts : version="2.0.1"; '
     'activeAlerts=camCheck.SP2R1HeaterVRead; '
     'alert=camCheck.SP2R1HeaterVRead,warn'
     ',"at 2020-08-04 22:30:18 UT found \'Reported by camCheck\'"'
@@ -42,7 +42,9 @@ async def tron_server(unused_tcp_port_factory):
         if 'getFor=alerts' in data.decode():
             transport.write(get_keys_reply.encode())
         else:
-            transport.write(data)
+            cmdr_name, mid, actor, __ = data.decode().strip().split()
+            reply = f'{cmdr_name}.{cmdr_name} {mid} {actor} : text="value"\n'
+            transport.write(reply.encode())
 
     server = TCPStreamServer('localhost',
                              unused_tcp_port_factory(),
@@ -64,10 +66,10 @@ async def tron_client(tron_server):
 
     log = get_logger('tron-test')
 
-    model_names = ['alerts'] if 'ACTORKEYS_DIR' in os.environ else None
+    models = ['alerts'] if 'ACTORKEYS_DIR' in os.environ else None
 
-    _tron = TronConnection('localhost', tron_server.port,
-                           model_names=model_names, log=log)
+    _tron = TronConnection(host='localhost', port=tron_server.port,
+                           models=models, log=log)
 
     await _tron.start()
     await asyncio.sleep(0.01)
@@ -81,13 +83,13 @@ async def tron_client(tron_server):
 @pytest.fixture
 async def actor(tron_server, unused_tcp_port_factory, tmp_path):
 
-    model_names = ['alerts'] if 'ACTORKEYS_DIR' in os.environ else None
+    models = ['alerts'] if 'ACTORKEYS_DIR' in os.environ else None
 
     _actor = LegacyActor('test_actor', 'localhost',
                          unused_tcp_port_factory(),
                          tron_host=tron_server.host,
                          tron_port=tron_server.port,
-                         model_names=model_names,
+                         models=models,
                          version='0.1.0', log_dir=tmp_path)
 
     await _actor.start()

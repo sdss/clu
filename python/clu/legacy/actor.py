@@ -44,7 +44,7 @@ class BaseLegacyActor(BaseActor):
         The host on which Tron is running.
     tron_port : int
         The port on which Tron is running.
-    model_names : list
+    models : list
         A list of strings with the actors whose models will be tracked.
     version : str
         The version of the actor.
@@ -63,7 +63,7 @@ class BaseLegacyActor(BaseActor):
     port = None
 
     def __init__(self, name, host, port, tron_host=None, tron_port=None,
-                 model_names=None, version=None, loop=None, log_dir=None,
+                 models=None, version=None, loop=None, log_dir=None,
                  log=None, verbose=False):
 
         super().__init__(name, version=version, loop=loop,
@@ -82,14 +82,13 @@ class BaseLegacyActor(BaseActor):
 
         if tron_host and tron_port:
             #: TronConnection: The client connection to Tron.
-            self.tron = TronConnection(tron_host, tron_port, self,
-                                       model_names=model_names, log=self.log)
+            self.tron = TronConnection(host=tron_host, port=tron_port,
+                                       models=models, log=self.log)
         else:
             self.tron = None
 
-        if self.tron:
-            #: dict: Actor models.
-            self.models = self.tron.models
+        #: dict: Actor models.
+        self.models = self.tron.models if self.tron else None
 
         self.timed_commands = TimedCommandList(self)
 
@@ -270,7 +269,12 @@ class BaseLegacyActor(BaseActor):
         """
 
         if self.tron:
-            self.tron.send_command(target, command_string, mid=command_id)
+            command = self.tron.send_command(target, command_string,
+                                             commander=f'{self.name}.{self.name}',
+                                             mid=command_id)
+            command.actor = self
+            return command
+
         else:
             raise clu.CluError('cannot connect to tron.')
 
