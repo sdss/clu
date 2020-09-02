@@ -107,7 +107,7 @@ The format for a reply to a command is as follows:
 - The content type of the message must be ``text/json``.
 - The body of the message must be a JSON string with a series of keyword-value pairs that conform to the :ref:`keyword model <keyword-model>` of the actor that is replying.
 
-In our example above, we commanded ``actor2` with ``status --verbose``. Let's imagine that the actor run that command and now wants to reply indicating that the lamps are on and the flat field screen is closed. The reply would look like
+In our example above, we commanded ``actor2`` with ``status --verbose``. Let's imagine that the actor run that command and now wants to reply indicating that the lamps are on and the flat field screen is closed. The reply would look like
 
 .. code:: yaml
 
