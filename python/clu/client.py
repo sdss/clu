@@ -63,7 +63,7 @@ class AMQPClient(BaseClient):
 
     """
 
-    __EXCHANGE_NAME__ = 'clu_exchange'
+    __EXCHANGE_NAME__ = 'sdss_exchange'
 
     connection = None
 
