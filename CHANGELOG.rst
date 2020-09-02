@@ -8,7 +8,7 @@ Changelog
 * :support:`-` First version with >80% test coverage.
 * :support:`-` Several changes to homogenise the API. All actors and clients now have ``start``, ``stop``, and ``run_forever`` methods.
 * :bug:`29` Fix the CLI application.
-* :feature:`4` `.AMQPActor` actors now self-validate their message. The schema can be requested as a command.
+* :feature:`4` `.AMQPActor` actors now self-validate their messages. The schema can be requested as a command.
 * :bug:`34` Fix actor replies with level ``REPLY`` not being logged.
 * :feature:`32` Add default ``version`` command.
 * :support:`35` `.TronConnection` now subclasses from `.BaseClient` and keeps track of running commands and replies.
