@@ -29,7 +29,7 @@ Installation
 
 or from source ::
 
-    git clone https://github.org/sdss/clu
+    git clone https://github.com/sdss/clu
     cd clu
     pip install .
 
@@ -48,7 +48,7 @@ Creating a new actor with ``CLU`` is easy. To instantiate and run an actor you c
 
     asyncio.run(main(loop))
 
-Next, head to the `Getting started <https://clu.readthedocs.io/en/latest/getting-started.html>`__ section for more information about using actors.
+Next, head to the `Getting started <https://clu.readthedocs.io/en/latest/getting-started.html>`__ section for more information about using actors. More examples are available `here <https://clu.readthedocs.io/en/latest/examples.html>`__.
 
 
 Why a new messaging protocol for SDSS?
