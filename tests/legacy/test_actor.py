@@ -75,7 +75,7 @@ async def test_new_command_client(actor, actor_client):
 
     lines = data.decode().splitlines()
 
-    assert lines[0] == '1 0 i '
+    assert lines[0] == '1 0 > '
     assert lines[1] == '1 0 : text=Pong.'
 
 
@@ -91,7 +91,7 @@ async def test_get_version(actor, actor_client):
 
     lines = data.decode().splitlines()
 
-    assert lines[0] == '1 0 i '
+    assert lines[0] == '1 0 > '
     assert lines[1] == '1 0 : version=0.1.0'
 
 
@@ -116,7 +116,7 @@ async def test_new_command(actor, actor_client):
 
     lines = data.decode().splitlines()
 
-    assert lines[0] == '1 0 i '
+    assert lines[0] == '1 0 > '
     assert lines[1] == '1 0 : text=Pong.'
 
 

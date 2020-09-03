@@ -83,7 +83,7 @@ async def test_send_command1(actor):
     assert cmd.status.is_done
 
     assert len(actor.mock_replies) == 6
-    assert actor.mock_replies[0].flag == 'i'
+    assert actor.mock_replies[0].flag == '>'
     assert actor.mock_replies[1].flag == 'd'
     assert actor.mock_replies[2].flag == 'i'
     assert actor.mock_replies[3].flag == 'w'

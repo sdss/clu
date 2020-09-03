@@ -41,7 +41,7 @@ COMMAND_STATUS_TO_CODE = {
     'FAILED': 'f',
     'TIMEDOUT': 'f',
     'READY': 'i',
-    'RUNNING': 'i',
+    'RUNNING': '>',
     'CANCELLING': 'w',
     'FAILING': 'w',
     'DEBUG': 'd',
@@ -123,7 +123,8 @@ class CommandStatus(Maskbit):
         statuses = {':': CommandStatus.DONE,
                     'f': CommandStatus.FAILED,
                     'e': CommandStatus.FAILED,
-                    'i': CommandStatus.RUNNING}
+                    '!': CommandStatus.FAILED,
+                    '>': CommandStatus.RUNNING}
 
         return statuses.get(code, default or CommandStatus.RUNNING)
 

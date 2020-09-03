@@ -30,7 +30,7 @@ async def test_json_actor_pong(json_client):
 
     data = await json_client.reader.readline()
     data_json = json.loads(data.decode())
-    assert data_json['header']['message_code'] == 'i'
+    assert data_json['header']['message_code'] == '>'
     assert data_json['header']['sender'] == 'json_actor'
     assert data_json['data'] == {}
 
