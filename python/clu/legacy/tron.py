@@ -13,8 +13,8 @@ from clu.command import Command, CommandStatus
 from clu.model import BaseModel, Property
 from clu.protocol import open_connection
 
-from .keys import KeysDictionary
-from .parser import ParseError, ReplyParser
+from .types.keys import KeysDictionary
+from .types.parser import ParseError, ReplyParser
 
 
 __all__ = ['TronConnection', 'TronModel', 'TronKey']

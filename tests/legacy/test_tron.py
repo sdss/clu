@@ -13,7 +13,7 @@ import os
 import pytest
 
 from clu.legacy import TronConnection
-from clu.legacy.parser import ParseError
+from clu.legacy.types.parser import ParseError
 
 
 pytestmark = [pytest.mark.asyncio,

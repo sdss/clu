@@ -89,13 +89,7 @@ include = [
 omit = [
     "*/__init__.py",
     "*/__main__.py",
-    "*/clu/legacy/ply/*",
-    "*/clu/legacy/keys.py",
-    "*/clu/legacy/html.py",
-    "*/clu/legacy/messages.py",
-    "*/clu/legacy/parser.py",
-    "*/clu/legacy/pvt.py",
-    "*/clu/legacy/types.py",
+    "*/clu/legacy/types/*"
 ]
 
 [tool.coverage.report]
