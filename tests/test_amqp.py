@@ -7,7 +7,6 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
 import sys
-import unittest.mock
 
 import pytest
 
@@ -15,12 +14,6 @@ from clu import REPLY, AMQPActor, CluError, CommandError
 from clu.model import Model
 
 from .conftest import RMQ_PORT
-
-
-if sys.version_info.major == 3 and sys.version_info.minor >= 8:
-    CoroutineMock = unittest.mock.AsyncMock
-else:
-    from asynctest import CoroutineMock
 
 
 pytestmark = [pytest.mark.asyncio]
@@ -132,13 +125,13 @@ async def test_bad_keyword(amqp_actor, caplog):
     assert 'Failed validating the reply' in caplog.record_tuples[-1][2]
 
 
+@pytest.mark.skipif(sys.version_info < (3, 8), reason='Python < 3.8')
 async def test_write_update_model_fails(amqp_actor, mocker):
 
     mocker.patch.object(amqp_actor.schema, 'update_model',
                         return_value=(False, 'failed updating model.'))
-    mocker.patch.object(amqp_actor.connection.exchange, 'publish',
-                        new_callable=CoroutineMock)
-    apika_message = mocker.patch('aio_pika.Message', new_callable=CoroutineMock)
+    mocker.patch.object(amqp_actor.connection.exchange, 'publish')
+    apika_message = mocker.patch('aio_pika.Message')
 
     await amqp_actor.write('i', {'text': 'Some message'})
 
@@ -154,15 +147,14 @@ async def test_write_no_validate(amqp_actor, mocker):
     mock_func.assert_not_called()
 
 
-@pytest.mark.xfailif(sys.version_info < (3, 8), reason='Python < 3.8')
+@pytest.mark.skipif(sys.version_info < (3, 8), reason='Python < 3.8')
 async def test_new_command_fails(amqp_actor, mocker):
 
     message = mocker.MagicMock()
     mocker.patch('clu.actor.Command', side_effect=CommandError)
     mocker.patch('json.loads')
 
-    actor_write = mocker.patch.object(amqp_actor, 'write',
-                                      new_callable=CoroutineMock)
+    actor_write = mocker.patch.object(amqp_actor, 'write')
 
     await amqp_actor.new_command(message)
 
