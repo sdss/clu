@@ -136,7 +136,8 @@ async def test_write_update_model_fails(amqp_actor, mocker):
 
     mocker.patch.object(amqp_actor.schema, 'update_model',
                         return_value=(False, 'failed updating model.'))
-    mocker.patch.object(amqp_actor.connection.exchange, 'publish')
+    mocker.patch.object(amqp_actor.connection.exchange, 'publish',
+                        new_callable=CoroutineMock)
     apika_message = mocker.patch('aio_pika.Message', new_callable=CoroutineMock)
 
     await amqp_actor.write('i', {'text': 'Some message'})
@@ -153,6 +154,7 @@ async def test_write_no_validate(amqp_actor, mocker):
     mock_func.assert_not_called()
 
 
+@pytest.mark.xfailif(sys.version_info < (3, 8), reason='Python < 3.8')
 async def test_new_command_fails(amqp_actor, mocker):
 
     message = mocker.MagicMock()
