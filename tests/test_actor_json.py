@@ -8,7 +8,6 @@
 
 import asyncio
 import json
-import sys
 
 import pytest
 
@@ -101,7 +100,6 @@ async def test_timed_command(json_actor, json_client):
     assert data_json['data'] == {'text': 'Pong.'}
 
 
-@pytest.mark.skipif(sys.version_info < (3, 8), reason='Python < 3.8')
 async def test_write_update_model_fails(json_actor, json_client, mocker):
 
     mocker.patch.object(json_actor.schema, 'update_model',
@@ -112,7 +110,7 @@ async def test_write_update_model_fails(json_actor, json_client, mocker):
 
     json_actor.write('i', {'text': 'Some message'})
 
-    b'Failed validating the reply' in mock_transport.write.call_args.args[0]
+    b'Failed validating the reply' in mock_transport.write.call_args[0][0]
 
 
 async def test_write_no_validate(json_actor, json_client, mocker):

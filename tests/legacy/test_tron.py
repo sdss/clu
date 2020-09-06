@@ -51,8 +51,9 @@ async def test_update_model(tron_client, tron_server):
                                "['Alert1', 'Alert2']>")
 
 
-@pytest.mark.xfail()
 async def test_parser_fails(tron_client, tron_server, caplog, mocker):
+
+    caplog.set_level(logging.WARNING, logger='tron-test')
 
     client_transport = list(tron_server.transports.values())[0]
 
@@ -63,11 +64,13 @@ async def test_parser_fails(tron_client, tron_server, caplog, mocker):
 
     assert tron_client.models['alerts']['activeAlerts'].value[0] != 'Alert1'
 
-    assert caplog.record_tuples[0][1] == logging.WARNING
-    assert 'Failed parsing reply' in caplog.record_tuples[0][2]
+    assert caplog.record_tuples[-1][1] == logging.WARNING
+    assert 'Failed parsing reply' in caplog.record_tuples[-1][2]
 
 
 async def test_model_parse_reply_fails(tron_client, tron_server, caplog, mocker):
+
+    caplog.set_level(logging.WARNING, logger='tron-test')
 
     client_transport = list(tron_server.transports.values())[0]
 
@@ -79,8 +82,8 @@ async def test_model_parse_reply_fails(tron_client, tron_server, caplog, mocker)
 
     assert tron_client.models['alerts']['activeAlerts'].value[0] != 'Alert1'
 
-    assert caplog.record_tuples[0][1] == logging.WARNING
-    assert 'Failed parsing reply' in caplog.record_tuples[0][2]
+    assert caplog.record_tuples[-1][1] == logging.WARNING
+    assert 'Failed parsing reply' in caplog.record_tuples[-1][2]
 
 
 async def test_send_command(actor, tron_server):
