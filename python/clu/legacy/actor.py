@@ -56,6 +56,11 @@ class BaseLegacyActor(BaseActor):
     log : ~logging.Logger
         A `~logging.Logger` instance to be used for logging instead of creating
         a new one.
+    schema : str
+        The path to the datamodel schema for the actor, in JSON Schema format.
+        If the schema is provided all replies will be validated against it.
+        An invalid reply will fail and not be emitted. The schema can also be
+        set when subclassing by setting the class ``schema`` attribute.
 
     """
 
@@ -64,10 +69,11 @@ class BaseLegacyActor(BaseActor):
 
     def __init__(self, name, host, port, tron_host=None, tron_port=None,
                  models=None, version=None, loop=None, log_dir=None,
-                 log=None, verbose=False):
+                 log=None, verbose=False, schema=None):
 
         super().__init__(name, version=version, loop=loop,
-                         log_dir=log_dir, log=log, verbose=verbose)
+                         log_dir=log_dir, log=log, verbose=verbose,
+                         schema=schema)
 
         #: Mapping of user_id to transport
         self.transports = dict()
@@ -279,7 +285,8 @@ class BaseLegacyActor(BaseActor):
             raise clu.CluError('cannot connect to tron.')
 
     def write(self, message_code='i', message=None, command=None, user_id=None,
-              command_id=None, concatenate=True, broadcast=False, **kwargs):
+              command_id=None, concatenate=True, broadcast=False,
+              no_validate=False, **kwargs):
         """Writes a message to user(s).
 
         Parameters
@@ -304,6 +311,10 @@ class BaseLegacyActor(BaseActor):
             each keyword will be output as a different message.
         broadcast : bool
             Whether to broadcast the reply. Equivalent to ``user_id=0``.
+        no_validate : bool
+            Do not validate the reply against the actor schema. This is
+            ignored if the actor was not started with knowledge of its own
+            schema.
         kwargs
             Keyword arguments that will be added to the message. If a keyword
             is both in ``message`` and in ``kwargs``, the value in ``kwargs``
@@ -329,6 +340,12 @@ class BaseLegacyActor(BaseActor):
             message = {'text': message}
         elif not isinstance(message, dict):
             raise TypeError('invalid message type ' + str(type(message)))
+
+        if not no_validate and hasattr(self, 'schema') and self.schema is not None:
+            result, err = self.schema.update_model(message)
+            if result is False:
+                message = {'error': f'Failed validating the reply: {err}'}
+                message_code = 'e'
 
         message.update(kwargs)
 
