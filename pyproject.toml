@@ -56,6 +56,7 @@ isort = ">=5.2.2"
 pytest-mock = "^3.2.0"
 ipdb = "^0.13.3"
 pytest-rabbitmq = "^2.0.1"
+asyncmock = {version = "^0.4.2", python = "<=3.7"}
 
 [tool.poetry.extras]
 docs = ["Sphinx"]
