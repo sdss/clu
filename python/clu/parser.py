@@ -225,7 +225,7 @@ def version(*args):
     return
 
 
-@click.command(cls=CluCommand, name='get_schema')
+@command_parser.command(cls=CluCommand, name='get_schema')
 def get_schema(*args):
     """Returns the schema of the actor as a JSON schema."""
 
@@ -300,14 +300,6 @@ class ClickParser:
 
     def parse_command(self, command):
         """Parses an user command using the Click internals."""
-
-        # Makes sure we have the ping, version, and help commands available
-        if 'help' not in self.parser.commands:
-            self.parser.add_command(help_)
-        if 'ping' not in self.parser.commands:
-            self.parser.add_command(ping)
-        if 'version' not in self.parser.commands:
-            self.parser.add_command(version)
 
         # This will pass the command as the first argument for each command.
         # If self.parser_args is defined, those arguments will be passed next.
