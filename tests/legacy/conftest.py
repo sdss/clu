@@ -9,6 +9,7 @@
 
 import asyncio
 import os
+import pathlib
 
 import pytest
 
@@ -17,6 +18,9 @@ from sdsstools import get_logger
 from clu.legacy import LegacyActor
 from clu.legacy.tron import TronConnection
 from clu.protocol import TCPStreamServer, open_connection
+
+
+DATA_DIR = pathlib.Path(os.path.dirname(__file__)) / '../data'
 
 
 get_keys_reply = (
@@ -90,7 +94,8 @@ async def actor(tron_server, unused_tcp_port_factory, tmp_path):
                          tron_host=tron_server.host,
                          tron_port=tron_server.port,
                          models=models,
-                         version='0.1.0', log_dir=tmp_path)
+                         version='0.1.0', log_dir=tmp_path,
+                         schema=DATA_DIR / 'schema.json')
 
     await _actor.start()
     await asyncio.sleep(0.01)

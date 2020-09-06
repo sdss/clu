@@ -8,7 +8,7 @@
 
 import pytest
 
-from clu import REPLY, AMQPActor, CluError
+from clu import REPLY, AMQPActor, CluError, CommandError
 from clu.model import Model
 
 from .conftest import RMQ_PORT
@@ -121,3 +121,38 @@ async def test_bad_keyword(amqp_actor, caplog):
         await amqp_actor.write('i', {'bad_keyword': 'blah'}, broadcast=True)
 
     assert 'Failed validating the reply' in caplog.record_tuples[-1][2]
+
+
+async def test_write_update_model_fails(amqp_actor, mocker):
+
+    mocker.patch.object(amqp_actor.schema, 'update_model',
+                        return_value=(False, 'failed updating model.'))
+    mocker.patch.object(amqp_actor.connection.exchange, 'publish')
+    apika_message = mocker.patch('aio_pika.Message')
+
+    await amqp_actor.write('i', {'text': 'Some message'})
+
+    assert b'failed updating model' in apika_message.call_args.args[0]
+
+
+async def test_write_no_validate(amqp_actor, mocker):
+
+    mock_func = mocker.patch.object(amqp_actor.schema, 'update_model')
+
+    await amqp_actor.write('i', {'text': 'Some message'}, no_validate=True)
+
+    mock_func.assert_not_called()
+
+
+async def test_new_command_fails(amqp_actor, mocker):
+
+    message = mocker.MagicMock()
+    mocker.patch('clu.actor.Command', side_effect=CommandError)
+    mocker.patch('json.loads')
+
+    actor_write = mocker.patch.object(amqp_actor, 'write')
+
+    await amqp_actor.new_command(message)
+
+    actor_write.assert_awaited()
+    assert 'Could not parse the following' in actor_write.call_args.args[1]['error']

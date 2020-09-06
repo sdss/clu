@@ -42,7 +42,7 @@ rabbitmq = factories.rabbitmq('rabbitmq_proc')
 async def amqp_actor(rabbitmq, event_loop):
 
     actor = AMQPActor(name='amqp_actor', port=RMQ_PORT,
-                      schema=DATA_DIR / 'amqp_actor.json')
+                      schema=DATA_DIR / 'schema.json')
 
     await actor.start()
 
@@ -68,7 +68,7 @@ async def json_actor(unused_tcp_port_factory, event_loop, tmpdir):
 
     actor = JSONActor('json_actor', host='localhost',
                       port=unused_tcp_port_factory(),
-                      log_dir=tmpdir)
+                      log_dir=tmpdir, schema=DATA_DIR / 'schema.json')
 
     await actor.start()
     await asyncio.sleep(0.01)

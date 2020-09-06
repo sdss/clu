@@ -98,3 +98,25 @@ async def test_timed_command(json_actor, json_client):
     data_json = json.loads(data[3])
     assert data_json['header']['message_code'] == ':'
     assert data_json['data'] == {'text': 'Pong.'}
+
+
+async def test_write_update_model_fails(json_actor, json_client, mocker):
+
+    mocker.patch.object(json_actor.schema, 'update_model',
+                        return_value=(False, 'failed updating model.'))
+
+    json_actor.transports['mock_transport'] = mocker.MagicMock()
+    mock_transport = json_actor.transports['mock_transport']
+
+    json_actor.write('i', {'text': 'Some message'})
+
+    b'Failed validating the reply' in mock_transport.write.call_args.args[0]
+
+
+async def test_write_no_validate(json_actor, json_client, mocker):
+
+    mock_func = mocker.patch.object(json_actor.schema, 'update_model')
+
+    json_actor.write('i', {'text': 'Some message'}, no_validate=True)
+
+    mock_func.assert_not_called()

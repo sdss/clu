@@ -55,16 +55,15 @@ async def test_parser_fails(tron_client, tron_server, caplog, mocker):
 
     client_transport = list(tron_server.transports.values())[0]
 
-    mocker.patch.object(tron_client.rparser, 'parse', side_effect=ParseError())
+    mocker.patch.object(tron_client.rparser, 'parse', side_effect=ParseError)
     client_transport.write('.alerts 0 alerts i activeAlerts=Alert1\n'.encode())
 
     await asyncio.sleep(0.01)
 
     assert tron_client.models['alerts']['activeAlerts'].value[0] != 'Alert1'
 
-    assert caplog.record_tuples == [('tron-test', logging.WARNING,
-                                     'Failed parsing reply .alerts '
-                                     '0 alerts i activeAlerts=Alert1.')]
+    assert caplog.record_tuples[0][1] == logging.WARNING
+    assert 'Failed parsing reply' in caplog.record_tuples[0][2]
 
 
 async def test_model_parse_reply_fails(tron_client, tron_server, caplog, mocker):
@@ -72,7 +71,7 @@ async def test_model_parse_reply_fails(tron_client, tron_server, caplog, mocker)
     client_transport = list(tron_server.transports.values())[0]
 
     mocker.patch.object(tron_client.models['alerts'], 'parse_reply',
-                        side_effect=ParseError())
+                        side_effect=ParseError)
     client_transport.write('.alerts 0 alerts i activeAlerts=Alert1\n'.encode())
 
     await asyncio.sleep(0.01)
