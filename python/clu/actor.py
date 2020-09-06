@@ -97,8 +97,9 @@ class AMQPActor(AMQPClient, ClickParser, BaseActor):
                               actor=self, loop=self.loop)
             command.actor = self  # Assign the actor
         except CommandError as ee:
-            await self.write('f', {'text': f'Could not parse the '
-                                           f'following as a command: {ee!r}'})
+            await self.write('f', {'error': 'Could not parse the '
+                                            'following as a command: '
+                                            f'{command_string!r}. {ee!r}'})
             return
 
         return self.parse_command(command)
@@ -299,7 +300,7 @@ class JSONActor(ClickParser, BaseActor):
         raise NotImplementedError('JSONActor cannot send commands to other actors.')
 
     def write(self, message_code='i', message=None, command=None,
-              broadcast=False, **kwargs):
+              broadcast=False, no_validate=False, **kwargs):
         """Writes a message to user(s) as a JSON.
 
         A ``header`` keyword with the ``commander_id`` (i.e., the user id of
@@ -346,6 +347,10 @@ class JSONActor(ClickParser, BaseActor):
         broadcast : bool
             Whether to broadcast the message to all the users or only to the
             commander.
+        no_validate : bool
+            Do not validate the reply against the actor schema. This is
+            ignored if the actor was not started with knowledge of its own
+            schema.
         kwargs
             Keyword arguments that will used to update the message.
 
@@ -362,6 +367,11 @@ class JSONActor(ClickParser, BaseActor):
         message = message or {}
         assert isinstance(message, dict), 'message must be a dictionary'
         message.update(kwargs)
+
+        if not no_validate and self.schema is not None:
+            result, err = self.schema.update_model(message)
+            if result is False:
+                message = {'error': f'Failed validating the reply: {err}'}
 
         commander_id = command.commander_id if command else None
         command_id = command.command_id if command else None
