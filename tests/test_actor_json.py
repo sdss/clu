@@ -101,7 +101,7 @@ async def test_timed_command(json_actor, json_client):
     assert data_json['data'] == {'text': 'Pong.'}
 
 
-@pytest.mark.xfailif(sys.version_info < (3, 8), reason='Python < 3.8')
+@pytest.mark.skipif(sys.version_info < (3, 8), reason='Python < 3.8')
 async def test_write_update_model_fails(json_actor, json_client, mocker):
 
     mocker.patch.object(json_actor.schema, 'update_model',
