@@ -15,6 +15,7 @@ import time
 
 from sdsstools import get_logger, read_yaml_file
 
+from .model import Model
 from .tools import REPLY
 
 
@@ -209,6 +210,26 @@ class BaseActor(BaseClient):
     which should be overridden by the specific actors.
 
     """
+
+    schema = None
+
+    def __init__(self, *args, schema=None, **kwargs):
+
+        super().__init__(*args, **kwargs)
+
+        self.validate_schema(schema)
+
+    def validate_schema(self, schema):
+        """Loads and validates the actor schema."""
+
+        schema = schema or self.schema
+
+        if schema is None:
+            return None
+
+        self.schema = Model(self.name, schema, is_file=True, log=self.log)
+
+        return self.schema
 
     @abc.abstractmethod
     def new_command(self):

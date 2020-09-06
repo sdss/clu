@@ -12,7 +12,7 @@ import os
 import pytest
 
 from clu.command import CommandStatus
-from clu.exceptions import CluWarning
+from clu.exceptions import CluError, CluWarning
 from clu.legacy import LegacyActor
 
 
@@ -25,6 +25,7 @@ async def test_actor(actor, actor_client):
     assert actor.host == 'localhost'
     assert actor.tron is not None
     assert actor.log is not None
+    assert actor.schema is not None
 
     assert actor._server._server.is_serving()
     assert len(actor.transports) == 1
@@ -171,3 +172,62 @@ async def test_command_failed_to_parse(actor, actor_client):
 
     assert b'UsageError' in data
     assert b'Command \'badcommand\' failed' in data
+
+
+async def test_write_update_model_fails(actor, actor_client, mocker):
+
+    mocker.patch.object(actor.schema, 'update_model',
+                        return_value=(False, 'failed updating model.'))
+
+    actor.transports[1] = mocker.MagicMock()
+
+    actor.write('i', {'text': 'Some message'})
+
+    actor.transports[1].write.assert_called_with(
+        b'0 0 e error="Failed validating the reply: '
+        b'failed updating model."\n')
+
+
+async def test_write_no_validate(actor, actor_client, mocker):
+
+    mock_func = mocker.patch.object(actor.schema, 'update_model')
+
+    actor.write('i', {'text': 'Some message'}, no_validate=True)
+
+    mock_func.assert_not_called()
+
+
+async def test_write_str(actor, actor_client, mocker):
+
+    actor.transports[1].write = mocker.MagicMock()
+
+    actor.write('i', 'Some message')
+
+    actor.transports[1].write.assert_called_with(
+        b'0 0 i text="Some message"\n')
+
+
+async def test_write_invalid(actor):
+
+    with pytest.raises(TypeError):
+        actor.write('i', 100)
+
+
+async def test_write_concatenate_false(actor, actor_client, mocker):
+
+    actor.transports[1].write = mocker.MagicMock()
+
+    actor.write('i', {'text': 'Some message', 'key': 'value'},
+                concatenate=False, no_validate=True)
+
+    actor.transports[1].write.assert_has_calls(
+        [mocker.call(b'0 0 i text="Some message"\n'),
+         mocker.call(b'0 0 i key=value\n')])
+
+
+async def test_send_command_no_tron(actor):
+
+    actor.tron = None
+
+    with pytest.raises(CluError):
+        actor.send_command('actor2', 'command')

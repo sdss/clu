@@ -17,8 +17,7 @@ from .base import BaseActor
 from .client import AMQPClient
 from .command import Command, TimedCommandList
 from .exceptions import CommandError
-from .model import Model
-from .parser import ClickParser, CluCommand, get_schema
+from .parser import ClickParser, CluCommand
 from .protocol import TCPStreamServer
 from .tools import log_reply
 
@@ -35,8 +34,8 @@ class AMQPActor(AMQPClient, ClickParser, BaseActor):
     internals and protocols are different the entry points and behaviour for
     both classes should be almost identical.
 
-    See the documentation for `.AMQPClient` for additional parameter
-    information.
+    See the documentation for `.AMQPActor` and `.AMQPClient` for additional
+    parameter information.
 
     Parameters
     ----------
@@ -46,9 +45,8 @@ class AMQPActor(AMQPClient, ClickParser, BaseActor):
         An invalid reply will fail and not be emitted. The schema can also be
         set when subclassing by setting the class ``schema`` attribute.
 
-    """
 
-    schema = None
+    """
 
     def __init__(self, *args, schema=None, **kwargs):
 
@@ -58,15 +56,9 @@ class AMQPActor(AMQPClient, ClickParser, BaseActor):
 
         self.timed_commands = TimedCommandList(self)
 
-        # TODO: for now the AMQPActor is the only actor that may use the
-        # self-validating schema, but eventually this code should be moved
-        # to BaseActor or to a mixin.
-        self.schema = self._validate_schema(schema or self.schema)
-
-        # Add the command to get the schema. This command is not added by
-        # default because only AMQPActor should have it.
-        if self.schema is not None:
-            self.parser.add_command(get_schema)
+        # Not calling BaseClient.__init__() here because we already called
+        # AMQPClient.__init__.
+        self.validate_schema(schema)
 
     async def start(self, **kwargs):
         """Starts the connection to the AMQP broker."""
@@ -85,16 +77,6 @@ class AMQPActor(AMQPClient, ClickParser, BaseActor):
         self.timed_commands.start()
 
         return self
-
-    def _validate_schema(self, schema):
-        """Loads and validates the actor schema."""
-
-        if schema is None:
-            return None
-
-        model = Model(self.name, schema, is_file=True, log=self.log)
-
-        return model
 
     async def new_command(self, message):
         """Handles a new command received by the actor."""
@@ -115,8 +97,9 @@ class AMQPActor(AMQPClient, ClickParser, BaseActor):
                               actor=self, loop=self.loop)
             command.actor = self  # Assign the actor
         except CommandError as ee:
-            await self.write('f', {'text': f'Could not parse the '
-                                           f'following as a command: {ee!r}'})
+            await self.write('f', {'error': 'Could not parse the '
+                                            'following as a command: '
+                                            f'{command_string!r}. {ee!r}'})
             return
 
         return self.parse_command(command)
@@ -317,7 +300,7 @@ class JSONActor(ClickParser, BaseActor):
         raise NotImplementedError('JSONActor cannot send commands to other actors.')
 
     def write(self, message_code='i', message=None, command=None,
-              broadcast=False, **kwargs):
+              broadcast=False, no_validate=False, **kwargs):
         """Writes a message to user(s) as a JSON.
 
         A ``header`` keyword with the ``commander_id`` (i.e., the user id of
@@ -364,6 +347,10 @@ class JSONActor(ClickParser, BaseActor):
         broadcast : bool
             Whether to broadcast the message to all the users or only to the
             commander.
+        no_validate : bool
+            Do not validate the reply against the actor schema. This is
+            ignored if the actor was not started with knowledge of its own
+            schema.
         kwargs
             Keyword arguments that will used to update the message.
 
@@ -380,6 +367,11 @@ class JSONActor(ClickParser, BaseActor):
         message = message or {}
         assert isinstance(message, dict), 'message must be a dictionary'
         message.update(kwargs)
+
+        if not no_validate and self.schema is not None:
+            result, err = self.schema.update_model(message)
+            if result is False:
+                message = {'error': f'Failed validating the reply: {err}'}
 
         commander_id = command.commander_id if command else None
         command_id = command.command_id if command else None

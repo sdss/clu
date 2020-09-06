@@ -226,15 +226,17 @@ class Model(BaseModel):
         if self.schema['type'] != 'object' or 'properties' not in self.schema:
             raise ValueError('Schema must be of type object.')
 
-        # All model have these three keys.
+        # All models must have these keys.
+        props = self.schema['properties']
         for default_prop in ['text', 'error', 'schema', 'version']:
-            if default_prop not in self.schema['properties']:
-                self.schema['properties'][default_prop] = {'type': 'string'}
-        self.schema['properties']['help'] = {'type': 'array'}
+            if default_prop not in props:
+                props[default_prop] = {'type': 'string'}
+        if 'help' not in props:
+            props['help'] = {'type': 'array'}
 
         super().__init__(name, **kwargs)
 
-        for name in self.schema['properties']:
+        for name in props:
             self[name] = Property(name, model=self)
 
     @staticmethod
