@@ -74,7 +74,7 @@ jobs:
 
     - name: Test with pytest
       run: |
-        pip install pytest pytest-cov pytest-asyncio pytest-mock pytest-rabbitmq asynctest asyncmock
+        pip install pytest pytest-cov pytest-asyncio pytest-mock pytest-rabbitmq asynctest
         pip install coverage[toml]
         pytest
       env:

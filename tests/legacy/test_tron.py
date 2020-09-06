@@ -51,6 +51,7 @@ async def test_update_model(tron_client, tron_server):
                                "['Alert1', 'Alert2']>")
 
 
+@pytest.mark.xfail()
 async def test_parser_fails(tron_client, tron_server, caplog, mocker):
 
     client_transport = list(tron_server.transports.values())[0]
