@@ -14,7 +14,7 @@ import click
 import pytest
 
 from clu import Command
-from clu.parser import ClickParser, command_parser
+from clu.parser import ClickParser, command_parser, pass_args
 from clu.testing import setup_test_actor
 
 
@@ -25,26 +25,32 @@ pytestmark = [pytest.mark.asyncio]
 # branch in the parser, it should not change anything in this case.
 @command_parser.command(context_settings={'ignore_unknown_options': False})
 @click.option('--finish', is_flag=True)
-async def command_exit(command, finish):
+async def command_exit(command, object, finish):
     if finish:
         command.finish()
     raise click.exceptions.Exit()
 
 
 @command_parser.command()
-async def command_abort(command):
+async def command_abort(command, object):
     raise click.exceptions.Abort()
 
 
 @command_parser.command()
-async def bad_command(command):
+async def bad_command(command, object):
     raise ValueError('This is an exception in the command.')
 
 
-@command_parser.command()
+@command_parser.group()
+@pass_args()
+def mygroup(command, object):
+    command.replies.append({'object': object})
+
+
+@mygroup.command()
 @click.argument('NEGNUMBER', type=int)
 @click.option('-r', '--recursive', is_flag=True)
-async def neg_number_command(command, negnumber, recursive):
+async def neg_number_command(command, object, negnumber, recursive):
     # Add the values to command.replies so that the test can easily get them.
     command.replies.append({'value': negnumber, 'recursive': recursive})
     command.finish()
@@ -54,6 +60,7 @@ async def neg_number_command(command, negnumber, recursive):
 async def click_parser(json_actor):
 
     parser = ClickParser()
+    parser.parser_args = ['my_object']
 
     # Hack some needed parameters because we are not using ClickParser
     # as a mixin.
@@ -74,6 +81,15 @@ async def test_help(json_actor, click_parser):
     await cmd
 
     assert cmd.status.is_done
+
+
+async def test_help_not_found(json_actor, click_parser):
+
+    cmd = Command(command_string='png --help', actor=json_actor)
+    click_parser.parse_command(cmd)
+    await cmd
+
+    assert cmd.status.did_fail
 
 
 async def test_exit(json_actor, click_parser):
@@ -138,11 +154,15 @@ async def test_uncaught_exception(json_actor, click_parser, caplog):
                                             'neg-number-command -r 15'])
 async def test_command_neg_number(json_actor, click_parser, command_string):
 
-    cmd = Command(command_string=command_string, actor=json_actor)
+    cmd = Command(command_string='mygroup ' + command_string, actor=json_actor)
     click_parser.parse_command(cmd)
     await cmd
 
     assert cmd.status.did_succeed
+
+    # This is a different test. We are testing that mygroup got called
+    # with the parser_obj "object" and its value was passed.
+    assert cmd.replies[-2]['object'] == 'my_object'
 
     if '-15' in command_string:
         assert cmd.replies[-1]['value'] == -15

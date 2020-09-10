@@ -61,12 +61,8 @@ class CluCommand(click.Command):
     async def _schedule_callback(self, ctx, timeout=None):
         """Schedules the callback as a task with a timeout."""
 
-        if not hasattr(ctx, 'obj') or 'parser_args' not in ctx.obj:
-            parser_args = []
-            command = None
-        else:
-            parser_args = ctx.obj['parser_args']
-            command = parser_args[0]
+        parser_args = ctx.obj.get('parser_args', [])
+        command = parser_args[0] if len(parser_args) > 0 else None
 
         callback_task = asyncio.create_task(
             ctx.invoke(self.callback, *parser_args, **ctx.params))
@@ -141,12 +137,11 @@ class CluGroup(click.Group):
 
         return decorator
 
-    def parse_args(self, ctx, args):
+    def parse_args(self, ctx, args):  # pragma: no cover
 
         # Copy this method so that we can turn off the printing of the
         # usage before ctx.exit()
         if not args and self.no_args_is_help and not ctx.resilient_parsing:
-            # click.echo(ctx.get_help(), color=ctx.color)
             ctx.exit()
 
         rest = click.Command.parse_args(self, ctx, args)
@@ -211,7 +206,7 @@ def pass_args():
 
 
 @click.group(cls=CluGroup)
-def command_parser():
+def command_parser(*args):
     pass
 
 
