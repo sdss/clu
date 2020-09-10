@@ -22,6 +22,10 @@ from clu.protocol import TCPStreamServer, open_connection
 
 DATA_DIR = pathlib.Path(os.path.dirname(__file__)) / '../data'
 
+# Monkeypatch the path for actorkeys
+os.environ['PYTHONPATH'] += os.pathsep + str(DATA_DIR)
+os.environ['ACTORKEYS_DIR'] = str(DATA_DIR)
+
 
 get_keys_reply = (
     'client.client 1 keys_alerts : version="2.0.1"; '
@@ -70,7 +74,7 @@ async def tron_client(tron_server):
 
     log = get_logger('tron-test')
 
-    models = ['alerts'] if 'ACTORKEYS_DIR' in os.environ else None
+    models = ['alerts']
 
     _tron = TronConnection(host='localhost', port=tron_server.port,
                            models=models, log=log)
