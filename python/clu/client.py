@@ -148,10 +148,10 @@ class AMQPClient(BaseClient):
 
         """
 
-        reply = Reply(message, ack=True)
+        reply = Reply(message, log=self.log, ack=True)
 
         if not reply.is_valid:
-            self.log.error('invalid message.')
+            self.log.error('Invalid message received.')
             return reply
 
         # Ignores message from self, because actors are also clients and they

@@ -25,6 +25,8 @@ class Reply(object):
     ----------
     message : aio_pika.IncomingMessage
         The message that contains the reply.
+    log : logging.Logger
+        A message logger.
     ack : bool
         Whether to acknowledge the message.
 
@@ -47,9 +49,10 @@ class Reply(object):
 
     """
 
-    def __init__(self, message, ack=True):
+    def __init__(self, message, log=None, ack=True):
 
         self.message = message
+        self.log = log
 
         self.is_valid = True
 
@@ -67,21 +70,22 @@ class Reply(object):
                 self.headers[key] = self.headers[key].decode()
 
         self.message_code = self.headers.get('message_code', None)
-        if self.message_code is None:
+        if self.message_code is None and self.log:
             self.log.warning(f'received message without message_code: {message}')
 
         self.sender = self.headers.get('sender', None)
-        if self.sender is None:
+        if self.sender is None and self.log:
             self.log.warning(f'received message without sender: {message}')
 
         self.command_id = message.correlation_id
 
         command_id_header = self.headers.get('command_id', None)
         if command_id_header and command_id_header != self.command_id:
-            self.log.error(f'mismatch between message '
-                           f'correlation_id={self.command_id} '
-                           f'and header command_id={command_id_header} '
-                           f'in message {message}')
+            if self.log:
+                self.log.error(f'mismatch between message '
+                               f'correlation_id={self.command_id} '
+                               f'and header command_id={command_id_header} '
+                               f'in message {message}')
             self.is_valid = False
             return
 

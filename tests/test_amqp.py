@@ -6,6 +6,7 @@
 # @Filename: test_actor.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
+import aio_pika as apika
 import pytest
 from asynctest import CoroutineMock
 
@@ -161,3 +162,16 @@ async def test_new_command_fails(amqp_actor, mocker):
 
     actor_write.assert_awaited()
     assert 'Could not parse the following' in actor_write.call_args[0][1]['error']
+
+
+async def test_client_handle_reply_bad_message(amqp_client, mocker, caplog):
+
+    message = mocker.MagicMock()
+    message.correlation_id = 5
+    message.info = mocker.MagicMock(return_value={'headers': {'command_id': 1,
+                                                              'message_code': 'i',
+                                                              'sender': 'me'}})
+
+    await amqp_client.handle_reply(message)
+
+    assert caplog.record_tuples[-1][2] == 'Invalid message received.'
