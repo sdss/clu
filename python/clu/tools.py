@@ -303,7 +303,7 @@ def format_value(value):
 
     if isinstance(value, str):
         if ' ' in value and not (value.startswith('\'') or value.startswith('"')):
-            value = json.dumps(value)
+            value = escape(value)
     elif isinstance(value, bool):
         value = 'T' if value else 'F'
     elif isinstance(value, (tuple, list)):

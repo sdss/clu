@@ -14,7 +14,7 @@ import warnings
 import pytest
 
 from clu import ActorHandler, CluWarning
-from clu.tools import CallbackMixIn
+from clu.tools import CallbackMixIn, format_value
 
 
 @pytest.fixture
@@ -139,3 +139,17 @@ async def test_actorhandler_warning(json_client, json_actor):
     assert data_json['header']['message_code'] == 'w'
     assert data_json['header']['sender'] == 'json_actor'
     assert data_json['data'] == {'text': 'A CLU warning (CluWarning)'}
+
+
+@pytest.mark.parametrize('value,formatted', [(True, 'T'), (False, 'F'),
+                                             ('string', 'string'),
+                                             ('"string"', '"string"'),
+                                             ('A string', '"A string"'),
+                                             ('\'A string\'', '\'A string\''),
+                                             ('"A string"', '"A string"'),
+                                             (5, '5'),
+                                             ([1, 2, 'A string', False],
+                                              '1,2,"A string",F')])
+def test_format_value(value, formatted):
+
+    assert format_value(value) == formatted
