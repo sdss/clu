@@ -6,16 +6,38 @@
 # @Filename: test_actor.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
+import logging
+
 import pytest
 from asynctest import CoroutineMock
 
 from clu import REPLY, AMQPActor, CluError, CommandError
+from clu.client import AMQPReply
 from clu.model import Model
 
 from .conftest import RMQ_PORT
 
 
 pytestmark = [pytest.mark.asyncio]
+
+
+@pytest.fixture
+def message_maker(mocker):
+
+    def _make_message(headers=None, body=None):
+
+        headers = headers or {'command_id': 1,
+                              'message_code': 'i',
+                              'sender': 'me'}
+
+        message = mocker.MagicMock()
+        message.correlation_id = headers['command_id']
+        message.info.return_value = {'headers': headers}
+        message.body = b'{}'
+
+        return message
+
+    yield _make_message
 
 
 def test_actor(amqp_actor):
@@ -163,14 +185,37 @@ async def test_new_command_fails(amqp_actor, mocker):
     assert 'Could not parse the following' in actor_write.call_args[0][1]['error']
 
 
-async def test_client_handle_reply_bad_message(amqp_client, mocker, caplog):
+class TestHandleReply:
 
-    message = mocker.MagicMock()
-    message.correlation_id = 5
-    message.info.return_value = {'headers': {'command_id': 1,
-                                             'message_code': 'i',
-                                             'sender': 'me'}}
+    async def test_client_handle_reply_bad_message(self,
+                                                   amqp_client,
+                                                   message_maker,
+                                                   caplog):
 
-    await amqp_client.handle_reply(message)
+        message = message_maker()
+        message.correlation_id = 100
 
-    assert caplog.record_tuples[-1][2] == 'Invalid message received.'
+        await amqp_client.handle_reply(message)
+
+        assert 'mismatch between message' in caplog.record_tuples[-2][2]
+        assert caplog.record_tuples[-1][2] == 'Invalid message received.'
+
+    @pytest.mark.parametrize('log', [False, logging.getLogger()])
+    async def test_reply_no_message_code(self, message_maker, log, caplog):
+
+        message = message_maker(headers={'command_id': 1, 'sender': 'me'})
+        reply = AMQPReply(message, log=log)
+
+        assert reply.is_valid is False
+        if log:
+            assert 'message without message_code' in caplog.record_tuples[-1][2]
+
+    @pytest.mark.parametrize('log', [False, logging.getLogger()])
+    async def test_reply_no_sender(self, message_maker, log, caplog):
+
+        message = message_maker(headers={'command_id': 1, 'message_code': 'i'})
+        reply = AMQPReply(message, log=log)
+
+        assert reply.is_valid is True
+        if log:
+            assert 'message without sender' in caplog.record_tuples[-1][2]

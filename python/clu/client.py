@@ -14,12 +14,88 @@ import aio_pika as apika
 
 from .base import BaseClient
 from .command import Command
-from .model import ModelSet, Reply
+from .model import ModelSet
 from .protocol import TopicListener
 from .tools import CommandStatus
 
 
-__all__ = ['AMQPClient']
+__all__ = ['AMQPClient', 'AMQPReply']
+
+
+class AMQPReply(object):
+    """Wrapper for an `~aio_pika.IncomingMessage` that expands and decodes it.
+
+    Parameters
+    ----------
+    message : aio_pika.IncomingMessage
+        The message that contains the reply.
+    log : logging.Logger
+        A message logger.
+
+    Attributes
+    ----------
+    is_valid : bool
+        Whether the message is valid and correctly parsed.
+    body : dict
+        The body of the message, as a JSON dictionary.
+    info : dict
+        The info dictionary.
+    headers : dict
+        The headers of the message, decoded if they are bytes.
+    message_code : str
+        The message code.
+    sender : str
+        The name of the actor that sends the reply.
+    command_id
+        The command ID.
+
+    """
+
+    def __init__(self, message, log=None):
+
+        self.message = message
+        self.log = log
+
+        self.is_valid = True
+
+        self.body = None
+
+        # Acknowledges receipt of message
+        message.ack()
+
+        self.info = message.info()
+
+        self.headers = self.info['headers']
+        for key in self.headers:
+            if isinstance(self.headers[key], bytes):
+                self.headers[key] = self.headers[key].decode()
+
+        self.message_code = self.headers.get('message_code', None)
+
+        if self.message_code is None:
+            self.is_valid = False
+            if self.log:
+                self.log.warning(f'received message without '
+                                 f'message_code: {message}')
+            return
+
+        self.sender = self.headers.get('sender', None)
+        if self.sender is None and self.log:
+            self.log.warning(f'received message without sender: {message}')
+
+        self.command_id = message.correlation_id
+
+        command_id_header = self.headers.get('command_id', None)
+        if command_id_header and command_id_header != self.command_id:
+            if self.log:
+                self.log.error(f'mismatch between message '
+                               f'correlation_id={self.command_id} '
+                               f'and header command_id={command_id_header} '
+                               f'in message {message}')
+            self.is_valid = False
+            return
+
+        self.body = json.loads(self.message.body.decode())
 
 
 class AMQPClient(BaseClient):
@@ -143,12 +219,12 @@ class AMQPClient(BaseClient):
 
         Returns
         -------
-        reply : `.Reply`
-            The `.Reply` object created from the message.
+        reply : `.AMQPReply`
+            The `.AMQPReply` object created from the message.
 
         """
 
-        reply = Reply(message, log=self.log, ack=True)
+        reply = AMQPReply(message, log=self.log)
 
         if not reply.is_valid:
             self.log.error('Invalid message received.')
