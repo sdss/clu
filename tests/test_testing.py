@@ -13,7 +13,7 @@ import pytest
 from clu.command import Command
 from clu.legacy import LegacyActor
 from clu.parser import command_parser, timeout
-from clu.testing import setup_test_actor
+from clu.testing import MockReplyList, setup_test_actor
 
 
 pytestmark = [pytest.mark.asyncio]
@@ -125,3 +125,13 @@ async def test_json_actor(json_actor):
     assert len(json_actor.mock_replies) == 2
     assert json_actor.mock_replies[-1].flag == ':'
     assert json_actor.mock_replies[-1]['text'] == 'Pong.'
+
+
+async def test_amqp_actor_fails(amqp_actor):
+
+    with pytest.raises(RuntimeError):
+        await setup_test_actor(amqp_actor)
+
+    with pytest.raises(RuntimeError):
+        reply_list = MockReplyList(amqp_actor)
+        reply_list.parse_reply('A reply')
