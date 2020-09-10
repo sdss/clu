@@ -39,6 +39,13 @@ async def bad_command(command):
     raise ValueError('This is an exception in the command.')
 
 
+@command_parser.command()
+@click.argument('NEGNUMBER', type=int)
+@click.option('-r', '--recursive', is_flag=True)
+async def neg_number_command(command, negnumber, recursive):
+    command.finish(value=negnumber, recursive=recursive)
+
+
 @pytest.fixture
 async def click_parser(json_actor):
 
@@ -117,3 +124,22 @@ async def test_uncaught_exception(json_actor, click_parser, caplog):
 
     log_data = open(log_filename).read()
     assert 'This is an exception in the command.' in log_data
+
+
+@pytest.mark.parametrize('command_string', ['neg-number-command -15',
+                                            'neg-number-command -r -15',
+                                            'neg-number-command --recursive -15',
+                                            'neg-number-command -15 -r'])
+async def test_command_neg_number(json_actor, click_parser, command_string):
+
+    cmd = Command(command_string=command_string, actor=json_actor)
+    click_parser.parse_command(cmd)
+    await cmd
+
+    assert cmd.status.did_succeed
+    assert cmd.replies[-1]['value'] == '-15'
+
+    if '-r' in command_string or '--recursive' in command_string:
+        assert cmd.replies[-1]['recursive'] == 'T'
+    else:
+        assert cmd.replies[-1]['recursive'] == 'F'
