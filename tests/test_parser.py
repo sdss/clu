@@ -43,7 +43,9 @@ async def bad_command(command):
 @click.argument('NEGNUMBER', type=int)
 @click.option('-r', '--recursive', is_flag=True)
 async def neg_number_command(command, negnumber, recursive):
-    command.finish(value=negnumber, recursive=recursive)
+    # Add the values to command.replies so that the test can easily get them.
+    command.replies.append({'value': negnumber, 'recursive': recursive})
+    command.finish()
 
 
 @pytest.fixture
@@ -129,7 +131,9 @@ async def test_uncaught_exception(json_actor, click_parser, caplog):
 @pytest.mark.parametrize('command_string', ['neg-number-command -15',
                                             'neg-number-command -r -15',
                                             'neg-number-command --recursive -15',
-                                            'neg-number-command -15 -r'])
+                                            'neg-number-command -15 -r',
+                                            'neg-number-command -15 --recursive',
+                                            'neg-number-command -r 15'])
 async def test_command_neg_number(json_actor, click_parser, command_string):
 
     cmd = Command(command_string=command_string, actor=json_actor)
@@ -137,9 +141,13 @@ async def test_command_neg_number(json_actor, click_parser, command_string):
     await cmd
 
     assert cmd.status.did_succeed
-    assert cmd.replies[-1]['value'] == '-15'
+
+    if '-15' in command_string:
+        assert cmd.replies[-1]['value'] == -15
+    else:
+        assert cmd.replies[-1]['value'] == 15
 
     if '-r' in command_string or '--recursive' in command_string:
-        assert cmd.replies[-1]['recursive'] == 'T'
+        assert cmd.replies[-1]['recursive'] is True
     else:
-        assert cmd.replies[-1]['recursive'] == 'F'
+        assert cmd.replies[-1]['recursive'] is False

@@ -37,6 +37,17 @@ def coroutine(fn):
 class CluCommand(click.Command):
     """Override :py:class:`click.Command` to pass the actor and command."""
 
+    def __init__(self, *args, context_settings=None, **kwargs):
+
+        # Unless told otherwise, set ignore_unknown_options=True to prevent
+        # negative numbers to be considered as options. See #40.
+        if (context_settings is None or
+                'ignore_unknown_options' not in context_settings):
+            context_settings = context_settings or {}
+            context_settings['ignore_unknown_options'] = True
+
+        super().__init__(*args, context_settings=context_settings, **kwargs)
+
     def done_callback(self, task, exception_handler=None):
         """Checks if the command task has been successfully done."""
 
