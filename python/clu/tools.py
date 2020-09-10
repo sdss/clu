@@ -30,9 +30,11 @@ class Maskbit(enum.Flag):
 
     @property
     def active_bits(self):
-        """Returns a list of flags that match the value."""
+        """Returns a list of non-combination flags that match the value."""
 
-        return [bit for bit in self.__class__ if bit.value & self.value]
+        return [bit for bit in self.__class__
+                if ((bit.value & self.value) and
+                    bin(bit.value).count('1') == 1)]
 
 
 COMMAND_STATUS_TO_CODE = {
@@ -77,7 +79,7 @@ class CommandStatus(Maskbit):
     def is_combination(self):
         """Returns True if a flag is a combination."""
 
-        if bin(self).count('1') > 1:
+        if bin(self.value).count('1') > 1:
             return True
         return False
 

@@ -243,3 +243,51 @@ class TestStatusMixIn:
 
         assert s.status == CommandStatus.READY
         assert s.watcher is None
+
+
+class TestCommandStatus:
+
+    CS = CommandStatus
+
+    def test_command_status_done(self):
+
+        assert self.CS.DONE.is_done
+        assert self.CS.CANCELLED.is_done
+        assert self.CS.FAILED.is_done
+
+    def test_command_status_did_fail(self):
+
+        assert self.CS.CANCELLED.did_fail
+        assert self.CS.FAILED.did_fail
+
+    def test_command_status_succeeded(self):
+
+        assert self.CS.DONE.did_succeed
+
+    def test_command_status_active(self):
+
+        assert self.CS.CANCELLING.is_active
+        assert self.CS.RUNNING.is_active
+        assert self.CS.FAILING.is_active
+
+    def test_command_status_failing(self):
+
+        assert self.CS.FAILING.is_failing
+        assert self.CS.CANCELLING.is_failing
+
+    def test_is_combination(self):
+
+        assert self.CS.DONE.is_combination is False
+
+        comb_bit = self.CS.DONE | self.CS.RUNNING
+        assert comb_bit.is_combination is True
+        assert len(comb_bit.active_bits) == 2
+
+    @pytest.mark.parametrize('code,status', [(':', CommandStatus.DONE),
+                                             ('f', CommandStatus.FAILED),
+                                             ('e', CommandStatus.FAILED),
+                                             ('!', CommandStatus.FAILED),
+                                             ('>', CommandStatus.RUNNING)])
+    def test_code_to_status(self, code, status):
+
+        assert self.CS.code_to_status(code) == status
