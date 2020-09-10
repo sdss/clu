@@ -429,8 +429,6 @@ class KeysDictionary(object):
         # try to find a corresponding file on the import search path
         try:
             # get the path corresponding to the actorkeys package
-            import os
-            print(os.environ['PYTHONPATH'])
             import actorkeys  # noqa
             keyspath = sys.modules['actorkeys'].__path__
         except ImportError:
