@@ -21,7 +21,9 @@ from clu.testing import setup_test_actor
 pytestmark = [pytest.mark.asyncio]
 
 
-@command_parser.command()
+# Use context_settings={"ignore_unknown_options": False} just to hit another
+# branch in the parser, it should not change anything in this case.
+@command_parser.command(context_settings={'ignore_unknown_options': False})
 @click.option('--finish', is_flag=True)
 async def command_exit(command, finish):
     if finish:
