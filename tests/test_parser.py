@@ -21,7 +21,9 @@ from clu.testing import setup_test_actor
 pytestmark = [pytest.mark.asyncio]
 
 
-@command_parser.command()
+# Use context_settings={"ignore_unknown_options": False} just to hit another
+# branch in the parser, it should not change anything in this case.
+@command_parser.command(context_settings={'ignore_unknown_options': False})
 @click.option('--finish', is_flag=True)
 async def command_exit(command, finish):
     if finish:
@@ -37,6 +39,15 @@ async def command_abort(command):
 @command_parser.command()
 async def bad_command(command):
     raise ValueError('This is an exception in the command.')
+
+
+@command_parser.command()
+@click.argument('NEGNUMBER', type=int)
+@click.option('-r', '--recursive', is_flag=True)
+async def neg_number_command(command, negnumber, recursive):
+    # Add the values to command.replies so that the test can easily get them.
+    command.replies.append({'value': negnumber, 'recursive': recursive})
+    command.finish()
 
 
 @pytest.fixture
@@ -117,3 +128,28 @@ async def test_uncaught_exception(json_actor, click_parser, caplog):
 
     log_data = open(log_filename).read()
     assert 'This is an exception in the command.' in log_data
+
+
+@pytest.mark.parametrize('command_string', ['neg-number-command -15',
+                                            'neg-number-command -r -15',
+                                            'neg-number-command --recursive -15',
+                                            'neg-number-command -15 -r',
+                                            'neg-number-command -15 --recursive',
+                                            'neg-number-command -r 15'])
+async def test_command_neg_number(json_actor, click_parser, command_string):
+
+    cmd = Command(command_string=command_string, actor=json_actor)
+    click_parser.parse_command(cmd)
+    await cmd
+
+    assert cmd.status.did_succeed
+
+    if '-15' in command_string:
+        assert cmd.replies[-1]['value'] == -15
+    else:
+        assert cmd.replies[-1]['value'] == 15
+
+    if '-r' in command_string or '--recursive' in command_string:
+        assert cmd.replies[-1]['recursive'] is True
+    else:
+        assert cmd.replies[-1]['recursive'] is False

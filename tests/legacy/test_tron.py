@@ -8,7 +8,6 @@
 
 import asyncio
 import logging
-import os
 
 import pytest
 
@@ -16,13 +15,10 @@ from clu.legacy import TronConnection
 from clu.legacy.types.parser import ParseError
 
 
-pytestmark = [pytest.mark.asyncio,
-              pytest.mark.xfail('ACTORKEYS_DIR' not in os.environ,
-                                reason='Actorkeys not present.')]
+pytestmark = [pytest.mark.asyncio]
 
 
 async def test_get_keys(tron_client):
-
     assert tron_client.models['alerts']['version'].value is not None
     assert tron_client.models['alerts']['version'].value[0] == '2.0.1'
 

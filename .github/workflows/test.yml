@@ -25,9 +25,6 @@ jobs:
       matrix:
         python-version: [3.7, 3.8]
 
-    env:
-      PYTHONPATH: ../actorkeys/python/
-
     steps:
 
     - uses: actions/checkout@v2
@@ -57,10 +54,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install .
 
-    - name: Setup actorkeys
-      run: |
-        git clone --depth=1 --branch apo https://github.com/sdss/actorkeys.git ../actorkeys
-
     - name: Lint with flake8
       run: |
         pip install flake8
@@ -77,8 +70,6 @@ jobs:
         pip install pytest pytest-cov pytest-asyncio pytest-mock pytest-rabbitmq asynctest
         pip install coverage[toml]
         pytest
-      env:
-        ACTORKEYS_DIR: ../actorkeys
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1

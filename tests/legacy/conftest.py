@@ -10,6 +10,7 @@
 import asyncio
 import os
 import pathlib
+import sys
 
 import pytest
 
@@ -21,6 +22,10 @@ from clu.protocol import TCPStreamServer, open_connection
 
 
 DATA_DIR = pathlib.Path(os.path.dirname(__file__)) / '../data'
+
+# Monkeypatch the path for actorkeys
+sys.path.append(str(DATA_DIR))
+os.environ['ACTORKEYS_DIR'] = str(DATA_DIR / 'actorkeys')
 
 
 get_keys_reply = (
@@ -70,7 +75,7 @@ async def tron_client(tron_server):
 
     log = get_logger('tron-test')
 
-    models = ['alerts'] if 'ACTORKEYS_DIR' in os.environ else None
+    models = ['alerts']
 
     _tron = TronConnection(host='localhost', port=tron_server.port,
                            models=models, log=log)
