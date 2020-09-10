@@ -23,7 +23,11 @@ from clu.protocol import TCPStreamServer, open_connection
 DATA_DIR = pathlib.Path(os.path.dirname(__file__)) / '../data'
 
 # Monkeypatch the path for actorkeys
-os.environ['PYTHONPATH'] += os.pathsep + str(DATA_DIR)
+if 'PYTHONPATH' in os.environ:
+    os.environ['PYTHONPATH'] += os.pathsep + str(DATA_DIR)
+else:
+    os.environ['PYTHONPATH'] = str(DATA_DIR)
+
 os.environ['ACTORKEYS_DIR'] = str(DATA_DIR)
 
 
