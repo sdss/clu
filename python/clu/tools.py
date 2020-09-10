@@ -188,7 +188,7 @@ class StatusMixIn(object):
         return self._status
 
     @status.setter
-    def status(self, value):  # pragma: no cover
+    def status(self, value):
         """Sets the status."""
 
         if value != self._status:
@@ -197,17 +197,11 @@ class StatusMixIn(object):
             if self.watcher is not None:
                 self.watcher.set()
 
-    async def wait_for_status(self, value, loop=None):
+    async def wait_for_status(self, value):
         """Awaits until the status matches ``value``."""
 
         if self.status == value:
             return
-
-        if loop is None:
-            if hasattr(self, 'loop') and self.loop is not None:
-                loop = self.loop
-            else:
-                loop = asyncio.get_event_loop()
 
         self.watcher = asyncio.Event()
 

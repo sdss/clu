@@ -14,7 +14,7 @@ import warnings
 import pytest
 
 from clu import ActorHandler, CluWarning
-from clu.tools import CallbackMixIn, format_value
+from clu.tools import CallbackMixIn, CommandStatus, StatusMixIn, format_value
 
 
 @pytest.fixture
@@ -130,11 +130,11 @@ async def test_actorhandler_warning(json_client, json_actor):
 
     with pytest.raises(asyncio.TimeoutError):
         warnings.warn('A deprecation warning', DeprecationWarning)
-        data = await asyncio.wait_for(json_client.reader.read(100), timeout=1)
+        data = await asyncio.wait_for(json_client.reader.read(100), timeout=0.01)
 
     warnings.warn('A CLU warning', CluWarning)
 
-    data = await asyncio.wait_for(json_client.reader.readline(), timeout=0.1)
+    data = await asyncio.wait_for(json_client.reader.readline(), timeout=0.01)
     data_json = json.loads(data.decode())
     assert data_json['header']['message_code'] == 'w'
     assert data_json['header']['sender'] == 'json_actor'
@@ -153,3 +153,93 @@ async def test_actorhandler_warning(json_client, json_actor):
 def test_format_value(value, formatted):
 
     assert format_value(value) == formatted
+
+
+@pytest.mark.asyncio
+class TestStatusMixIn:
+
+    async def test_callback_call_now(self, mocker):
+
+        callback = mocker.MagicMock()
+
+        StatusMixIn(CommandStatus, CommandStatus.READY,
+                    callback_func=callback, call_now=True)
+
+        await asyncio.sleep(0.01)
+
+        callback.assert_called_once()
+
+    async def test_callback(self, mocker):
+
+        callback = mocker.MagicMock()
+
+        s = StatusMixIn(CommandStatus, CommandStatus.READY,
+                        callback_func=callback)
+
+        s.status = CommandStatus.RUNNING
+
+        await asyncio.sleep(0.01)
+
+        callback.assert_called_once()
+
+    async def test_callback_list(self, mocker):
+
+        callback = [mocker.MagicMock(), mocker.MagicMock()]
+
+        s = StatusMixIn(CommandStatus, CommandStatus.READY,
+                        callback_func=callback)
+
+        s.status = CommandStatus.RUNNING
+
+        await asyncio.sleep(0.01)
+
+        callback[0].assert_called_once()
+        callback[1].assert_called_once()
+
+    async def test_callback_tuple(self, mocker):
+
+        callback = (mocker.MagicMock(), mocker.MagicMock())
+
+        s = StatusMixIn(CommandStatus, CommandStatus.READY,
+                        callback_func=callback)
+
+        s.status = CommandStatus.READY  # This should not trigger callbacks
+        s.status = CommandStatus.RUNNING
+
+        await asyncio.sleep(0.01)
+
+        callback[0].assert_called_once()
+        callback[1].assert_called_once()
+
+    async def test_no_callback(self, mocker):
+
+        s = StatusMixIn(CommandStatus, CommandStatus.READY)
+
+        s.status = CommandStatus.READY
+        assert s.status == CommandStatus.READY
+
+        s.status = CommandStatus.RUNNING
+        assert s.status == CommandStatus.RUNNING
+
+    async def test_wait_for_status(self, event_loop):
+
+        def set_status(mixin, status):
+            mixin.status = status
+
+        s = StatusMixIn(CommandStatus, CommandStatus.READY)
+
+        event_loop.call_later(0.01, set_status, s, CommandStatus.DONE)
+
+        await s.wait_for_status(CommandStatus.DONE)
+
+        assert s.status == CommandStatus.DONE
+        assert s.watcher is None
+
+    async def test_wait_for_status_same(self):
+
+        s = StatusMixIn(CommandStatus, CommandStatus.READY)
+
+        await s.wait_for_status(CommandStatus.READY)
+
+        assert s.status == CommandStatus.READY
+        assert s.watcher is None
