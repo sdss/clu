@@ -17,17 +17,19 @@ Features
 - Messages are validated JSON strings.
 - `click <https://click.palletsprojects.com/en/7.x/>`__-enabled command parser.
 
-.. warning:: CLU is under active development and it must be considered in beta stage. The API is changing quickly and breaking changes are frequent.
-
 
 Installation
 ------------
 
-``CLU`` can be installed using ``pip`` as ::
+``CLU`` can be installed using ``pip`` as
+
+.. code-block:: console
 
     pip install sdss-clu
 
-or from source ::
+or from source
+
+.. code-block:: console
 
     git clone https://github.com/sdss/clu
     cd clu
@@ -37,7 +39,9 @@ or from source ::
 Quick start
 -----------
 
-Creating a new actor with ``CLU`` is easy. To instantiate and run an actor you can simply do ::
+Creating a new actor with ``CLU`` is easy. To instantiate and run an actor you can simply do
+
+.. code-block:: python
 
     import asyncio
     from clu import AMQPActor
