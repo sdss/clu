@@ -63,3 +63,17 @@ async def test_device(device_client):
 async def test_write_to_device(device_client):
 
     assert device_client.write('writing to device') is None
+
+
+async def test_connection_not_open(device):
+
+    device_client = Device('localhost', device.port)
+
+    with pytest.raises(RuntimeError):
+        await device_client._listen()
+
+
+async def test_connection_already_open(device, device_client):
+
+    with pytest.raises(RuntimeError):
+        await device_client.start()

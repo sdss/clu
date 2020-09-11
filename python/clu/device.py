@@ -65,9 +65,6 @@ class Device(CallbackMixIn):
         self.listener = None
 
         callback = callback or self.process_message
-        if not asyncio.iscoroutinefunction(callback):
-            callback = asyncio.coroutine(callback)
-
         CallbackMixIn.__init__(self, callbacks=[callback])
 
     async def start(self):
@@ -115,7 +112,7 @@ class Device(CallbackMixIn):
             line = line.decode().strip()
             self.notify(line)
 
-    async def process_message(self, line):
+    async def process_message(self, line):  # pragma: no cover
         """Processes a newly received message."""
 
         pass
