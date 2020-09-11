@@ -10,7 +10,8 @@ import asyncio
 
 import pytest
 
-from clu.protocol import TCPStreamClient, TCPStreamPeriodicServer, TCPStreamServer, open_connection
+from clu.protocol import (TCPStreamClient, TCPStreamPeriodicServer,
+                          TCPStreamServer, open_connection)
 
 
 pytestmark = [pytest.mark.asyncio]
