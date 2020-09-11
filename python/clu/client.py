@@ -180,7 +180,7 @@ class AMQPClient(BaseClient):
         """Starts the connection to the AMQP broker."""
 
         # Starts the connection and creates the exchange
-        await self.connection.connect(exchange_name, loop=self.loop)
+        await self.connection.connect(exchange_name)
 
         # Binds the replies queue.
         self.replies_queue = await self.connection.add_queue(

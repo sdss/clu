@@ -433,8 +433,7 @@ class TopicListener(object):
         self.exchange = None
         self.queues = []
 
-    async def connect(self, exchange_name, channel=None, loop=None,
-                      exchange_type=apika.ExchangeType.TOPIC):
+    async def connect(self, exchange_name, exchange_type=apika.ExchangeType.TOPIC):
         """Initialise the connection.
 
         Parameters
@@ -451,25 +450,12 @@ class TopicListener(object):
 
         """
 
-        self.loop = loop or asyncio.get_event_loop()
+        self.connection = await apika.connect_robust(user=self.user,
+                                                     host=self.host,
+                                                     port=self.port)
 
-        if not channel:
-
-            self.connection = await apika.connect_robust(user=self.user,
-                                                         host=self.host,
-                                                         port=self.port,
-                                                         loop=self.loop)
-
-            self.channel = await self.connection.channel()
-            await self.channel.set_qos(prefetch_count=1)
-
-        else:
-
-            self.connection = channel._connection
-            self.channel = channel
-
-            self.user = self.connection.url.user
-            self.host = self.connection.url.host
+        self.channel = await self.connection.channel()
+        await self.channel.set_qos(prefetch_count=1)
 
         self.exchange = await self.channel.declare_exchange(exchange_name,
                                                             type=exchange_type,
