@@ -153,7 +153,8 @@ class Model(BaseModel):
 
         self.validator = self.VALIDATOR(self.schema)
 
-        if self.schema['type'] != 'object' or 'properties' not in self.schema:
+        if ('type' not in self.schema or self.schema['type'] != 'object' or
+                'properties' not in self.schema):
             raise ValueError('Schema must be of type object.')
 
         # All models must have these keys.
@@ -198,10 +199,6 @@ class Model(BaseModel):
         try:
             self.validator.validate(instance)
         except jsonschema.exceptions.ValidationError as err:
-            if self.log:
-                self.log.error(f'Model {self.name} cannot be updated. '
-                               f'Failed validating instance {instance}: '
-                               f'{err}.')
             return False, err
 
         for key, value in instance.items():
