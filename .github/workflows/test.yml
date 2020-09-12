@@ -70,6 +70,8 @@ jobs:
         pip install pytest pytest-cov pytest-asyncio pytest-mock pytest-rabbitmq asynctest
         pip install coverage[toml]
         pytest
+      env:
+        PYTEST_ADDOPTS: "--rabbitmq-ctl=/usr/lib/rabbitmq/bin/rabbitmqctl --rabbitmq-server=/usr/lib/rabbitmq/bin/rabbitmq-server"
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
