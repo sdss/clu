@@ -4,6 +4,8 @@
 Changelog
 =========
 
+* :support:`-` Significantly increased coverage and cleaned some code.
+
 * :release:`0.5.1 <2020-09-09>`
 * :support:`-` Rename ``clu_exchange`` to ``sdss_exchange``.
 * :support:`38` Use reply code ``>`` when the command is set to `~.CommandStatus.RUNNING`.
