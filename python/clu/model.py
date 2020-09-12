@@ -8,10 +8,11 @@
 
 import json
 import pathlib
+import warnings
 
 import jsonschema
 
-from .exceptions import CluError
+from .exceptions import CluError, CluWarning
 from .tools import CallbackMixIn, CaseInsensitiveDict
 
 
@@ -82,16 +83,12 @@ class BaseModel(CaseInsensitiveDict, CallbackMixIn):
         A function or coroutine to call when the datamodel changes. The
         function is called with the instance of `.BaseModel` and the key that
         changed.
-    log : ~logging.Logger
-        Where to log messages.
 
     """
 
     def __init__(self, name, callback=None, log=None):
 
         self.name = name
-
-        self.log = log
 
         CaseInsensitiveDict.__init__(self, {})
         CallbackMixIn.__init__(self, [callback] if callback else [])
@@ -249,8 +246,6 @@ class ModelSet(dict):
         self.client = client
         self.actors = actors
 
-        self.log = kwargs.get('log', None)
-
         self.__raise_exception = raise_exception
         self.__get_schema = get_schema_command
         self.__kwargs = kwargs
@@ -283,7 +278,7 @@ class ModelSet(dict):
             except Exception as err:
 
                 if not self.__raise_exception:
-                    if self.log:
-                        self.log.warning(f'Cannot load model {actor!r}. {err}')
+                    warnings.warn(f'Cannot load model {actor!r}. {err}',
+                                  CluWarning)
                     continue
                 raise

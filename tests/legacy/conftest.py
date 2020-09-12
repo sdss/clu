@@ -14,8 +14,6 @@ import sys
 
 import pytest
 
-from sdsstools import get_logger
-
 from clu.legacy import LegacyActor
 from clu.legacy.tron import TronConnection
 from clu.protocol import TCPStreamServer, open_connection
@@ -69,16 +67,14 @@ async def tron_server(unused_tcp_port_factory):
 
 
 @pytest.fixture
-async def tron_client(tron_server):
+async def tron_client(tron_server, request):
 
     # Used to trigger echo messages from the tron server.
-
-    log = get_logger('tron-test')
 
     models = ['alerts']
 
     _tron = TronConnection(host='localhost', port=tron_server.port,
-                           models=models, log=log)
+                           models=models)
 
     await _tron.start()
     await asyncio.sleep(0.01)
@@ -86,7 +82,6 @@ async def tron_client(tron_server):
     yield _tron
 
     _tron.stop()
-    del log
 
 
 @pytest.fixture

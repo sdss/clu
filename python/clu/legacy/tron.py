@@ -120,8 +120,7 @@ class TronConnection(BaseClient):
                               for model in models}
 
         #: dict: The model and values of each actor being tracked.
-        self.models = {model: TronModel(self.keyword_dicts[model],
-                                        log=self.log)
+        self.models = {model: TronModel(self.keyword_dicts[model])
                        for model in models}
 
         self._parser = None
@@ -234,8 +233,7 @@ class TronConnection(BaseClient):
                 line = line.decode()  # Do not strip here or that will cause parsing problems.
                 reply = self.rparser.parse(line)
             except ParseError:
-                if self.log:
-                    self.log.warning(f'Failed parsing reply {line.strip()}.')
+                self.log.warning(f'Failed parsing reply {line.strip()}.')
                 continue
 
             actor = reply.header.actor
@@ -249,9 +247,8 @@ class TronConnection(BaseClient):
                 try:
                     self.models[actor].parse_reply(reply)
                 except ParseError as ee:
-                    if self.log:
-                        self.log.warning(f'Failed parsing reply {reply!r} '
-                                         f'with error: {ee!s}')
+                    self.log.warning(f'Failed parsing reply {reply!r} '
+                                     f'with error: {ee!s}')
 
             mid = reply.header.commandId
             status = CommandStatus.code_to_status(reply.header.code.lower())
@@ -261,5 +258,3 @@ class TronConnection(BaseClient):
                     self.running_commands[mid].replies.append(reply)
                     command = self.running_commands.pop(mid)
                     command.set_status(status)
-                    if not command.done():
-                        command.set_result(command)
