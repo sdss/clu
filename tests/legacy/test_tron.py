@@ -110,3 +110,10 @@ async def test_tron_no_models():
 
     assert tron.models == {}
     assert tron.keyword_dicts == {}
+
+
+async def test_mid_out_of_range(tron_client, tron_server):
+
+    tron_client.send_command('actor', 'command', mid=(2**32 + 2))
+
+    assert 2 in tron_client.running_commands

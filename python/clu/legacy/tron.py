@@ -185,7 +185,7 @@ class TronConnection(BaseClient):
 
         # The mid must be a 32-bit unsigned number.
         if mid >= 2**32:
-            self._mid = mid = 1
+            self._mid = mid = (mid % 2**32)
 
         command_string = (f'{commander} {mid} {target} {command_string}\n')
 
