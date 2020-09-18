@@ -229,11 +229,18 @@ class TronConnection(BaseClient):
         while True:
 
             line = await self._client.reader.readline()
+
+            if self._client.reader.at_eof():
+                self.log.error('Client received EOF. This usually means that '
+                               'Tron is not responding. Closing the connection.')
+                self.stop()
+                return
+
             try:
                 line = line.decode()  # Do not strip here or that will cause parsing problems.
                 reply = self.rparser.parse(line)
             except ParseError:
-                self.log.warning(f'Failed parsing reply {line.strip()}.')
+                self.log.warning(f'Failed parsing reply \'{line.strip()}\'.')
                 continue
 
             actor = reply.header.actor

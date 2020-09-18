@@ -117,3 +117,14 @@ async def test_mid_out_of_range(tron_client, tron_server):
     tron_client.send_command('actor', 'command', mid=(2**32 + 2))
 
     assert 2 in tron_client.running_commands
+
+
+async def test_tron_server_closes(tron_client, tron_server, caplog):
+
+    # Simulate sending an EOF, which happens when the connection is severed.
+    client_transport = list(tron_server.transports.values())[0]
+    client_transport.write_eof()
+
+    await asyncio.sleep(0.01)
+
+    assert 'Client received EOF.' in caplog.record_tuples[-1][2]

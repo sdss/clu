@@ -104,7 +104,7 @@ The models can be accessed via the ``models`` attribute. From now on, when the c
 Tron models
 -----------
 
-The keyword models used by legacy actors are different (of course) in that they are not defined as JSON schemas but as `actorkeys <https://github.com/sdss/actorkeys>`__ instead. To avoid depending on ``opscore`` and other Python 2 products, ``CLU`` includes a Python 3-ready set of routines to read the actorkeys datamodel and parse the replies using it. The only requisite is that ``actorkeys`` must be in the ``PYTHONPATH` and be importable by ``CLU``.
+The keyword models used by legacy actors are different (of course) in that they are not defined as JSON schemas but as `actorkeys <https://github.com/sdss/actorkeys>`__ instead. To avoid depending on ``opscore`` and other Python 2 products, ``CLU`` includes a Python 3-ready set of routines to read the actorkeys datamodel and parse the replies using it. The only requisite is that ``actorkeys`` must be in the ``PYTHONPATH`` and be importable by ``CLU``.
 
 We can create a connection to ``tron`` and request that the client keeps track of the ``guider`` actor model ::
 
