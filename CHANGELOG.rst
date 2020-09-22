@@ -4,6 +4,7 @@
 Changelog
 =========
 
+* :release:`0.5.1 <2020-09-22>`
 * :support:`-` Significantly increased coverage and cleaned some code.
 * :bug:`42` Detect EOF received in `.TronConnection` and cleanly close the connection.
 * :support:`-` Call the `.TronModel` callback only with the model itself (it was also receiving the latest changed key). This make it consistent with `.Model` and the documentation.
