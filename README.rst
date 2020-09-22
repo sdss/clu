@@ -36,6 +36,24 @@ or from source
     pip install .
 
 
+Development
+-----------
+
+``clu`` uses `poetry <http://poetry.eustace.io/>`__ for dependency management and packaging. To work with an editable install it's recommended that you setup ``poetry`` and install ``clu`` in a virtual environment by doing
+
+.. code-block:: console
+
+    poetry install
+
+Pip does not support editable installs with PEP-517 yet. That means that running ``pip install -e .`` will fail because ``poetry`` doesn't use a ``setup.py`` file. As a workaround, you can use the ``create_setup.py`` file to generate a temporary ``setup.py`` file. To install ``clu`` in editable mode without ``poetry``, do
+
+.. code-block:: console
+
+    pip install --pre poetry
+    python create_setup.py
+    pip install -e .
+
+
 Quick start
 -----------
 
