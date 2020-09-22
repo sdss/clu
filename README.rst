@@ -37,7 +37,7 @@ or from source
 
 
 Development
------------
+^^^^^^^^^^^
 
 ``clu`` uses `poetry <http://poetry.eustace.io/>`__ for dependency management and packaging. To work with an editable install it's recommended that you setup ``poetry`` and install ``clu`` in a virtual environment by doing
 
