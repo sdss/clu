@@ -68,7 +68,7 @@ class BaseClient(metaclass=abc.ABCMeta):
         self.version = version or '?'
 
         # Internally store the original configuration used to start the client.
-        self._config = None
+        self.config = None
 
     def __repr__(self):
 
@@ -107,11 +107,6 @@ class BaseClient(metaclass=abc.ABCMeta):
 
             config = read_yaml_file(str(config))
 
-        if 'actor' in config:
-            config = config['actor']
-        elif 'client' in config:
-            config = config['client']
-
         return config
 
     @classmethod
@@ -131,6 +126,12 @@ class BaseClient(metaclass=abc.ABCMeta):
         orig_config_dict = cls._parse_config(config)
 
         config_dict = orig_config_dict.copy()
+
+        if 'actor' in config_dict:
+            config_dict = config_dict['actor']
+        elif 'client' in config_dict:
+            config_dict = config_dict['client']
+
         config_dict.update(kwargs)
 
         # Decide what to do with the rest of the keyword arguments:
@@ -156,8 +157,7 @@ class BaseClient(metaclass=abc.ABCMeta):
 
         # Store original config. This may not be complete since from_config
         # may have been super'd from somewhere else.
-        new_client._config = orig_config_dict
-        new_client._config.update(kwargs)
+        new_client.config = orig_config_dict
 
         return new_client
 

@@ -57,6 +57,7 @@ pytest-mock = "^3.2.0"
 ipdb = "^0.13.3"
 pytest-rabbitmq = "^2.0.1"
 autopep8 = "^1.5.4"
+rstcheck = "^3.3.1"
 
 [tool.poetry.extras]
 docs = ["Sphinx"]
