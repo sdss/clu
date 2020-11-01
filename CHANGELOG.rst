@@ -4,6 +4,7 @@
 Changelog
 =========
 
+* :release:`0.5.3 <2020-10-31>`
 * :feature:`-` Expose ``BaseClient.config`` with the full configuration passed to `.BaseClient.from_config`.
 
 * :release:`0.5.2 <2020-09-22>`
