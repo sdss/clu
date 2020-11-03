@@ -79,11 +79,13 @@ class Device(CallbackMixIn):
     async def stop(self):
         """Closes the connection and stops the listener."""
 
-        self._client.close()
+        if self._client:
+            self._client.close()
 
         with contextlib.suppress(asyncio.CancelledError):
-            self.listener.cancel()
-            await self.listener
+            if self.listner:
+                self.listener.cancel()
+                await self.listener
 
     def is_connected(self):
         """Returns `True` if the connection is open."""

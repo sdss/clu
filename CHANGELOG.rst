@@ -4,6 +4,8 @@
 Changelog
 =========
 
+* :bug:`-` Handle `.Device.stop` when the client is not connected.
+
 * :release:`0.5.3 <2020-10-31>`
 * :feature:`-` Expose ``BaseClient.config`` with the full configuration passed to `.BaseClient.from_config`.
 
