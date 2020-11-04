@@ -393,11 +393,11 @@ class ClickParser:
             if not command.status.is_done:
                 command.fail(text=f'Command {command.body!r} was aborted.')
 
-        except Exception:
+        except Exception as err:
 
-            msg = (f'Command {command.command_id} failed because '
-                   'of an uncaught error. See traceback in the log '
-                   'for more information.')
+            msg = (f'Command {command.body!r} failed because of an uncaught '
+                   f'error \'{err.__class__.__name__}: {str(err)}\'. See '
+                   f'traceback in the log for more information.')
 
             if command.status.is_done:
                 command.write(text=msg)

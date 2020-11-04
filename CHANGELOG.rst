@@ -4,6 +4,7 @@
 Changelog
 =========
 
+* :feature:`-` Provide more information in actor reply for an uncaught error.
 * :bug:`-` Handle `.Device.stop` when the client is not connected.
 
 * :release:`0.5.3 <2020-10-31>`
