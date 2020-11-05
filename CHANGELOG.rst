@@ -4,6 +4,7 @@
 Changelog
 =========
 
+* :release:`0.5.4 <2020-11-05>`
 * :bug:`-` Fix typo that caused `.Device.stop` to fail.
 * :feature:`-` When a ``parent`` command is specified, output messages using that command.
 * :feature:`-` Add ``silent`` option to `.BaseCommand.set_status`.
