@@ -4,6 +4,7 @@
 Changelog
 =========
 
+* :feature:`-` When a ``parent`` command is specified, output messages using that command.
 * :feature:`-` Add ``silent`` option to `.BaseCommand.set_status`.
 * :feature:`-` Provide more information in actor reply for an uncaught error.
 * :bug:`-` Handle `.Device.stop` when the client is not connected.

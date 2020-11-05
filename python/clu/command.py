@@ -41,9 +41,8 @@ class BaseCommand(asyncio.Future, StatusMixIn):
         actor but if we are commanding another actor ``consumer_id`` will
         be the destination actor.
     parent : .BaseCommand
-        Another `.BaseCommand` object that is issuing this subcommand. If they
-        are not specified, sets ``commander_id`` and ``consumer_id``
-        appropriately.
+        Another `.BaseCommand` object that is issuing this subcommand.
+        Messages emitted by the command will use the parent ``command_id``.
     status_callback : function
         A function to call when the status changes.
     call_now : bool
@@ -65,16 +64,6 @@ class BaseCommand(asyncio.Future, StatusMixIn):
         self.command_id = command_id
 
         self.parent = parent
-
-        if self.parent:
-            if not isinstance(self.parent, BaseCommand):
-                raise clu.CluError('invalid parent type.')
-            if self.parent.command_id != 0 and self.command_id == self.parent.command_id:
-                raise clu.CluError('subcommand cannot have the '
-                                   'same command_id as the parent.')
-
-            self.commander_id = self.commander_id or self.parent.commander_id
-            self.consumer_id = self.consumer_id or self.parent.consumer_id
 
         self.default_keyword = default_keyword
         self.loop = loop or asyncio.get_event_loop()
@@ -213,8 +202,11 @@ class BaseCommand(asyncio.Future, StatusMixIn):
             raise clu.CommandError('An actor has not been defined for '
                                    'this command. Cannot write to users.')
 
-        result = self.actor.write(message_code, message=message, command=self,
-                                  broadcast=broadcast, **kwargs)
+        command = self if not self.parent else self.parent
+
+        result = self.actor.write(message_code, message=message,
+                                  command=command, broadcast=broadcast,
+                                  **kwargs)
 
         if asyncio.iscoroutine(result):
             self.loop.create_task(result)
