@@ -83,7 +83,7 @@ class Device(CallbackMixIn):
             self._client.close()
 
         with contextlib.suppress(asyncio.CancelledError):
-            if self.listner:
+            if self.listener:
                 self.listener.cancel()
                 await self.listener
 

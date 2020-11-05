@@ -4,6 +4,7 @@
 Changelog
 =========
 
+* :bug:`-` Fix typo that caused `.Device.stop` to fail.
 * :feature:`-` When a ``parent`` command is specified, output messages using that command.
 * :feature:`-` Add ``silent`` option to `.BaseCommand.set_status`.
 * :feature:`-` Provide more information in actor reply for an uncaught error.
