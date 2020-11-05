@@ -76,16 +76,15 @@ def test_child_command(command):
     assert child.parent == command
 
 
-def test_child_command_bad_command_id(command):
+def test_child_command_write(command):
 
-    with pytest.raises(CluError):
-        Command(command_string='new-command', parent=command, command_id=100)
+    command.command_id = 666
+    child = Command(command_string='new-command', parent=command)
 
-
-def test_child_command_bad_parent(command):
-
-    with pytest.raises(CluError):
-        Command(command_string='new-command', parent='blah')
+    child.write('i', 'hello')
+    command.actor.write.assert_called_with('i', message={'text': 'hello'},
+                                           command=command,
+                                           broadcast=False, **{})
 
 
 def test_write_str(command):

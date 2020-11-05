@@ -132,7 +132,7 @@ async def test_uncaught_exception(json_actor, click_parser, caplog):
     await cmd
 
     assert cmd.status.did_fail
-    assert 'uncaught error. See traceback' in json_actor.mock_replies[-1]['text']
+    assert 'uncaught error' in json_actor.mock_replies[-1]['text']
 
     last_log = caplog.record_tuples[-1]
     assert last_log[1] == logging.ERROR
