@@ -106,12 +106,14 @@ class BaseCommand(asyncio.Future, StatusMixIn):
             integer associated with the maskbit. If ``value`` is a string,
             loops over the bits in `CommandStatus` and assigns the one whose
             name matches.
+        silent : bool
+            Update the status but do not output it with a message to the users.
 
         """
 
         self.set_status(status)
 
-    def set_status(self, status, message=None, **kwargs):
+    def set_status(self, status, message=None, silent=False, **kwargs):
         """Same as `.status` but allows to specify a message to the users."""
 
         if self.status.is_done:
@@ -137,7 +139,7 @@ class BaseCommand(asyncio.Future, StatusMixIn):
 
             status_code = status.code
 
-            if self.actor:
+            if self.actor and not silent:
                 self.write(status_code, message, **kwargs)
 
             self._status = status
