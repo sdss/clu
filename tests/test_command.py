@@ -10,7 +10,7 @@ import asyncio
 
 import pytest
 
-from clu import CluError, Command, CommandError, CommandStatus
+from clu import Command, CommandError, CommandStatus
 
 
 @pytest.fixture
