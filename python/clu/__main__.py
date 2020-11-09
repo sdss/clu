@@ -29,7 +29,8 @@ style = prompt_toolkit.styles.style_from_pygments_cls(
     pygments.styles.get_style_by_name('solarized-dark'))
 
 
-color_codes = {'i': 'lightblue',
+color_codes = {'>': 'lightblue',
+               'i': 'lightblue',
                'd': 'gray',
                'w': 'yellow',
                'f': 'red',
@@ -53,9 +54,11 @@ class ShellClient(clu.AMQPClient):
         message_code = headers.get('message_code', '')
         sender = headers.get('sender', '')
 
+        message_code_esc = message_code if message_code != '>' else '&gt;'
+
         message_code_formatted = prompt_toolkit.formatted_text.HTML(
             f'<style font-weight="bold" '
-            f'fg="{color_codes[message_code]}">{message_code}</style>')
+            f'fg="{color_codes[message_code]}">{message_code_esc}</style>')
 
         body = message.body
 
