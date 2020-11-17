@@ -4,6 +4,7 @@
 Changelog
 =========
 
+* :release:`0.5.5 <2020-11-17>`
 * :bug:`-` Fix AMQP CLI. It failed when printing a message code ``>`` as HTML.
 * :bug:`44` Add ``url``, ``virtualhost``, and ``ssl`` parameters for `.AMQPClient` that propagates to `.TopicListener`. When defined ``url`` overrides the connection parameters. The CLU CLI now also accepts a ``--url`` flag.
 
