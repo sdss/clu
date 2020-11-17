@@ -8,7 +8,9 @@
 The AMQP actor
 ==============
 
-The new-style actor that CLU introduces uses the `AMQP <https://www.amqp.org/>`_ protocol, of which `RabbitMQ <https://rabbitmq.com>`_ is the best known implementation, to communicate with other actors and clients. Here we'll delve deeper into how the protocol is implemented and some of the code gritty details.
+The new-style actor that CLU introduces uses the `AMQP <https://www.amqp.org/>`_ protocol, of which `RabbitMQ <https://rabbitmq.com>`_ is the best known implementation, to communicate with other actors and clients. CLU supports AMQP 0-9-1; AMQP 1.0 is not supported at the moment.
+
+In the following sections we'll delve deeper into how the protocol is implemented and some of the code gritty details.
 
 
 Why a new messaging protocol for SDSS?
