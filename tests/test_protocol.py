@@ -11,7 +11,9 @@ import asyncio
 import pytest
 
 from clu.protocol import (TCPStreamClient, TCPStreamPeriodicServer,
-                          TCPStreamServer, open_connection)
+                          TCPStreamServer, TopicListener, open_connection)
+
+from .conftest import RMQ_PORT
 
 
 pytestmark = [pytest.mark.asyncio]
@@ -67,3 +69,16 @@ async def test_periodic_server(unused_tcp_port_factory, mocker):
     callback.assert_called()
 
     periodic_server.stop()
+
+
+async def test_topic_listener_url(amqp_actor):
+
+    url = f'amqp://guest:guest@localhost:{RMQ_PORT}'
+    exchange = 'test'
+
+    listener = TopicListener(url)
+    await listener.connect(exchange)
+
+    assert listener.connection.connected.is_set()
+
+    await listener.stop()
