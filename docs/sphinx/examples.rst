@@ -26,10 +26,10 @@ To test this code you can use the ``clu`` CLI command from a shell terminal. Thi
 .. code-block:: console
 
    $ clu
-   hello_actor say-hello Lucy!
+   hello_actor say-hello Lucy
    hello_actor >
    hello_actor i {
-      "text": "Hi Lucy!!"
+      "text": "Hi Lucy!"
    }
    hello_actor :
    hello_actor ping
