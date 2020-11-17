@@ -78,9 +78,10 @@ class ShellClient(clu.AMQPClient):
             print()  # Newline
 
 
-async def shell_client_prompt(user=None, password=None, host=None, port=None):
+async def shell_client_prompt(url=None, user=None, password=None,
+                              host=None, port=None):
 
-    client = await ShellClient('shell_client',
+    client = await ShellClient('shell_client', url=url,
                                user=user, password=password,
                                host=host, port=port,
                                log=False).start()
@@ -115,6 +116,8 @@ async def shell_client_prompt(user=None, password=None, host=None, port=None):
 
 
 @click.command(name='clu')
+@click.option('--url', type=str,
+              help='AMQP RFC3986 formatted broker address.')
 @click.option('--user', '-U', type=str, show_default=True, default='guest',
               help='The AMQP username.')
 @click.option('--password', '-U', type=str, show_default=True, default='guest',
@@ -123,12 +126,13 @@ async def shell_client_prompt(user=None, password=None, host=None, port=None):
               help='The host running the AMQP server.')
 @click.option('--port', '-P', type=int, show_default=True, default=5672,
               help='The port on which the server is running')
-def clu_cli(user, password, host, port):
+def clu_cli(url, user, password, host, port):
     """Runs the AMQP command line interpreter."""
 
     with patch_stdout():
 
-        shell_task = loop.create_task(shell_client_prompt(user=user,
+        shell_task = loop.create_task(shell_client_prompt(url=url,
+                                                          user=user,
                                                           password=password,
                                                           host=host,
                                                           port=port))

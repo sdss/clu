@@ -409,24 +409,35 @@ class TopicListener(object):
 
     Parameters
     ----------
+    url : str
+        RFC3986 formatted broker address. When used, the other keyword
+        arguments are ignored.
     user : str
         The user to connect to the RabbitMQ broker.
     password : str
         The password for the user.
     host : str
         The host where the RabbitMQ message broker runs.
+    virtualhost : str
+         Virtualhost parameter. ``'/'`` by default.
     port : int
         The port on which the RabbitMQ message broker is running.
+    ssl : bool
+        Whether to use TLS/SSL connection.
 
     """
 
-    def __init__(self, user='guest', password='guest',
-                 host='localhost', port=5672):
+    def __init__(self, url=None, user='guest', password='guest',
+                 host='localhost', virtualhost='/', port=5672,
+                 ssl=False):
 
+        self.url = url
         self.user = user
         self.password = password
         self.host = host
         self.port = port
+        self.virtualhost = virtualhost
+        self.ssl = ssl
 
         self.connection = None
         self.channel = None
@@ -440,19 +451,20 @@ class TopicListener(object):
         ----------
         exchange_name : str
             The name of the exchange to create.
-        channel
-            If specified, ``user`` and ``host`` are ignored and the connection
-            and channel are set from ``channel``.
         exchange_type : str
             The type of exchange to create.
-        loop
-            Event loop. If empty, the current event loop will be used.
 
         """
 
-        self.connection = await apika.connect_robust(user=self.user,
-                                                     host=self.host,
-                                                     port=self.port)
+        if self.url:
+            self.connection = await apika.connect_robust(self.url)
+        else:
+            self.connection = await apika.connect_robust(login=self.user,
+                                                         host=self.host,
+                                                         port=self.port,
+                                                         password=self.password,
+                                                         virtualhost=self.virtualhost,
+                                                         ssl=self.ssl)
 
         self.channel = await self.connection.channel()
         await self.channel.set_qos(prefetch_count=1)
