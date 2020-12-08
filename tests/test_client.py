@@ -10,12 +10,8 @@ import asyncio
 import logging
 
 import pytest
-from more_itertools import side_effect
-
-from sdsstools.logger import SDSSLogger
 
 from clu import BaseClient
-from clu.base import get_logger
 
 
 class SimpleClientTester(BaseClient):
