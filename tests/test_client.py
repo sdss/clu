@@ -10,8 +10,12 @@ import asyncio
 import logging
 
 import pytest
+from more_itertools import side_effect
+
+from sdsstools.logger import SDSSLogger
 
 from clu import BaseClient
+from clu.base import get_logger
 
 
 class SimpleClientTester(BaseClient):
@@ -55,6 +59,24 @@ def test_client_file_log(tmpdir):
     assert client.log.fh is not None
 
     assert (log_dir / 'test_client.log').exists
+
+    # Remove the fh handler so that test_client_file_log_bad_path doesn't inherit it.
+    client.log.handlers.remove(client.log.fh)
+    client.log.fh = None
+
+
+def test_client_file_log_bad_path(mocker):
+
+    log_dir = 'InvalidPath'
+
+    logger = mocker.Mock(fh=None)
+    logger.configure_mocker(**{'start_file_logger.return_value': None})
+
+    mocker.patch('clu.base.get_logger', return_value=logger)
+
+    client = SimpleClientTester('test_client', version='0.1.0', log_dir=log_dir)
+
+    assert client.log.fh is None
 
 
 @pytest.mark.asyncio
