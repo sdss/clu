@@ -173,12 +173,9 @@ class BaseClient(metaclass=abc.ABCMeta):
 
             log_dir = pathlib.Path(log_dir).expanduser()
 
-            if not log_dir.exists():
-                log_dir.mkdir(parents=True)
-
             log.start_file_logger(log_dir / f'{self.name}.log')
 
-            if log.fh:
+            if log.fh:  # In case starting the file logger fails.
                 log.fh.formatter.converter = time.gmtime
                 log.fh.setLevel(REPLY)
 
