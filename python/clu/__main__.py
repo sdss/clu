@@ -33,6 +33,7 @@ color_codes = {'>': 'lightblue',
                'i': 'lightblue',
                'd': 'gray',
                'w': 'yellow',
+               'e': 'LightCoral',
                'f': 'red',
                ':': 'green'}
 
