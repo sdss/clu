@@ -256,6 +256,7 @@ def help_(ctx, *args, parser_command):
     parser_command = parser_command.strip('"').split()
 
     help_lines = ''
+    command_name = args[0].actor.name  # Actor name
 
     # Gets the help lines for the command group or for a specific command.
     if len(parser_command) > 0:
@@ -264,6 +265,7 @@ def help_(ctx, *args, parser_command):
 
         for ii in range(len(parser_command)):
             ctx_command_name = parser_command[ii].lower()
+            command_name += f' {ctx_command_name}'
             if ctx_command_name not in ctx_commands:
                 return command.fail(text=f'command {ctx_command_name} not found.')
             ctx_command = ctx_commands[ctx_command_name]
@@ -281,9 +283,9 @@ def help_(ctx, *args, parser_command):
     message = []
     for line in help_lines.splitlines():
         # Remove the parser name.
-        match = re.match(r'^Usage:([A-Za-z-\ ]+? \[OPTIONS\]) .*', line)
+        match = re.match(r'^Usage: ([A-Za-z-_]+)', line)
         if match:
-            line = line.replace(match.groups()[0], '')
+            line = line.replace(match.groups()[0], command_name)
 
         message.append(line)
 

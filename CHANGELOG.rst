@@ -5,6 +5,7 @@ Changelog
 =========
 
 * :bug:`-` More file logger fixes. Prevent a failure when the log directory cannot be created.
+* :support:`-` Improve the output of the ``help`` command.
 
 * :release:`0.5.6 <2020-12-07>`
 * :bug:`-` Do not try to set logger format if it failed to create the file logger.
