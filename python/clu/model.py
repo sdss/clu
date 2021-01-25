@@ -160,7 +160,12 @@ class Model(BaseModel):
             if default_prop not in props:
                 props[default_prop] = {'type': 'string'}
         if 'help' not in props:
-            props['help'] = {'type': 'array'}
+            props['help'] = {
+                'oneOf': [
+                    {'type': 'array', 'items': {'type': 'string'}},
+                    {'type': 'string'}
+                ]
+            }
 
         super().__init__(name, **kwargs)
 

@@ -139,6 +139,10 @@ class AMQPActor(AMQPClient, ClickParser, BaseActor):
         if not no_validate and self.schema is not None:
             result, err = self.schema.update_model(message)
             if result is False:
+                if message_code == ':':
+                    message_code = 'f'
+                else:
+                    message_code = 'e'
                 message = {'error': f'Failed validating the reply: {err}'}
 
         message_json = json.dumps(message)

@@ -379,9 +379,12 @@ class ClickParser:
             else:
                 message = f'{ee.__class__.__name__}: {ee.message}'
 
-            lines = message.splitlines()
-            for line in lines:
-                command.write('w', text=line)
+            if isinstance(command.actor, (actor.AMQPActor, actor.JSONActor)):
+                command.warning(help=message.splitlines())
+            else:
+                lines = message.splitlines()
+                for line in lines:
+                    command.warning(help=line)
 
             msg = f'Command {command.body!r} failed.'
 
