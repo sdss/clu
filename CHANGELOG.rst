@@ -4,6 +4,7 @@
 Changelog
 =========
 
+* :release:`0.5.7 <2021-01-24>`
 * :bug:`-` More file logger fixes. Prevent a failure when the log directory cannot be created.
 * :support:`-` Improve the output of the ``help`` command.
 * :bug:`-` Add colour code for error message in ``clu`` CLI.
