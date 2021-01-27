@@ -18,7 +18,11 @@ from distutils.version import StrictVersion
 
 
 # If there is a global installation of poetry, prefer that.
-lib = os.path.expanduser('~/.poetry/lib')
+if 'POETRY_HOME' in os.environ:
+    lib = os.path.expanduser(os.path.join(os.environ['POETRY_HOME'], 'lib'))
+else:
+    lib = os.path.expanduser('~/.poetry/lib')
+
 vendors = os.path.join(lib, 'poetry', '_vendor')
 current_vendors = os.path.join(
     vendors, 'py{}'.format('.'.join(str(v) for v in sys.version_info[:2]))
