@@ -50,6 +50,7 @@ Pip does not support editable installs with PEP-517 yet. That means that running
 .. code-block:: console
 
     pip install --pre poetry
+    pip install -U setuptools
     python create_setup.py
     pip install -e .
 
