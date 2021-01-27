@@ -107,8 +107,8 @@ async def test_model_callback(amqp_client, amqp_actor, mocker):
                                                           'help': None,
                                                           'version': None}
 
-    json = ('{"fwhm": null, "text": "Pong.", "error": null, '
-            '"schema": null, "version": null, "help": null}')
+    json = ('{"fwhm": null, "text": "Pong.", "schema": null, '
+            '"version": null, "help": null, "error": null}')
     assert amqp_client.models['amqp_actor'].jsonify() == json
 
 
