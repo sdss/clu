@@ -143,7 +143,9 @@ class AMQPActor(AMQPClient, ClickParser, BaseActor):
                     message_code = 'f'
                 else:
                     message_code = 'e'
-                message = {'error': f'Failed validating the reply: {err}'}
+                message = {
+                    'error': f'Failed validating the reply: {err}'.splitlines()
+                }
 
         message_json = json.dumps(message)
 

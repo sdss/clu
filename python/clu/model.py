@@ -156,16 +156,17 @@ class Model(BaseModel):
 
         # All models must have these keys.
         props = self.schema['properties']
-        for default_prop in ['text', 'error', 'schema', 'version']:
+        for default_prop in ['text', 'schema', 'version']:
             if default_prop not in props:
                 props[default_prop] = {'type': 'string'}
-        if 'help' not in props:
-            props['help'] = {
-                'oneOf': [
-                    {'type': 'array', 'items': {'type': 'string'}},
-                    {'type': 'string'}
-                ]
-            }
+        for prop in ['help', 'error']:
+            if prop not in props:
+                props[prop] = {
+                    'oneOf': [
+                        {'type': 'array', 'items': {'type': 'string'}},
+                        {'type': 'string'}
+                    ]
+                }
 
         super().__init__(name, **kwargs)
 
