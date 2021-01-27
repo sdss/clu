@@ -5,6 +5,7 @@ Changelog
 =========
 
 * :feature:`-` Allow ``error`` keyword to output a string or a list of string. When the message being written fails schema validation, output the error message as a list.
+* :feature:`-` New option ``--no-indent`` in CLI to output JSONs in a single line.
 
 * :release:`0.5.7 <2021-01-24>`
 * :bug:`-` More file logger fixes. Prevent a failure when the log directory cannot be created.

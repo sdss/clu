@@ -41,6 +41,8 @@ color_codes = {'>': 'lightblue',
 class ShellClient(clu.AMQPClient):
     """A shell client."""
 
+    indent = False
+
     async def handle_reply(self, message):
         """Prints the formatted reply."""
 
@@ -63,7 +65,8 @@ class ShellClient(clu.AMQPClient):
 
         body = message.body
 
-        body_tokens = list(pygments.lex(json.dumps(body, indent=True),
+        indent = 4 if self.indent is True else None
+        body_tokens = list(pygments.lex(json.dumps(body, indent=indent),
                                         lexer=JsonLexer()))
 
         if sender:
@@ -80,12 +83,13 @@ class ShellClient(clu.AMQPClient):
 
 
 async def shell_client_prompt(url=None, user=None, password=None,
-                              host=None, port=None):
+                              host=None, port=None, indent=True):
 
     client = await ShellClient('shell_client', url=url,
                                user=user, password=password,
                                host=host, port=port,
                                log=False).start()
+    client.indent = indent
 
     history = FileHistory(os.path.expanduser('~/.clu_history'))
 
@@ -127,16 +131,20 @@ async def shell_client_prompt(url=None, user=None, password=None,
               help='The host running the AMQP server.')
 @click.option('--port', '-P', type=int, show_default=True, default=5672,
               help='The port on which the server is running')
-def clu_cli(url, user, password, host, port):
+@click.option('--no-indent', '-n', is_flag=True, default=False,
+              help='Do not indent the output JSONs.')
+def clu_cli(url, user, password, host, port, no_indent):
     """Runs the AMQP command line interpreter."""
 
     with patch_stdout():
 
-        shell_task = loop.create_task(shell_client_prompt(url=url,
-                                                          user=user,
-                                                          password=password,
-                                                          host=host,
-                                                          port=port))
+        shell_task = loop.create_task(
+            shell_client_prompt(url=url,
+                                user=user,
+                                password=password,
+                                host=host,
+                                port=port,
+                                indent=not no_indent))
         loop.run_until_complete(shell_task)
 
 
