@@ -7,6 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
 import asyncio
+import datetime
 import json
 import os
 
@@ -42,6 +43,7 @@ class ShellClient(clu.AMQPClient):
     """A shell client."""
 
     indent = False
+    show_time = True
 
     async def handle_reply(self, message):
         """Prints the formatted reply."""
@@ -69,6 +71,13 @@ class ShellClient(clu.AMQPClient):
         body_tokens = list(pygments.lex(json.dumps(body, indent=indent),
                                         lexer=JsonLexer()))
 
+        if self.show_time:
+            time = datetime.datetime.utcnow().isoformat().split('T')[1]
+            time = time[0:12]  # Milliseconds
+            print(prompt_toolkit.formatted_text.HTML(
+                f'<style fg="Gray">{time}</style> '
+            ), end='')
+
         if sender:
             print(f'{sender} ', end='')
 
@@ -83,13 +92,15 @@ class ShellClient(clu.AMQPClient):
 
 
 async def shell_client_prompt(url=None, user=None, password=None,
-                              host=None, port=None, indent=True):
+                              host=None, port=None, indent=True,
+                              show_time=True):
 
     client = await ShellClient('shell_client', url=url,
                                user=user, password=password,
                                host=host, port=port,
                                log=False).start()
     client.indent = indent
+    client.show_time = show_time
 
     history = FileHistory(os.path.expanduser('~/.clu_history'))
 
@@ -133,7 +144,9 @@ async def shell_client_prompt(url=None, user=None, password=None,
               help='The port on which the server is running')
 @click.option('--no-indent', '-n', is_flag=True, default=False,
               help='Do not indent the output JSONs.')
-def clu_cli(url, user, password, host, port, no_indent):
+@click.option('--no-time', '-t', is_flag=True, default=False,
+              help='Do not show the message time.')
+def clu_cli(url, user, password, host, port, no_indent, no_time):
     """Runs the AMQP command line interpreter."""
 
     with patch_stdout():
@@ -144,7 +157,8 @@ def clu_cli(url, user, password, host, port, no_indent):
                                 password=password,
                                 host=host,
                                 port=port,
-                                indent=not no_indent))
+                                indent=not no_indent,
+                                show_time=not no_time))
         loop.run_until_complete(shell_task)
 
 
