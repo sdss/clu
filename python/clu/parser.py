@@ -6,19 +6,26 @@
 # @Filename: parser.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
+from __future__ import annotations
+
 import asyncio
 import functools
 import inspect
 import json
+import logging
 import re
+
+from typing import Any, Generic, TypeVar
 
 import click
 from click.decorators import group, pass_obj
 
+from clu.base import BaseActor
+from clu.command import Command
+
 from . import actor
 
-
-__all__ = ['CluCommand', 'CluGroup', 'command_parser', 'ClickParser', 'timeout']
+__all__ = ["CluCommand", "CluGroup", "command_parser", "ClickParser", "timeout"]
 
 
 def coroutine(fn):
@@ -41,19 +48,22 @@ class CluCommand(click.Command):
 
         # Unless told otherwise, set ignore_unknown_options=True to prevent
         # negative numbers to be considered as options. See #40.
-        if (context_settings is None or
-                'ignore_unknown_options' not in context_settings):
+        if context_settings is None or "ignore_unknown_options" not in context_settings:
             context_settings = context_settings or {}
-            context_settings['ignore_unknown_options'] = True
+            context_settings["ignore_unknown_options"] = True
 
-        super().__init__(*args, context_settings=context_settings, **kwargs)
+        super().__init__(
+            *args,
+            context_settings=context_settings,  # type: ignore
+            **kwargs,
+        )
 
     def done_callback(self, task, exception_handler=None):
         """Checks if the command task has been successfully done."""
 
         ctx = task.ctx
 
-        command = ctx.obj['parser_args'][0]
+        command = ctx.obj["parser_args"][0]
 
         if exception_handler and task.exception():
             exception_handler(command, task.exception())
@@ -61,18 +71,21 @@ class CluCommand(click.Command):
     async def _schedule_callback(self, ctx, timeout=None):
         """Schedules the callback as a task with a timeout."""
 
-        parser_args = ctx.obj.get('parser_args', [])
+        parser_args = ctx.obj.get("parser_args", [])
         command = parser_args[0] if len(parser_args) > 0 else None
 
         callback_task = asyncio.create_task(
-            ctx.invoke(self.callback, *parser_args, **ctx.params))
+            ctx.invoke(self.callback, *parser_args, **ctx.params)
+        )
 
         try:
             await asyncio.wait_for(callback_task, timeout=timeout)
         except asyncio.TimeoutError:
             if command:
-                command.set_status(command.status.TIMEDOUT,
-                                   f'command timed out after {timeout} seconds.')
+                command.set_status(
+                    command.status.TIMEDOUT,
+                    f"command timed out after {timeout} seconds.",
+                )
             return False
 
         return True
@@ -80,7 +93,7 @@ class CluCommand(click.Command):
     def invoke(self, ctx):
         """As :py:class:`click.Command.invoke` but passes the actor and command."""
 
-        click.core._maybe_show_deprecated_notice(self)
+        click.core._maybe_show_deprecated_notice(self)  # type: ignore
 
         if self.callback is not None:
 
@@ -94,23 +107,26 @@ class CluCommand(click.Command):
 
                 # Check to see if there is a timeout value in the callback.
                 # If so, schedules a task to be cancelled after timeout.
-                timeout = getattr(self.callback, 'timeout', None)
+                timeout = getattr(self.callback, "timeout", None)
 
-                log = ctx.obj.pop('log', None)
+                log = ctx.obj.pop("log", None)
 
                 # Defines the done callback function.
-                exception_handler = ctx.obj.pop('exception_handler', None)
-                done_callback = functools.partial(self.done_callback,
-                                                  exception_handler=exception_handler)
+                exception_handler = ctx.obj.pop("exception_handler", None)
+                done_callback = functools.partial(
+                    self.done_callback, exception_handler=exception_handler
+                )
 
                 # Launches callback scheduler and adds the done callback
-                ctx.task = loop.create_task(self._schedule_callback(ctx, timeout=timeout))
+                ctx.task = loop.create_task(
+                    self._schedule_callback(ctx, timeout=timeout)
+                )
                 ctx.task.add_done_callback(done_callback)
 
                 # Add some attributes to the task because it's
                 # what will be passed to done_callback
-                ctx.task.ctx = ctx
-                ctx.task.log = log
+                ctx.task.ctx = ctx  # type: ignore
+                ctx.task.log = log  # type: ignore
 
             return ctx
 
@@ -125,10 +141,10 @@ class CluGroup(click.Group):
     def command(self, *args, **kwargs):
         """Override :py:class:`click.Group` to use `.CluCommand` by default."""
 
-        if 'cls' in kwargs:
+        if "cls" in kwargs:
             pass
         else:
-            kwargs['cls'] = CluCommand
+            kwargs["cls"] = CluCommand
 
         def decorator(f):
             cmd = click.decorators.command(*args, **kwargs)(f)
@@ -156,11 +172,11 @@ class CluGroup(click.Group):
     def group(self, *args, **kwargs):
         """Creates a new group inheriting from this class."""
 
-        if 'cls' not in kwargs:
-            kwargs['cls'] = self.__class__
+        if "cls" not in kwargs:
+            kwargs["cls"] = self.__class__
 
         def decorator(f):
-            assert not asyncio.iscoroutinefunction(f), 'groups cannot be coroutines.'
+            assert not asyncio.iscoroutinefunction(f), "groups cannot be coroutines."
             cmd = group(*args, **kwargs)(f)
             self.add_command(cmd)
             return cmd
@@ -168,7 +184,7 @@ class CluGroup(click.Group):
         return decorator
 
 
-def timeout(seconds):
+def timeout(seconds: float):
     """A decorator to timeout the command after a number of ``seconds``."""
 
     def decorator(f):
@@ -199,7 +215,8 @@ def pass_args():
         @functools.wraps(f)
         @pass_obj
         def new_func(obj, *args, **kwargs):
-            return f(*obj['parser_args'], *args, **kwargs)
+            return f(*obj["parser_args"], *args, **kwargs)
+
         return functools.update_wrapper(new_func, f)
 
     return decorator
@@ -215,7 +232,7 @@ def ping(*args):
     """Pings the actor."""
 
     command = args[0]
-    command.set_status(command.status.DONE, 'Pong.')
+    command.set_status(command.status.DONE, "Pong.")
 
     return
 
@@ -225,26 +242,25 @@ def version(*args):
     """Reports the version."""
 
     command = args[0]
-    command.set_status(command.status.DONE,
-                       version=command.actor.version)
+    command.set_status(command.status.DONE, version=command.actor.version)
 
     return
 
 
-@command_parser.command(cls=CluCommand, name='get_schema')
+@command_parser.command(cls=CluCommand, name="get_schema")
 def get_schema(*args):
     """Returns the schema of the actor as a JSON schema."""
 
     command = args[0]
 
-    if command.actor.schema is None:
-        return command.fail(text='The actor does not know its own schema.')
+    if command.actor.model is None:
+        return command.fail(text="The actor does not know its own schema.")
 
-    return command.finish(schema=json.dumps(command.actor.schema.schema))
+    return command.finish(schema=json.dumps(command.actor.model.schema))
 
 
-@command_parser.command(name='help')
-@click.argument('PARSER-COMMAND', type=str, required=False)
+@command_parser.command(name="help")
+@click.argument("PARSER-COMMAND", type=str, required=False)
 @click.pass_context
 def help_(ctx, *args, parser_command):
     """Shows the help."""
@@ -255,7 +271,7 @@ def help_(ctx, *args, parser_command):
     # value. Strip it and unpack it in as many groups and commands as needed.
     parser_command = parser_command.strip('"').split()
 
-    help_lines = ''
+    help_lines = ""
     command_name = args[0].actor.name  # Actor name
 
     # Gets the help lines for the command group or for a specific command.
@@ -265,9 +281,9 @@ def help_(ctx, *args, parser_command):
 
         for ii in range(len(parser_command)):
             ctx_command_name = parser_command[ii].lower()
-            command_name += f' {ctx_command_name}'
+            command_name += f" {ctx_command_name}"
             if ctx_command_name not in ctx_commands:
-                return command.fail(text=f'command {ctx_command_name} not found.')
+                return command.fail(text=f"command {ctx_command_name} not found.")
             ctx_command = ctx_commands[ctx_command_name]
             if ii == len(parser_command) - 1:
                 # This is the last element in the command list
@@ -278,12 +294,12 @@ def help_(ctx, *args, parser_command):
 
     else:
 
-        help_lines = ctx.get_help()
+        help_lines: str = ctx.get_help()
 
     message = []
     for line in help_lines.splitlines():
         # Remove the parser name.
-        match = re.match(r'^Usage: ([A-Za-z-_]+)', line)
+        match = re.match(r"^Usage: ([A-Za-z-_]+)", line)
         if match:
             line = line.replace(match.groups()[0], command_name)
 
@@ -297,16 +313,22 @@ def help_(ctx, *args, parser_command):
         return command.finish()
 
 
+T = TypeVar("T", bound=Command)
+
+
 class ClickParser:
     """A command parser that uses Click at its base."""
 
     #: list: Arguments to be passed to each command in the parser.
     #: Note that the command is always passed first.
-    parser_args = []
-
+    parser_args: list[Any] = []
     parser = command_parser
 
-    def parse_command(self, command):
+    # For type hints
+    log: logging.Logger
+    name: str
+
+    def parse_command(self, command: T) -> T:
         """Parses an user command using the Click internals."""
 
         # This will pass the command as the first argument for each command.
@@ -323,38 +345,38 @@ class ClickParser:
 
         # If the command contains the --help flag,
         # redirects it to the help command.
-        if '--help' in command.body:
-            command.body = 'help ' + command.body
-            command.body = command.body.replace(' --help', '')
+        if "--help" in command.body:
+            command.body = "help " + command.body
+            command.body = command.body.replace(" --help", "")
 
-        if not command.body.startswith('help'):
+        if not command.body.startswith("help"):
             command_args = command.body.split()
         else:
-            command_args = ['help', '"{}"'.format(command.body[5:])]
+            command_args = ["help", '"{}"'.format(command.body[5:])]
 
         # We call the command with a custom context to get around
         # the default handling of exceptions in Click. This will force
         # exceptions to be raised instead of redirected to the stdout.
         # See http://click.palletsprojects.com/en/7.x/exceptions/
         ctx = self.parser.make_context(
-            f'{self.name}-command-parser', command_args,
-            obj={'parser_args': parser_args,
-                 'log': self.log,
-                 'exception_handler': self._handle_command_exception})
+            f"{self.name}-command-parser",
+            command_args,
+            obj={
+                "parser_args": parser_args,
+                "log": self.log,
+                "exception_handler": self._handle_command_exception,
+            },
+        )
 
         # Makes sure this is the global context. This solves problems when
         # the actor have been started from inside an existing context,
         # for example when it's called from a CLI click application.
         click.globals.push_context(ctx)
 
-        # Sets the context in the command.
-        command.ctx = ctx
-
-        with ctx:
-            try:
-                self.parser.invoke(ctx)
-            except Exception as exc:
-                self._handle_command_exception(command, exc)
+        try:
+            self.parser.invoke(ctx)
+        except Exception as exc:
+            self._handle_command_exception(command, exc)
 
         return command
 
@@ -365,19 +387,16 @@ class ClickParser:
 
             raise exception
 
-        except (click.ClickException, click.exceptions.Exit) as ee:
-
-            if not hasattr(ee, 'message'):
-                ee.message = None
+        except (click.ClickException) as ee:
 
             ctx = command.ctx
-            message = ''
+            message = ""
 
             # If this is a command that cannot be parsed.
-            if ee.message is None and ctx:
-                message = f'{ee.__class__.__name__}:\n{ctx.get_help()}'
+            if not hasattr(ee, "message") and ctx:
+                message = f"{ee.__class__.__name__}:\n{ctx.get_help()}"
             else:
-                message = f'{ee.__class__.__name__}: {ee.message}'
+                message = f"{ee.__class__.__name__}: {ee.message}"
 
             if isinstance(command.actor, (actor.AMQPActor, actor.JSONActor)):
                 command.warning(help=message.splitlines())
@@ -386,29 +405,31 @@ class ClickParser:
                 for line in lines:
                     command.warning(help=line)
 
-            msg = f'Command {command.body!r} failed.'
+            msg = f"Command {command.body!r} failed."
 
             if not command.status.is_done:
                 command.fail(text=msg)
             else:
-                command.write('e', text=msg)
+                command.write("e", text=msg)
 
-        except click.exceptions.Abort:
+        except (click.exceptions.Exit, click.exceptions.Abort):
 
             if not command.status.is_done:
-                command.fail(text=f'Command {command.body!r} was aborted.')
+                command.fail(text=f"Command {command.body!r} was aborted.")
 
         except Exception as err:
 
-            msg = (f'Command {command.body!r} failed because of an uncaught '
-                   f'error \'{err.__class__.__name__}: {str(err)}\'. See '
-                   f'traceback in the log for more information.')
+            msg = (
+                f"Command {command.body!r} failed because of an uncaught "
+                f"error '{err.__class__.__name__}: {str(err)}'. See "
+                f"traceback in the log for more information."
+            )
 
             if command.status.is_done:
                 command.write(text=msg)
             else:
                 command.fail(text=msg)
 
-            log = self.log or command.ctx.obj.get('log', None)
+            log = self.log or command.ctx.obj.get("log", None)
             if log:
-                log.exception(f'Command {command.body!r} failed with error:')
+                log.exception(f"Command {command.body!r} failed with error:")

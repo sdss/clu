@@ -6,14 +6,17 @@
 # @Filename: device.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
+from __future__ import annotations
+
 import asyncio
 import contextlib
+
+from typing import Any, Callable, Optional
 
 from .protocol import open_connection
 from .tools import CallbackMixIn
 
-
-__all__ = ['Device']
+__all__ = ["Device"]
 
 
 class Device(CallbackMixIn):
@@ -44,18 +47,23 @@ class Device(CallbackMixIn):
 
     Parameters
     ----------
-    host : str
+    host
         The host of the device.
-    port : int
+    port
         The port on which the device is serving.
     callback
-        The callback to call with each new message received from the client.
-        If no callback is specified, `.process_message` is called. If the
-        callback is not a coroutine, it will be converted to one.
+        The callback to call with each new message received from the client (after
+        decoding into a string). If no callback is specified, `.process_message` is
+        called. If the callback is not a coroutine, it will be converted to one.
 
     """
 
-    def __init__(self, host, port, callback=None):
+    def __init__(
+        self,
+        host: str,
+        port: int,
+        callback: Optional[Callable[[str], Any]] = None,
+    ):
 
         self.host = host
         self.port = port
@@ -71,7 +79,7 @@ class Device(CallbackMixIn):
         """Opens the connection and starts the listener."""
 
         if self.is_connected():
-            raise RuntimeError('connection is already running.')
+            raise RuntimeError("connection is already running.")
 
         self._client = await open_connection(self.host, self.port)
         self.listener = asyncio.create_task(self._listen())
@@ -87,7 +95,7 @@ class Device(CallbackMixIn):
                 self.listener.cancel()
                 await self.listener
 
-    def is_connected(self):
+    def is_connected(self) -> bool:
         """Returns `True` if the connection is open."""
 
         if self._client is None:
@@ -95,10 +103,10 @@ class Device(CallbackMixIn):
 
         return not self._client.writer.is_closing()
 
-    def write(self, message, newline='\n'):
+    def write(self, message: str, newline="\n"):
         """Write to the device. The message is encoded and a new line added."""
 
-        assert self.is_connected() and self._client.writer, 'device is not connected'
+        assert self.is_connected() and self._client.writer, "device is not connected"
 
         message = message.strip() + newline
         self._client.writer.write(message.encode())
@@ -107,14 +115,14 @@ class Device(CallbackMixIn):
         """Listens to the reader stream and callbacks on message received."""
 
         if not self._client:
-            raise RuntimeError('connection is not open.')
+            raise RuntimeError("connection is not open.")
 
         while True:
             line = await self._client.reader.readline()
             line = line.decode().strip()
             self.notify(line)
 
-    async def process_message(self, line):  # pragma: no cover
+    async def process_message(self, line: str):  # pragma: no cover
         """Processes a newly received message."""
 
         pass
