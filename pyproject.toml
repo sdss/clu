@@ -108,8 +108,7 @@ exclude_lines = [
     "class TCPProtocol",
     "class PeriodicTCPServer",
     "class CaseInsensitiveDict",
-    "def cli_coro",
-    "async def as_complete_failer"
+    "def cli_coro"
 ]
 
 [build-system]

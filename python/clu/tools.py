@@ -402,7 +402,7 @@ async def as_complete_failer(
     aws: list[Awaitable],
     on_fail_callback: Optional[Callable] = None,
     **kwargs,
-) -> tuple[bool, str | None]:
+) -> tuple[bool, str | None]:  # pragma: no cover
     """Similar to `~asyncio.as_complete` but cancels all the tasks
     if any of them returns `False`.
 
