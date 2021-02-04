@@ -19,7 +19,6 @@ from clu.tools import CallbackMixIn, CommandStatus, StatusMixIn, format_value
 
 @pytest.fixture
 def callback_object():
-
     class TestClass(CallbackMixIn):
         pass
 
@@ -101,55 +100,66 @@ def test_callback_none(callback_object):
     assert results == []
 
 
-@pytest.mark.parametrize('level', (logging.DEBUG, logging.INFO,
-                                   logging.WARNING, logging.ERROR))
+@pytest.mark.parametrize(
+    "level", (logging.DEBUG, logging.INFO, logging.WARNING, logging.ERROR)
+)
 @pytest.mark.asyncio
 async def test_actorhandler(json_client, json_actor, level):
 
     json_actor.log.addHandler(ActorHandler(json_actor, level=logging.DEBUG))
 
-    json_actor.log.log(level, 'This is a log message.')
+    json_actor.log.log(level, "This is a log message.")
 
-    msg_code = {logging.DEBUG: 'd', logging.INFO: 'i',
-                logging.WARNING: 'w', logging.ERROR: 'f'}
+    msg_code = {
+        logging.DEBUG: "d",
+        logging.INFO: "i",
+        logging.WARNING: "w",
+        logging.ERROR: "f",
+    }
 
     data = await json_client.reader.readline()
     data_json = json.loads(data.decode())
-    assert data_json['header']['message_code'] == msg_code[level]
-    assert data_json['header']['sender'] == 'json_actor'
-    assert data_json['data'] == {'text': 'This is a log message.'}
+    assert data_json["header"]["message_code"] == msg_code[level]
+    assert data_json["header"]["sender"] == "json_actor"
+    assert data_json["data"] == {"text": "This is a log message."}
 
 
 @pytest.mark.asyncio
 async def test_actorhandler_warning(json_client, json_actor):
 
-    handler = ActorHandler(json_actor, level=logging.WARNING,
-                           filter_warnings=[CluWarning])
+    handler = ActorHandler(
+        json_actor, level=logging.WARNING, filter_warnings=[CluWarning]
+    )
     json_actor.log.addHandler(handler)
     json_actor.log.warnings_logger.addHandler(handler)
 
     with pytest.raises(asyncio.TimeoutError):
-        warnings.warn('A deprecation warning', DeprecationWarning)
+        warnings.warn("A deprecation warning", DeprecationWarning)
         data = await asyncio.wait_for(json_client.reader.read(100), timeout=0.01)
 
-    warnings.warn('A CLU warning', CluWarning)
+    warnings.warn("A CLU warning", CluWarning)
 
     data = await asyncio.wait_for(json_client.reader.readline(), timeout=0.01)
     data_json = json.loads(data.decode())
-    assert data_json['header']['message_code'] == 'w'
-    assert data_json['header']['sender'] == 'json_actor'
-    assert data_json['data'] == {'text': 'A CLU warning (CluWarning)'}
+    assert data_json["header"]["message_code"] == "w"
+    assert data_json["header"]["sender"] == "json_actor"
+    assert data_json["data"] == {"text": "A CLU warning (CluWarning)"}
 
 
-@pytest.mark.parametrize('value,formatted', [(True, 'T'), (False, 'F'),
-                                             ('string', 'string'),
-                                             ('"string"', '"string"'),
-                                             ('A string', '"A string"'),
-                                             ('\'A string\'', '\'A string\''),
-                                             ('"A string"', '"A string"'),
-                                             (5, '5'),
-                                             ([1, 2, 'A string', False],
-                                              '1,2,"A string",F')])
+@pytest.mark.parametrize(
+    "value,formatted",
+    [
+        (True, "T"),
+        (False, "F"),
+        ("string", "string"),
+        ('"string"', '"string"'),
+        ("A string", '"A string"'),
+        ("'A string'", "'A string'"),
+        ('"A string"', '"A string"'),
+        (5, "5"),
+        ([1, 2, "A string", False], '1,2,"A string",F'),
+    ],
+)
 def test_format_value(value, formatted):
 
     assert format_value(value) == formatted
@@ -157,13 +167,13 @@ def test_format_value(value, formatted):
 
 @pytest.mark.asyncio
 class TestStatusMixIn:
-
     async def test_callback_call_now(self, mocker):
 
         callback = mocker.MagicMock()
 
-        StatusMixIn(CommandStatus, CommandStatus.READY,
-                    callback_func=callback, call_now=True)
+        StatusMixIn(
+            CommandStatus, CommandStatus.READY, callback_func=callback, call_now=True
+        )
 
         await asyncio.sleep(0.01)
 
@@ -173,8 +183,7 @@ class TestStatusMixIn:
 
         callback = mocker.MagicMock()
 
-        s = StatusMixIn(CommandStatus, CommandStatus.READY,
-                        callback_func=callback)
+        s = StatusMixIn(CommandStatus, CommandStatus.READY, callback_func=callback)
 
         s.status = CommandStatus.RUNNING
 
@@ -186,8 +195,7 @@ class TestStatusMixIn:
 
         callback = [mocker.MagicMock(), mocker.MagicMock()]
 
-        s = StatusMixIn(CommandStatus, CommandStatus.READY,
-                        callback_func=callback)
+        s = StatusMixIn(CommandStatus, CommandStatus.READY, callback_func=callback)
 
         s.status = CommandStatus.RUNNING
 
@@ -200,8 +208,7 @@ class TestStatusMixIn:
 
         callback = (mocker.MagicMock(), mocker.MagicMock())
 
-        s = StatusMixIn(CommandStatus, CommandStatus.READY,
-                        callback_func=callback)
+        s = StatusMixIn(CommandStatus, CommandStatus.READY, callback_func=callback)
 
         s.status = CommandStatus.READY  # This should not trigger callbacks
         s.status = CommandStatus.RUNNING
@@ -222,7 +229,6 @@ class TestStatusMixIn:
         assert s.status == CommandStatus.RUNNING
 
     async def test_wait_for_status(self, event_loop):
-
         def set_status(mixin, status):
             mixin.status = status
 
@@ -283,11 +289,16 @@ class TestCommandStatus:
         assert comb_bit.is_combination is True
         assert len(comb_bit.active_bits) == 2
 
-    @pytest.mark.parametrize('code,status', [(':', CommandStatus.DONE),
-                                             ('f', CommandStatus.FAILED),
-                                             ('e', CommandStatus.FAILED),
-                                             ('!', CommandStatus.FAILED),
-                                             ('>', CommandStatus.RUNNING)])
+    @pytest.mark.parametrize(
+        "code,status",
+        [
+            (":", CommandStatus.DONE),
+            ("f", CommandStatus.FAILED),
+            ("e", CommandStatus.FAILED),
+            ("!", CommandStatus.FAILED),
+            (">", CommandStatus.RUNNING),
+        ],
+    )
     def test_code_to_status(self, code, status):
 
         assert self.CS.code_to_status(code) == status

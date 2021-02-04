@@ -19,14 +19,15 @@ pytestmark = [pytest.mark.asyncio]
 
 @pytest.fixture
 async def device(unused_tcp_port_factory, event_loop):
-
     async def emit_number(transport):
-        transport.write(f'Writing to transport {str(transport)}\n'.encode())
+        transport.write(f"Writing to transport {str(transport)}\n".encode())
 
-    server = TCPStreamPeriodicServer(host='localhost',
-                                     port=unused_tcp_port_factory(),
-                                     periodic_callback=emit_number,
-                                     sleep_time=0.1)
+    server = TCPStreamPeriodicServer(
+        host="localhost",
+        port=unused_tcp_port_factory(),
+        periodic_callback=emit_number,
+        sleep_time=0.1,
+    )
 
     await server.start()
 
@@ -43,7 +44,7 @@ async def device_client(device):
     async def handle_received(line):
         received.append(line)
 
-    _device = Device('localhost', device.port, callback=handle_received)
+    _device = Device("localhost", device.port, callback=handle_received)
     _device.received = received
 
     await _device.start()
@@ -62,12 +63,12 @@ async def test_device(device_client):
 
 async def test_write_to_device(device_client):
 
-    assert device_client.write('writing to device') is None
+    assert device_client.write("writing to device") is None
 
 
 async def test_connection_not_open(device):
 
-    device_client = Device('localhost', device.port)
+    device_client = Device("localhost", device.port)
 
     with pytest.raises(RuntimeError):
         await device_client._listen()

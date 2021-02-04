@@ -16,13 +16,12 @@ from clu import Command, CommandError, CommandStatus
 @pytest.fixture
 def command(mocker):
 
-    yield Command(command_string='say-hello', command_id=100,
-                  actor=mocker.MagicMock())
+    yield Command(command_string="say-hello", command_id=100, actor=mocker.MagicMock())
 
 
 def test_command(command):
 
-    assert command.body == 'say-hello'
+    assert command.body == "say-hello"
 
 
 def test_set_status(command):
@@ -57,7 +56,7 @@ def test_set_status_int(command):
 
 def test_set_status_str(command):
 
-    command.status = 'TIMEDOUT'
+    command.status = "TIMEDOUT"
     assert command.status.is_done
     assert command.status.did_fail
     assert command.status == CommandStatus.TIMEDOUT
@@ -67,46 +66,46 @@ def test_set_status_str(command):
 def test_set_status_str_fails(command):
 
     with pytest.raises(TypeError):
-        command.set_status('AAAAA')
+        command.set_status("AAAAA")
 
 
 def test_child_command(command):
 
-    child = Command(command_string='new-command', parent=command)
+    child = Command(command_string="new-command", parent=command)
     assert child.parent == command
 
 
 def test_child_command_write(command):
 
     command.command_id = 666
-    child = Command(command_string='new-command', parent=command)
+    child = Command(command_string="new-command", parent=command)
 
-    child.write('i', 'hello')
-    command.actor.write.assert_called_with('i', message={'text': 'hello'},
-                                           command=command,
-                                           broadcast=False, **{})
+    child.write("i", "hello")
+    command.actor.write.assert_called_with(
+        "i", message={"text": "hello"}, command=command, broadcast=False, **{}
+    )
 
 
 def test_write_str(command):
 
-    command.write('i', 'hello')
-    command.actor.write.assert_called_with('i', message={'text': 'hello'},
-                                           command=command,
-                                           broadcast=False, **{})
+    command.write("i", "hello")
+    command.actor.write.assert_called_with(
+        "i", message={"text": "hello"}, command=command, broadcast=False, **{}
+    )
 
 
 def test_write_dict(command):
 
-    command.write('i', {'key': 'hello'})
-    command.actor.write.assert_called_with('i', message={'key': 'hello'},
-                                           command=command,
-                                           broadcast=False, **{})
+    command.write("i", {"key": "hello"})
+    command.actor.write.assert_called_with(
+        "i", message={"key": "hello"}, command=command, broadcast=False, **{}
+    )
 
 
 def test_write_bad_message(command):
 
     with pytest.raises(ValueError):
-        command.write('i', 100)
+        command.write("i", 100)
 
 
 def test_write_no_actor(command):
@@ -114,12 +113,11 @@ def test_write_no_actor(command):
     command.actor = None
 
     with pytest.raises(CommandError):
-        command.write('i', 'hi')
+        command.write("i", "hi")
 
 
 @pytest.mark.asyncio
 async def test_wait_for_status(command, event_loop):
-
     async def mark_cancelled():
         await asyncio.sleep(0.01)
         command.set_status(CommandStatus.CANCELLED)
