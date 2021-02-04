@@ -400,18 +400,18 @@ class JSONActor(ClickParser, BaseActor):
 
         Parameters
         ----------
-        message_code : str
+        message_code
             The message code (e.g., ``'i'`` or ``':'``). Ignored.
-        message : dict
+        message
             The keywords to be output. Must be a dictionary of pairs
             ``{keyword: value}``.
-        command : Command
+        command
             The command to which we are replying. If not set, it is assumed
             that this is a broadcast.
-        broadcast : bool
+        broadcast
             Whether to broadcast the message to all the users or only to the
             commander.
-        no_validate : bool
+        no_validate
             Do not validate the reply against the actor schema. This is
             ignored if the actor was not started with knowledge of its own
             schema.

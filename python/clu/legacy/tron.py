@@ -108,15 +108,15 @@ class TronConnection(BaseClient):
 
     Parameters
     ----------
-    name : str
+    name
         The name of the client.
-    host : str
+    host
         The host on which Tron is running.
-    port : int
+    port
         The port on which Tron is running.
-    models : list
+    models
         A list of strings with the actors whose models will be tracked.
-    kwargs : dict
+    kwargs
         Arguments to be passed to `.BaseClient`.
     """
 
@@ -184,17 +184,17 @@ class TronConnection(BaseClient):
 
         Parameters
         ----------
-        target : str
+        target
             The actor to command.
-        command_string : str
+        command_string
             The command to send.
-        commander : str
+        commander
             The actor or client sending the command. The format for Tron is
             "commander message_id target command" where commander needs to
             start with a letter and have a program and a user joined by a dot.
             Otherwise the command will be accepted but the reply will fail
             to parse.
-        mid : int
+        mid
             The message id. If `None`, a sequentially increasing value will
             be used. You should not specify a ``mid`` unless you really know
             what you're doing.

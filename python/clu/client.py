@@ -243,7 +243,7 @@ class AMQPClient(BaseClient):
     async def handle_reply(self, message: apika.IncomingMessage) -> AMQPReply:
         """Handles a reply received from the exchange.
 
-        Creates a new instance of `.Reply` from the ``message``. If the
+        Creates a new instance of `.AMQPReply` from the ``message``. If the
         reply is valid it updates any running command.
 
         Parameters
@@ -296,9 +296,9 @@ class AMQPClient(BaseClient):
 
         Parameters
         ----------
-        consumer : str
+        consumer
             The actor we are commanding.
-        command_string : str
+        command_string
             The command string that will be parsed by the remote actor.
         command_id
             The command ID associated with this command. If empty, an unique
