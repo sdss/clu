@@ -67,6 +67,7 @@ docs = ["Sphinx"]
 line-length = 88
 target-version = ['py38']
 fast = true
+exclude = 'docs/sphinx/examples/.+\.py'
 
 [tool.isort]
 profile = "black"
