@@ -40,7 +40,7 @@ To test this code you can use the ``clu`` CLI command from a shell terminal. Thi
 
 
 `hello_actor_schema.py <examples/hello_actor_schema.py>`__
-------------------------------------------------------
+----------------------------------------------------------
 
 Let's continue expanding our example. Now we define the same greeter actor but we provide it with a schema. We also add a command, ``say-goodbye``, that outputs a keyword that is not in the actor schema.
 
