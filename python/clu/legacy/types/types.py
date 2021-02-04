@@ -4,6 +4,8 @@ Type declarations for SDSS-3 keyword values
 Refer to https://trac.sdss3.org/wiki/Ops/Types
 """
 
+# type: ignore
+
 # Created 30-Oct-2008 by David Kirkby (dkirkby@uci.edu)
 
 import re
@@ -20,6 +22,7 @@ class InvalidValueError(Exception):
     """
     Signals that an invalid value was detected during conversion from a string
     """
+
     pass
 
 
@@ -39,11 +42,13 @@ class Descriptive(object):
         can be printed. The description is indented with spaces assuming
         a fixed-width font.
         """
-        text = ''
+        text = ""
         for label, value in self.descriptors:
-            pad = '\n' + ' ' * 14
-            formatted = textwrap.fill(textwrap.dedent(value).strip(), width=66).replace('\n', pad)
-            text += '%12s: %s\n' % (label, formatted)
+            pad = "\n" + " " * 14
+            formatted = textwrap.fill(textwrap.dedent(value).strip(), width=66).replace(
+                "\n", pad
+            )
+            text += "%12s: %s\n" % (label, formatted)
         return text[:-1]
 
     def describeAsHTML(self):
@@ -53,13 +58,15 @@ class Descriptive(object):
         Uses the following CSS elements: div.vtype, div.descriptor,
         span.label, span.value
         """
-        content = html.Div(className='vtype')
+        content = html.Div(className="vtype")
         for label, value in self.descriptors:
             content.append(
                 html.Div(
-                    html.Span(label, className='label'),
-                    html.Span(value, className='value'),
-                    className='type descriptor'))
+                    html.Span(label, className="label"),
+                    html.Span(value, className="value"),
+                    className="type descriptor",
+                )
+            )
         return content
 
 
@@ -67,8 +74,9 @@ class ValueType(type, Descriptive):
     """
     A metaclass for types that represent an enumerated or numeric value
     """
-    _nameSpec = re.compile('[A-Za-z][A-Za-z0-9_]*')
-    _metaKeys = ('reprFmt', 'strFmt', 'invalid', 'units', 'help', 'name')
+
+    _nameSpec = re.compile("[A-Za-z][A-Za-z0-9_]*")
+    _metaKeys = ("reprFmt", "strFmt", "invalid", "units", "help", "name")
 
     def __new__(cls, *args, **kwargs):
         """
@@ -77,13 +85,13 @@ class ValueType(type, Descriptive):
 
         def doRepr(self):
             if self.units:
-                units = ' ' + self.units
+                units = " " + self.units
             else:
-                units = ''
+                units = ""
             if self.reprFmt:
-                return '%s(%s%s)' % (cls.__name__, self.reprFmt % self, units)
+                return "%s(%s%s)" % (cls.__name__, self.reprFmt % self, units)
             else:
-                return '%s(%s%s)' % (cls.__name__, cls.baseType.__repr__(self), units)
+                return "%s(%s%s)" % (cls.__name__, cls.baseType.__repr__(self), units)
 
         def doStr(self):
             if self.strFmt:
@@ -95,97 +103,103 @@ class ValueType(type, Descriptive):
 
         # check for any invalid metadata keys
         for key in kwargs:
-            if key not in ValueType._metaKeys and (not hasattr(cls, 'customKeys') or
-                                                   key not in cls.customKeys):
-                raise ValueTypeError('invalid metadata key "%s" for %s' % (key, cls.__name__))
+            if key not in ValueType._metaKeys and (
+                not hasattr(cls, "customKeys") or key not in cls.customKeys
+            ):
+                raise ValueTypeError(
+                    'invalid metadata key "%s" for %s' % (key, cls.__name__)
+                )
 
         # force the invalid string, if present, to be lowercase
-        if 'invalid' in kwargs:
-            kwargs['invalid'] = str(kwargs['invalid']).lower()
+        if "invalid" in kwargs:
+            kwargs["invalid"] = str(kwargs["invalid"]).lower()
 
         # check that the name string, if present, is a valid identifier
-        if 'name' in kwargs:
-            matched = ValueType._nameSpec.match(kwargs['name'])
-            if not matched or not matched.end() == len(kwargs['name']):
-                raise ValueTypeError('invalid type name: %s' % kwargs['name'])
+        if "name" in kwargs:
+            matched = ValueType._nameSpec.match(kwargs["name"])
+            if not matched or not matched.end() == len(kwargs["name"]):
+                raise ValueTypeError("invalid type name: %s" % kwargs["name"])
 
         # check that any format strings provided are not circular
-        if 'reprFmt' in kwargs:
-            fmt = kwargs['reprFmt']
-            if (fmt.find('%s') != -1) or (fmt.find('%r') != -1):
-                raise ValueTypeError('reprFmt cannot contain %r or %s')
-        if 'strFmt' in kwargs:
-            fmt = kwargs['strFmt']
-            if (fmt.find('%s') != -1) or (fmt.find('%r') != -1):
-                raise ValueTypeError('strFmt cannot contain %r or %s')
+        if "reprFmt" in kwargs:
+            fmt = kwargs["reprFmt"]
+            if (fmt.find("%s") != -1) or (fmt.find("%r") != -1):
+                raise ValueTypeError("reprFmt cannot contain %r or %s")
+        if "strFmt" in kwargs:
+            fmt = kwargs["strFmt"]
+            if (fmt.find("%s") != -1) or (fmt.find("%r") != -1):
+                raise ValueTypeError("strFmt cannot contain %r or %s")
 
         def get(name, default=None):
             return kwargs.get(name, cls.__dict__.get(name, default))
 
         dct = {
-            'reprFmt': get('reprFmt'),
-            'strFmt': get('strFmt'),
-            'invalid': get('invalid'),
-            'units': get('units'),
-            'help': get('help'),
-            'name': get('name'),
-            '__repr__': doRepr,
-            '__str__': doStr,
+            "reprFmt": get("reprFmt"),
+            "strFmt": get("strFmt"),
+            "invalid": get("invalid"),
+            "units": get("units"),
+            "help": get("help"),
+            "name": get("name"),
+            "__repr__": doRepr,
+            "__str__": doStr,
         }
         if cls == Bits:
             # leave special bit handling alone, since some code may rely on it
             def getNative(self):
                 return int(self)
 
-            dct['native'] = property(getNative)
+            dct["native"] = property(getNative)
         elif cls == Bool:
             # cls.baseType is int, not bool, because one cannot subclass bool
             def getNative(self):
                 return bool(self)
 
-            dct['native'] = property(getNative)
-        elif hasattr(cls, 'baseType'):
+            dct["native"] = property(getNative)
+        elif hasattr(cls, "baseType"):
 
             def getNative(self):
                 return cls.baseType(self)
 
-            dct['native'] = property(getNative)
+            dct["native"] = property(getNative)
         else:
-            print('WARNING: no baseType')
+            print("WARNING: no baseType")
 
-        if hasattr(cls, 'new'):
-            dct['__new__'] = cls.new
-        if hasattr(cls, 'init'):
+        if hasattr(cls, "new"):
+            dct["__new__"] = cls.new
+        if hasattr(cls, "init"):
             cls.init(dct, *args, **kwargs)
-        return type.__new__(cls, cls.__name__, (cls.baseType, ), dct)
+        return type.__new__(cls, cls.__name__, (cls.baseType,), dct)
 
     def addDescriptors(cls):
         if cls.units:
-            cls.descriptors.append(('Units', cls.units))
+            cls.descriptors.append(("Units", cls.units))
 
     def __init__(cls, *args, **kwargs):
         """
         Initializes a new ValueType class
         """
-        super(ValueType, cls).__init__(cls.__name__, (cls.baseType, ), {})
+        super(ValueType, cls).__init__(cls.__name__, (cls.baseType,), {})
         cls.descriptors = []
         if cls.name:
-            cls.descriptors.append(('Name', cls.name))
+            cls.descriptors.append(("Name", cls.name))
         if cls.help:
-            cls.descriptors.append(('Description', cls.help))
-        cls.descriptors.append(('Type',
-                                '%s (%s,%s)' % (cls.__name__, cls.baseType.__name__, cls.storage)))
+            cls.descriptors.append(("Description", cls.help))
+        cls.descriptors.append(
+            ("Type", "%s (%s,%s)" % (cls.__name__, cls.baseType.__name__, cls.storage))
+        )
         cls.addDescriptors()
         if cls.invalid:
-            cls.descriptors.append(('Invalid', cls.invalid))
+            cls.descriptors.append(("Invalid", cls.invalid))
 
     def __mul__(self, amount):
         if isinstance(amount, int):
             return RepeatedValueType(self, amount, amount)
         elif not isinstance(amount, tuple):
-            raise TypeError('Cannot multiply ValueType by type %r' % type(amount))
+            raise TypeError("Cannot multiply ValueType by type %r" % type(amount))
         if len(amount) == 0 or len(amount) > 2:
-            raise ValueTypeError('Repetions should be specified as *(min,) or *(min,max)')
+            raise ValueTypeError(
+                "Repetions should be specified as *(min,) or *(min,max)"
+            )
         minRepeat = amount[0]
         if len(amount) == 2:
             maxRepeat = amount[1]
@@ -203,37 +217,40 @@ class ValueType(type, Descriptive):
 
 
 class RepeatedValueType(Descriptive):
-
     def __init__(self, vtype, minRepeat, maxRepeat):
         if not isinstance(vtype, ValueType):
-            raise ValueTypeError('RepeatedValueType only works for a ValueType')
+            raise ValueTypeError("RepeatedValueType only works for a ValueType")
         self.vtype = vtype
-        if not isinstance(minRepeat, int) or (maxRepeat and not isinstance(maxRepeat, int)):
-            raise ValueTypeError('Expected integer min/max repetitions for RepeatedValueType')
+        if not isinstance(minRepeat, int) or (
+            maxRepeat and not isinstance(maxRepeat, int)
+        ):
+            raise ValueTypeError(
+                "Expected integer min/max repetitions for RepeatedValueType"
+            )
         self.minRepeat = minRepeat
         self.maxRepeat = maxRepeat
         if self.minRepeat < 0 or (self.maxRepeat and self.maxRepeat < self.minRepeat):
-            raise ValueTypeError('Expected min <= max for RepeatedValueType')
+            raise ValueTypeError("Expected min <= max for RepeatedValueType")
         if self.minRepeat == 1:
-            times = 'once'
+            times = "once"
         else:
-            times = '%d times' % self.minRepeat
+            times = "%d times" % self.minRepeat
         if self.minRepeat == self.maxRepeat:
             repeatText = times
         elif self.maxRepeat is None:
-            repeatText = 'at least ' + times
+            repeatText = "at least " + times
         else:
-            repeatText = '%d-%d times' % (self.minRepeat, self.maxRepeat)
-        self.descriptors = [('Repeated', repeatText)]
+            repeatText = "%d-%d times" % (self.minRepeat, self.maxRepeat)
+        self.descriptors = [("Repeated", repeatText)]
         self.descriptors.extend(self.vtype.descriptors)
 
     def __repr__(self):
         if self.minRepeat == self.maxRepeat:
-            return '%r*%d' % (self.vtype, self.minRepeat)
+            return "%r*%d" % (self.vtype, self.minRepeat)
         elif self.maxRepeat is None:
-            return '%r*(%d,)' % (self.vtype, self.minRepeat)
+            return "%r*(%d,)" % (self.vtype, self.minRepeat)
         else:
-            return '%r*(%d,%d)' % (self.vtype, self.minRepeat, self.maxRepeat)
+            return "%r*(%d,%d)" % (self.vtype, self.minRepeat, self.maxRepeat)
 
 
 class CompoundValueType(Descriptive):
@@ -246,25 +263,26 @@ class CompoundValueType(Descriptive):
     a function (which might be a class constructor) that is called with the
     individual values and returns the wrapping object.
     """
+
     # a global flag to enable/disable the wrapping of compound values
     WrapEnable = True
 
     def __init__(self, *vtypes, **kwargs):
         self.vtypes = vtypes
-        self.name = kwargs.get('name', None)
-        self.help = kwargs.get('help', None)
+        self.name = kwargs.get("name", None)
+        self.help = kwargs.get("help", None)
         self.descriptors = []
         if self.name:
-            self.descriptors.append(('Name', self.name))
+            self.descriptors.append(("Name", self.name))
         if self.help:
-            self.descriptors.append(('Description', self.help))
+            self.descriptors.append(("Description", self.help))
         for index, vtype in enumerate(self.vtypes):
-            self.descriptors.append(('Subtype-%d' % index, '-' * 40))
+            self.descriptors.append(("Subtype-%d" % index, "-" * 40))
             self.descriptors.extend(vtype.descriptors)
-        self.wrapper = kwargs.get('wrapper', None)
+        self.wrapper = kwargs.get("wrapper", None)
 
     def __repr__(self):
-        return '%s%r' % (self.__class__.__name__, self.vtypes)
+        return "%s%r" % (self.__class__.__name__, self.vtypes)
 
 
 class PVT(CompoundValueType):
@@ -273,12 +291,15 @@ class PVT(CompoundValueType):
     """
 
     def __init__(self, **kwargs):
-        vtypes = (Float(name='position', units='deg'), Float(name='velocity', units='deg/s'),
-                  Double(name='time', units='MJD-secs(TAI)'))
-        if 'wrapper' not in kwargs:
+        vtypes = (
+            Float(name="position", units="deg"),
+            Float(name="velocity", units="deg/s"),
+            Double(name="time", units="MJD-secs(TAI)"),
+        )
+        if "wrapper" not in kwargs:
             # by default, use RO.PVT to wrap values of type PVT
 
-            kwargs['wrapper'] = pvt.PVT
+            kwargs["wrapper"] = pvt.PVT
         CompoundValueType.__init__(self, *vtypes, **kwargs)
 
 
@@ -286,11 +307,12 @@ class Invalid(object):
     """
     Represents an invalid value
     """
-    units = ''
+
+    units = ""
     native = None
 
     def __repr__(self):
-        return '(invalid)'
+        return "(invalid)"
 
     def __eq__(self, other):
         """
@@ -308,20 +330,20 @@ InvalidValue = Invalid()
 
 class Float(ValueType):
     baseType = float
-    storage = 'flt4'
+    storage = "flt4"
 
     def new(cls, value):
         fvalue = float(cls.validate(value))
         # the limit value is float(340282346638528859811704183484516925440)
         # where 3402... is (2 - 2^(-23)) 2^127
-        if abs(fvalue) > 3.4028234663852886e+38 and abs(fvalue) != float('inf'):
-            raise OverflowError('Invalid literal for Float: %r' % value)
+        if abs(fvalue) > 3.4028234663852886e38 and abs(fvalue) != float("inf"):
+            raise OverflowError("Invalid literal for Float: %r" % value)
         return float.__new__(cls, fvalue)
 
 
 class Double(ValueType):
     baseType = float
-    storage = 'flt8'
+    storage = "flt8"
 
     def new(cls, value):
         return float.__new__(cls, cls.validate(value))
@@ -329,7 +351,7 @@ class Double(ValueType):
 
 class Int(ValueType):
     baseType = int
-    storage = 'int4'
+    storage = "int4"
 
     def new(cls, value):
         if isinstance(value, str):
@@ -337,14 +359,14 @@ class Int(ValueType):
             lvalue = int(cls.validate(value), 0)
         else:
             lvalue = int(cls.validate(value))
-        if lvalue < -0x7fffffff or lvalue > 0x7fffffff:
-            raise OverflowError('Invalid literal for Int: %r' % value)
+        if lvalue < -0x7FFFFFFF or lvalue > 0x7FFFFFFF:
+            raise OverflowError("Invalid literal for Int: %r" % value)
         return int.__new__(cls, lvalue)
 
 
 class Long(ValueType):
     baseType = int
-    storage = 'int8'
+    storage = "int8"
 
     def new(cls, value):
         if isinstance(value, str):
@@ -356,7 +378,7 @@ class Long(ValueType):
 
 class String(ValueType):
     baseType = str
-    storage = 'text'
+    storage = "text"
 
     def new(cls, value):
         return str.__new__(cls, cls.validate(value))
@@ -364,7 +386,7 @@ class String(ValueType):
 
 class UInt(ValueType):
     baseType = int
-    storage = 'int4'
+    storage = "int4"
 
     def new(cls, value):
         if isinstance(value, str):
@@ -372,8 +394,8 @@ class UInt(ValueType):
             lvalue = int(cls.validate(value), 0)
         else:
             lvalue = int(cls.validate(value))
-        if lvalue < -0x7fffffff or lvalue > 0xffffffff:
-            raise OverflowError('Invalid literal for UInt: %r' % value)
+        if lvalue < -0x7FFFFFFF or lvalue > 0xFFFFFFFF:
+            raise OverflowError("Invalid literal for UInt: %r" % value)
         if lvalue < 0:
             # re-interpret a negative 32-bit value as its bit-equivalent unsigned value
             lvalue = 0x80000000 | (-lvalue)
@@ -384,7 +406,8 @@ class Hex(UInt):
     """
     The Hex class has been deprecated and is scheduled for deletion (20-Jul-2009)
     """
-    reprFmt = '0x%x'
+
+    reprFmt = "0x%x"
 
     def new(cls, value):
         try:
@@ -397,30 +420,30 @@ class Hex(UInt):
 class Enum(ValueType):
 
     baseType = str
-    storage = 'int2'
-    customKeys = ('labelHelp')
+    storage = "int2"
+    customKeys = "labelHelp"
 
     @classmethod
     def init(cls, dct, *args, **kwargs):
         if not args:
-            raise ValueTypeError('missing enum labels in ctor')
+            raise ValueTypeError("missing enum labels in ctor")
         # force each label to be interpreted as a string so, for example,
         # False->'False', 1->'1', 0xff->'255'
         strargs = [str(arg) for arg in args]
-        dct['enumLabels'] = strargs
-        dct['enumValues'] = dict(zip(args, range(len(strargs))))
+        dct["enumLabels"] = strargs
+        dct["enumValues"] = dict(zip(args, range(len(strargs))))
         # look for optional per-label help text
-        labelHelp = kwargs.get('labelHelp', None)
+        labelHelp = kwargs.get("labelHelp", None)
         if labelHelp and not len(labelHelp) == len(strargs):
-            raise ValueTypeError('wrong number of enum label help strings provided')
-        dct['labelHelp'] = labelHelp
+            raise ValueTypeError("wrong number of enum label help strings provided")
+        dct["labelHelp"] = labelHelp
 
         # provide a custom storage value helper since our storage type is int2
         # but our basetype is str
         def storageValue(self):
             return str(self.enumValues[self])
 
-        dct['storageValue'] = storageValue
+        dct["storageValue"] = storageValue
 
         # enumerated value comparisons are case insensitive
         def eqTest(self, other):
@@ -429,8 +452,8 @@ class Enum(ValueType):
         def neTest(self, other):
             return str(other).lower() != self.lower()
 
-        dct['__eq__'] = eqTest
-        dct['__ne__'] = neTest
+        dct["__eq__"] = eqTest
+        dct["__ne__"] = neTest
 
     def new(cls, value):
         """
@@ -443,7 +466,7 @@ class Enum(ValueType):
             if value >= 0 and value < len(cls.enumLabels):
                 return str.__new__(cls, cls.enumLabels[value])
             else:
-                raise ValueError('Invalid index for Enum: %d' % value)
+                raise ValueError("Invalid index for Enum: %d" % value)
         value = str(value).lower()
         for label in cls.enumLabels:
             if value == label.lower():
@@ -454,24 +477,24 @@ class Enum(ValueType):
         for index, label in enumerate(cls.enumLabels):
             description = label
             if cls.labelHelp:
-                description += ' (%s)' % cls.labelHelp[index]
-            cls.descriptors.append(('Value-%d' % index, description))
+                description += " (%s)" % cls.labelHelp[index]
+            cls.descriptors.append(("Value-%d" % index, description))
 
 
 # Boolean value type
 class Bool(ValueType):
 
     baseType = int  # bool cannot be subclassed
-    storage = 'int2'
+    storage = "int2"
 
     @classmethod
     def init(cls, dct, *args, **kwargs):
         if not args or not len(args) == 2:
-            raise ValueTypeError('missing true/false labels in ctor')
+            raise ValueTypeError("missing true/false labels in ctor")
         # force the literal values to be interpreted as strings so, for example,
         # False->'False', 0->'0'
-        dct['falseValue'] = str(args[0])
-        dct['trueValue'] = str(args[1])
+        dct["falseValue"] = str(args[0])
+        dct["trueValue"] = str(args[1])
 
         def doStr(self):
             if self:
@@ -479,9 +502,9 @@ class Bool(ValueType):
             else:
                 return self.falseValue
 
-        dct['__str__'] = doStr
-        if dct['strFmt']:
-            print('Bool: ignoring strFmt metadata')
+        dct["__str__"] = doStr
+        if dct["strFmt"]:
+            print("Bool: ignoring strFmt metadata")
 
     def new(cls, value):
         """
@@ -494,49 +517,51 @@ class Bool(ValueType):
         # can be used for False,True
         if value == True or value == cls.trueValue:  # noqa
             return int.__new__(cls, True)
-        elif value == False or value == cls.falseValue:   # noqa
+        elif value == False or value == cls.falseValue:  # noqa
             return int.__new__(cls, False)
         else:
-            raise ValueError('Invalid Bool value: %r' % value)
+            raise ValueError("Invalid Bool value: %r" % value)
 
     def addDescriptors(cls):
-        cls.descriptors.append(('False', cls.falseValue))
-        cls.descriptors.append(('True', cls.trueValue))
+        cls.descriptors.append(("False", cls.falseValue))
+        cls.descriptors.append(("True", cls.trueValue))
 
 
 # Bitfield value type
 class Bits(UInt):
 
-    fieldSpec = re.compile('([a-zA-Z0-9_]+)?(?::([0-9]+))?$')
+    fieldSpec = re.compile("([a-zA-Z0-9_]+)?(?::([0-9]+))?$")
 
     @staticmethod
     def binary(value, width):
-        return ''.join([str((value >> shift) & 1) for shift in range(width - 1, -1, -1)])
+        return "".join(
+            [str((value >> shift) & 1) for shift in range(width - 1, -1, -1)]
+        )
 
     @classmethod
     def init(cls, dct, *args, **kwargs):
         if not args:
-            raise ValueTypeError('missing bitfield specs in ctor')
+            raise ValueTypeError("missing bitfield specs in ctor")
         offset = 0
         fields = {}
         specs = []
         for field in args:
             parsed = cls.fieldSpec.match(field)
             if not parsed or not parsed.end() == len(field):
-                raise ValueTypeError('invalid bitfield spec: %s' % field)
+                raise ValueTypeError("invalid bitfield spec: %s" % field)
             (name, width) = parsed.groups()
             width = int(width or 1)
             if name:
-                if name == 'native':
+                if name == "native":
                     raise ValueTypeError("'native' is not an allowed bitfield name")
                 specs.append((name, width))
                 fields[name] = (offset, int((1 << width) - 1))
             offset += width
             if offset > 32:
-                raise ValueTypeError('total bitfield length > 32')
-        dct['width'] = offset
-        dct['fieldSpecs'] = specs
-        dct['bitFields'] = fields
+                raise ValueTypeError("total bitfield length > 32")
+        dct["width"] = offset
+        dct["fieldSpecs"] = specs
+        dct["bitFields"] = fields
 
         def getAttr(self, name):
             if name not in self.bitFields:
@@ -544,35 +569,41 @@ class Bits(UInt):
             (offset, mask) = self.bitFields[name]
             return (self >> offset) & mask
 
-        dct['__getattr__'] = getAttr
+        dct["__getattr__"] = getAttr
 
         def setAttr(self, name, value):
             if name not in self.bitFields:
                 raise AttributeError('no such bitfield "%s"' % name)
             (offset, mask) = self.bitFields[name]
-            return self.__class__((self & ~(mask << offset)) | ((value & mask) << offset))
+            return self.__class__(
+                (self & ~(mask << offset)) | ((value & mask) << offset)
+            )
 
-        dct['set'] = setAttr
+        dct["set"] = setAttr
 
         def doRepr(self):
-            return '(%s)' % ','.join(
-                ['%s=%s' % (n, Bits.binary(getAttr(self, n), w)) for (n, w) in self.fieldSpecs])
+            return "(%s)" % ",".join(
+                [
+                    "%s=%s" % (n, Bits.binary(getAttr(self, n), w))
+                    for (n, w) in self.fieldSpecs
+                ]
+            )
 
-        dct['__repr__'] = doRepr
+        dct["__repr__"] = doRepr
 
         def bitsString(self):
             return Bits.binary(self, offset)
 
-        dct['bitsString'] = bitsString
+        dct["bitsString"] = bitsString
         # dct['__str__'] = doStr
-        if dct['strFmt']:
-            print('Bits: ignoring strFmt metadata')
+        if dct["strFmt"]:
+            print("Bits: ignoring strFmt metadata")
 
     def addDescriptors(cls):
         for index, (name, width) in enumerate(cls.fieldSpecs):
             offset, mask = cls.bitFields[name]
             shifted = Bits.binary(mask << offset, cls.width)
-            cls.descriptors.append(('Field-%d' % index, '%s %s' % (shifted, name)))
+            cls.descriptors.append(("Field-%d" % index, "%s %s" % (shifted, name)))
 
 
 class ByName(object):
