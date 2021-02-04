@@ -23,6 +23,7 @@ import clu.base
 from .exceptions import CluError, CluWarning
 from .tools import CallbackMixIn, CaseInsensitiveDict
 
+
 __all__ = ["Property", "BaseModel", "Model", "ModelSet"]
 
 

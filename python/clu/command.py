@@ -19,6 +19,7 @@ import clu
 import clu.base
 from clu.tools import CommandStatus, StatusMixIn
 
+
 __all__ = [
     "BaseCommand",
     "Command",

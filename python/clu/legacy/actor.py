@@ -16,7 +16,6 @@ from os import PathLike
 from typing import Any, Optional, TypeVar, cast
 
 import clu
-from clu.model import Model
 
 from ..actor import CustomTransportType
 from ..base import BaseActor
@@ -25,6 +24,7 @@ from ..parser import ClickParser
 from ..protocol import TCPStreamServer
 from ..tools import log_reply
 from .tron import TronConnection
+
 
 __all__ = ["LegacyActor", "BaseLegacyActor"]
 

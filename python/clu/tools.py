@@ -9,7 +9,6 @@
 from __future__ import annotations
 
 import asyncio
-import collections
 import contextlib
 import enum
 import functools
@@ -17,17 +16,8 @@ import json
 import logging
 import re
 
-from typing import (
-    Any,
-    Awaitable,
-    Callable,
-    Dict,
-    Generic,
-    Optional,
-    OrderedDict,
-    Type,
-    TypeVar,
-)
+from typing import Any, Awaitable, Callable, Dict, Generic, Optional, Type, TypeVar
+
 
 __all__ = [
     "CommandStatus",

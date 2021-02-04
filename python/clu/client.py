@@ -24,6 +24,7 @@ from .model import ModelSet
 from .protocol import TopicListener
 from .tools import CommandStatus
 
+
 __all__ = ["AMQPClient", "AMQPReply"]
 
 

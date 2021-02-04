@@ -16,6 +16,7 @@ from pytest_rabbitmq import factories
 from clu import AMQPActor, AMQPClient, JSONActor
 from clu.protocol import open_connection
 
+
 DATA_DIR = pathlib.Path(os.path.dirname(__file__)) / "data"
 RMQ_PORT = 8888
 

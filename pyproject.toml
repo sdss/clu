@@ -76,6 +76,7 @@ default_section = "THIRDPARTY"
 known_first_party = "archon"
 known_typing = ["typing"]
 known_sdss = ["sdsstools"]
+lines_after_imports = 2
 skip_glob = [
     "setup.py",
     "*/__init__.py",

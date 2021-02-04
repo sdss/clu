@@ -17,6 +17,7 @@ from clu.model import Model
 
 from .conftest import RMQ_PORT
 
+
 pytestmark = [pytest.mark.asyncio]
 
 

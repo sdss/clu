@@ -18,6 +18,7 @@ import os
 import sys
 from distutils.version import StrictVersion
 
+
 # If there is a global installation of poetry, prefer that.
 if "POETRY_HOME" in os.environ:
     lib = os.path.expanduser(os.path.join(os.environ["POETRY_HOME"], "lib"))

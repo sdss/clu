@@ -11,7 +11,7 @@ from __future__ import annotations
 import asyncio
 import logging
 
-from typing import Any, Callable, NewType, Optional, TypeVar
+from typing import Any, Callable, Optional
 
 from clu.base import BaseClient
 from clu.command import Command, CommandStatus
@@ -20,6 +20,7 @@ from clu.protocol import open_connection
 
 from .types.keys import KeysDictionary
 from .types.parser import ParseError, ReplyParser
+
 
 __all__ = ["TronConnection", "TronModel", "TronKey"]
 

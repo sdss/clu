@@ -15,6 +15,7 @@ from pkg_resources import parse_version
 
 from clu import __version__
 
+
 # Are we building in RTD?
 on_rtd = os.environ.get("READTHEDOCS") == "True"
 

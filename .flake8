@@ -11,5 +11,7 @@ per-file-ignores =
     __init__.py:F401,F403
     setup.py:E
     docs/sphinx/examples/*:E,F,W
+    docs/sphinx/_build/**:E,F,W
+    python/clu/legacy/types/*:E,F,W
 
 max-line-length = 88

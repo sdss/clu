@@ -14,6 +14,7 @@ from clu.command import CommandStatus
 from clu.exceptions import CluError, CluWarning
 from clu.legacy import LegacyActor
 
+
 pytestmark = [pytest.mark.asyncio]
 
 

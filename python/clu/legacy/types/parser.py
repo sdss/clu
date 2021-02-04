@@ -28,6 +28,7 @@ from .messages import (
 )
 from .ply import lex, yacc
 
+
 name_pattern = re.compile("[A-Za-z][A-Za-z0-9_.]*$")
 
 

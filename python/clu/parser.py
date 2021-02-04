@@ -15,15 +15,15 @@ import json
 import logging
 import re
 
-from typing import Any, Generic, TypeVar
+from typing import Any, TypeVar
 
 import click
 from click.decorators import group, pass_obj
 
-from clu.base import BaseActor
 from clu.command import Command
 
 from . import actor
+
 
 __all__ = ["CluCommand", "CluGroup", "command_parser", "ClickParser", "timeout"]
 

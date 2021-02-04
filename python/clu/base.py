@@ -26,6 +26,7 @@ from clu.command import Command
 from .model import Model
 from .tools import REPLY
 
+
 __all__ = ["BaseClient", "BaseActor"]
 
 SchemaType = Union[Dict[str, Any], PathLike]

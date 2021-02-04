@@ -16,6 +16,7 @@ from typing import Any, Callable, Optional
 from .protocol import open_connection
 from .tools import CallbackMixIn
 
+
 __all__ = ["Device"]
 
 
