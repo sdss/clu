@@ -4,6 +4,7 @@
 Changelog
 =========
 
+* :release:`0.6.0 <2021-02-04>`
 * :feature:`50` Add type hints to all codebase.
 
 * :release:`0.5.8 <2021-01-27>`
