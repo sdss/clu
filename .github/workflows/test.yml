@@ -71,7 +71,7 @@ jobs:
       - name: Run type checking
         run: |
           npm install -g pyright
-          poetry run pyright
+          pyright
 
       - name: Test with pytest
         run: |
