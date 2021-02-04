@@ -1,3 +1,3 @@
 {
-  "exclude": ["python/clu/legacy/types/**"]
+  "ignore": ["python/clu/legacy/types/**", "tests/**"]
 }
