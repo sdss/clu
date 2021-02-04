@@ -24,7 +24,7 @@ from clu.legacy.actor import LegacyActor
 
 
 if sys.version_info.major == 3 and sys.version_info.minor >= 8:
-    CoroutineMock = unittest.mock.AsyncMock  # type: ignore
+    CoroutineMock = unittest.mock.AsyncMock
 else:
     try:
         from asynctest import CoroutineMock

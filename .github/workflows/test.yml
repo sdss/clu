@@ -70,6 +70,7 @@ jobs:
           poetry run isort -c python/
 
       - name: Run type checking
+        if: ${{ matrix.python-version != '3.7' }}
         run: |
           npm install -g pyright
           poetry run pyright
