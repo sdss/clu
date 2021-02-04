@@ -58,17 +58,15 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip wheel setuptools
-          poetry install --no-dev
+          poetry install
 
       - name: Lint with flake8
         run: |
-          poetry run pip install flake8
           # stop the build if there are Python syntax errors or undefined names
           poetry run flake8 . --count --show-source --statistics
 
       - name: Lint with isort
         run: |
-          poetry run pip install isort
           poetry run isort -c python/
 
       - name: Run type checking
@@ -78,8 +76,6 @@ jobs:
 
       - name: Test with pytest
         run: |
-          poetry run pip install pytest pytest-cov pytest-asyncio pytest-mock pytest-rabbitmq asynctest
-          poetry run pip install coverage[toml]
           poetry run pytest
         env:
           PYTEST_ADDOPTS: '--rabbitmq-ctl=/usr/lib/rabbitmq/bin/rabbitmqctl --rabbitmq-server=/usr/lib/rabbitmq/bin/rabbitmq-server'
