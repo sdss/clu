@@ -6,6 +6,8 @@
 # @Filename: testing.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
+from __future__ import annotations
+
 import asyncio
 import json
 import re
@@ -13,8 +15,12 @@ import sys
 import types
 import unittest.mock
 
+from typing import Any, TypeVar
+
 import clu
+from clu.actor import JSONActor
 from clu.command import Command
+from clu.legacy.actor import LegacyActor
 
 
 if sys.version_info.major == 3 and sys.version_info.minor >= 8:
@@ -23,10 +29,18 @@ else:
     try:
         from asynctest import CoroutineMock
     except ImportError:
-        raise ImportError('clu.testing requires asynctest if Python < 3.8.')
+        raise ImportError("clu.testing requires asynctest if Python < 3.8.")
 
 
-__all__ = ['MockReply', 'MockReplyList', 'setup_test_actor']
+__all__ = ["MockReply", "MockReplyList", "setup_test_actor"]
+
+
+class MockedActor(JSONActor, LegacyActor):
+    invoke_mock_command: Any
+    mock_replies: list[MockReply]
+
+
+T = TypeVar("T", bound=MockedActor)
 
 
 class MockReply(dict):
@@ -36,18 +50,23 @@ class MockReply(dict):
 
     Parameters
     ----------
-    user_id : int
+    user_id
         The user ID of the client to which the reply was sent.
-    command_id : int
+    command_id
         The command ID of the command that produced this reply.
-    flag : str
+    flag
         The message type flag.
-    data : dict
+    data
         The payload of the message.
-
     """
 
-    def __init__(self, command_id, user_id, flag, data={}):
+    def __init__(
+        self,
+        command_id: int,
+        user_id: int,
+        flag: str,
+        data: dict[str, Any] = {},
+    ):
 
         self.command_id = command_id
         self.user_id = user_id
@@ -56,14 +75,18 @@ class MockReply(dict):
         dict.__init__(self, data)
 
     def __repr__(self):
-        return (f'<MockReply ({self.user_id} {self.command_id} '
-                f'{self.flag} {super().__repr__()})>')
+        return (
+            f"<MockReply ({self.user_id} {self.command_id} "
+            f"{self.flag} {super().__repr__()})>"
+        )
 
 
 class MockReplyList(list):
     """Stores replies as `.MockReply` objects."""
 
-    LEGACY_REPLY_PATTERN = re.compile(r'([0-9]+)\s+([0-9]+)\s+((?:[a-z]|\:|\>|\!))\s+(.*)')
+    LEGACY_REPLY_PATTERN = re.compile(
+        r"([0-9]+)\s+([0-9]+)\s+((?:[a-z]|\:|\>|\!))\s+(.*)"
+    )
 
     def __init__(self, actor):
 
@@ -71,7 +94,7 @@ class MockReplyList(list):
 
         list.__init__(self)
 
-    def parse_reply(self, reply):
+    def parse_reply(self, reply: bytes | str):
         """Parses a reply and construct a `.MockReply`, which is appended."""
 
         if isinstance(reply, bytes):
@@ -89,25 +112,25 @@ class MockReplyList(list):
             command_id = int(command_id)
 
             data = {}
-            for keyword_raw in keywords_raw.split(';'):
-                if keyword_raw.strip() == '':
+            for keyword_raw in keywords_raw.split(";"):
+                if keyword_raw.strip() == "":
                     continue
-                name, value = keyword_raw.split('=', maxsplit=1)
+                name, value = keyword_raw.split("=", maxsplit=1)
                 data[name] = value
 
         elif issubclass(self.actor.__class__, clu.JSONActor):
 
-            reply = json.loads(reply)
+            reply_dict: dict[str, Any] = json.loads(reply)
 
-            header = reply['header']
-            user_id = header.pop('commander_id', None)
-            command_id = header.pop('command_id', None)
-            flag = header.pop('message_code', 'd')
+            header = reply_dict["header"]
+            user_id = header.pop("commander_id", None)
+            command_id = header.pop("command_id", None)
+            flag = header.pop("message_code", "d")
 
-            data = reply['data']
+            data = reply_dict["data"]
 
         else:
-            raise RuntimeError('actor must be LegacyActor or JSONActor.')
+            raise RuntimeError("actor must be LegacyActor or JSONActor.")
 
         list.append(self, MockReply(user_id, command_id, flag, data))
 
@@ -119,7 +142,7 @@ class MockReplyList(list):
         return any([m in reply[kw] for reply in self for kw in reply.keys()])
 
 
-async def setup_test_actor(actor, user_id=1):
+async def setup_test_actor(actor: T, user_id: int = 1) -> T:
     """Setups an actor for testing, mocking the client transport.
 
     Takes an ``actor`` and modifies it in two ways:
@@ -133,18 +156,18 @@ async def setup_test_actor(actor, user_id=1):
       attribute.
 
     The actor is modified in place and returned.
-
     """
 
     if not issubclass(actor.__class__, (clu.LegacyActor, clu.JSONActor)):
-        raise RuntimeError('setup_test_actor is only usable with '
-                           'LegacyActor or JSONActor actors.')
+        raise RuntimeError(
+            "setup_test_actor is only usable with " "LegacyActor or JSONActor actors."
+        )
 
     def invoke_mock_command(self, command_str, command_id=0):
         if isinstance(command_str, str):
-            command_str = command_str.encode('utf-8')
-        full_command = f' {command_id} '.encode('utf-8') + command_str
-        return self.new_command(actor.transports['mock_user'], full_command)
+            command_str = command_str.encode("utf-8")
+        full_command = f" {command_id} ".encode("utf-8") + command_str
+        return self.new_command(actor.transports["mock_user"], full_command)
 
     actor.start = CoroutineMock(return_value=actor)
 
@@ -160,7 +183,7 @@ async def setup_test_actor(actor, user_id=1):
     mock_transport.user_id = user_id
     mock_transport.write.side_effect = actor.mock_replies.parse_reply
 
-    actor.transports['mock_user'] = mock_transport
+    actor.transports["mock_user"] = mock_transport
 
     actor = await actor.start()
 

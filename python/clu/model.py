@@ -6,17 +6,28 @@
 # @Filename: model.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
+from __future__ import annotations
+
 import json
 import pathlib
 import warnings
+from os import PathLike
+
+from typing import Any, Callable, Dict, Optional, TypeVar, Union, cast
 
 import jsonschema
+import jsonschema.exceptions
+
+import clu.base
 
 from .exceptions import CluError, CluWarning
 from .tools import CallbackMixIn, CaseInsensitiveDict
 
 
-__all__ = ['Property', 'BaseModel', 'Model', 'ModelSet']
+__all__ = ["Property", "BaseModel", "Model", "ModelSet"]
+
+
+SchemaType = Union[Dict[str, Any], PathLike, str]
 
 
 class Property(CallbackMixIn):
@@ -28,17 +39,22 @@ class Property(CallbackMixIn):
         The name of the property.
     value
         The value of the property.
-    model : BaseModel
+    model
         The parent model.
     callback
         The function or coroutine that will be called if the value of the key
         if updated. The callback is called with the instance of `Property`
         as the only argument. Note that the callback will be scheduled even
         if the value does not change.
-
     """
 
-    def __init__(self, name, value=None, model=None, callback=None):
+    def __init__(
+        self,
+        name: str,
+        value: Optional[Any] = None,
+        model: Optional[Any] = None,
+        callback: Optional[Callable[[Any], Any]] = None,
+    ):
 
         self.name = name
         self._value = value
@@ -48,45 +64,52 @@ class Property(CallbackMixIn):
         CallbackMixIn.__init__(self, [callback] if callback else [])
 
     def __repr__(self):
-        return f'<{self.__class__.__name__!s} ({self.name}): {self.value}>'
+        return f"<{self.__class__.__name__!s} ({self.name}): {self.value}>"
 
     def __str__(self):
         return str(self.value)
 
     @property
-    def value(self):
+    def value(self) -> Any:
         """The value associated to the key."""
 
         return self._value
 
     @value.setter
-    def value(self, new_value):
+    def value(self, new_value: Any):
         """Sets the value of the key and schedules the callback."""
 
         self._value = new_value
         self.notify(self)
 
-    def flatten(self):
+    def flatten(self) -> dict[str, Any]:
         """Returns a dictionary with the name and value of the property."""
 
         return {self.name: self.value}
 
 
-class BaseModel(CaseInsensitiveDict, CallbackMixIn):
+T = TypeVar("T", bound=Property)
+
+
+class BaseModel(CaseInsensitiveDict[T], CallbackMixIn):
     """A JSON-compliant model.
 
     Parameters
     ----------
-    name : str
+    name
         The name of the model.
     callback
         A function or coroutine to call when the datamodel changes. The
         function is called with the instance of `.BaseModel` and the key that
         changed.
-
     """
 
-    def __init__(self, name, callback=None, log=None):
+    def __init__(
+        self,
+        name: str,
+        callback: Optional[Callable[[Any], Any]] = None,
+        **kwargs,
+    ):
 
         self.name = name
 
@@ -94,28 +117,27 @@ class BaseModel(CaseInsensitiveDict, CallbackMixIn):
         CallbackMixIn.__init__(self, [callback] if callback else [])
 
     def __repr__(self):
-        return f'<Model ({self.name})>'
+        return f"<Model ({self.name})>"
 
     def __str__(self):
         return str(self.flatten())
 
-    def flatten(self):
+    def flatten(self) -> dict[str, Any]:
         """Returns a dictionary of values.
 
         Return a dictionary in which the `Property` instances are replaced
         with their values.
-
         """
 
         return {key: prop.value for key, prop in self.items()}
 
-    def jsonify(self):
+    def jsonify(self) -> str:
         """Returns a JSON string with the model."""
 
         return json.dumps(self.flatten())
 
 
-class Model(BaseModel):
+class Model(BaseModel[Property]):
     """A model with JSON validation.
 
     In addition to the parameters in `.BaseModel`, the following parameters
@@ -123,48 +145,51 @@ class Model(BaseModel):
 
     Parameters
     ----------
-    schema : dict
+    schema
         A valid JSON schema, to be used for validation.
-    is_file : bool
+    is_file
         Whether the input schema is a filepath or a dictionary.
-
     """
 
     VALIDATOR = jsonschema.Draft7Validator
 
-    def __init__(self, name, schema, is_file=False, **kwargs):
+    def __init__(self, name: str, schema: SchemaType, is_file: bool = False, **kwargs):
 
         if is_file:
-            schema = open(pathlib.Path(schema).expanduser(), 'r').read()
+            schema = cast(PathLike, schema)
+            schema = open(pathlib.Path(schema).expanduser(), "r").read()
 
         if isinstance(schema, str):
             try:
                 schema = json.loads(schema)
             except json.JSONDecodeError:
-                raise ValueError('cannot parse input schema.')
+                raise ValueError("cannot parse input schema.")
 
-        self.schema = schema
+        self.schema = cast("dict[str, Any]", schema)
 
         if not self.check_schema(self.schema):
-            raise ValueError(f'schema {name!r} is invalid.')
+            raise ValueError(f"schema {name!r} is invalid.")
 
         self.validator = self.VALIDATOR(self.schema)
 
-        if ('type' not in self.schema or self.schema['type'] != 'object' or
-                'properties' not in self.schema):
-            raise ValueError('Schema must be of type object.')
+        if (
+            "type" not in self.schema
+            or self.schema["type"] != "object"
+            or "properties" not in self.schema
+        ):
+            raise ValueError("Schema must be of type object.")
 
         # All models must have these keys.
-        props = self.schema['properties']
-        for default_prop in ['text', 'schema', 'version']:
+        props = self.schema["properties"]
+        for default_prop in ["text", "schema", "version"]:
             if default_prop not in props:
-                props[default_prop] = {'type': 'string'}
-        for prop in ['help', 'error']:
+                props[default_prop] = {"type": "string"}
+        for prop in ["help", "error"]:
             if prop not in props:
                 props[prop] = {
-                    'oneOf': [
-                        {'type': 'array', 'items': {'type': 'string'}},
-                        {'type': 'string'}
+                    "oneOf": [
+                        {"type": "array", "items": {"type": "string"}},
+                        {"type": "string"},
                     ]
                 }
 
@@ -174,20 +199,19 @@ class Model(BaseModel):
             self[name] = Property(name, model=self)
 
     @staticmethod
-    def check_schema(schema):
+    def check_schema(schema: dict[str, Any]) -> bool:
         """Checks whether a JSON schema is valid.
 
         Parameters
         ----------
-        schema : dict
+        schema
             The schema to check as a dictionary.
 
         Returns
         -------
-        result : `bool`
+        result
             Returns `True` if the schema is a valid JSON schema, `False`
             otherwise.
-
         """
 
         try:
@@ -196,7 +220,7 @@ class Model(BaseModel):
         except jsonschema.SchemaError:
             return False
 
-    def update_model(self, instance):
+    def update_model(self, instance: dict[str, Any]):
         """Validates a new instance and updates the model."""
 
         try:
@@ -224,13 +248,13 @@ class ModelSet(dict):
 
     Parameters
     ----------
-    client : .BaseClient
+    client
         A client with a connection to the actors to monitor.
-    actors : list
+    actors
         A list of actor models whose schemas will be loaded.
-    get_schema_command : str
+    get_schema_command
         The command to send to the actor to get it to return its own schema.
-    raise_exception : bool
+    raise_exception
         Whether to raise an exception if any of the models cannot be loaded.
     kwargs
         Keyword arguments to be passed to `Model`.
@@ -244,8 +268,14 @@ class ModelSet(dict):
 
     """
 
-    def __init__(self, client, actors=None, get_schema_command='get_schema',
-                 raise_exception=True, **kwargs):
+    def __init__(
+        self,
+        client: clu.base.BaseClient,
+        actors: list[str] = [],
+        get_schema_command: str = "get_schema",
+        raise_exception: bool = True,
+        **kwargs,
+    ):
 
         dict.__init__(self, {})
 
@@ -256,7 +286,7 @@ class ModelSet(dict):
         self.__get_schema = get_schema_command
         self.__kwargs = kwargs
 
-    async def load_schemas(self, actors=None):
+    async def load_schemas(self, actors: Optional[list[str]] = None):
         """Loads the actor schames."""
 
         actors = actors or self.actors or []
@@ -270,21 +300,20 @@ class ModelSet(dict):
                 await cmd
 
                 if cmd.status.did_fail:
-                    raise CluError(f'Failed getting schema for {actor}.')
+                    raise CluError(f"Failed getting schema for {actor}.")
                 else:
                     for reply in cmd.replies:
-                        if 'schema' in reply.body:
-                            schema = json.loads(reply.body['schema'])
+                        if "schema" in reply.body:
+                            schema = json.loads(reply.body["schema"])
                             break
                     if schema is None:
-                        raise CluError(f'{actor} did not reply with a model.')
+                        raise CluError(f"{actor} did not reply with a model.")
 
                 self[actor] = Model(actor, schema, **self.__kwargs)
 
             except Exception as err:
 
                 if not self.__raise_exception:
-                    warnings.warn(f'Cannot load model {actor!r}. {err}',
-                                  CluWarning)
+                    warnings.warn(f"Cannot load model {actor!r}. {err}", CluWarning)
                     continue
                 raise

@@ -14,7 +14,7 @@ from clu.model import Model
 def test_model_fails():
 
     with pytest.raises(ValueError):
-        Model('test_model', '{1}')
+        Model("test_model", "{1}")
 
 
 def test_schema_validation_fails():
@@ -47,30 +47,30 @@ def test_schema_validation_fails():
 """
 
     with pytest.raises(ValueError) as err:
-        Model('test_model', INVALID_SCHEMA)
+        Model("test_model", INVALID_SCHEMA)
 
-    assert str(err.value) == 'schema \'test_model\' is invalid.'
+    assert str(err.value) == "schema 'test_model' is invalid."
 
 
 def test_schema_no_type():
 
     with pytest.raises(ValueError) as err:
-        Model('test_model', '{}')
+        Model("test_model", "{}")
 
-    assert str(err.value) == 'Schema must be of type object.'
+    assert str(err.value) == "Schema must be of type object."
 
 
 def test_schema_bad_type():
 
     with pytest.raises(ValueError) as err:
-        Model('test_model', '{"type": "array"}')
+        Model("test_model", '{"type": "array"}')
 
-    assert str(err.value) == 'Schema must be of type object.'
+    assert str(err.value) == "Schema must be of type object."
 
 
 def test_schema_no_properties():
 
     with pytest.raises(ValueError) as err:
-        Model('test_model', '{"type": "object"}')
+        Model("test_model", '{"type": "object"}')
 
-    assert str(err.value) == 'Schema must be of type object.'
+    assert str(err.value) == "Schema must be of type object."

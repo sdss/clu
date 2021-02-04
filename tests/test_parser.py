@@ -23,8 +23,8 @@ pytestmark = [pytest.mark.asyncio]
 
 # Use context_settings={"ignore_unknown_options": False} just to hit another
 # branch in the parser, it should not change anything in this case.
-@command_parser.command(context_settings={'ignore_unknown_options': False})
-@click.option('--finish', is_flag=True)
+@command_parser.command(context_settings={"ignore_unknown_options": False})
+@click.option("--finish", is_flag=True)
 async def command_exit(command, object, finish):
     if finish:
         command.finish()
@@ -38,21 +38,21 @@ async def command_abort(command, object):
 
 @command_parser.command()
 async def bad_command(command, object):
-    raise ValueError('This is an exception in the command.')
+    raise ValueError("This is an exception in the command.")
 
 
 @command_parser.group()
 @pass_args()
 def mygroup(command, object):
-    command.replies.append({'object': object})
+    command.replies.append({"object": object})
 
 
 @mygroup.command()
-@click.argument('NEGNUMBER', type=int)
-@click.option('-r', '--recursive', is_flag=True)
+@click.argument("NEGNUMBER", type=int)
+@click.option("-r", "--recursive", is_flag=True)
 async def neg_number_command(command, object, negnumber, recursive):
     # Add the values to command.replies so that the test can easily get them.
-    command.replies.append({'value': negnumber, 'recursive': recursive})
+    command.replies.append({"value": negnumber, "recursive": recursive})
     command.finish()
 
 
@@ -60,11 +60,11 @@ async def neg_number_command(command, object, negnumber, recursive):
 async def click_parser(json_actor):
 
     parser = ClickParser()
-    parser.parser_args = ['my_object']
+    parser.parser_args = ["my_object"]
 
     # Hack some needed parameters because we are not using ClickParser
     # as a mixin.
-    parser.name = 'my-parser'
+    parser.name = "my-parser"
     parser.log = json_actor.log
 
     json_actor = await setup_test_actor(json_actor)
@@ -76,7 +76,7 @@ async def click_parser(json_actor):
 
 async def test_help(json_actor, click_parser):
 
-    cmd = Command(command_string='ping --help', actor=json_actor)
+    cmd = Command(command_string="ping --help", actor=json_actor)
     click_parser.parse_command(cmd)
     await cmd
 
@@ -85,7 +85,7 @@ async def test_help(json_actor, click_parser):
 
 async def test_help_not_found(json_actor, click_parser):
 
-    cmd = Command(command_string='png --help', actor=json_actor)
+    cmd = Command(command_string="png --help", actor=json_actor)
     click_parser.parse_command(cmd)
     await cmd
 
@@ -94,17 +94,17 @@ async def test_help_not_found(json_actor, click_parser):
 
 async def test_exit(json_actor, click_parser):
 
-    cmd = Command(command_string='command-exit', actor=json_actor)
+    cmd = Command(command_string="command-exit", actor=json_actor)
     click_parser.parse_command(cmd)
     await cmd
 
     assert cmd.status.did_fail
-    assert 'Command \'command-exit\' failed' in json_actor.mock_replies[-1]['text']
+    assert "Command 'command-exit' was aborted" in json_actor.mock_replies[-1]["text"]
 
 
 async def test_exit_finish(json_actor, click_parser):
 
-    cmd = Command(command_string='command-exit --finish', actor=json_actor)
+    cmd = Command(command_string="command-exit --finish", actor=json_actor)
     click_parser.parse_command(cmd)
     await cmd
 
@@ -112,27 +112,26 @@ async def test_exit_finish(json_actor, click_parser):
     await asyncio.sleep(0.1)
 
     assert cmd.status.is_done
-    assert 'Command \'command-exit --finish\' failed' in json_actor.mock_replies[-1]['text']
 
 
 async def test_abort(json_actor, click_parser):
 
-    cmd = Command(command_string='command-abort', actor=json_actor)
+    cmd = Command(command_string="command-abort", actor=json_actor)
     click_parser.parse_command(cmd)
     await cmd
 
     assert cmd.status.did_fail
-    assert 'Command \'command-abort\' was aborted' in json_actor.mock_replies[-1]['text']
+    assert "Command 'command-abort' was aborted" in json_actor.mock_replies[-1]["text"]
 
 
 async def test_uncaught_exception(json_actor, click_parser, caplog):
 
-    cmd = Command(command_string='bad-command', actor=json_actor)
+    cmd = Command(command_string="bad-command", actor=json_actor)
     click_parser.parse_command(cmd)
     await cmd
 
     assert cmd.status.did_fail
-    assert 'uncaught error' in json_actor.mock_replies[-1]['text']
+    assert "uncaught error" in json_actor.mock_replies[-1]["text"]
 
     last_log = caplog.record_tuples[-1]
     assert last_log[1] == logging.ERROR
@@ -143,18 +142,23 @@ async def test_uncaught_exception(json_actor, click_parser, caplog):
     assert os.path.exists(log_filename)
 
     log_data = open(log_filename).read()
-    assert 'This is an exception in the command.' in log_data
+    assert "This is an exception in the command." in log_data
 
 
-@pytest.mark.parametrize('command_string', ['neg-number-command -15',
-                                            'neg-number-command -r -15',
-                                            'neg-number-command --recursive -15',
-                                            'neg-number-command -15 -r',
-                                            'neg-number-command -15 --recursive',
-                                            'neg-number-command -r 15'])
+@pytest.mark.parametrize(
+    "command_string",
+    [
+        "neg-number-command -15",
+        "neg-number-command -r -15",
+        "neg-number-command --recursive -15",
+        "neg-number-command -15 -r",
+        "neg-number-command -15 --recursive",
+        "neg-number-command -r 15",
+    ],
+)
 async def test_command_neg_number(json_actor, click_parser, command_string):
 
-    cmd = Command(command_string='mygroup ' + command_string, actor=json_actor)
+    cmd = Command(command_string="mygroup " + command_string, actor=json_actor)
     click_parser.parse_command(cmd)
     await cmd
 
@@ -162,14 +166,14 @@ async def test_command_neg_number(json_actor, click_parser, command_string):
 
     # This is a different test. We are testing that mygroup got called
     # with the parser_obj "object" and its value was passed.
-    assert cmd.replies[-2]['object'] == 'my_object'
+    assert cmd.replies[-2]["object"] == "my_object"
 
-    if '-15' in command_string:
-        assert cmd.replies[-1]['value'] == -15
+    if "-15" in command_string:
+        assert cmd.replies[-1]["value"] == -15
     else:
-        assert cmd.replies[-1]['value'] == 15
+        assert cmd.replies[-1]["value"] == 15
 
-    if '-r' in command_string or '--recursive' in command_string:
-        assert cmd.replies[-1]['recursive'] is True
+    if "-r" in command_string or "--recursive" in command_string:
+        assert cmd.replies[-1]["recursive"] is True
     else:
-        assert cmd.replies[-1]['recursive'] is False
+        assert cmd.replies[-1]["recursive"] is False

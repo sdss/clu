@@ -6,8 +6,9 @@
 # @Filename: tools.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
+from __future__ import annotations
+
 import asyncio
-import collections
 import contextlib
 import enum
 import functools
@@ -15,38 +16,49 @@ import json
 import logging
 import re
 
+from typing import Any, Awaitable, Callable, Dict, Generic, Optional, Type, TypeVar
+
+
+__all__ = [
+    "CommandStatus",
+    "StatusMixIn",
+    "format_value",
+    "CallbackMixIn",
+    "CaseInsensitiveDict",
+    "cli_coro",
+    "as_complete_failer",
+    "log_reply",
+    "ActorHandler",
+]
 
 REPLY = 5  # REPLY logging level
-WARNING_REGEX = r'^.*?\s*?(\w*?Warning): (.*)'
-
-
-__ALL__ = ['CommandStatus', 'StatusMixIn', 'format_value', 'CallbackMixIn',
-           'CaseInsensitiveDict', 'cli_coro', 'value', 'as_complete_failer',
-           'log_reply', 'ActorHandler']
+WARNING_REGEX = r"^.*?\s*?(\w*?Warning): (.*)"
 
 
 class Maskbit(enum.Flag):
     """A maskbit enumeration. Intended for subclassing."""
 
     @property
-    def active_bits(self):
+    def active_bits(self) -> list[Maskbit]:
         """Returns a list of non-combination flags that match the value."""
 
-        return [bit for bit in self.__class__
-                if ((bit.value & self.value) and
-                    bin(bit.value).count('1') == 1)]
+        return [
+            bit
+            for bit in self.__class__  # type: ignore
+            if ((bit.value & self.value) and bin(bit.value).count("1") == 1)
+        ]
 
 
-COMMAND_STATUS_TO_CODE = {
-    'DONE': ':',
-    'CANCELLED': 'f',
-    'FAILED': 'f',
-    'TIMEDOUT': 'f',
-    'READY': 'i',
-    'RUNNING': '>',
-    'CANCELLING': 'w',
-    'FAILING': 'w',
-    'DEBUG': 'd',
+COMMAND_STATUS_TO_CODE: dict[str, str] = {
+    "DONE": ":",
+    "CANCELLED": "f",
+    "FAILED": "f",
+    "TIMEDOUT": "f",
+    "READY": "i",
+    "RUNNING": ">",
+    "CANCELLING": "w",
+    "FAILING": "w",
+    "DEBUG": "d",
 }
 
 
@@ -76,45 +88,45 @@ class CommandStatus(Maskbit):
             self.code = None
 
     @property
-    def is_combination(self):
+    def is_combination(self) -> bool:
         """Returns True if a flag is a combination."""
 
-        if bin(self.value).count('1') > 1:
+        if bin(self.value).count("1") > 1:
             return True
         return False
 
     @property
-    def did_fail(self):
+    def did_fail(self) -> bool:
         """Command failed or was cancelled."""
 
         return self in self.FAILED_STATES
 
     @property
-    def did_succeed(self):
+    def did_succeed(self) -> bool:
         """Command finished with DONE status."""
 
         return self == self.DONE
 
     @property
-    def is_active(self):
+    def is_active(self) -> bool:
         """Command is running, cancelling or failing."""
 
         return self in self.ACTIVE_STATES
 
     @property
-    def is_done(self):
+    def is_done(self) -> bool:
         """Command is done (whether successfully or not)."""
 
         return self in self.DONE_STATES
 
     @property
-    def is_failing(self):
+    def is_failing(self) -> bool:
         """Command is being cancelled or is failing."""
 
         return self in self.FAILING_STATES
 
     @staticmethod
-    def code_to_status(code, default=None):
+    def code_to_status(code, default: Optional[CommandStatus] = None) -> CommandStatus:
         """Returns the status associated with a code.
 
         If the code doesn't have an associated status, returns ``default``.
@@ -122,16 +134,21 @@ class CommandStatus(Maskbit):
 
         """
 
-        statuses = {':': CommandStatus.DONE,
-                    'f': CommandStatus.FAILED,
-                    'e': CommandStatus.FAILED,
-                    '!': CommandStatus.FAILED,
-                    '>': CommandStatus.RUNNING}
+        statuses = {
+            ":": CommandStatus.DONE,
+            "f": CommandStatus.FAILED,
+            "e": CommandStatus.FAILED,
+            "!": CommandStatus.FAILED,
+            ">": CommandStatus.RUNNING,
+        }
 
         return statuses.get(code, default or CommandStatus.RUNNING)
 
 
-class StatusMixIn(object):
+MaskbitType = TypeVar("MaskbitType", bound=Maskbit)
+
+
+class StatusMixIn(Generic[MaskbitType]):
     """A mixin that provides status tracking with callbacks.
 
     Provides a status property that executes a list of callbacks when
@@ -139,30 +156,34 @@ class StatusMixIn(object):
 
     Parameters
     ----------
-    maskbit_flags : class
+    maskbit_flags
         A class containing the available statuses as a series of maskbit
         flags. Usually as subclass of `enum.Flag`.
-    initial_status : str
+    initial_status
         The initial status.
-    callback_func : function
+    callback_func
         The function to call if the status changes.
-    call_now : bool
+    call_now
         Whether the callback function should be called when initialising.
 
     Attributes
     ----------
-    callbacks : list
+    callbacks
         A list of the callback functions to call.
-
     """
 
-    def __init__(self, maskbit_flags, initial_status=None,
-                 callback_func=None, call_now=False):
+    def __init__(
+        self,
+        maskbit_flags: Type[MaskbitType],
+        initial_status: Optional[MaskbitType] = None,
+        callback_func: Optional[Callable[[MaskbitType], Any]] = None,
+        call_now: bool = False,
+    ):
 
         self.flags = maskbit_flags
-        self.callbacks = []
-        self._status = initial_status
-        self.watcher = None
+        self.callbacks: list[Callable[[MaskbitType], Any]] = []
+        self._status: MaskbitType | None = initial_status
+        self.watcher: Optional[asyncio.Event] = None
 
         if callback_func is not None:
             if isinstance(callback_func, (list, tuple)):
@@ -176,9 +197,9 @@ class StatusMixIn(object):
     def do_callbacks(self):
         """Calls functions in ``callbacks``."""
 
-        assert hasattr(self, 'callbacks'), 'missing callbacks attribute.'
+        assert hasattr(self, "callbacks"), "missing callbacks attribute."
 
-        loop = self.loop if hasattr(self, 'loop') else asyncio.get_event_loop()
+        loop = asyncio.get_event_loop()
 
         for func in self.callbacks:
             loop.call_soon(func)
@@ -194,7 +215,7 @@ class StatusMixIn(object):
         """Sets the status."""
 
         if value != self._status:
-            self._status = self.flags(value)
+            self._status = value
             self.do_callbacks()
             if self.watcher is not None:
                 self.watcher.set()
@@ -220,12 +241,15 @@ class CallbackMixIn(object):
 
     Parameters
     ----------
-    callbacks : list
+    callbacks
         A list of functions or coroutines to be called.
-
     """
 
-    def __init__(self, callbacks=[], loop=None):
+    def __init__(
+        self,
+        callbacks: list[Callable[[Any], Any]] = [],
+        loop: Optional[asyncio.AbstractEventLoop] = None,
+    ):
 
         self._callbacks = []
         for cb in callbacks:
@@ -248,17 +272,18 @@ class CallbackMixIn(object):
 
         self._running = []
 
-    def register_callback(self, callback_func):
+    def register_callback(self, callback_func: Callable[[Any], Any]):
         """Adds a callback function or coroutine function."""
 
-        assert callable(callback_func), 'callback_func must be a callable.'
+        assert callable(callback_func), "callback_func must be a callable."
         self._callbacks.append(callback_func)
 
-    def remove_callback(self, callback_func):
+    def remove_callback(self, callback_func: Callable[[Any], Any]):
         """Removes a callback function."""
 
-        assert callback_func in self._callbacks, \
-            'callback_func is not in the list of callbacks.'
+        assert (
+            callback_func in self._callbacks
+        ), "callback_func is not in the list of callbacks."
         self._callbacks.remove(callback_func)
 
     def notify(self, *args):
@@ -282,7 +307,7 @@ class CallbackMixIn(object):
                 task = self.loop.call_soon(cb, *args)
 
 
-def format_value(value):
+def format_value(value: Any) -> str:
     """Formats messages in a way that is compatible with the parser.
 
     Parameters
@@ -292,41 +317,46 @@ def format_value(value):
 
     Returns
     -------
-    formatted_text : `str`
+    formatted_text
         A string with the escaped text.
 
     """
 
     if isinstance(value, str):
-        if ' ' in value and not (value.startswith('\'') or value.startswith('"')):
+        if " " in value and not (value.startswith("'") or value.startswith('"')):
             value = escape(value)
     elif isinstance(value, bool):
-        value = 'T' if value else 'F'
+        value = "T" if value else "F"
     elif isinstance(value, (tuple, list)):
-        value = ','.join([format_value(item) for item in value])
+        value = ",".join([format_value(item) for item in value])
     else:
         value = str(value)
 
     return value
 
 
-def escape(value):
+def escape(value: Any):
     """Escapes a text using `json.dumps`."""
 
     return json.dumps(value)
 
 
-class CaseInsensitiveDict(collections.OrderedDict):
+T = TypeVar("T")
+
+
+class CaseInsensitiveDict(Dict[str, T]):
     """A dictionary that performs case-insensitive operations."""
 
-    def __init__(self, values):
+    def __init__(self, values: Any):
 
         self._lc = []
 
-        collections.OrderedDict.__init__(self, values)
+        dict.__init__(self, values)
 
         self._lc = [key.lower() for key in values]
-        assert len(set(self._lc)) == len(self._lc), 'the are duplicated items in the dict.'
+        assert len(set(self._lc)) == len(
+            self._lc
+        ), "the are duplicated items in the dict."
 
     def __get_key__(self, key):
         """Returns the correct value of the key, regardless of its case."""
@@ -339,21 +369,21 @@ class CaseInsensitiveDict(collections.OrderedDict):
         return list(self)[idx]
 
     def __getitem__(self, key):
-        return collections.OrderedDict.__getitem__(self, self.__get_key__(key))
+        return dict.__getitem__(self, self.__get_key__(key))
 
     def __setitem__(self, key, value):
 
         if key.lower() not in self._lc:
             self._lc.append(key.lower())
-            collections.OrderedDict.__setitem__(self, key, value)
+            dict.__setitem__(self, key, value)
         else:
-            collections.OrderedDict.__setitem__(self, self.__get_key__(key), value)
+            dict.__setitem__(self, self.__get_key__(key), value)
 
     def __contains__(self, key):
-        return collections.OrderedDict.__contains__(self, self.__get_key__(key))
+        return dict.__contains__(self, self.__get_key__(key))
 
     def __eq__(self, key):
-        return collections.OrderedDict.__eq__(self, self.__get_key__(key))
+        return dict.__eq__(self, self.__get_key__(key))
 
 
 def cli_coro(f):
@@ -368,34 +398,37 @@ def cli_coro(f):
     return functools.update_wrapper(wrapper, f)
 
 
-async def as_complete_failer(aws, on_fail_callback=None, **kwargs):
+async def as_complete_failer(
+    aws: list[Awaitable],
+    on_fail_callback: Optional[Callable] = None,
+    **kwargs,
+) -> tuple[bool, str | None]:
     """Similar to `~asyncio.as_complete` but cancels all the tasks
     if any of them returns `False`.
 
     Parameters
     ----------
-    aws : list
+    aws
         A list of awaitable objects. If not a list, it will be wrapped in one.
     on_fail_callback
         A function or coroutine to call if any of the tasks failed.
-    kwargs : dict
+    kwargs
         A dictionary of keywords to be passed to `~asyncio.as_complete`.
 
     Returns
     -------
-    result_tuple : tuple
+    result_tuple
         A tuple in which the first element is `True` if all the tasks
         completed, `False` if any of them failed and the rest were cancelled.
         If `False`, the second element is `None` if no exceptions were caught
         during the execution of the tasks, otherwise it contains the error
         message. If `True`, the second element is always `None`.
-
     """
 
     if not isinstance(aws, (list, tuple)):
         aws = [aws]
 
-    loop = kwargs.get('loop', asyncio.get_event_loop())
+    loop = kwargs.get("loop", asyncio.get_event_loop())
 
     tasks = [loop.create_task(aw) for aw in aws]
 
@@ -431,15 +464,22 @@ async def as_complete_failer(aws, on_fail_callback=None, **kwargs):
     return (True, None)
 
 
-def log_reply(log, message_code, message, use_message_code=False):
+def log_reply(
+    log: logging.Logger,
+    message_code: str,
+    message: str,
+    use_message_code: bool = False,
+):
     """Logs an actor message with the correct code."""
 
-    code_dict = {'f': logging.ERROR,
-                 'e': logging.ERROR,
-                 'w': logging.WARNING,
-                 'i': logging.INFO,
-                 ':': logging.INFO,
-                 'd': logging.DEBUG}
+    code_dict = {
+        "f": logging.ERROR,
+        "e": logging.ERROR,
+        "w": logging.WARNING,
+        "i": logging.INFO,
+        ":": logging.INFO,
+        "d": logging.DEBUG,
+    }
 
     if use_message_code:
         log.log(code_dict[message_code], message)
@@ -454,6 +494,9 @@ def log_reply(log, message_code, message, use_message_code=False):
         log.log(log_level, message)
 
 
+_ActorClass = TypeVar("_ActorClass")
+
+
 class ActorHandler(logging.Handler):
     """A handler that outputs log messages as actor keywords.
 
@@ -461,31 +504,38 @@ class ActorHandler(logging.Handler):
     ----------
     actor
         The actor instance.
-    level : int
+    level
         The level above which records will be output in the actor.
-    keyword : str
+    keyword
         The keyword around which the messages will be output.
-    code_mapping : dict
+    code_mapping
         A mapping of logging levels to actor codes. The values provided
         override the default mapping. For example, to make input log messages
         with info level be output as debug,
         ``code_mapping={logging.INFO: 'd'}``.
-    filter_warnings : list
+    filter_warnings
         A list of warning classes that will be issued to the actor. Subclasses
         of the filter warning are accepted, any other warnings will be ignored.
-
     """
 
-    def __init__(self, actor, level=logging.ERROR, keyword='text',
-                 code_mapping=None, filter_warnings=None):
+    def __init__(
+        self,
+        actor,
+        level: int = logging.ERROR,
+        keyword: str = "text",
+        code_mapping: Optional[dict[int, str]] = None,
+        filter_warnings: Optional[list[Type[Warning]]] = None,
+    ):
 
         self.actor = actor
         self.keyword = keyword
 
-        self.code_mapping = {logging.DEBUG: 'd',
-                             logging.INFO: 'i',
-                             logging.WARNING: 'w',
-                             logging.ERROR: 'f'}
+        self.code_mapping = {
+            logging.DEBUG: "d",
+            logging.INFO: "i",
+            logging.WARNING: "w",
+            logging.ERROR: "f",
+        }
 
         if code_mapping:
             self.code_mapping.update(code_mapping)
@@ -494,14 +544,14 @@ class ActorHandler(logging.Handler):
 
         super().__init__(level=level)
 
-    def emit(self, record):
+    def emit(self, record: logging.LogRecord):
         """Emits the record."""
 
         message = record.getMessage()
         message_lines = message.splitlines()
 
         if record.exc_info:
-            message_lines.append(f'{record.exc_info[0].__name__}: {record.exc_info[1]}')
+            message_lines.append(f"{record.exc_info[0].__name__}: {record.exc_info[1]}")
 
         if record.levelno <= logging.DEBUG:
             code = self.code_mapping[logging.DEBUG]
@@ -515,7 +565,7 @@ class ActorHandler(logging.Handler):
         elif record.levelno >= logging.ERROR:
             code = self.code_mapping[logging.ERROR]
         else:
-            code = 'w'
+            code = "w"
 
         for line in message_lines:
             result = self.actor.write(code, message={self.keyword: line})
@@ -526,7 +576,7 @@ class ActorHandler(logging.Handler):
     def _filter_warning(self, warning_category_groups):
 
         warning_category, warning_text = warning_category_groups.groups()
-        message_lines = [f'{warning_text} ({warning_category})']
+        message_lines = [f"{warning_text} ({warning_category})"]
 
         try:
             if self.filter_warnings:

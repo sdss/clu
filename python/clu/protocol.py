@@ -6,7 +6,11 @@
 # @Filename: command.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
+from __future__ import annotations
+
 import asyncio
+
+from typing import Any, Callable, Optional, TypeVar
 
 import aio_pika as apika
 import aiormq
@@ -14,10 +18,19 @@ import aiormq
 from .exceptions import CluError
 
 
-__all__ = ['TCPProtocol', 'PeriodicTCPServer',
-           'TCPStreamServer', 'TCPStreamPeriodicServer',
-           'TCPStreamClient', 'open_connection',
-           'TopicListener']
+__all__ = [
+    "TCPProtocol",
+    "PeriodicTCPServer",
+    "TCPStreamServer",
+    "TCPStreamPeriodicServer",
+    "TCPStreamClient",
+    "open_connection",
+    "TopicListener",
+]
+
+T = TypeVar("T")
+ConnectionCallbackType = Callable[[Any], Any]
+DataReceivedCallbackType = Callable[[Any, bytes], Any]
 
 
 class TCPProtocol(asyncio.Protocol):
@@ -35,14 +48,18 @@ class TCPProtocol(asyncio.Protocol):
         Callback to call when a new client connects.
     data_received_callback
         Callback to call when a new data is received.
-    max_connections : int
+    max_connections
         How many clients the server accepts. If `None`, unlimited connections
         are allowed.
-
     """
 
-    def __init__(self, loop=None, connection_callback=None,
-                 data_received_callback=None, max_connections=None):
+    def __init__(
+        self,
+        loop: asyncio.AbstractEventLoop = None,
+        connection_callback: Optional[ConnectionCallbackType] = None,
+        data_received_callback: Optional[Callable[[str], Any]] = None,
+        max_connections: Optional[int] = None,
+    ):
 
         self.connection_callback = connection_callback
         self.data_received_callback = data_received_callback
@@ -53,10 +70,10 @@ class TCPProtocol(asyncio.Protocol):
         self.loop = loop or asyncio.get_event_loop()
 
     @classmethod
-    async def create_server(cls, host, port, **kwargs):
+    async def create_server(cls, host: str, port: int, **kwargs):
         """Returns a `~asyncio.Server` connection."""
 
-        loop = kwargs.get('loop', asyncio.get_event_loop())
+        loop = kwargs.get("loop", asyncio.get_event_loop())
 
         new_tcp = cls(**kwargs)
 
@@ -67,32 +84,34 @@ class TCPProtocol(asyncio.Protocol):
         return server
 
     @classmethod
-    async def create_client(cls, host, port, **kwargs):
+    async def create_client(cls, host: str, port: int, **kwargs):
         """Returns a `~asyncio.Transport` and `~asyncio.Protocol`."""
 
-        if 'connection_callback' in kwargs:
-            raise KeyError('connection_callback not allowed when creating a client.')
+        if "connection_callback" in kwargs:
+            raise KeyError("connection_callback not allowed when creating a client.")
 
-        loop = kwargs.get('loop', asyncio.get_event_loop())
+        loop = kwargs.get("loop", asyncio.get_event_loop())
 
         new_tcp = cls.__new__(cls, **kwargs)
         transport, protocol = await loop.create_connection(lambda: new_tcp, host, port)
 
         return transport, protocol
 
-    def connection_made(self, transport):
+    def connection_made(self, transport: asyncio.Transport):
         """Receives a connection and calls the connection callback."""
 
-        if self.max_connections is None or (len(self.transports) < self.max_connections):
+        if self.max_connections is None or (
+            len(self.transports) < self.max_connections
+        ):
             self.transports.append(transport)
         else:
-            transport.write('Maximum number of connections reached.')
+            transport.write("Maximum number of connections reached.")
             transport.close()
 
         if self.connection_callback:
             self.connection_callback(transport)
 
-    def data_received(self, data):
+    def data_received(self, data: bytes):
         """Decodes the received data."""
 
         if self.data_received_callback:
@@ -111,14 +130,19 @@ class PeriodicTCPServer(TCPProtocol):
     ----------
     period_callback
         Callback to run every iteration.
-    sleep_time : float
+    sleep_time
         The delay between two calls to ``periodic_callback``.
-    kwargs : dict
+    kwargs
         Parameters to pass to `TCPProtocol`
 
     """
 
-    def __init__(self, periodic_callback=None, sleep_time=1, **kwargs):
+    def __init__(
+        self,
+        periodic_callback: Optional[ConnectionCallbackType] = None,
+        sleep_time: float = 1,
+        **kwargs,
+    ):
 
         self._periodic_callback = periodic_callback
         self.sleep_time = sleep_time
@@ -130,13 +154,15 @@ class PeriodicTCPServer(TCPProtocol):
     @classmethod
     async def create_client(cls, *args, **kwargs):
 
-        raise NotImplementedError('create_client is not implemented for PeriodicTCPServer.')
+        raise NotImplementedError(
+            "create_client is not implemented for PeriodicTCPServer."
+        )
 
     @classmethod
-    async def create_server(cls, host, port, *args, **kwargs):
+    async def create_server(cls, host: str, port: int, *args, **kwargs):
         """Returns a `~asyncio.Server` connection."""
 
-        loop = kwargs.get('loop', asyncio.get_event_loop())
+        loop = kwargs.get("loop", asyncio.get_event_loop())
 
         new_tcp = cls(*args, **kwargs)
 
@@ -149,13 +175,13 @@ class PeriodicTCPServer(TCPProtocol):
         return server
 
     @property
-    def periodic_callback(self):
+    def periodic_callback(self) -> ConnectionCallbackType | None:
         """Returns the periodic callback."""
 
         return self._periodic_callback
 
     @periodic_callback.setter
-    def periodic_callback(self, func):
+    def periodic_callback(self, func: Callable[[asyncio.Transport], Any]):
         """Sets the periodic callback."""
 
         self._periodic_callback = func
@@ -183,9 +209,9 @@ class TCPStreamServer(object):
 
     Parameters
     ----------
-    host : str
+    host
         The server host.
-    port : int
+    port
         The server port.
     connection_callback
         Callback to call when a new client connects or disconnects.
@@ -193,14 +219,20 @@ class TCPStreamServer(object):
         Callback to call when a new data is received.
     loop
         The event loop. The current event loop is used by default.
-    max_connections : int
+    max_connections
         How many clients the server accepts. If `None`, unlimited connections
         are allowed.
-
     """
 
-    def __init__(self, host, port, connection_callback=None,
-                 data_received_callback=None, loop=None, max_connections=None):
+    def __init__(
+        self,
+        host: str,
+        port: int,
+        connection_callback: Optional[ConnectionCallbackType] = None,
+        data_received_callback: Optional[DataReceivedCallbackType] = None,
+        loop: Optional[asyncio.AbstractEventLoop] = None,
+        max_connections: Optional[int] = None,
+    ):
 
         self.host = host
         self.port = port
@@ -216,11 +248,14 @@ class TCPStreamServer(object):
         # The `asyncio.Server`. Created when `.start_server` is run.
         self._server = None
 
-    async def start(self):
+    async def start(self) -> asyncio.AbstractServer:
         """Starts the server and returns a `~asyncio.Server` connection."""
 
-        self._server = await asyncio.start_server(self.connection_made,
-                                                  self.host, self.port)
+        self._server = await asyncio.start_server(
+            self.connection_made,
+            self.host,
+            self.port,
+        )
 
         return self._server
 
@@ -234,7 +269,7 @@ class TCPStreamServer(object):
 
         return self._server.serve_forever()
 
-    def is_serving(self):
+    def is_serving(self) -> bool:
         return self._server.is_serving()
 
     async def _do_callback(self, cb, *args, **kwargs):
@@ -245,16 +280,19 @@ class TCPStreamServer(object):
         else:
             return cb(*args, **kwargs)
 
-    async def connection_made(self, reader, writer):
+    async def connection_made(
+        self,
+        reader: asyncio.StreamReader,
+        writer: asyncio.StreamWriter,
+    ):
         """Called when a new client connects to the server.
 
         Stores the writer protocol in ``transports``, calls the connection
         callback, if any, and starts a loop to read any incoming data.
-
         """
 
         if self.max_connections and len(self.transports) == self.max_connections:
-            writer.write('Max number of connections reached.\n'.encode())
+            writer.write("Max number of connections reached.\n".encode())
             return
 
         self.transports[writer.transport] = writer
@@ -274,14 +312,15 @@ class TCPStreamServer(object):
                 break
 
             if self.data_received_callback:
-                await self._do_callback(self.data_received_callback,
-                                        writer.transport, data)
+                await self._do_callback(
+                    self.data_received_callback, writer.transport, data
+                )
 
 
 class TCPStreamClient:
     """An object containing a writer and reader stream to a TCP server."""
 
-    def __init__(self, host, port):
+    def __init__(self, host: str, port: int):
 
         self.host = host
         self.port = port
@@ -292,8 +331,7 @@ class TCPStreamClient:
     async def open_connection(self):
         """Creates the connection."""
 
-        self.reader, self.writer = await asyncio.open_connection(self.host,
-                                                                 self.port)
+        self.reader, self.writer = await asyncio.open_connection(self.host, self.port)
 
     def close(self):
         """Closes the stream."""
@@ -301,11 +339,10 @@ class TCPStreamClient:
         if self.writer:
             self.writer.close()
         else:
-            raise RuntimeError('connection cannot be closed '
-                               'because it is not open.')
+            raise RuntimeError("connection cannot be closed " "because it is not open.")
 
 
-async def open_connection(host, port):
+async def open_connection(host: str, port: int) -> TCPStreamClient:
     """Returns a TCP stream connection with a writer and reader.
 
     This function is equivalent to doing ::
@@ -329,7 +366,6 @@ async def open_connection(host, port):
     -------
     client : `.TCPStreamClient`
         A container for the stream reader and writer.
-
     """
 
     client = TCPStreamClient(host, port)
@@ -343,22 +379,28 @@ class TCPStreamPeriodicServer(TCPStreamServer):
 
     Parameters
     ----------
-    host : str
+    host
         The server host.
-    port : int
+    port
         The server port.
     period_callback
         Callback to run every iteration. It is called for each transport
         that is connected to the server and receives the transport object.
-    sleep_time : float
+    sleep_time
         The delay between two calls to ``periodic_callback``.
-    kwargs : dict
+    kwargs
         Parameters to pass to `TCPStreamServer`
 
     """
 
-    def __init__(self, host, port, periodic_callback=None,
-                 sleep_time=1, **kwargs):
+    def __init__(
+        self,
+        host: str,
+        port: int,
+        periodic_callback: Optional[Callable[[asyncio.Transport], Any]] = None,
+        sleep_time: float = 1,
+        **kwargs,
+    ):
 
         self._periodic_callback = periodic_callback
         self.sleep_time = sleep_time
@@ -367,7 +409,7 @@ class TCPStreamPeriodicServer(TCPStreamServer):
 
         super().__init__(host, port, **kwargs)
 
-    async def start(self):
+    async def start(self) -> asyncio.AbstractServer:
         """Starts the server and returns a `~asyncio.Server` connection."""
 
         self._server = await super().start()
@@ -388,7 +430,7 @@ class TCPStreamPeriodicServer(TCPStreamServer):
         return self._periodic_callback
 
     @periodic_callback.setter
-    def periodic_callback(self, func):
+    def periodic_callback(self, func: Callable[[asyncio.Transport], Any]):
         """Sets the periodic callback."""
 
         self._periodic_callback = func
@@ -409,27 +451,33 @@ class TopicListener(object):
 
     Parameters
     ----------
-    url : str
+    url
         RFC3986 formatted broker address. When used, the other keyword
         arguments are ignored.
-    user : str
+    user
         The user to connect to the RabbitMQ broker.
-    password : str
+    password
         The password for the user.
-    host : str
+    host
         The host where the RabbitMQ message broker runs.
-    virtualhost : str
+    virtualhost
          Virtualhost parameter. ``'/'`` by default.
-    port : int
+    port
         The port on which the RabbitMQ message broker is running.
-    ssl : bool
+    ssl
         Whether to use TLS/SSL connection.
-
     """
 
-    def __init__(self, url=None, user='guest', password='guest',
-                 host='localhost', virtualhost='/', port=5672,
-                 ssl=False):
+    def __init__(
+        self,
+        url: str = None,
+        user: str = "guest",
+        password: str = "guest",
+        host: str = "localhost",
+        virtualhost: str = "/",
+        port: int = 5672,
+        ssl: bool = False,
+    ):
 
         self.url = url
         self.user = user
@@ -439,77 +487,90 @@ class TopicListener(object):
         self.virtualhost = virtualhost
         self.ssl = ssl
 
-        self.connection = None
-        self.channel = None
-        self.exchange = None
-        self.queues = []
+        self.connection: apika.RobustConnection
+        self.channel: apika.Channel
+        self.exchange: apika.Exchange
+        self.queues: list[apika.Queue] = []
 
-    async def connect(self, exchange_name, exchange_type=apika.ExchangeType.TOPIC):
+        self._consumer_tag: dict[apika.Queue, apika.queue.ConsumerTag] = {}
+
+    async def connect(
+        self,
+        exchange_name: str,
+        exchange_type: apika.ExchangeType = apika.ExchangeType.TOPIC,
+    ) -> TopicListener:
         """Initialise the connection.
 
         Parameters
         ----------
-        exchange_name : str
+        exchange_name
             The name of the exchange to create.
-        exchange_type : str
+        exchange_type
             The type of exchange to create.
-
         """
 
         if self.url:
             self.connection = await apika.connect_robust(self.url)
         else:
-            self.connection = await apika.connect_robust(login=self.user,
-                                                         host=self.host,
-                                                         port=self.port,
-                                                         password=self.password,
-                                                         virtualhost=self.virtualhost,
-                                                         ssl=self.ssl)
+            self.connection = await apika.connect_robust(
+                login=self.user,
+                host=self.host,
+                port=self.port,
+                password=self.password,
+                virtualhost=self.virtualhost,
+                ssl=self.ssl,
+            )
 
         self.channel = await self.connection.channel()
         await self.channel.set_qos(prefetch_count=1)
 
-        self.exchange = await self.channel.declare_exchange(exchange_name,
-                                                            type=exchange_type,
-                                                            auto_delete=True)
+        self.exchange = await self.channel.declare_exchange(
+            exchange_name, type=exchange_type, auto_delete=True
+        )
 
         return self
 
-    async def add_queue(self, queue_name, callback=None, bindings='*'):
+    async def add_queue(
+        self,
+        queue_name: str,
+        callback: Optional[Callable[[apika.IncomingMessage], Any]] = None,
+        bindings: str | list[str] = "*",
+    ) -> apika.Queue:
         """Adds a queue with bindings.
 
         Parameters
         ----------
-        queue_name : str
+        queue_name
             The name of the queue to create.
         callback
             A callable that will be called when a new message is received in
             the queue. Can be a coroutine.
-        bindings : list or str
+        bindings
             The list of bindings for the queue. Can be a list of string or a
             single string in which the bindings are comma-separated.
-
         """
 
         if isinstance(bindings, str):
-            bindings = bindings.split(',')
+            bindings = bindings.split(",")
         elif isinstance(bindings, (list, tuple)):
             bindings = list(bindings)
         else:
-            raise TypeError(f'invalid type for bindings {bindings!r}.')
+            raise TypeError(f"invalid type for bindings {bindings!r}.")
 
         try:
             queue = await self.channel.declare_queue(queue_name, exclusive=True)
         except aiormq.exceptions.ChannelLockedResource:
-            raise CluError(f'cannot create queue {queue_name}. '
-                           'This may indicate that another instance of the '
-                           'same actor is running.')
+            raise CluError(
+                f"cannot create queue {queue_name}. "
+                "This may indicate that another instance of the "
+                "same actor is running."
+            )
 
         for binding in bindings:
             await queue.bind(self.exchange, routing_key=binding)
 
         if callback:
-            queue.consumer_tag = await queue.consume(callback)
+            self._consumer_tag[queue] = await queue.consume(callback)
 
         self.queues.append(queue)
 
@@ -519,8 +580,8 @@ class TopicListener(object):
         """Cancels queues and closes the connection."""
 
         for queue in self.queues:
-
-            if hasattr(queue, 'consumer_tag') and queue.consumer_tag is not None:
-                await queue.cancel(queue.consumer_tag)
+            consumer_tag = self._consumer_tag.get(queue, None)
+            if hasattr(queue, "consumer_tag") and consumer_tag is not None:
+                await queue.cancel(consumer_tag)
 
         await self.connection.close()

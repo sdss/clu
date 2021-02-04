@@ -12,14 +12,16 @@ History:
 2015-11-03 ROwen    Replace "!= None" with "is not None" to modernize the code.
 """
 
+# type: ignore
+
 import math
 import time
 
 
-__all__ = ['PVT']
+__all__ = ["PVT"]
 
 
-MJDJ2000 = 51544.5      # Modified Julian Date at epoch J2000.0 noon (days)
+MJDJ2000 = 51544.5  # Modified Julian Date at epoch J2000.0 noon (days)
 SecPerDay = 24.0 * 3600.0  # seconds per day
 _UTCMinusTAIDays = -35 / float(SecPerDay)  # a reasonable value correct as of 2012-12
 _TimeError = 0.0  # time reported by your computer's clock - actual time (seconds)
@@ -38,8 +40,7 @@ def getCurrPySec(uncorrTime=None):
 
 
 def utcFromPySec(pySec=None):
-    """Returns the UTC (MJD) corresponding to the supplied python time, or now if none.
-    """
+    """Returns the UTC (MJD) corresponding to the supplied python time, or now if none."""
     global _TimeTupleJ2000
 
     if pySec is None:
@@ -76,7 +77,7 @@ def asFloatOrNone(val):
     # check for NaN first in case ieee floating point is in use
     # (in which case float(val) would return something instead of failing)
 
-    if hasattr(val, 'lower') and val.lower() in ('nan', '?'):
+    if hasattr(val, "lower") and val.lower() in ("nan", "?"):
         return None
     else:
         return float(val)
@@ -103,7 +104,7 @@ class PVT(object):
         self.set(pos, vel, t)
 
     def __repr__(self):
-        return 'PVT(%s, %s, %s)' % (str(self.pos), str(self.vel), str(self.t))
+        return "PVT(%s, %s, %s)" % (str(self.pos), str(self.vel), str(self.t))
 
     @property
     def native(self):
@@ -130,8 +131,7 @@ class PVT(object):
         return self.pos + (self.vel * (t - self.t))
 
     def hasVel(self):
-        """Return True if velocity is known and nonzero.
-        """
+        """Return True if velocity is known and nonzero."""
         return self.vel not in (0, None)
 
     def isValid(self):
@@ -139,10 +139,15 @@ class PVT(object):
 
         A pvt is valid if all values are known (not None and finite) and time > 0.
         """
-        return ((self.pos is not None) and math.isfinite(self.pos) and
-                (self.vel is not None) and math.isfinite(self.vel) and
-                (self.t is not None) and math.isfinite(self.t) and
-                (self.t > 0))
+        return (
+            (self.pos is not None)
+            and math.isfinite(self.pos)
+            and (self.vel is not None)
+            and math.isfinite(self.vel)
+            and (self.t is not None)
+            and math.isfinite(self.t)
+            and (self.t > 0)
+        )
 
     def set(self, pos=None, vel=None, t=None):
         """Sets pos, vel and t; all default to their current values
@@ -161,18 +166,24 @@ class PVT(object):
             self.t = asFloatOrNone(t)
 
 
-if __name__ == '__main__':
-    print('\nrunning PVT test')
+if __name__ == "__main__":
+    print("\nrunning PVT test")
 
     currTAI = taiFromPySec() * SecPerDay
 
-    varList = (PVT(), PVT(25), PVT(25, 0, currTAI), PVT(25, 1), PVT(25, 1, currTAI),
-               PVT('NaN', 'NaN', 'NaN'))
+    varList = (
+        PVT(),
+        PVT(25),
+        PVT(25, 0, currTAI),
+        PVT(25, 1),
+        PVT(25, 1, currTAI),
+        PVT("NaN", "NaN", "NaN"),
+    )
 
     for i in range(5):
         t = taiFromPySec() * SecPerDay
-        print('\ntime =', t)
+        print("\ntime =", t)
         for var in varList:
-            print(var, 'pos =', var.getPos(t))
+            print(var, "pos =", var.getPos(t))
         if i < 4:
             time.sleep(1)

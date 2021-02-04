@@ -16,4 +16,4 @@ def test_clu_not_implemented():
     with pytest.raises(CluNotImplemented) as err:
         raise CluNotImplemented()
 
-    assert str(err.value) == 'This feature is not implemented yet.'
+    assert str(err.value) == "This feature is not implemented yet."

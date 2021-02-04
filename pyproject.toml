@@ -58,19 +58,24 @@ ipdb = "^0.13.3"
 pytest-rabbitmq = "^2.0.1"
 autopep8 = "^1.5.4"
 rstcheck = "^3.3.1"
+black = {version = "^20.8b1", allow-prereleases = true}
 
 [tool.poetry.extras]
 docs = ["Sphinx"]
 
+[tool.black]
+line-length = 88
+target-version = ['py38']
+fast = true
+exclude = 'docs/sphinx/examples/.+\.py'
+
 [tool.isort]
-line_length = 79
-sections = ["FUTURE", "STDLIB", "THIRDPARTY", "SDSS", "FIRSTPARTY", "LOCALFOLDER"]
+profile = "black"
+sections = ["FUTURE", "STDLIB", "TYPING", "THIRDPARTY", "SDSS", "FIRSTPARTY", "LOCALFOLDER"]
 default_section = "THIRDPARTY"
-known_first_party = ["clu"]
+known_first_party = "archon"
+known_typing = ["typing"]
 known_sdss = ["sdsstools"]
-multi_line_output = 0
-balanced_wrapping = true
-include_trailing_comma = false
 lines_after_imports = 2
 skip_glob = [
     "setup.py",

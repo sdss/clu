@@ -6,20 +6,30 @@
 # @Filename: base.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
+from __future__ import annotations
+
 import abc
 import asyncio
 import inspect
 import logging
 import pathlib
 import time
+from os import PathLike
+
+from typing import Any, Dict, Optional, Union, cast
 
 from sdsstools import get_logger, read_yaml_file
+from sdsstools.logger import SDSSLogger
+
+from clu.command import Command
 
 from .model import Model
 from .tools import REPLY
 
 
-__all__ = ['BaseClient', 'BaseActor']
+__all__ = ["BaseClient", "BaseActor"]
+
+SchemaType = Union[Dict[str, Any], PathLike]
 
 
 class BaseClient(metaclass=abc.ABCMeta):
@@ -36,46 +46,50 @@ class BaseClient(metaclass=abc.ABCMeta):
 
     Parameters
     ----------
-    name : str
+    name
         The name of the actor.
-    version : str
+    version
         The version of the actor.
     loop
         The event loop. If `None`, the current event loop will be used.
-    log_dir : str
+    log_dir
         The directory where to store the file logs.
-    log : ~logging.Logger
+    log
         A `~logging.Logger` instance to be used for logging instead of creating
         a new one.
-    verbose : bool or int
+    verbose
         Whether to log to stdout. Can be an integer logging level.
-
     """
 
-    name = None
+    name: str
 
-    def __init__(self, name, version=None, loop=None,
-                 log_dir=None, log=None, verbose=False):
+    def __init__(
+        self,
+        name: str,
+        version: Optional[str] = None,
+        loop: Optional[asyncio.AbstractEventLoop] = None,
+        log_dir: Optional[PathLike] = None,
+        log: Optional[logging.Logger] = None,
+        verbose: bool | int = False,
+    ):
 
         self.loop = loop or asyncio.get_event_loop()
 
         self.name = name
-        assert self.name, 'name cannot be empty.'
+        assert self.name, "name cannot be empty."
 
-        self.log = None
+        self.log: SDSSLogger
         self.setup_logger(log, log_dir, verbose=verbose)
 
-        self.version = version or '?'
+        self.version = version or "?"
 
         # Internally store the original configuration used to start the client.
-        self.config = None
+        self.config: Optional[dict[str, Any]] = None
 
     def __repr__(self):
-
-        return f'<{str(self)} (name={self.name!r})>'
+        return f"<{str(self)} (name={self.name!r})>"
 
     def __str__(self):
-
         return self.__class__.__name__
 
     @abc.abstractmethod
@@ -87,10 +101,13 @@ class BaseClient(metaclass=abc.ABCMeta):
     async def stop(self):
         """Shuts down all the remaining tasks."""
 
-        self.log.info('cancelling all pending tasks and shutting down.')
+        self.log.info("cancelling all pending tasks and shutting down.")
 
-        tasks = [task for task in asyncio.all_tasks(loop=self.loop)
-                 if task is not asyncio.current_task(loop=self.loop)]
+        tasks = [
+            task
+            for task in asyncio.all_tasks(loop=self.loop)
+            if task is not asyncio.current_task(loop=self.loop)
+        ]
         list(map(lambda task: task.cancel(), tasks))
 
         await asyncio.gather(*tasks, return_exceptions=True)
@@ -98,39 +115,38 @@ class BaseClient(metaclass=abc.ABCMeta):
         self.loop.stop()
 
     @staticmethod
-    def _parse_config(config):
+    def _parse_config(config: dict[str, Any] | PathLike) -> dict[str, Any]:
 
         if not isinstance(config, dict):
 
             config = pathlib.Path(config)
-            assert config.exists(), 'configuration path does not exist.'
+            assert config.exists(), "configuration path does not exist."
 
             config = read_yaml_file(str(config))
 
-        return config
+        return cast("dict[str, Any]", config)
 
     @classmethod
-    def from_config(cls, config, *args, **kwargs):
+    def from_config(cls, config: dict[str, Any], *args, **kwargs):
         """Parses a configuration file.
 
         Parameters
         ----------
-        config : dict or str
+        config
             A configuration dictionary or the path to a YAML configuration
             file. If the file contains a section called ``'actor'`` or
             ``'client'``, that section will be used instead of the whole
             file.
-
         """
 
         orig_config_dict = cls._parse_config(config)
 
         config_dict = orig_config_dict.copy()
 
-        if 'actor' in config_dict:
-            config_dict = config_dict['actor']
-        elif 'client' in config_dict:
-            config_dict = config_dict['client']
+        if "actor" in config_dict:
+            config_dict = config_dict["actor"]
+        elif "client" in config_dict:
+            config_dict = config_dict["client"]
 
         config_dict.update(kwargs)
 
@@ -145,11 +161,12 @@ class BaseClient(metaclass=abc.ABCMeta):
             # Check the kw arguments in the subclass and pass only
             # values from config_dict that match them.
             class_kwargs = args_inspect.args
-            class_kwargs.remove('self')
+            class_kwargs.remove("self")
 
             # Remove keys that are not in the signature.
-            config_dict = {key: value for key, value in config_dict.items()
-                           if key in class_kwargs}
+            config_dict = {
+                key: value for key, value in config_dict.items() if key in class_kwargs
+            }
 
         # We also pass *args in case the actor has been subclassed
         # and the subclass' __init__ accepts different arguments.
@@ -161,11 +178,16 @@ class BaseClient(metaclass=abc.ABCMeta):
 
         return new_client
 
-    def setup_logger(self, log, log_dir, verbose=False):
+    def setup_logger(
+        self,
+        log: Any,
+        log_dir: Optional[PathLike],
+        verbose: bool | int = False,
+    ):
         """Starts the file logger."""
 
         if not log:
-            log = get_logger('clu:' + self.name)
+            log = get_logger("clu:" + self.name)
 
         log.setLevel(REPLY)
 
@@ -173,7 +195,7 @@ class BaseClient(metaclass=abc.ABCMeta):
 
             log_dir = pathlib.Path(log_dir).expanduser()
 
-            log.start_file_logger(log_dir / f'{self.name}.log')
+            log.start_file_logger(log_dir / f"{self.name}.log")
 
             if log.fh:  # In case starting the file logger fails.
                 log.fh.formatter.converter = time.gmtime
@@ -186,18 +208,19 @@ class BaseClient(metaclass=abc.ABCMeta):
             log.sh.setLevel(logging.WARNING)
 
         self.log = log
-        self.log.debug(f'{self.name}: logging system initiated.')
+        self.log.debug(f"{self.name}: logging system initiated.")
 
         # Set the loop exception handler to be handled by the logger.
         self.loop.set_exception_handler(self.log.asyncio_exception_handler)
 
         return log
 
-    def send_command(self):  # pragma: no cover
+    def send_command(self, actor: str, *args, **kwargs):  # pragma: no cover
         """Sends a command to an actor and returns a `.Command` instance."""
 
-        raise NotImplementedError('Sending commands is not implemented '
-                                  'for this client.')
+        raise NotImplementedError(
+            "Sending commands is not implemented " "for this client."
+        )
 
 
 class BaseActor(BaseClient):
@@ -206,28 +229,25 @@ class BaseActor(BaseClient):
     This class expands `.BaseClient` with a parsing system for new commands
     and placeholders for methods for handling new commands and writing replies,
     which should be overridden by the specific actors.
-
     """
 
-    schema = None
+    model: Model | None = None
 
-    def __init__(self, *args, schema=None, **kwargs):
+    def __init__(self, *args, schema: SchemaType = None, **kwargs):
 
         super().__init__(*args, **kwargs)
 
         self.validate_schema(schema)
 
-    def validate_schema(self, schema):
+    def validate_schema(self, schema: SchemaType | None) -> Model | None:
         """Loads and validates the actor schema."""
-
-        schema = schema or self.schema
 
         if schema is None:
             return None
 
-        self.schema = Model(self.name, schema, is_file=True, log=self.log)
+        self.model = Model(self.name, schema, is_file=True, log=self.log)
 
-        return self.schema
+        return self.model
 
     @abc.abstractmethod
     def new_command(self):
@@ -235,13 +255,12 @@ class BaseActor(BaseClient):
 
         Must be overridden by the subclass and call `.parse_command`
         with a `.Command` object.
-
         """
 
         pass
 
     @abc.abstractmethod
-    def parse_command(self, command):
+    def parse_command(self, command: Command):
         """Parses and executes a `.Command`. Must be overridden."""
 
         pass
@@ -249,11 +268,12 @@ class BaseActor(BaseClient):
     def send_command(self):
         """Sends a command to another actor."""
 
-        raise NotImplementedError('Sending commands is not implemented '
-                                  'for this actor.')
+        raise NotImplementedError(
+            "Sending commands is not implemented " "for this actor."
+        )
 
     @abc.abstractmethod
-    def write(self):
+    def write(self, *args, **kwargs):
         """Writes a message to user(s). To be overridden by the subclasses."""
 
         pass

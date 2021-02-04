@@ -17,18 +17,17 @@ from clu import AMQPActor, AMQPClient, JSONActor
 from clu.protocol import open_connection
 
 
-DATA_DIR = pathlib.Path(os.path.dirname(__file__)) / 'data'
+DATA_DIR = pathlib.Path(os.path.dirname(__file__)) / "data"
 RMQ_PORT = 8888
 
 rabbitmq_proc = factories.rabbitmq_proc(port=RMQ_PORT)
-rabbitmq = factories.rabbitmq('rabbitmq_proc')
+rabbitmq = factories.rabbitmq("rabbitmq_proc")
 
 
 @pytest.fixture
 async def amqp_actor(rabbitmq, event_loop):
 
-    actor = AMQPActor(name='amqp_actor', port=RMQ_PORT,
-                      schema=DATA_DIR / 'schema.json')
+    actor = AMQPActor(name="amqp_actor", port=RMQ_PORT, schema=DATA_DIR / "schema.json")
 
     await actor.start()
 
@@ -40,8 +39,7 @@ async def amqp_actor(rabbitmq, event_loop):
 @pytest.fixture
 async def amqp_client(rabbitmq, amqp_actor, event_loop):
 
-    client = AMQPClient(name='amqp_client', port=RMQ_PORT,
-                        models=['amqp_actor'])
+    client = AMQPClient(name="amqp_client", port=RMQ_PORT, models=["amqp_actor"])
     await client.start()
 
     yield client
@@ -52,9 +50,13 @@ async def amqp_client(rabbitmq, amqp_actor, event_loop):
 @pytest.fixture
 async def json_actor(unused_tcp_port_factory, event_loop, tmpdir):
 
-    actor = JSONActor('json_actor', host='localhost',
-                      port=unused_tcp_port_factory(),
-                      log_dir=tmpdir, schema=DATA_DIR / 'schema.json')
+    actor = JSONActor(
+        "json_actor",
+        host="localhost",
+        port=unused_tcp_port_factory(),
+        log_dir=tmpdir,
+        schema=DATA_DIR / "schema.json",
+    )
 
     await actor.start()
     await asyncio.sleep(0.01)

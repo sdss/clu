@@ -6,9 +6,15 @@
 # @Filename: actor.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
+from __future__ import annotations
+
+import asyncio
 import json
 import re
 import uuid
+from os import PathLike
+
+from typing import Any, Dict, Optional, TypeVar, Union
 
 import aio_pika as apika
 import click
@@ -22,7 +28,16 @@ from .protocol import TCPStreamServer
 from .tools import log_reply
 
 
-__all__ = ['AMQPActor', 'JSONActor']
+__all__ = ["AMQPActor", "JSONActor"]
+
+
+T = TypeVar("T")
+SchemaType = Union[Dict[str, Any], PathLike]
+
+
+class CustomTransportType(asyncio.Transport):
+    user_id: str | int
+    multiline: bool
 
 
 class AMQPActor(AMQPClient, ClickParser, BaseActor):
@@ -39,16 +54,14 @@ class AMQPActor(AMQPClient, ClickParser, BaseActor):
 
     Parameters
     ----------
-    schema : str
+    schema
         The path to the datamodel schema for the actor, in JSON Schema format.
         If the schema is provided all replies will be validated against it.
         An invalid reply will fail and not be emitted. The schema can also be
         set when subclassing by setting the class ``schema`` attribute.
-
-
     """
 
-    def __init__(self, *args, schema=None, **kwargs):
+    def __init__(self, *args, schema: Optional[SchemaType] = None, **kwargs):
 
         AMQPClient.__init__(self, *args, **kwargs)
 
@@ -68,11 +81,15 @@ class AMQPActor(AMQPClient, ClickParser, BaseActor):
 
         # Binds the commands queue.
         self.commands_queue = await self.connection.add_queue(
-            f'{self.name}_commands', callback=self.new_command,
-            bindings=[f'command.{self.name}.#'])
+            f"{self.name}_commands",
+            callback=self.new_command,
+            bindings=[f"command.{self.name}.#"],
+        )
 
-        self.log.info(f'commands queue {self.commands_queue.name!r} '
-                      f'bound to {self.connection.connection.url!s}')
+        self.log.info(
+            f"commands queue {self.commands_queue.name!r} "
+            f"bound to {self.connection.connection.url!s}"
+        )
 
         self.timed_commands.start()
 
@@ -83,45 +100,61 @@ class AMQPActor(AMQPClient, ClickParser, BaseActor):
 
         async with message.process():
 
-            headers = message.info()['headers']
+            headers = message.info()["headers"]
             command_body = json.loads(message.body.decode())
 
-        commander_id = headers['commander_id'].decode()
-        command_id = headers['command_id'].decode()
-        command_string = command_body['command_string']
+        commander_id = headers["commander_id"].decode()
+        command_id = headers["command_id"].decode()
+        command_string = command_body["command_string"]
 
         try:
-            command = Command(command_string, command_id=command_id,
-                              commander_id=commander_id,
-                              consumer_id=self.name,
-                              actor=self, loop=self.loop)
+            command = Command(
+                command_string,
+                command_id=command_id,
+                commander_id=commander_id,
+                consumer_id=self.name,
+                actor=self,
+                loop=self.loop,
+            )
             command.actor = self  # Assign the actor
         except CommandError as ee:
-            await self.write('f', {'error': 'Could not parse the '
-                                            'following as a command: '
-                                            f'{command_string!r}. {ee!r}'})
+            await self.write(
+                "f",
+                {
+                    "error": "Could not parse the "
+                    "following as a command: "
+                    f"{command_string!r}. {ee!r}"
+                },
+            )
             return
 
         return self.parse_command(command)
 
-    async def write(self, message_code='i', message=None, command=None,
-                    broadcast=False, no_validate=False, **kwargs):
+    async def write(
+        self,
+        message_code: str = "i",
+        message: Optional[dict[str, Any]] = None,
+        command: Optional[Command] = None,
+        broadcast: bool = False,
+        no_validate: bool = False,
+        **kwargs,
+    ):
         """Writes a message to user(s).
 
         Parameters
         ----------
-        message_code : str
+        message_code
             The message code (e.g., ``'i'`` or ``':'``).
-        message : dict
+        message
             The keywords to be output. Must be a dictionary of pairs
             ``{keyword: value}``.
-        command : Command
+        command
             The command to which we are replying. If not set, it is assumed
             that this is a broadcast.
-        broadcast : bool
+        broadcast
             Whether to broadcast the message to all the users or only to the
             commander.
-        no_validate : bool
+        no_validate
             Do not validate the reply against the actor schema. This is
             ignored if the actor was not started with knowledge of its own
             schema.
@@ -132,20 +165,18 @@ class AMQPActor(AMQPClient, ClickParser, BaseActor):
 
         message = message or {}
 
-        assert isinstance(message, dict), 'message must be a dictionary'
+        assert isinstance(message, dict), "message must be a dictionary"
 
         message.update(kwargs)
 
-        if not no_validate and self.schema is not None:
-            result, err = self.schema.update_model(message)
+        if not no_validate and self.model is not None:
+            result, err = self.model.update_model(message)
             if result is False:
-                if message_code == ':':
-                    message_code = 'f'
+                if message_code == ":":
+                    message_code = "f"
                 else:
-                    message_code = 'e'
-                message = {
-                    'error': f'Failed validating the reply: {err}'.splitlines()
-                }
+                    message_code = "e"
+                message = {"error": f"Failed validating the reply: {err}".splitlines()}
 
         message_json = json.dumps(message)
 
@@ -155,24 +186,30 @@ class AMQPActor(AMQPClient, ClickParser, BaseActor):
         commander_id = command.commander_id if command else None
         command_id = command.command_id if command else None
 
-        headers = {'message_code': message_code,
-                   'commander_id': commander_id,
-                   'command_id': command_id,
-                   'sender': self.name}
+        headers = {
+            "message_code": message_code,
+            "commander_id": commander_id,
+            "command_id": command_id,
+            "sender": self.name,
+        }
 
         if broadcast:
-            routing_key = 'reply.broadcast'
+            routing_key = "reply.broadcast"
         else:
-            routing_key = f'reply.{command.commander_id}'
+            routing_key = f"reply.{command.commander_id}"
 
         await self.connection.exchange.publish(
-            apika.Message(message_json.encode(),
-                          content_type='text/json',
-                          headers=headers,
-                          correlation_id=command_id),
-            routing_key=routing_key)
+            apika.Message(
+                message_json.encode(),
+                content_type="text/json",
+                headers=headers,
+                correlation_id=command_id,
+            ),
+            routing_key=routing_key,
+        )
 
-        log_reply(self.log, message_code, message_json)
+        if self.log:
+            log_reply(self.log, message_code, message_json)
 
 
 class JSONActor(ClickParser, BaseActor):
@@ -190,45 +227,56 @@ class JSONActor(ClickParser, BaseActor):
 
     Parameters
     ----------
-    name : str
+    name
         The actor name.
-    host : str
+    host
         The host where the TCP server will run.
-    port : int
+    port
         The port of the TCP server.
     args,kwargs
         Arguments to be passed to `.BaseActor`.
 
     """
 
-    def __init__(self, name, host=None, port=None, *args, **kwargs):
+    def __init__(
+        self,
+        name: str,
+        host: Optional[str] = None,
+        port: Optional[int] = None,
+        *args,
+        **kwargs,
+    ):
 
         super().__init__(name, *args, **kwargs)
 
-        self.host = host or 'localhost'
+        self.host = host or "localhost"
         self.port = port
 
         if self.port is None:
-            raise ValueError('port needs to be specified.')
+            raise ValueError("port needs to be specified.")
 
         #: Mapping of commander_id to transport
         self.transports = dict()
 
         #: TCPStreamServer: The server to talk to this actor.
-        self.server = TCPStreamServer(host, port, loop=self.loop,
-                                      connection_callback=self.new_user,
-                                      data_received_callback=self.new_command)
+        self.server = TCPStreamServer(
+            self.host,
+            self.port,
+            loop=self.loop,
+            connection_callback=self.new_user,
+            data_received_callback=self.new_command,
+        )
 
         self.timed_commands = TimedCommandList(self)
 
         # Add the multiline command
         self.parser.add_command(multiline)
 
-    async def start(self):
+    async def start(self) -> JSONActor:
         """Starts the TCP server."""
 
         await self.server.start()
-        self.log.info(f'running TCP server on {self.host}:{self.port}')
+        self.log.info(f"running TCP server on {self.host}:{self.port}")
 
         self.timed_commands.start()
 
@@ -247,12 +295,12 @@ class JSONActor(ClickParser, BaseActor):
 
         await self.server.serve_forever()
 
-    def new_user(self, transport):
+    def new_user(self, transport: CustomTransportType):
         """Assigns userID to new client connection."""
 
         if transport.is_closing():
-            if hasattr(transport, 'user_id'):
-                self.log.debug(f'user {transport.user_id} disconnected.')
+            if hasattr(transport, "user_id"):
+                self.log.debug(f"user {transport.user_id} disconnected.")
                 return self.transports.pop(transport.user_id)
 
         user_id = str(uuid.uuid4())
@@ -260,25 +308,23 @@ class JSONActor(ClickParser, BaseActor):
         transport.multiline = False
         self.transports[user_id] = transport
 
-        sock = transport.get_extra_info('socket')
+        sock = transport.get_extra_info("socket")
         if sock is not None:
             peername = sock.getpeername()[0]
-            self.log.debug(f'user {user_id} connected from {peername}.')
+            self.log.debug(f"user {user_id} connected from {peername}.")
 
-        return
-
-    def new_command(self, transport, command_str):
+    def new_command(self, transport: CustomTransportType, command_str: bytes):
         """Handles a new command received by the actor."""
 
-        commander_id = getattr(transport, 'user_id', None)
-        message = command_str.decode().strip()
+        commander_id: Optional[int] = getattr(transport, "user_id", None)
+        message: str = command_str.decode().strip()
 
         if not message:
             return
 
-        command_id, command_string = re.match(r'([0-9]*)\s*(.+)', message).groups()
+        command_id, command_string = re.match(r"([0-9]*)\s*(.+)", message).groups()
 
-        if command_id == '':
+        if command_id == "":
             command_id = 0
         else:
             command_id = int(command_id)
@@ -288,14 +334,19 @@ class JSONActor(ClickParser, BaseActor):
         if not command_string:
             return
         try:
-            command = Command(command_string=command_string,
-                              commander_id=commander_id,
-                              command_id=command_id,
-                              consumer_id=self.name,
-                              actor=self, loop=self.loop,
-                              transport=transport)
+            command = Command(
+                command_string=command_string,
+                commander_id=commander_id,
+                command_id=command_id,
+                consumer_id=self.name,
+                actor=self,
+                loop=self.loop,
+                transport=transport,
+            )
         except CommandError as ee:
-            self.write('f', {'text': f'Could not parse the following as a command: {ee!r}'})
+            self.write(
+                "f", {"text": f"Could not parse the following as a command: {ee!r}"}
+            )
             return
 
         return self.parse_command(command)
@@ -303,10 +354,17 @@ class JSONActor(ClickParser, BaseActor):
     def send_command(self, *args, **kwargs):
         """Not implemented for `.JSONActor`."""
 
-        raise NotImplementedError('JSONActor cannot send commands to other actors.')
+        raise NotImplementedError("JSONActor cannot send commands to other actors.")
 
-    def write(self, message_code='i', message=None, command=None,
-              broadcast=False, no_validate=False, **kwargs):
+    def write(
+        self,
+        message_code: str = "i",
+        message: Optional[dict[str, Any]] = None,
+        command: Optional[Command] = None,
+        broadcast: bool = False,
+        no_validate: bool = False,
+        **kwargs,
+    ):
         """Writes a message to user(s) as a JSON.
 
         A ``header`` keyword with the ``commander_id`` (i.e., the user id of
@@ -364,33 +422,37 @@ class JSONActor(ClickParser, BaseActor):
 
         def send_to_transport(transport, message):
 
-            if getattr(transport, 'multiline', False):
-                message_json = json.dumps(message, sort_keys=False, indent=4) + '\n'
+            if getattr(transport, "multiline", False):
+                message_json = json.dumps(message, sort_keys=False, indent=4) + "\n"
             else:
-                message_json = json.dumps(message, sort_keys=False) + '\n'
+                message_json = json.dumps(message, sort_keys=False) + "\n"
             transport.write(message_json.encode())
 
         message = message or {}
-        assert isinstance(message, dict), 'message must be a dictionary'
+        assert isinstance(message, dict), "message must be a dictionary"
         message.update(kwargs)
 
-        if not no_validate and self.schema is not None:
-            result, err = self.schema.update_model(message)
+        if not no_validate and self.model is not None:
+            result, err = self.model.update_model(message)
             if result is False:
-                message = {'error': f'Failed validating the reply: {err}'}
+                message = {"error": f"Failed validating the reply: {err}"}
 
         commander_id = command.commander_id if command else None
         command_id = command.command_id if command else None
         transport = command.transport if command else None
 
         message_full = {}
-        header = {'header': {'command_id': command_id,
-                             'commander_id': commander_id,
-                             'message_code': message_code,
-                             'sender': self.name}}
+        header = {
+            "header": {
+                "command_id": command_id,
+                "commander_id": commander_id,
+                "message_code": message_code,
+                "sender": self.name,
+            }
+        }
 
         message_full.update(header)
-        message_full.update({'data': message})
+        message_full.update({"data": message})
 
         if broadcast or commander_id is None or transport is None:
             for transport in self.transports.values():
@@ -398,19 +460,21 @@ class JSONActor(ClickParser, BaseActor):
         else:
             send_to_transport(transport, message_full)
 
-        message_json = json.dumps(message_full, sort_keys=False) + '\n'
-        log_reply(self.log, message_code, message_json)
+        message_json = json.dumps(message_full, sort_keys=False) + "\n"
+
+        if self.log:
+            log_reply(self.log, message_code, message_json)
 
 
 @click.command(cls=CluCommand)
-@click.option('--on/--off', default=True, help='Turn multiline on/off.')
-async def multiline(command, on):
+@click.option("--on/--off", default=True, help="Turn multiline on/off.")
+async def multiline(command: Command, on: bool):
     """Set multiline mode for the transport."""
 
-    transport = getattr(command, 'transport', None)
+    transport: CustomTransportType = getattr(command, "transport", None)
     if not transport:
-        return command.fail('The command has no transport.')
+        return command.fail("The command has no transport.")
 
     transport.multiline = on
 
-    return command.finish('Multiline mode is {}'.format('on' if on else 'off'))
+    return command.finish("Multiline mode is {}".format("on" if on else "off"))

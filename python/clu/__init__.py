@@ -20,15 +20,21 @@ from .device import *
 from .exceptions import *
 from .legacy import LegacyActor
 from .parser import ClickParser, command_parser
-from .tools import (REPLY, ActorHandler, CommandStatus,
-                    as_complete_failer, escape, format_value)
-
+from .tools import (
+    REPLY,
+    ActorHandler,
+    CommandStatus,
+    as_complete_failer,
+    escape,
+    format_value,
+)
 
 # Add REPLY level to logging
-logging.addLevelName(REPLY, 'REPLY')
-logging.Logger.REPLY = lambda self, message, *args, **kws: \
-    self._log(REPLY, message, *args, **kws)
+logging.addLevelName(REPLY, "REPLY")
+logging.Logger.REPLY = lambda self, message, *args, **kws: self._log(  # type: ignore
+    REPLY, message, *args, **kws
+)
 
 
-NAME = 'sdss-clu'
-__version__ = get_package_version(__file__, 'sdss-clu', pep_440=True)
+NAME = "sdss-clu"
+__version__ = get_package_version(__file__, "sdss-clu", pep_440=True)
