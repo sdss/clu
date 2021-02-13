@@ -4,6 +4,8 @@
 Changelog
 =========
 
+* :bug:`-` If ``version=False`` the console logger level was being set to zero. Now it's set to ``WARNING`` unless ``verbose=True`` which sets it to ``DEBUG`` or if ``verbose=<int>`` in which case it sets it to that numerical value.
+
 * :release:`0.6.1 <2021-02-13>`
 * :feature:`-` Use log rollover.
 * :bug:`-` If ``verbose=True`` set console logger level to ``DEBUG``. This prevents replies being logged to the console.
