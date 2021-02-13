@@ -12,13 +12,14 @@ import asyncio
 import functools
 import inspect
 import json
-import logging
 import re
 
 from typing import Any, TypeVar
 
 import click
 from click.decorators import group, pass_obj
+
+from sdsstools.logger import SDSSLogger
 
 from clu.command import Command
 
@@ -325,7 +326,7 @@ class ClickParser:
     parser = command_parser
 
     # For type hints
-    log: logging.Logger
+    log: SDSSLogger
     name: str
 
     def parse_command(self, command: T) -> T:

@@ -68,6 +68,7 @@ class BaseClient(metaclass=abc.ABCMeta):
         version: Optional[str] = None,
         loop: Optional[asyncio.AbstractEventLoop] = None,
         log_dir: Optional[pathlib.Path | str] = None,
+        log: Optional[SDSSLogger] = None,
         verbose: bool | int = False,
     ):
 
@@ -186,6 +187,8 @@ class BaseClient(metaclass=abc.ABCMeta):
 
         if not log:
             log = get_logger("clu:" + self.name)
+        else:
+            assert isinstance(log, SDSSLogger), "Logger must be sdsstools.SDSSLogger"
 
         log.setLevel(REPLY)
 
