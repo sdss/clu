@@ -4,6 +4,10 @@
 Changelog
 =========
 
+* :feature:`-` Use log rollover.
+* :bug:`-` If ``verbose=True`` set console logger level to ``DEBUG``. This prevents replies being logged to the console.
+* :bug:`-` Remove newline when logging `.JSONActor` replies.
+
 * :release:`0.6.0 <2021-02-04>`
 * :feature:`50` Add type hints to all codebase.
 
