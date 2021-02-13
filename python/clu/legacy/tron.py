@@ -277,7 +277,7 @@ class TronConnection(BaseClient):
                     self.models[actor].parse_reply(reply)
                 except ParseError as ee:
                     self.log.warning(
-                        f"Failed parsing reply {reply!r} " f"with error: {ee!s}"
+                        f"Failed parsing reply {reply!r} with error: {ee!s}"
                     )
 
             mid = reply.header.commandId
