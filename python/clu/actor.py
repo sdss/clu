@@ -10,9 +10,9 @@ from __future__ import annotations
 
 import asyncio
 import json
+import pathlib
 import re
 import uuid
-from os import PathLike
 
 from typing import Any, Dict, Optional, TypeVar, Union
 
@@ -32,6 +32,7 @@ __all__ = ["AMQPActor", "JSONActor"]
 
 
 T = TypeVar("T")
+PathLike = Union[str, pathlib.Path]
 SchemaType = Union[Dict[str, Any], PathLike]
 
 
@@ -463,7 +464,7 @@ class JSONActor(ClickParser, BaseActor):
         message_json = json.dumps(message_full, sort_keys=False) + "\n"
 
         if self.log:
-            log_reply(self.log, message_code, message_json)
+            log_reply(self.log, message_code, message_json.strip())
 
 
 @click.command(cls=CluCommand)

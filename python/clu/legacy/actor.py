@@ -10,10 +10,10 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import pathlib
 import warnings
-from os import PathLike
 
-from typing import Any, Optional, TypeVar, cast
+from typing import Any, Optional, TypeVar, Union, cast
 
 import clu
 
@@ -30,6 +30,7 @@ __all__ = ["LegacyActor", "BaseLegacyActor"]
 
 
 T = TypeVar("T", bound="BaseLegacyActor")
+PathLike = Union[str, pathlib.Path]
 
 
 class BaseLegacyActor(BaseActor):

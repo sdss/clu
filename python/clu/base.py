@@ -14,7 +14,6 @@ import inspect
 import logging
 import pathlib
 import time
-from os import PathLike
 
 from typing import Any, Dict, Optional, Union, cast
 
@@ -29,7 +28,7 @@ from .tools import REPLY
 
 __all__ = ["BaseClient", "BaseActor"]
 
-SchemaType = Union[Dict[str, Any], PathLike]
+SchemaType = Union[Dict[str, Any], pathlib.Path, str]
 
 
 class BaseClient(metaclass=abc.ABCMeta):
@@ -68,8 +67,7 @@ class BaseClient(metaclass=abc.ABCMeta):
         name: str,
         version: Optional[str] = None,
         loop: Optional[asyncio.AbstractEventLoop] = None,
-        log_dir: Optional[PathLike] = None,
-        log: Optional[logging.Logger] = None,
+        log_dir: Optional[pathlib.Path | str] = None,
         verbose: bool | int = False,
     ):
 
@@ -115,14 +113,14 @@ class BaseClient(metaclass=abc.ABCMeta):
         self.loop.stop()
 
     @staticmethod
-    def _parse_config(config: dict[str, Any] | PathLike) -> dict[str, Any]:
+    def _parse_config(input: dict[str, Any] | pathlib.Path | str) -> dict[str, Any]:
 
-        if not isinstance(config, dict):
-
-            config = pathlib.Path(config)
-            assert config.exists(), "configuration path does not exist."
-
-            config = read_yaml_file(str(config))
+        if not isinstance(input, dict):
+            input = pathlib.Path(input)
+            assert input.exists(), "configuration path does not exist."
+            config = read_yaml_file(str(input))
+        else:
+            config = input
 
         return cast("dict[str, Any]", config)
 
@@ -181,7 +179,7 @@ class BaseClient(metaclass=abc.ABCMeta):
     def setup_logger(
         self,
         log: Any,
-        log_dir: Optional[PathLike],
+        log_dir: Optional[pathlib.Path | str],
         verbose: bool | int = False,
     ):
         """Starts the file logger."""

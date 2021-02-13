@@ -11,10 +11,10 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import pathlib
 import uuid
-from os import PathLike
 
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 import aio_pika as apika
 
@@ -26,6 +26,9 @@ from .tools import CommandStatus
 
 
 __all__ = ["AMQPClient", "AMQPReply"]
+
+
+PathLike = Union[str, pathlib.Path]
 
 
 class AMQPReply(object):
