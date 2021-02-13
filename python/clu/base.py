@@ -208,13 +208,11 @@ class BaseClient(metaclass=abc.ABCMeta):
                 log.fh.formatter.converter = time.gmtime
                 log.fh.setLevel(REPLY)
 
-        log.sh.setLevel(logging.INFO)
+        log.sh.setLevel(logging.WARNING)
         if verbose is True:
             log.sh.setLevel(logging.DEBUG)
-        elif isinstance(verbose, int):
+        elif verbose is not False and isinstance(verbose, int):
             log.sh.setLevel(verbose)
-        else:
-            log.sh.setLevel(logging.WARNING)
 
         self.log = log
         self.log.debug(f"{self.name}: logging system initiated.")
