@@ -189,6 +189,8 @@ class BaseClient(metaclass=abc.ABCMeta):
             log = get_logger("clu:" + self.name)
         else:
             assert isinstance(log, SDSSLogger), "Logger must be sdsstools.SDSSLogger"
+            self.log = log
+            return log
 
         log.setLevel(REPLY)
 
