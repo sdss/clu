@@ -193,7 +193,11 @@ class BaseClient(metaclass=abc.ABCMeta):
 
             log_dir = pathlib.Path(log_dir).expanduser()
 
-            log.start_file_logger(log_dir / f"{self.name}.log")
+            log.start_file_logger(
+                str(log_dir / f"{self.name}.log"),
+                rotating=True,
+                rollover=True,
+            )
 
             if log.fh:  # In case starting the file logger fails.
                 log.fh.formatter.converter = time.gmtime
