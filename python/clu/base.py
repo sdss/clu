@@ -207,8 +207,10 @@ class BaseClient(metaclass=abc.ABCMeta):
                 log.fh.setLevel(REPLY)
 
         log.sh.setLevel(logging.INFO)
-        if verbose:
-            log.sh.setLevel(int(verbose))
+        if verbose is True:
+            log.sh.setLevel(logging.DEBUG)
+        elif isinstance(verbose, int):
+            log.sh.setLevel(verbose)
         else:
             log.sh.setLevel(logging.WARNING)
 
