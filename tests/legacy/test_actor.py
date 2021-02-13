@@ -232,3 +232,14 @@ async def test_send_command_no_tron(actor):
 
     with pytest.raises(CluError):
         actor.send_command("actor2", "command")
+
+
+async def test_write_dict(actor, actor_client):
+    actor.write("i", message={"test1": {"subtest1": 1, "subtest2": 2}})
+    data = await actor_client.reader.read(200)
+    assert data == b"0 0 i test1=1,2\n"
+
+
+async def test_write_dict_max_depth(actor, actor_client):
+    with pytest.raises(TypeError):
+        actor.write("i", message={"test1": {"subtest1": {"subtest2": 2}}})

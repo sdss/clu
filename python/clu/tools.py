@@ -307,6 +307,13 @@ class CallbackMixIn(object):
                 task = self.loop.call_soon(cb, *args)
 
 
+def dict_depth(d: dict) -> int:
+    """Gets the depth of a dictionary."""
+    if isinstance(d, dict):
+        return 1 + (max(map(dict_depth, d.values())) if d else 0)
+    return 0
+
+
 def format_value(value: Any) -> str:
     """Formats messages in a way that is compatible with the parser.
 
@@ -319,7 +326,6 @@ def format_value(value: Any) -> str:
     -------
     formatted_text
         A string with the escaped text.
-
     """
 
     if isinstance(value, str):
@@ -329,6 +335,10 @@ def format_value(value: Any) -> str:
         value = "T" if value else "F"
     elif isinstance(value, (tuple, list)):
         value = ",".join([format_value(item) for item in value])
+    elif isinstance(value, dict):
+        if dict_depth(value) > 1:
+            raise ValueError("Cannot format a dictionary with depth > 1.")
+        value = format_value(list(value.values()))
     else:
         value = str(value)
 
