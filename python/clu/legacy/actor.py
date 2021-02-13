@@ -420,7 +420,10 @@ class BaseLegacyActor(BaseActor):
 
         lines = []
         for keyword in message:
-            value = clu.format_value(message[keyword])
+            try:
+                value = clu.format_value(message[keyword])
+            except BaseException as err:
+                raise TypeError(f"Cannot format keyword {keyword!r} " + str(err))
             lines.append(f"{keyword}={value}")
 
         if concatenate:
@@ -439,7 +442,8 @@ class BaseLegacyActor(BaseActor):
             else:
                 transport.write(msg)
 
-            log_reply(self.log, message_code, full_msg_str)
+            if self.log:
+                log_reply(self.log, message_code, full_msg_str)
 
 
 class LegacyActor(ClickParser, BaseLegacyActor):
