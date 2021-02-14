@@ -25,6 +25,7 @@ MJDJ2000 = 51544.5  # Modified Julian Date at epoch J2000.0 noon (days)
 SecPerDay = 24.0 * 3600.0  # seconds per day
 _UTCMinusTAIDays = -35 / float(SecPerDay)  # a reasonable value correct as of 2012-12
 _TimeError = 0.0  # time reported by your computer's clock - actual time (seconds)
+_TimeTupleJ2000 = (2000, 1, 1, 12, 0, 0, 5, 1, 0)
 
 
 def getCurrPySec(uncorrTime=None):
@@ -41,7 +42,6 @@ def getCurrPySec(uncorrTime=None):
 
 def utcFromPySec(pySec=None):
     """Returns the UTC (MJD) corresponding to the supplied python time, or now if none."""
-    global _TimeTupleJ2000
 
     if pySec is None:
         pySec = getCurrPySec()
