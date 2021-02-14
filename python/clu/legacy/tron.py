@@ -45,6 +45,9 @@ class TronKey(Property):
 
         self.key = key
 
+    def __getitem__(self, sl):
+        return self.value.__getitem__(sl)
+
 
 class TronModel(BaseModel[TronKey]):
     """A JSON-compliant model for actor keywords.
@@ -103,6 +106,13 @@ class TronModel(BaseModel[TronKey]):
             self.notify(self)
 
 
+class TronLoggingFilter(logging.Filter):
+    """Logs issues with the Tron parser only to the file logger."""
+
+    def filter(self, record):
+        return not record.getMessage().startswith("Failed parsing reply")
+
+
 class TronConnection(BaseClient):
     """Allows to send commands to Tron and manages the feed of replies.
 
@@ -149,6 +159,10 @@ class TronConnection(BaseClient):
 
         self._client = None
         self.running_commands = {}
+
+        # We want to log problems with the Tron parser, but not to the console.
+        if self.log.sh:
+            self.log.sh.addFilter(TronLoggingFilter())
 
     async def start(self, get_keys=True):
         """Starts the connection to Tron.
