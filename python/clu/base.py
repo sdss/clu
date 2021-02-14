@@ -67,9 +67,9 @@ class BaseClient(metaclass=abc.ABCMeta):
         name: str,
         version: Optional[str] = None,
         loop: Optional[asyncio.AbstractEventLoop] = None,
-        log_dir: Optional[pathlib.Path | str] = None,
+        log_dir: Optional[Union[pathlib.Path, str]] = None,
         log: Optional[SDSSLogger] = None,
-        verbose: bool | int = False,
+        verbose: Union[bool, int] = False,
     ):
 
         self.loop = loop or asyncio.get_event_loop()
@@ -114,7 +114,9 @@ class BaseClient(metaclass=abc.ABCMeta):
         self.loop.stop()
 
     @staticmethod
-    def _parse_config(input: dict[str, Any] | pathlib.Path | str) -> dict[str, Any]:
+    def _parse_config(
+        input: Union[dict[str, Any], pathlib.Path, str]
+    ) -> dict[str, Any]:
 
         if not isinstance(input, dict):
             input = pathlib.Path(input)
@@ -180,8 +182,8 @@ class BaseClient(metaclass=abc.ABCMeta):
     def setup_logger(
         self,
         log: Any,
-        log_dir: Optional[pathlib.Path | str],
-        verbose: bool | int = False,
+        log_dir: Optional[Union[pathlib.Path, str]],
+        verbose: Union[bool, int] = False,
     ):
         """Starts the file logger."""
 
@@ -238,7 +240,7 @@ class BaseActor(BaseClient):
     which should be overridden by the specific actors.
     """
 
-    model: Model | None = None
+    model: Union[Model, None] = None
 
     def __init__(self, *args, schema: SchemaType = None, **kwargs):
 
@@ -246,7 +248,7 @@ class BaseActor(BaseClient):
 
         self.validate_schema(schema)
 
-    def validate_schema(self, schema: SchemaType | None) -> Model | None:
+    def validate_schema(self, schema: Union[SchemaType, None]) -> Union[Model, None]:
         """Loads and validates the actor schema."""
 
         if schema is None:

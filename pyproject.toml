@@ -32,7 +32,6 @@ Click = "^7.0"
 aio_pika = "^6.4.1"
 jsonschema = "^3.0.1"
 sdsstools = ">=0.2.0"
-Sphinx = {version = ">=2.3", optional = true}
 prompt_toolkit = "^3.0.6"
 aiormq = "^3.2.0"
 
@@ -59,9 +58,7 @@ pytest-rabbitmq = "^2.0.1"
 autopep8 = "^1.5.4"
 rstcheck = "^3.3.1"
 black = {version = "^20.8b1", allow-prereleases = true}
-
-[tool.poetry.extras]
-docs = ["Sphinx"]
+sphinx-autodoc-typehints = "^1.11.1"
 
 [tool.black]
 line-length = 88

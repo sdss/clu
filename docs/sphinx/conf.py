@@ -26,6 +26,7 @@ on_rtd = os.environ.get("READTHEDOCS") == "True"
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
+    "sphinx_autodoc_typehints",
     "sphinx.ext.autosummary",
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",

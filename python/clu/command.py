@@ -13,7 +13,7 @@ import re
 import time
 from contextlib import suppress
 
-from typing import Any, Awaitable, Callable, Optional
+from typing import Any, Awaitable, Callable, Optional, Union
 
 import clu
 import clu.base
@@ -67,9 +67,9 @@ class BaseCommand(asyncio.Future, StatusMixIn[CommandStatus]):
 
     def __init__(
         self,
-        commander_id: int | str = 0,
-        command_id: int | str = 0,
-        consumer_id: int | str = 0,
+        commander_id: Union[int, str] = 0,
+        command_id: Union[int, str] = 0,
+        consumer_id: Union[int, str] = 0,
         actor: clu.base.BaseActor = None,
         parent: BaseCommand = None,
         status_callback: Callable[[CommandStatus], Any] = None,
@@ -103,7 +103,7 @@ class BaseCommand(asyncio.Future, StatusMixIn[CommandStatus]):
         )
 
     @property
-    def status(self) -> CommandStatus | None:
+    def status(self) -> Union[CommandStatus, None]:
         """Returns the status."""
 
         return self._status
@@ -127,7 +127,7 @@ class BaseCommand(asyncio.Future, StatusMixIn[CommandStatus]):
 
     def set_status(
         self,
-        status: CommandStatus | str,
+        status: Union[CommandStatus, str],
         message: dict[str, Any] = None,
         silent: bool = False,
         **kwargs,
@@ -241,7 +241,7 @@ class BaseCommand(asyncio.Future, StatusMixIn[CommandStatus]):
 
         command = self if not self.parent else self.parent
 
-        result: Awaitable[Any] | None = self.actor.write(
+        result: Optional[Awaitable[Any]] = self.actor.write(
             message_code,
             message=message,
             command=command,

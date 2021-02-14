@@ -37,7 +37,7 @@ SchemaType = Union[Dict[str, Any], PathLike]
 
 
 class CustomTransportType(asyncio.Transport):
-    user_id: str | int
+    user_id: Union[str, int]
     multiline: bool
 
 

@@ -15,7 +15,7 @@ import sys
 import types
 import unittest.mock
 
-from typing import Any, TypeVar
+from typing import Any, TypeVar, Union
 
 import clu
 from clu.actor import JSONActor
@@ -94,7 +94,7 @@ class MockReplyList(list):
 
         list.__init__(self)
 
-    def parse_reply(self, reply: bytes | str):
+    def parse_reply(self, reply: Union[bytes, str]):
         """Parses a reply and construct a `.MockReply`, which is appended."""
 
         if isinstance(reply, bytes):

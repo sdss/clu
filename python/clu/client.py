@@ -18,6 +18,8 @@ from typing import Any, Optional, Union
 
 import aio_pika as apika
 
+from sdsstools.logger import SDSSLogger
+
 from .base import BaseClient
 from .command import Command
 from .model import ModelSet
@@ -158,7 +160,6 @@ class AMQPClient(BaseClient):
         If `None`, the active parser will be used.
     models
         A list of actor models whose schemas will be monitored.
-
     """
 
     __EXCHANGE_NAME__ = "sdss_exchange"
@@ -178,7 +179,7 @@ class AMQPClient(BaseClient):
         version: Optional[str] = None,
         loop: Optional[asyncio.AbstractEventLoop] = None,
         log_dir: Optional[PathLike] = None,
-        log: Optional[logging.Logger] = None,
+        log: Optional[SDSSLogger] = None,
         models: list[str] = [],
     ):
 

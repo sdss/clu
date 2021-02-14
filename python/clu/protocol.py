@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import asyncio
 
-from typing import Any, Callable, Optional, TypeVar
+from typing import Any, Callable, Optional, TypeVar, Union
 
 import aio_pika as apika
 import aiormq
@@ -175,7 +175,7 @@ class PeriodicTCPServer(TCPProtocol):
         return server
 
     @property
-    def periodic_callback(self) -> ConnectionCallbackType | None:
+    def periodic_callback(self) -> Optional[ConnectionCallbackType]:
         """Returns the periodic callback."""
 
         return self._periodic_callback
@@ -534,7 +534,7 @@ class TopicListener(object):
         self,
         queue_name: str,
         callback: Optional[Callable[[apika.IncomingMessage], Any]] = None,
-        bindings: str | list[str] = "*",
+        bindings: Union[str, list[str]] = "*",
     ) -> apika.Queue:
         """Adds a queue with bindings.
 
