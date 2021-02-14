@@ -13,7 +13,7 @@ import pathlib
 import warnings
 from os import PathLike
 
-from typing import Any, Callable, Dict, Optional, TypeVar, Union, cast
+from typing import Any, Callable, Dict, List, Optional, TypeVar, Union, cast
 
 import jsonschema
 import jsonschema.exceptions
@@ -82,7 +82,7 @@ class Property(CallbackMixIn):
         self._value = new_value
         self.notify(self)
 
-    def flatten(self) -> dict[str, Any]:
+    def flatten(self) -> Dict[str, Any]:
         """Returns a dictionary with the name and value of the property."""
 
         return {self.name: self.value}
@@ -122,7 +122,7 @@ class BaseModel(CaseInsensitiveDict[T], CallbackMixIn):
     def __str__(self):
         return str(self.flatten())
 
-    def flatten(self) -> dict[str, Any]:
+    def flatten(self) -> Dict[str, Any]:
         """Returns a dictionary of values.
 
         Return a dictionary in which the `Property` instances are replaced
@@ -165,7 +165,7 @@ class Model(BaseModel[Property]):
             except json.JSONDecodeError:
                 raise ValueError("cannot parse input schema.")
 
-        self.schema = cast("dict[str, Any]", schema)
+        self.schema = cast("Dict[str, Any]", schema)
 
         if not self.check_schema(self.schema):
             raise ValueError(f"schema {name!r} is invalid.")
@@ -199,7 +199,7 @@ class Model(BaseModel[Property]):
             self[name] = Property(name, model=self)
 
     @staticmethod
-    def check_schema(schema: dict[str, Any]) -> bool:
+    def check_schema(schema: Dict[str, Any]) -> bool:
         """Checks whether a JSON schema is valid.
 
         Parameters
@@ -220,7 +220,7 @@ class Model(BaseModel[Property]):
         except jsonschema.SchemaError:
             return False
 
-    def update_model(self, instance: dict[str, Any]):
+    def update_model(self, instance: Dict[str, Any]):
         """Validates a new instance and updates the model."""
 
         try:
@@ -271,7 +271,7 @@ class ModelSet(dict):
     def __init__(
         self,
         client: clu.base.BaseClient,
-        actors: list[str] = [],
+        actors: List[str] = [],
         get_schema_command: str = "get_schema",
         raise_exception: bool = True,
         **kwargs,
@@ -286,7 +286,7 @@ class ModelSet(dict):
         self.__get_schema = get_schema_command
         self.__kwargs = kwargs
 
-    async def load_schemas(self, actors: Optional[list[str]] = None):
+    async def load_schemas(self, actors: Optional[List[str]] = None):
         """Loads the actor schames."""
 
         actors = actors or self.actors or []

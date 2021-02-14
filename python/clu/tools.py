@@ -16,7 +16,18 @@ import json
 import logging
 import re
 
-from typing import Any, Awaitable, Callable, Dict, Generic, Optional, Type, TypeVar
+from typing import (
+    Any,
+    Awaitable,
+    Callable,
+    Dict,
+    Generic,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    TypeVar,
+)
 
 
 __all__ = [
@@ -39,7 +50,7 @@ class Maskbit(enum.Flag):
     """A maskbit enumeration. Intended for subclassing."""
 
     @property
-    def active_bits(self) -> list[Maskbit]:
+    def active_bits(self) -> List[Maskbit]:
         """Returns a list of non-combination flags that match the value."""
 
         return [
@@ -49,7 +60,7 @@ class Maskbit(enum.Flag):
         ]
 
 
-COMMAND_STATUS_TO_CODE: dict[str, str] = {
+COMMAND_STATUS_TO_CODE: Dict[str, str] = {
     "DONE": ":",
     "CANCELLED": "f",
     "FAILED": "f",
@@ -181,7 +192,7 @@ class StatusMixIn(Generic[MaskbitType]):
     ):
 
         self.flags = maskbit_flags
-        self.callbacks: list[Callable[[MaskbitType], Any]] = []
+        self.callbacks: List[Callable[[MaskbitType], Any]] = []
         self._status: MaskbitType | None = initial_status
         self.watcher: Optional[asyncio.Event] = None
 
@@ -247,7 +258,7 @@ class CallbackMixIn(object):
 
     def __init__(
         self,
-        callbacks: list[Callable[[Any], Any]] = [],
+        callbacks: List[Callable[[Any], Any]] = [],
         loop: Optional[asyncio.AbstractEventLoop] = None,
     ):
 
@@ -409,10 +420,10 @@ def cli_coro(f):
 
 
 async def as_complete_failer(
-    aws: list[Awaitable],
+    aws: List[Awaitable],
     on_fail_callback: Optional[Callable] = None,
     **kwargs,
-) -> tuple[bool, str | None]:  # pragma: no cover
+) -> Tuple[bool, str | None]:  # pragma: no cover
     """Similar to `~asyncio.as_complete` but cancels all the tasks
     if any of them returns `False`.
 
@@ -533,8 +544,8 @@ class ActorHandler(logging.Handler):
         actor,
         level: int = logging.ERROR,
         keyword: str = "text",
-        code_mapping: Optional[dict[int, str]] = None,
-        filter_warnings: Optional[list[Type[Warning]]] = None,
+        code_mapping: Optional[Dict[int, str]] = None,
+        filter_warnings: Optional[List[Type[Warning]]] = None,
     ):
 
         self.actor = actor

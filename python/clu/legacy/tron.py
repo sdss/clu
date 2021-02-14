@@ -11,7 +11,7 @@ from __future__ import annotations
 import asyncio
 import logging
 
-from typing import Any, Callable, Optional
+from typing import Any, Callable, List, Optional
 
 from clu.base import BaseClient
 from clu.command import Command, CommandStatus
@@ -35,7 +35,7 @@ class TronKey(Property):
     def __init__(
         self,
         name: str,
-        value: list[Any] = [],
+        value: List[Any] = [],
         key: Optional[str] = None,
         model: Optional[TronModel] = None,
         callback: Optional[Callable[[TronKey], Any]] = None,
@@ -135,7 +135,7 @@ class TronConnection(BaseClient):
         host: str,
         port: int = 6093,
         name: str = "tron",
-        models: list[str] = [],
+        models: List[str] = [],
         **kwargs,
     ):
 

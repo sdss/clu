@@ -134,7 +134,7 @@ class AMQPActor(AMQPClient, ClickParser, BaseActor):
     async def write(
         self,
         message_code: str = "i",
-        message: Optional[dict[str, Any]] = None,
+        message: Optional[Dict[str, Any]] = None,
         command: Optional[Command] = None,
         broadcast: bool = False,
         no_validate: bool = False,
@@ -360,7 +360,7 @@ class JSONActor(ClickParser, BaseActor):
     def write(
         self,
         message_code: str = "i",
-        message: Optional[dict[str, Any]] = None,
+        message: Optional[Dict[str, Any]] = None,
         command: Optional[Command] = None,
         broadcast: bool = False,
         no_validate: bool = False,

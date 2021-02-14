@@ -83,7 +83,7 @@ class BaseClient(metaclass=abc.ABCMeta):
         self.version = version or "?"
 
         # Internally store the original configuration used to start the client.
-        self.config: Optional[dict[str, Any]] = None
+        self.config: Optional[Dict[str, Any]] = None
 
     def __repr__(self):
         return f"<{str(self)} (name={self.name!r})>"
@@ -115,8 +115,8 @@ class BaseClient(metaclass=abc.ABCMeta):
 
     @staticmethod
     def _parse_config(
-        input: Union[dict[str, Any], pathlib.Path, str]
-    ) -> dict[str, Any]:
+        input: Union[Dict[str, Any], pathlib.Path, str]
+    ) -> Dict[str, Any]:
 
         if not isinstance(input, dict):
             input = pathlib.Path(input)
@@ -125,10 +125,10 @@ class BaseClient(metaclass=abc.ABCMeta):
         else:
             config = input
 
-        return cast("dict[str, Any]", config)
+        return cast("Dict[str, Any]", config)
 
     @classmethod
-    def from_config(cls, config: dict[str, Any], *args, **kwargs):
+    def from_config(cls, config: Dict[str, Any], *args, **kwargs):
         """Parses a configuration file.
 
         Parameters

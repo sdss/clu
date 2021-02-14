@@ -15,7 +15,7 @@ import sys
 import types
 import unittest.mock
 
-from typing import Any, TypeVar, Union
+from typing import Any, Dict, List, TypeVar, Union
 
 import clu
 from clu.actor import JSONActor
@@ -37,7 +37,7 @@ __all__ = ["MockReply", "MockReplyList", "setup_test_actor"]
 
 class MockedActor(JSONActor, LegacyActor):
     invoke_mock_command: Any
-    mock_replies: list[MockReply]
+    mock_replies: List[MockReply]
 
 
 T = TypeVar("T", bound=MockedActor)
@@ -65,7 +65,7 @@ class MockReply(dict):
         command_id: int,
         user_id: int,
         flag: str,
-        data: dict[str, Any] = {},
+        data: Dict[str, Any] = {},
     ):
 
         self.command_id = command_id
@@ -120,7 +120,7 @@ class MockReplyList(list):
 
         elif issubclass(self.actor.__class__, clu.JSONActor):
 
-            reply_dict: dict[str, Any] = json.loads(reply)
+            reply_dict: Dict[str, Any] = json.loads(reply)
 
             header = reply_dict["header"]
             user_id = header.pop("commander_id", None)

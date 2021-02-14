@@ -13,7 +13,7 @@ import re
 import time
 from contextlib import suppress
 
-from typing import Any, Awaitable, Callable, Optional, Union
+from typing import Any, Awaitable, Callable, Dict, Optional, Tuple, Union
 
 import clu
 import clu.base
@@ -128,7 +128,7 @@ class BaseCommand(asyncio.Future, StatusMixIn[CommandStatus]):
     def set_status(
         self,
         status: Union[CommandStatus, str],
-        message: dict[str, Any] = None,
+        message: Dict[str, Any] = None,
         silent: bool = False,
         **kwargs,
     ) -> BaseCommand:
@@ -210,7 +210,7 @@ class BaseCommand(asyncio.Future, StatusMixIn[CommandStatus]):
     def write(
         self,
         message_code: str = "i",
-        message: dict[str, Any] = None,
+        message: Dict[str, Any] = None,
         broadcast: bool = False,
         **kwargs,
     ):
@@ -306,7 +306,7 @@ class Command(BaseCommand):
         )
 
 
-def parse_legacy_command(command_string: str) -> tuple[int, str]:
+def parse_legacy_command(command_string: str) -> Tuple[int, str]:
     """Parses a command received by a legacy actor.
 
     Parameters

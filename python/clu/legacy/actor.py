@@ -13,7 +13,7 @@ import logging
 import pathlib
 import warnings
 
-from typing import Any, Optional, TypeVar, Union, cast
+from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union, cast
 
 import clu
 
@@ -83,7 +83,7 @@ class BaseLegacyActor(BaseActor):
         port: int,
         tron_host: Optional[str] = None,
         tron_port: Optional[int] = None,
-        models: list[str] = [],
+        models: List[str] = [],
         version: Optional[str] = None,
         loop: Optional[asyncio.AbstractEventLoop] = None,
         log_dir: Optional[PathLike] = None,
@@ -282,7 +282,7 @@ class BaseLegacyActor(BaseActor):
         command: Optional[Command] = None,
         user_id: Optional[int] = 0,
         command_id: Optional[int] = 0,
-    ) -> tuple[int, int]:
+    ) -> Tuple[int, int]:
         """Returns commander_id, command_id based on user-supplied information.
 
         Parameters
@@ -350,7 +350,7 @@ class BaseLegacyActor(BaseActor):
     def write(
         self,
         message_code: str = "i",
-        message: dict[str, Any] = None,
+        message: Dict[str, Any] = None,
         command: Optional[Command] = None,
         user_id: Optional[int] = None,
         command_id: Optional[int] = None,
