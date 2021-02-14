@@ -4,6 +4,7 @@
 Changelog
 =========
 
+* :release:`0.6.2 <2021-02-13>`
 * :bug:`-` If ``version=False`` the console logger level was being set to zero. Now it's set to ``WARNING`` unless ``verbose=True`` which sets it to ``DEBUG`` or if ``verbose=<int>`` in which case it sets it to that numerical value.
 * :feature:`54` Filter out issues parsing out Tron replies and log them only to the file logger.
 * :bug:`-` Missing variable ``_TimeTupleJ2000`` in PVT.
