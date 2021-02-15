@@ -170,7 +170,7 @@ class Model(BaseModel[Property]):
         if not self.check_schema(self.schema):
             raise ValueError(f"schema {name!r} is invalid.")
 
-        self.validator = self.VALIDATOR(self.schema)
+        self.validator = self.VALIDATOR(self.schema, types={"array": (list, tuple)})
 
         if (
             "type" not in self.schema
