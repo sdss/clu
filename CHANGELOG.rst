@@ -5,6 +5,7 @@ Changelog
 =========
 
 * :feature:`-` The JSONSchema ``array`` type now allows both Python ``list`` and ``tuple``.
+* :support:`-` Renamed ``no_validate`` in actors ``write`` method to ``validate`` (defaults to ``True`` so the behaviour should not change).
 
 * :release:`0.6.2 <2021-02-13>`
 * :bug:`-` If ``version=False`` the console logger level was being set to zero. Now it's set to ``WARNING`` unless ``verbose=True`` which sets it to ``DEBUG`` or if ``verbose=<int>`` in which case it sets it to that numerical value.

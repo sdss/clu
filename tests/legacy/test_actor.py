@@ -190,7 +190,7 @@ async def test_write_no_validate(actor, actor_client, mocker):
 
     mock_func = mocker.patch.object(actor.model, "update_model")
 
-    actor.write("i", {"text": "Some message"}, no_validate=True)
+    actor.write("i", {"text": "Some message"}, validate=False)
 
     mock_func.assert_not_called()
 

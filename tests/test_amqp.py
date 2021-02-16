@@ -166,7 +166,7 @@ async def test_write_no_validate(amqp_actor, mocker):
 
     mock_func = mocker.patch.object(amqp_actor.model, "update_model")
 
-    await amqp_actor.write("i", {"text": "Some message"}, no_validate=True)
+    await amqp_actor.write("i", {"text": "Some message"}, validate=False)
 
     mock_func.assert_not_called()
 

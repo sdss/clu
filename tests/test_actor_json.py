@@ -118,6 +118,6 @@ async def test_write_no_validate(json_actor, json_client, mocker):
 
     mock_func = mocker.patch.object(json_actor.model, "update_model")
 
-    json_actor.write("i", {"text": "Some message"}, no_validate=True)
+    json_actor.write("i", {"text": "Some message"}, validate=False)
 
     mock_func.assert_not_called()

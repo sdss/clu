@@ -356,7 +356,7 @@ class BaseLegacyActor(BaseActor):
         command_id: Optional[int] = None,
         concatenate: bool = True,
         broadcast: bool = False,
-        no_validate: bool = False,
+        validate: bool = True,
         **kwargs,
     ):
         """Writes a message to user(s).
@@ -383,10 +383,9 @@ class BaseLegacyActor(BaseActor):
             each keyword will be output as a different message.
         broadcast
             Whether to broadcast the reply. Equivalent to ``user_id=0``.
-        no_validate
-            Do not validate the reply against the actor model. This is
-            ignored if the actor was not started with knowledge of its own
-            schema.
+        validate
+            Validate the reply against the actor model. This is ignored if the actor
+            was not started with knowledge of its own schema.
         kwargs
             Keyword arguments that will be added to the message. If a keyword
             is both in ``message`` and in ``kwargs``, the value in ``kwargs``
@@ -413,7 +412,7 @@ class BaseLegacyActor(BaseActor):
         elif not isinstance(message, dict):
             raise TypeError("invalid message type " + str(type(message)))
 
-        if not no_validate and hasattr(self, "model") and self.model is not None:
+        if validate and hasattr(self, "model") and self.model is not None:
             result, err = self.model.update_model(message)
             if result is False:
                 message = {"error": f"Failed validating the reply: {err}"}

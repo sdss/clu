@@ -137,7 +137,7 @@ class AMQPActor(AMQPClient, ClickParser, BaseActor):
         message: Optional[Dict[str, Any]] = None,
         command: Optional[Command] = None,
         broadcast: bool = False,
-        no_validate: bool = False,
+        validate: bool = True,
         **kwargs,
     ):
         """Writes a message to user(s).
@@ -155,10 +155,9 @@ class AMQPActor(AMQPClient, ClickParser, BaseActor):
         broadcast
             Whether to broadcast the message to all the users or only to the
             commander.
-        no_validate
-            Do not validate the reply against the actor schema. This is
-            ignored if the actor was not started with knowledge of its own
-            schema.
+        validate
+            Validate the reply against the actor schema. This is ignored if the actor
+            was not started with knowledge of its own schema.
         kwargs
             Keyword arguments that will be added to the message.
 
@@ -170,7 +169,7 @@ class AMQPActor(AMQPClient, ClickParser, BaseActor):
 
         message.update(kwargs)
 
-        if not no_validate and self.model is not None:
+        if validate and self.model is not None:
             result, err = self.model.update_model(message)
             if result is False:
                 if message_code == ":":
@@ -363,7 +362,7 @@ class JSONActor(ClickParser, BaseActor):
         message: Optional[Dict[str, Any]] = None,
         command: Optional[Command] = None,
         broadcast: bool = False,
-        no_validate: bool = False,
+        validate: bool = True,
         **kwargs,
     ):
         """Writes a message to user(s) as a JSON.
@@ -412,10 +411,9 @@ class JSONActor(ClickParser, BaseActor):
         broadcast
             Whether to broadcast the message to all the users or only to the
             commander.
-        no_validate
-            Do not validate the reply against the actor schema. This is
-            ignored if the actor was not started with knowledge of its own
-            schema.
+        validate
+            Validate the reply against the actor schema. This is ignored if the actor
+            was not started with knowledge of its own schema.
         kwargs
             Keyword arguments that will used to update the message.
 
@@ -433,7 +431,7 @@ class JSONActor(ClickParser, BaseActor):
         assert isinstance(message, dict), "message must be a dictionary"
         message.update(kwargs)
 
-        if not no_validate and self.model is not None:
+        if validate and self.model is not None:
             result, err = self.model.update_model(message)
             if result is False:
                 message = {"error": f"Failed validating the reply: {err}"}
