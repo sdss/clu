@@ -4,6 +4,7 @@
 Changelog
 =========
 
+* :release:`0.6.3 <2021-02-16>`
 * :feature:`-` The JSONSchema ``array`` type now allows both Python ``list`` and ``tuple``.
 * :support:`-` Renamed ``no_validate`` in actors ``write`` method to ``validate`` (defaults to ``True`` so the behaviour should not change).
 
