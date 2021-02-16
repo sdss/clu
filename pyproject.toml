@@ -20,7 +20,7 @@ classifiers = [
 packages = [
     { include = "clu", from = "python" }
 ]
-include = ["README.md"]
+include = []
 exclude = []
 
 [tool.poetry.scripts]
