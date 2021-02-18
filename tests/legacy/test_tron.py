@@ -42,7 +42,7 @@ async def test_update_model(tron_client, tron_server):
     assert act_alert.value[1] == "Alert2"
     assert act_alert.key[1].name == "alertID"
 
-    assert repr(act_alert) == ("<TronKey (activeAlerts): " "['Alert1', 'Alert2']>")
+    assert repr(act_alert) == ("<TronKey (activeAlerts): ['Alert1', 'Alert2']>")
 
 
 async def test_parser_fails(tron_client, tron_server, caplog, mocker):
@@ -88,7 +88,7 @@ async def test_send_command(actor, tron_server):
 
     assert b"test_actor.test_actor" in tron_server.received[-1]
     assert b"alerts ping" in tron_server.received[-1]
-
+    print(command.replies)
     assert len(command.replies) == 1
 
 

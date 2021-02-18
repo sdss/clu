@@ -6,6 +6,7 @@
 # @Filename: test_actor.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
+import asyncio
 import logging
 
 import pytest
@@ -142,7 +143,9 @@ async def test_bad_keyword(amqp_actor, caplog):
     amqp_actor.model = Model(amqp_actor.name, schema)
 
     with caplog.at_level(REPLY, logger=f"clu:{amqp_actor.name}"):
-        await amqp_actor.write("i", {"bad_keyword": "blah"}, broadcast=True)
+        amqp_actor.write("i", {"bad_keyword": "blah"}, broadcast=True)
+
+    await asyncio.sleep(0.01)
 
     assert "Failed validating the reply" in caplog.record_tuples[-1][2]
 
@@ -150,15 +153,20 @@ async def test_bad_keyword(amqp_actor, caplog):
 async def test_write_update_model_fails(amqp_actor, mocker):
 
     mocker.patch.object(
-        amqp_actor.model, "update_model", return_value=(False, "failed updating model.")
+        amqp_actor.model,
+        "update_model",
+        return_value=(False, "failed updating model."),
     )
     mocker.patch.object(
-        amqp_actor.connection.exchange, "publish", new_callable=CoroutineMock
+        amqp_actor.connection.exchange,
+        "publish",
+        new_callable=CoroutineMock,
     )
     apika_message = mocker.patch("aio_pika.Message")
 
-    await amqp_actor.write("i", {"text": "Some message"})
+    amqp_actor.write("i", {"text": "Some message"})
 
+    await asyncio.sleep(0.01)
     assert b"failed updating model" in apika_message.call_args[0][0]
 
 
@@ -166,7 +174,7 @@ async def test_write_no_validate(amqp_actor, mocker):
 
     mock_func = mocker.patch.object(amqp_actor.model, "update_model")
 
-    await amqp_actor.write("i", {"text": "Some message"}, validate=False)
+    amqp_actor.write("i", {"text": "Some message"}, validate=False)
 
     mock_func.assert_not_called()
 
@@ -179,12 +187,18 @@ async def test_new_command_fails(amqp_actor, mocker):
     mocker.patch("clu.actor.Command", side_effect=CommandError)
     mocker.patch("json.loads")
 
-    actor_write = mocker.patch.object(amqp_actor, "write", new_callable=CoroutineMock)
+    actor_write = mocker.patch.object(
+        amqp_actor,
+        "_write_internal",
+        new_callable=CoroutineMock,
+    )
 
     await amqp_actor.new_command(message)
 
-    actor_write.assert_awaited()
-    assert "Could not parse the following" in actor_write.call_args[0][1]["error"]
+    actor_write.assert_called()
+    assert (
+        "Could not parse the following" in actor_write.call_args[0][0].message["error"]
+    )
 
 
 class TestHandleReply:

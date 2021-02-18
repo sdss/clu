@@ -54,7 +54,9 @@ async def tron_server(unused_tcp_port_factory):
             transport.write(reply.encode())
 
     server = TCPStreamServer(
-        "localhost", unused_tcp_port_factory(), data_received_callback=echo
+        "localhost",
+        unused_tcp_port_factory(),
+        data_received_callback=echo,
     )
 
     server.received = received

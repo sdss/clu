@@ -174,7 +174,9 @@ async def test_command_failed_to_parse(actor, actor_client):
 async def test_write_update_model_fails(actor, actor_client, mocker):
 
     mocker.patch.object(
-        actor.model, "update_model", return_value=(False, "failed updating model.")
+        actor.model,
+        "update_model",
+        return_value=(False, "failed updating model."),
     )
 
     actor.transports[1] = mocker.MagicMock()
@@ -182,7 +184,7 @@ async def test_write_update_model_fails(actor, actor_client, mocker):
     actor.write("i", {"text": "Some message"})
 
     actor.transports[1].write.assert_called_with(
-        b'0 0 e error="Failed validating the reply: ' b'failed updating model."\n'
+        b'0 0 e error="Failed validating the reply: failed updating model."\n'
     )
 
 

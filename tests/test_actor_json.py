@@ -11,6 +11,8 @@ import json
 
 import pytest
 
+from clu.command import Command
+
 
 pytestmark = [pytest.mark.asyncio]
 
@@ -22,6 +24,20 @@ async def test_json_actor(json_actor, json_client):
 
     assert json_actor.server.is_serving()
     assert len(json_actor.transports) == 1
+
+
+async def test_json_actor_command_write(json_actor, json_client):
+
+    command = Command(
+        command_string="ping",
+        actor=json_actor,
+    )
+
+    command.set_status("RUNNING")
+    command.write("i", text="Pong")
+
+    assert len(command.replies) == 2
+    assert command.replies[0].message_code == ">"
 
 
 async def test_json_actor_pong(json_client):
@@ -103,7 +119,9 @@ async def test_timed_command(json_actor, json_client):
 async def test_write_update_model_fails(json_actor, json_client, mocker):
 
     mocker.patch.object(
-        json_actor.model, "update_model", return_value=(False, "failed updating model.")
+        json_actor.model,
+        "update_model",
+        return_value=(False, "failed updating model."),
     )
 
     json_actor.transports["mock_transport"] = mocker.MagicMock()
