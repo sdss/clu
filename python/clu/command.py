@@ -13,7 +13,7 @@ import re
 import time
 from contextlib import suppress
 
-from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import clu
 import clu.base
@@ -88,7 +88,7 @@ class BaseCommand(asyncio.Future, StatusMixIn[CommandStatus]):
         self.default_keyword = default_keyword
         self.loop = loop or asyncio.get_event_loop()
 
-        #: ~clu.base.Reply: A list of replies this command has received.
+        #: .Reply: A list of replies this command has received.
         self.replies: List[clu.base.Reply] = []
 
         asyncio.Future.__init__(self, loop=self.loop)
