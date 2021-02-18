@@ -339,7 +339,7 @@ class TCPStreamClient:
         if self.writer:
             self.writer.close()
         else:
-            raise RuntimeError("connection cannot be closed " "because it is not open.")
+            raise RuntimeError("connection cannot be closed because it is not open.")
 
 
 async def open_connection(host: str, port: int) -> TCPStreamClient:

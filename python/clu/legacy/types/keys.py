@@ -487,11 +487,11 @@ class KeysDictionary(object):
             return kdict
         except ImportError as e:
             raise KeysDictionaryError(
-                "no keys dictionary found " "for %s: %s" % (dictname, str(e))
+                "no keys dictionary found for %s: %s" % (dictname, str(e))
             )
         except Exception as e:
             indent = "\n >> "
             description = indent + indent.join(str(e).split("\n"))
             raise KeysDictionaryError(
-                "badly formatted keys " "dictionary in %s:%s" % (dictname, description)
+                "badly formatted keys dictionary in %s:%s" % (dictname, description)
             )
