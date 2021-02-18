@@ -14,19 +14,20 @@ import inspect
 import logging
 import pathlib
 import time
+from datetime import datetime
 
 from typing import Any, Dict, Optional, Union, cast
 
 from sdsstools import get_logger, read_yaml_file
 from sdsstools.logger import SDSSLogger
 
-from clu.command import Command
+from clu.command import BaseCommand
 
 from .model import Model
 from .tools import REPLY
 
 
-__all__ = ["BaseClient", "BaseActor"]
+__all__ = ["BaseClient", "BaseActor", "Reply"]
 
 SchemaType = Union[Dict[str, Any], pathlib.Path, str]
 
@@ -228,7 +229,7 @@ class BaseClient(metaclass=abc.ABCMeta):
         """Sends a command to an actor and returns a `.Command` instance."""
 
         raise NotImplementedError(
-            "Sending commands is not implemented " "for this client."
+            "Sending commands is not implemented for this client."
         )
 
 
@@ -265,24 +266,138 @@ class BaseActor(BaseClient):
         Must be overridden by the subclass and call `.parse_command`
         with a `.Command` object.
         """
-
         pass
 
     @abc.abstractmethod
-    def parse_command(self, command: Command):
+    def parse_command(self, command: BaseCommand):
         """Parses and executes a `.Command`. Must be overridden."""
-
         pass
 
     def send_command(self):
         """Sends a command to another actor."""
 
-        raise NotImplementedError(
-            "Sending commands is not implemented " "for this actor."
-        )
+        raise NotImplementedError("Sending commands is not implemented for this actor.")
 
     @abc.abstractmethod
-    def write(self, *args, **kwargs):
-        """Writes a message to user(s). To be overridden by the subclasses."""
+    def _write_internal(self, reply: Reply):
+        """Internally handle the reply and output it to the users.
 
+        Must handle converting the general `.Reply` to the specific format of the
+        actor transport. Must also handle logging the reply.
+        """
         pass
+
+    def write(
+        self,
+        message_code: str = "i",
+        message: Optional[Dict[str, Any] | str] = None,
+        command: Optional[BaseCommand] = None,
+        broadcast: bool = False,
+        validate: bool = True,
+        call_internal: bool = True,
+        **kwargs,
+    ) -> Reply:
+        """Writes a message to user(s).
+
+        The reply to the users will be formatted by the actor class into message
+        specific to the communication channel. Additional keywords passed to this
+        method will be used to complete the message (as long as they don't overlap
+        with named parameters). For example ::
+
+            actor.write('i', message={'text': 'Hi!', 'value1': 1})
+
+        and ::
+
+            actor.write('i', text='Hi!', value1=1)
+
+        are equivalent and ::
+
+            actor.write('i', message={'text': 'Hi!'}, value1=1)
+
+        is equivalent to ::
+
+            actor.write('i', message={'text': 'Hi!', 'value1': 1})
+
+        This method generates a `.Reply` object that is passed to the
+        ``_write_internal`` method in the class, which processes it and outputs the
+        message to the users using the appropriate transport. If ``command`` is passed,
+        the reply is added to ``command.replies``.
+
+        Parameters
+        ----------
+        message_code
+            The message code (e.g., ``'i'`` or ``':'``).
+        message
+            The keywords to be output. Must be a dictionary of pairs
+            ``{keyword: value}``.
+        command
+            The command to which we are replying. If not set, it is assumed
+            that this is a broadcast.
+        broadcast
+            Whether to broadcast the message to all the users or only to the
+            commander.
+        validate
+            Validate the reply against the actor schema. This is ignored if the actor
+            was not started with knowledge of its own schema.
+        call_internal
+            Whether to call the actor internal write method. Should be `True` but
+            it's sometimes useful to call `.write` with ``call_internal=False`` when
+            one is overriding the method and wants to control when to call the internal
+            method.
+        kwargs
+            Keyword arguments that will used to update the message.
+        """
+
+        if isinstance(message, str):
+            message = {"text": message}
+        else:
+            message = message or {}
+            if not isinstance(message, dict):
+                raise TypeError("message must be a dictionary")
+
+        message.update(kwargs)
+
+        reply = Reply(message_code, message, command=command, broadcast=broadcast)
+
+        if validate and self.model is not None:
+            reply.use_validation = True
+            result, err = self.model.update_model(message)
+            if result is False:
+                message = {"error": f"Failed validating the reply: {err}"}
+                reply.message_code = "e"
+                reply.message = message
+                reply.validated = False
+            else:
+                reply.validated = True
+
+        if command:
+            command.replies.append(reply)
+
+        if call_internal:
+            if asyncio.iscoroutinefunction(self._write_internal):
+                asyncio.create_task(self._write_internal(reply))  # type: ignore
+            else:
+                self._write_internal(reply)
+
+        return reply
+
+
+class Reply:
+    """A reply from a command or actor to be sent to the users."""
+
+    def __init__(
+        self,
+        message_code: str,
+        message: Dict[str, Any],
+        command: Optional[BaseCommand] = None,
+        broadcast: bool = False,
+        use_validation: bool = False,
+        validated: bool = False,
+    ):
+        self.date = datetime.utcnow()
+        self.message_code = message_code
+        self.message = message
+        self.command = command
+        self.broadcast = broadcast
+        self.use_validation = use_validation
+        self.validated = validated

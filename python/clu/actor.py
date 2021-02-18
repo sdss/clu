@@ -19,7 +19,7 @@ from typing import Any, Dict, Optional, TypeVar, Union
 import aio_pika as apika
 import click
 
-from .base import BaseActor
+from .base import BaseActor, Reply
 from .client import AMQPClient
 from .command import Command, TimedCommandList
 from .exceptions import CommandError
@@ -119,7 +119,7 @@ class AMQPActor(AMQPClient, ClickParser, BaseActor):
             )
             command.actor = self  # Assign the actor
         except CommandError as ee:
-            await self.write(
+            self.write(
                 "f",
                 {
                     "error": "Could not parse the "
@@ -131,72 +131,28 @@ class AMQPActor(AMQPClient, ClickParser, BaseActor):
 
         return self.parse_command(command)
 
-    async def write(
-        self,
-        message_code: str = "i",
-        message: Optional[Dict[str, Any]] = None,
-        command: Optional[Command] = None,
-        broadcast: bool = False,
-        validate: bool = True,
-        **kwargs,
-    ):
-        """Writes a message to user(s).
+    async def _write_internal(self, reply: Reply):
+        """Writes a message to user(s)."""
 
-        Parameters
-        ----------
-        message_code
-            The message code (e.g., ``'i'`` or ``':'``).
-        message
-            The keywords to be output. Must be a dictionary of pairs
-            ``{keyword: value}``.
-        command
-            The command to which we are replying. If not set, it is assumed
-            that this is a broadcast.
-        broadcast
-            Whether to broadcast the message to all the users or only to the
-            commander.
-        validate
-            Validate the reply against the actor schema. This is ignored if the actor
-            was not started with knowledge of its own schema.
-        kwargs
-            Keyword arguments that will be added to the message.
-
-        """
-
-        message = message or {}
-
-        assert isinstance(message, dict), "message must be a dictionary"
-
-        message.update(kwargs)
-
-        if validate and self.model is not None:
-            result, err = self.model.update_model(message)
-            if result is False:
-                if message_code == ":":
-                    message_code = "f"
-                else:
-                    message_code = "e"
-                message = {"error": f"Failed validating the reply: {err}".splitlines()}
-
+        message = reply.message
         message_json = json.dumps(message)
 
-        if command is None:
-            broadcast = True
+        command = reply.command
+
+        if command is None or reply.broadcast:
+            routing_key = "reply.broadcast"
+        else:
+            routing_key = f"reply.{command.commander_id}"
 
         commander_id = command.commander_id if command else None
         command_id = command.command_id if command else None
 
         headers = {
-            "message_code": message_code,
+            "message_code": reply.message_code,
             "commander_id": commander_id,
             "command_id": command_id,
             "sender": self.name,
         }
-
-        if broadcast:
-            routing_key = "reply.broadcast"
-        else:
-            routing_key = f"reply.{command.commander_id}"
 
         await self.connection.exchange.publish(
             apika.Message(
@@ -209,7 +165,7 @@ class AMQPActor(AMQPClient, ClickParser, BaseActor):
         )
 
         if self.log:
-            log_reply(self.log, message_code, message_json)
+            log_reply(self.log, reply.message_code, message_json)
 
 
 class JSONActor(ClickParser, BaseActor):
@@ -356,15 +312,7 @@ class JSONActor(ClickParser, BaseActor):
 
         raise NotImplementedError("JSONActor cannot send commands to other actors.")
 
-    def write(
-        self,
-        message_code: str = "i",
-        message: Optional[Dict[str, Any]] = None,
-        command: Optional[Command] = None,
-        broadcast: bool = False,
-        validate: bool = True,
-        **kwargs,
-    ):
+    def write(self, *args, **kwargs):
         """Writes a message to user(s) as a JSON.
 
         A ``header`` keyword with the ``commander_id`` (i.e., the user id of
@@ -398,26 +346,13 @@ class JSONActor(ClickParser, BaseActor):
         For a multiline output, which is more human-readable, use the
         ``multiline`` command.
 
-        Parameters
-        ----------
-        message_code
-            The message code (e.g., ``'i'`` or ``':'``). Ignored.
-        message
-            The keywords to be output. Must be a dictionary of pairs
-            ``{keyword: value}``.
-        command
-            The command to which we are replying. If not set, it is assumed
-            that this is a broadcast.
-        broadcast
-            Whether to broadcast the message to all the users or only to the
-            commander.
-        validate
-            Validate the reply against the actor schema. This is ignored if the actor
-            was not started with knowledge of its own schema.
-        kwargs
-            Keyword arguments that will used to update the message.
-
+        See `~.BaseActor.write` for details on the allowed parameters.
         """
+
+        BaseActor.write(self, *args, **kwargs)
+
+    def _write_internal(self, reply: Reply):
+        """Write a reply to the users."""
 
         def send_to_transport(transport, message):
 
@@ -427,14 +362,8 @@ class JSONActor(ClickParser, BaseActor):
                 message_json = json.dumps(message, sort_keys=False) + "\n"
             transport.write(message_json.encode())
 
-        message = message or {}
-        assert isinstance(message, dict), "message must be a dictionary"
-        message.update(kwargs)
-
-        if validate and self.model is not None:
-            result, err = self.model.update_model(message)
-            if result is False:
-                message = {"error": f"Failed validating the reply: {err}"}
+        message = reply.message
+        command = reply.command
 
         commander_id = command.commander_id if command else None
         command_id = command.command_id if command else None
@@ -445,7 +374,7 @@ class JSONActor(ClickParser, BaseActor):
             "header": {
                 "command_id": command_id,
                 "commander_id": commander_id,
-                "message_code": message_code,
+                "message_code": reply.message_code,
                 "sender": self.name,
             }
         }
@@ -453,7 +382,7 @@ class JSONActor(ClickParser, BaseActor):
         message_full.update(header)
         message_full.update({"data": message})
 
-        if broadcast or commander_id is None or transport is None:
+        if reply.broadcast or commander_id is None or transport is None:
             for transport in self.transports.values():
                 send_to_transport(transport, message_full)
         else:
@@ -462,7 +391,7 @@ class JSONActor(ClickParser, BaseActor):
         message_json = json.dumps(message_full, sort_keys=False) + "\n"
 
         if self.log:
-            log_reply(self.log, message_code, message_json.strip())
+            log_reply(self.log, reply.message_code, message_json.strip())
 
 
 @click.command(cls=CluCommand)
