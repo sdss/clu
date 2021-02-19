@@ -50,8 +50,7 @@ If using `pytest <https://docs.pytest.org>`__, a normal design pattern is to def
 
 This usually requires instally `pytest-asyncio <https://github.com/pytest-dev/pytest-asyncio>`__ to be able to define coroutines as fixtures.
 
-.. note:: `.setup_test_actor` currently only works with `.LegacyActor` and `.JSONActor`.
-
+`.setup_test_actor` can be used with `.AMQPActor`, `.JSONActor`, and `.LegacyActor`.
 
 API
 ---
