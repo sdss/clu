@@ -14,7 +14,7 @@ import pathlib
 import re
 import uuid
 
-from typing import Any, Dict, Optional, TypeVar, Union
+from typing import Any, Dict, Optional, TypeVar, Union, cast
 
 import aio_pika as apika
 import click
@@ -363,7 +363,7 @@ class JSONActor(ClickParser, BaseActor):
             transport.write(message_json.encode())
 
         message = reply.message
-        command = reply.command
+        command = cast(Command, reply.command)
 
         commander_id = command.commander_id if command else None
         command_id = command.command_id if command else None

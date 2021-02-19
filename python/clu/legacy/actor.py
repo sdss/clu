@@ -413,7 +413,7 @@ class BaseLegacyActor(BaseActor):
     def _write_internal(self, reply: Reply, user_id=0, command_id=0, concatenate=True):
         """Writes reply to users."""
 
-        command = reply.command
+        command = cast(Command, reply.command)
         message = reply.message
 
         # For a reply, the commander ID is the user assigned to the transport
