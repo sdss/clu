@@ -163,17 +163,16 @@ async def test_command_neg_number(json_actor, click_parser, command_string):
     await cmd
 
     assert cmd.status.did_succeed
-
     # This is a different test. We are testing that mygroup got called
     # with the parser_obj "object" and its value was passed.
-    assert cmd.replies[-2]["object"] == "my_object"
+    assert cmd.replies[-3]["object"] == "my_object"
 
     if "-15" in command_string:
-        assert cmd.replies[-1]["value"] == -15
+        assert cmd.replies[-2]["value"] == -15
     else:
-        assert cmd.replies[-1]["value"] == 15
+        assert cmd.replies[-2]["value"] == 15
 
     if "-r" in command_string or "--recursive" in command_string:
-        assert cmd.replies[-1]["recursive"] is True
+        assert cmd.replies[-2]["recursive"] is True
     else:
-        assert cmd.replies[-1]["recursive"] is False
+        assert cmd.replies[-2]["recursive"] is False

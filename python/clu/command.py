@@ -13,7 +13,7 @@ import re
 import time
 from contextlib import suppress
 
-from typing import Any, Awaitable, Callable, Dict, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import clu
 import clu.base
@@ -88,8 +88,8 @@ class BaseCommand(asyncio.Future, StatusMixIn[CommandStatus]):
         self.default_keyword = default_keyword
         self.loop = loop or asyncio.get_event_loop()
 
-        #: A list of replies this command has received.
-        self.replies = []
+        #: .Reply: A list of replies this command has received.
+        self.replies: List[clu.base.Reply] = []
 
         asyncio.Future.__init__(self, loop=self.loop)
 
@@ -210,7 +210,7 @@ class BaseCommand(asyncio.Future, StatusMixIn[CommandStatus]):
     def write(
         self,
         message_code: str = "i",
-        message: Dict[str, Any] = None,
+        message: Optional[Union[Dict[str, Any], str]] = None,
         broadcast: bool = False,
         **kwargs,
     ):
@@ -241,16 +241,13 @@ class BaseCommand(asyncio.Future, StatusMixIn[CommandStatus]):
 
         command = self if not self.parent else self.parent
 
-        result: Optional[Awaitable[Any]] = self.actor.write(
+        self.actor.write(
             message_code,
             message=message,
             command=command,
             broadcast=broadcast,
             **kwargs,
         )
-
-        if result and asyncio.iscoroutine(result):
-            self.loop.create_task(result)
 
 
 class Command(BaseCommand):

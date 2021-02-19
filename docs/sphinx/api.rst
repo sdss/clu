@@ -9,6 +9,7 @@ Base classes
 
 .. autoclass:: clu.base.BaseClient
 .. autoclass:: clu.base.BaseActor
+.. autoclass:: clu.base.Reply
 
 
 Client

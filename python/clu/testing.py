@@ -160,7 +160,7 @@ async def setup_test_actor(actor: T, user_id: int = 1) -> T:
 
     if not issubclass(actor.__class__, (clu.LegacyActor, clu.JSONActor)):
         raise RuntimeError(
-            "setup_test_actor is only usable with " "LegacyActor or JSONActor actors."
+            "setup_test_actor is only usable with LegacyActor or JSONActor actors."
         )
 
     def invoke_mock_command(self, command_str, command_id=0):

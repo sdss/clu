@@ -18,7 +18,7 @@ from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union, cast
 import clu
 
 from ..actor import CustomTransportType
-from ..base import BaseActor
+from ..base import BaseActor, Reply
 from ..command import Command, TimedCommandList, parse_legacy_command
 from ..parser import ClickParser
 from ..protocol import TCPStreamServer
@@ -341,7 +341,7 @@ class BaseLegacyActor(BaseActor):
                 commander=f"{self.name}.{self.name}",
                 mid=command_id,
             )
-            command.actor = self
+            # command.actor = self
             return command
 
         else:
@@ -392,33 +392,44 @@ class BaseLegacyActor(BaseActor):
             supersedes ``message``.
         """
 
+        reply = BaseActor.write(
+            self,
+            message_code=message_code,
+            message=message,
+            command=command,
+            broadcast=broadcast,
+            validate=validate,
+            call_internal=False,
+            **kwargs,
+        )
+
+        self._write_internal(
+            reply,
+            user_id=user_id,
+            command_id=command_id,
+            concatenate=concatenate,
+        )
+
+    def _write_internal(self, reply: Reply, user_id=0, command_id=0, concatenate=True):
+        """Writes reply to users."""
+
+        command = cast(Command, reply.command)
+        message = reply.message
+
         # For a reply, the commander ID is the user assigned to the transport
         # that issues this command.
         transport = command.transport if command else None
         user_id = (transport.user_id if transport else None) or user_id
 
-        if broadcast:
+        if reply.broadcast:
             user_id = 0
             command_id = 0
 
         user_id, command_id = self.get_user_command_id(
-            command=command, user_id=user_id, command_id=command_id
+            command=command,
+            user_id=user_id,
+            command_id=command_id,
         )
-
-        if message is None or (isinstance(message, str) and message.strip() == ""):
-            message = {}
-        elif isinstance(message, str):
-            message = {"text": message}
-        elif not isinstance(message, dict):
-            raise TypeError("invalid message type " + str(type(message)))
-
-        if validate and hasattr(self, "model") and self.model is not None:
-            result, err = self.model.update_model(message)
-            if result is False:
-                message = {"error": f"Failed validating the reply: {err}"}
-                message_code = "e"
-
-        message.update(kwargs)
 
         lines = []
         for keyword in message:
@@ -432,9 +443,11 @@ class BaseLegacyActor(BaseActor):
             lines = ["; ".join(lines)]
 
         for line in lines:
-
             full_msg_str = self.format_user_output(
-                user_id, command_id, message_code, line
+                user_id,
+                command_id,
+                reply.message_code,
+                line,
             )
             msg = (full_msg_str + "\n").encode()
 
@@ -445,7 +458,7 @@ class BaseLegacyActor(BaseActor):
                 transport.write(msg)
 
             if self.log:
-                log_reply(self.log, message_code, full_msg_str)
+                log_reply(self.log, reply.message_code, full_msg_str)
 
 
 class LegacyActor(ClickParser, BaseLegacyActor):
