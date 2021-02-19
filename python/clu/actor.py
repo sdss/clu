@@ -96,11 +96,14 @@ class AMQPActor(AMQPClient, ClickParser, BaseActor):
 
         return self
 
-    async def new_command(self, message):
+    async def new_command(self, message: apika.IncomingMessage, ack=True):
         """Handles a new command received by the actor."""
 
-        async with message.process():
-
+        if ack:
+            async with message.process():
+                headers = message.info()["headers"]
+                command_body = json.loads(message.body.decode())
+        else:
             headers = message.info()["headers"]
             command_body = json.loads(message.body.decode())
 
