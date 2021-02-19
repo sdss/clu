@@ -15,10 +15,15 @@ import sys
 import types
 import unittest.mock
 
-from typing import Any, Dict, List, TypeVar, Union
+from typing import Any, Dict, List, Optional, TypeVar, Union, cast
+
+import aio_pika
+import pamqp.specification
+from aiormq.types import DeliveredMessage
+from pamqp.header import ContentHeader
 
 import clu
-from clu.actor import JSONActor
+from clu.actor import AMQPActor, JSONActor
 from clu.command import Command
 from clu.legacy.actor import LegacyActor
 
@@ -35,7 +40,7 @@ else:
 __all__ = ["MockReply", "MockReplyList", "setup_test_actor"]
 
 
-class MockedActor(JSONActor, LegacyActor):
+class MockedActor(JSONActor, LegacyActor, AMQPActor):
     invoke_mock_command: Any
     mock_replies: List[MockReply]
 
@@ -94,14 +99,18 @@ class MockReplyList(list):
 
         list.__init__(self)
 
-    def parse_reply(self, reply: Union[bytes, str]):
+    def parse_reply(
+        self,
+        reply: Union[bytes, str, aio_pika.Message],
+        routing_key: Optional[str] = None,
+    ):
         """Parses a reply and construct a `.MockReply`, which is appended."""
 
         if isinstance(reply, bytes):
             reply = reply.decode()
 
         if issubclass(self.actor.__class__, clu.LegacyActor):
-
+            reply = cast(str, reply)
             match = self.LEGACY_REPLY_PATTERN.match(reply)
             if not match:
                 return
@@ -119,7 +128,7 @@ class MockReplyList(list):
                 data[name] = value
 
         elif issubclass(self.actor.__class__, clu.JSONActor):
-
+            reply = cast(str, reply)
             reply_dict: Dict[str, Any] = json.loads(reply)
 
             header = reply_dict["header"]
@@ -129,8 +138,19 @@ class MockReplyList(list):
 
             data = reply_dict["data"]
 
+        elif issubclass(self.actor.__class__, clu.AMQPActor):
+            reply = cast(aio_pika.Message, reply)
+
+            header = reply.headers
+
+            user_id = header.get("commander_id", None)
+            command_id = header.get("command_id", None)
+            flag = header.get("message_code", "d")
+
+            data = json.loads(reply.body.decode())
+
         else:
-            raise RuntimeError("actor must be LegacyActor or JSONActor.")
+            raise RuntimeError("This type of actor is not supported")
 
         list.append(self, MockReply(user_id, command_id, flag, data))
 
@@ -158,16 +178,34 @@ async def setup_test_actor(actor: T, user_id: int = 1) -> T:
     The actor is modified in place and returned.
     """
 
-    if not issubclass(actor.__class__, (clu.LegacyActor, clu.JSONActor)):
-        raise RuntimeError(
-            "setup_test_actor is only usable with LegacyActor or JSONActor actors."
-        )
+    if not issubclass(actor.__class__, (clu.LegacyActor, clu.JSONActor, clu.AMQPActor)):
+        raise RuntimeError("setup_test_actor is not implemented for this type of actor")
 
     def invoke_mock_command(self, command_str, command_id=0):
-        if isinstance(command_str, str):
-            command_str = command_str.encode("utf-8")
-        full_command = f" {command_id} ".encode("utf-8") + command_str
-        return self.new_command(actor.transports["mock_user"], full_command)
+        if issubclass(actor.__class__, (clu.LegacyActor, clu.JSONActor)):
+            if isinstance(command_str, str):
+                command_str = command_str.encode("utf-8")
+            full_command = f" {command_id} ".encode("utf-8") + command_str
+            return self.new_command(actor.transports["mock_user"], full_command)
+        elif issubclass(actor.__class__, clu.AMQPActor):
+            command_id = str(command_id)
+            headers = {"command_id": command_id, "commander_id": "mock_test_client"}
+            header = ContentHeader(
+                properties=pamqp.specification.Basic.Properties(
+                    content_type="text/json",
+                    headers=headers,
+                )
+            )
+            message_body = {"command_string": command_str}
+            message = aio_pika.IncomingMessage(
+                DeliveredMessage(
+                    pamqp.specification.Basic.Deliver(),
+                    header,
+                    json.dumps(message_body).encode(),
+                    None,
+                ),
+            )
+            return self.new_command(message, ack=False)
 
     actor.start = CoroutineMock(return_value=actor)
 
@@ -179,11 +217,16 @@ async def setup_test_actor(actor: T, user_id: int = 1) -> T:
     # Mocks a user transport and stores the replies in a MockReplyListobject
     actor.mock_replies = MockReplyList(actor)
 
-    mock_transport = unittest.mock.MagicMock(spec=asyncio.Transport)
-    mock_transport.user_id = user_id
-    mock_transport.write.side_effect = actor.mock_replies.parse_reply
-
-    actor.transports["mock_user"] = mock_transport
+    if issubclass(actor.__class__, (clu.LegacyActor, clu.JSONActor)):
+        mock_transport = unittest.mock.MagicMock(spec=asyncio.Transport)
+        mock_transport.user_id = user_id
+        mock_transport.write.side_effect = actor.mock_replies.parse_reply
+        actor.transports["mock_user"] = mock_transport
+    elif issubclass(actor.__class__, clu.AMQPActor):
+        actor.connection.exchange = unittest.mock.MagicMock()
+        actor.connection.exchange.publish = CoroutineMock(
+            side_effect=actor.mock_replies.parse_reply
+        )
 
     actor = await actor.start()
 
