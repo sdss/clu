@@ -4,6 +4,7 @@
 Changelog
 =========
 
+* :release:`0.7.1 <2021-02-21>`
 * :feature:`-` Add the option to update the object of the parser object by setting `.ClickParser.context_obj`.
 
 * :release:`0.7.0 <2021-02-18>`
