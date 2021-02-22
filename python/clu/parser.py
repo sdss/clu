@@ -325,6 +325,9 @@ class ClickParser:
     parser_args: List[Any] = []
     parser = command_parser
 
+    #: dict: Parameters to be set in the context object.
+    context_obj = {}
+
     # For type hints
     log: SDSSLogger
     name: str
@@ -359,14 +362,16 @@ class ClickParser:
         # the default handling of exceptions in Click. This will force
         # exceptions to be raised instead of redirected to the stdout.
         # See http://click.palletsprojects.com/en/7.x/exceptions/
+        obj = {
+            "parser_args": parser_args,
+            "log": self.log,
+            "exception_handler": self._handle_command_exception,
+        }
+        obj.update(self.context_obj)
         ctx = self.parser.make_context(
             f"{self.name}-command-parser",
             command_args,
-            obj={
-                "parser_args": parser_args,
-                "log": self.log,
-                "exception_handler": self._handle_command_exception,
-            },
+            obj=obj,
         )
 
         # Makes sure this is the global context. This solves problems when

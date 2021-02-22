@@ -4,6 +4,8 @@
 Changelog
 =========
 
+* :feature:`-` Add the option to update the object of the parser object by setting `.ClickParser.context_obj`.
+
 * :release:`0.7.0 <2021-02-18>`
 * :feature:`49` `.setup_test_actor` can now be used with `.AMQPActor` instances.
 * :feature:`48` `.BaseActor.write` now processes the reply regardless of the specific actor implementation and creates a `.Reply`. The `.Reply` is passed to the actor ``_write_internal`` implementation which handles sending it to the users using the specific actor transport. If the reply has been created by a command, the `.Reply` object is appended to `.BaseCommand.replies`.
