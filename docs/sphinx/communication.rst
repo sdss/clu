@@ -74,7 +74,7 @@ An extended version of this :ref:`example <communicating-example>` can be found 
 Accessing replies
 -----------------
 
-When we command ``ShutterActor`` to open the shutter, it completes the command and outputs the keyword ``shutter="open"``. In some cases we may want to not only know that the command has finished, but also access the replies that command output. One way to do this is to :ref:`register callbacks <keyword-model-callbacks>` against the model of the commanded actor.
+When we command ``ShutterActor`` to open the shutter, it completes the command and outputs the keyword ``shutter="open"``. In some cases we may want to not only know that the command has finished, but also access the replies that command output. One way to do this is to subscribe the commanding actor to the datamodel of the commanded actor and check the model after the command finishes, or to :ref:`register callbacks <keyword-model-callbacks>` against the model of the commanded actor.
 
 Another way is to access the command `~.BaseCommand.replies` attribute. ``replies`` lists all the replies the remote actor has output as a response to the command. The format of the replies varies depending on the actor. For `.AMQPClient` and `.AMQPActor`, it consists of a list of `.AMQPReply` objects in the order in which they were output. We can use this to retrieve the value of the ``shutter`` keyword after the command finishes ::
 
