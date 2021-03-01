@@ -17,6 +17,7 @@ Contents
   legacy
   keyword-model
   parser
+  communication
   testing
   examples
   api
