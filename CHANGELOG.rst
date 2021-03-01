@@ -6,6 +6,7 @@ Changelog
 
 * :release:`0.7.1 <2021-02-21>`
 * :feature:`-` Add the option to update the object of the parser object by setting `.ClickParser.context_obj`.
+* :support:`57` Documentation on :ref:`actor communication <actor-communication>`.
 
 * :release:`0.7.0 <2021-02-18>`
 * :feature:`49` `.setup_test_actor` can now be used with `.AMQPActor` instances.
