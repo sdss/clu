@@ -228,7 +228,7 @@ async def setup_test_actor(actor: T, user_id: int = 1) -> T:
             side_effect=actor.mock_replies.parse_reply
         )
 
-    actor = await actor.start()
+    actor = cast(T, await actor.start())
 
     return actor
 

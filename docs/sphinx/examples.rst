@@ -99,3 +99,54 @@ The following code shows the real implementation of the `jaeger actor <https://g
 
 .. literalinclude:: examples/jaeger_actor.py
    :language: python
+
+
+.. _communicating-example:
+
+Communicating with other actors
+-------------------------------
+
+Let's expand a bit the example that we saw in :ref:`actor-communication`. We had two actors, one of them ``CameraActor`` manages a camera (integration, buffer fetching) while the other, ``ShutterActor`` handles the external shutter and allows is to open/close it. We want ``CameraActor`` to command ``ShutterActor`` at the beginning and the end of an exposure, and read the status reported by ``ShutterActor``. For that, we write two actors in two different files. We use `.AMQPActor` but the same code, with small modifications, could be written for `.LegacyActor` using a `.TronConnection`.
+
+First we write the code for ``ShutterActor`` (`click here to download <examples/shutter_actor.py>`__):
+
+.. literalinclude:: examples/shutter_actor.py
+   :language: python
+
+And we do the same for ``CameraActor`` (`click here to download <examples/camera_actor.py>`__):
+
+.. literalinclude:: examples/camera_actor.py
+   :language: python
+
+To run this code we need to execute ``python camera_actor.py`` and ``python shutter_actor.py`` on different terminals. Then, on a third terminal, we use ``clu`` to open a CLI to the actors.
+
+.. code-block:: console
+
+   $ clu
+   camera_actor expose 1
+   17:18:56.382 camera_actor >
+   17:18:56.394 camera_actor i {
+      "text": "Starting the exposure."
+   }
+   17:18:56.402 shutter_actor >
+   17:18:56.410 shutter_actor i {
+      "text": "Opening the shutter!"
+   }
+   17:18:56.416 shutter_actor : {
+      "shutter": "open"
+   }
+   17:18:56.424 camera_actor i {
+      "text": "Shutter is now 'open'."
+   }
+   17:18:57.386 shutter_actor >
+   17:18:57.399 shutter_actor i {
+      "text": "Closing the shutter!"
+   }
+   17:18:57.409 shutter_actor : {
+      "shutter": "closed"
+   }
+   17:18:57.417 camera_actor : {
+      "text": "Exposure done!"
+   }
+
+Note how we are receiving the replies from both actors, and how we use the reply from ``shutter_actor`` to output the status of the shutter in ``camera_actor``.

@@ -142,6 +142,8 @@ The initial value of the keyword is ``None`` but once a reply updates it, we can
 
 In practice, one can treat tron models the same way as other models, with the difference that the value of each keyword is always a list and one must know what each element represents.
 
+.. _keyword-model-callbacks:
+
 Adding callbacks
 ----------------
 

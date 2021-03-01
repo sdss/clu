@@ -16,7 +16,7 @@ import pathlib
 import time
 from datetime import datetime
 
-from typing import Any, Dict, Optional, Union, cast
+from typing import Any, Dict, Optional, TypeVar, Union, cast
 
 from sdsstools import get_logger, read_yaml_file
 from sdsstools.logger import SDSSLogger
@@ -30,6 +30,7 @@ from .tools import REPLY
 __all__ = ["BaseClient", "BaseActor", "Reply"]
 
 SchemaType = Union[Dict[str, Any], pathlib.Path, str]
+T = TypeVar("T", bound="BaseClient")
 
 
 class BaseClient(metaclass=abc.ABCMeta):
@@ -93,7 +94,7 @@ class BaseClient(metaclass=abc.ABCMeta):
         return self.__class__.__name__
 
     @abc.abstractmethod
-    async def start(self):
+    async def start(self: T) -> T:
         """Runs the client."""
 
         pass
