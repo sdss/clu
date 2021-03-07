@@ -17,6 +17,8 @@ import uuid
 from typing import Any, Dict, List, Optional, Union
 
 import aio_pika as apika
+from aiormq import PublishError
+from click import exceptions
 
 from sdsstools.logger import SDSSLogger
 
@@ -333,15 +335,31 @@ class AMQPClient(BaseClient):
 
         message_body = {"command_string": command_string}
 
-        await self.connection.exchange.publish(
-            apika.Message(
-                json.dumps(message_body).encode(),
-                content_type="text/json",
-                headers=headers,
-                correlation_id=command_id,
-                reply_to=self.replies_queue.name,
-            ),
-            routing_key=routing_key,
-        )
+        try:
+            await self.connection.exchange.publish(
+                apika.Message(
+                    json.dumps(message_body).encode(),
+                    content_type="text/json",
+                    headers=headers,
+                    correlation_id=command_id,
+                    reply_to=self.replies_queue.name,
+                ),
+                routing_key=routing_key,
+            )
+        except (apika.exceptions.DeliveryError, apika.exceptions.PublishError):
+            # The consumer (actor) did not reply. This usually means that the actor
+            # is not connected. We fake a reply from that actor saying so. That will
+            # be received by handle_reply which will fail the current command.
+            error_msg = dict(error=f"Failed routing message to consumer {consumer!r}.")
+            headers.update({"message_code": "f", "sender": consumer})
+            await self.connection.exchange.publish(
+                apika.Message(
+                    json.dumps(error_msg).encode(),
+                    content_type="text/json",
+                    headers=headers,
+                    correlation_id=command_id,
+                ),
+                routing_key=f"reply.{command.commander_id}",
+            )
 
         return command
