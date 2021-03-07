@@ -17,8 +17,6 @@ import uuid
 from typing import Any, Dict, List, Optional, Union
 
 import aio_pika as apika
-from aiormq import PublishError
-from click import exceptions
 
 from sdsstools.logger import SDSSLogger
 
