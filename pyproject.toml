@@ -28,7 +28,7 @@ clu = "clu.__main__:main"
 
 [tool.poetry.dependencies]
 python = "^3.7"
-Click = "^7.0"
+click = "^7.0"
 aio_pika = "^6.4.1"
 jsonschema = "^3.0.1"
 sdsstools = ">=0.2.0"
