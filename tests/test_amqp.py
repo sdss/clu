@@ -71,6 +71,15 @@ async def test_bad_command(amqp_client, amqp_actor):
     assert "Command 'bad_command' failed." in cmd.replies[-1].body["text"]
 
 
+async def test_send_command_actor_not_connected(amqp_client, amqp_actor):
+
+    cmd = await amqp_client.send_command("amqp_actor_2", "ping")
+    await cmd
+
+    assert cmd.status.did_fail
+    assert "Failed routing message" in cmd.replies[-1].body["error"]
+
+
 async def test_queue_locked(amqp_actor):
 
     with pytest.raises(CluError) as error:
