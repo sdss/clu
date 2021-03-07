@@ -498,6 +498,7 @@ class TopicListener(object):
         self,
         exchange_name: str,
         exchange_type: apika.ExchangeType = apika.ExchangeType.TOPIC,
+        on_return_raises=True,
     ) -> TopicListener:
         """Initialise the connection.
 
@@ -521,7 +522,7 @@ class TopicListener(object):
                 ssl=self.ssl,
             )
 
-        self.channel = await self.connection.channel()
+        self.channel = await self.connection.channel(on_return_raises=on_return_raises)
         await self.channel.set_qos(prefetch_count=1)
 
         self.exchange = await self.channel.declare_exchange(
