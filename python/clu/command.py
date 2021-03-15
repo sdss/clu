@@ -13,7 +13,7 @@ import re
 import time
 from contextlib import suppress
 
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Generic, List, Optional, Tuple, TypeVar, Union
 
 import clu
 import clu.base
@@ -29,7 +29,10 @@ __all__ = [
 ]
 
 
-class BaseCommand(asyncio.Future, StatusMixIn[CommandStatus]):
+Actor_co = TypeVar("Actor_co", bound="clu.base.BaseActor", covariant=True)
+
+
+class BaseCommand(asyncio.Future, StatusMixIn[CommandStatus], Generic[Actor_co]):
     """Base class for commands of all types (user and device).
 
     A `BaseCommand` instance is a `~asyncio.Future` whose result gets set
@@ -70,7 +73,7 @@ class BaseCommand(asyncio.Future, StatusMixIn[CommandStatus]):
         commander_id: Union[int, str] = 0,
         command_id: Union[int, str] = 0,
         consumer_id: Union[int, str] = 0,
-        actor: clu.base.BaseActor = None,
+        actor: Optional[Actor_co] = None,
         parent: BaseCommand = None,
         status_callback: Callable[[CommandStatus], Any] = None,
         call_now: bool = False,
@@ -250,7 +253,7 @@ class BaseCommand(asyncio.Future, StatusMixIn[CommandStatus]):
         )
 
 
-class Command(BaseCommand):
+class Command(BaseCommand[Actor_co]):
     """A command from a user.
 
     Parameters
@@ -289,7 +292,7 @@ class Command(BaseCommand):
     def parse(self) -> Command:
         """Parses the command."""
 
-        if not self.actor:
+        if not isinstance(self.actor, clu.base.BaseActor):
             raise clu.CluError("the actor is not defined. Cannot parse command.")
 
         self.actor.parse_command(self)
@@ -329,9 +332,9 @@ def parse_legacy_command(command_string: str) -> Tuple[int, str]:
 
     command_dict = command_match.groupdict("")
 
-    command_id = command_dict["cmdID"]
-    if command_id:
-        command_id = int(command_id)
+    command_id_str = command_dict["cmdID"]
+    if command_id_str:
+        command_id = int(command_id_str)
     else:
         command_id = 0
 

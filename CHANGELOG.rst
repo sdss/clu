@@ -5,6 +5,7 @@ Changelog
 =========
 
 * :feature:`59` Fail AMQP client command when the consumer is not connected.
+* :support:`-` Typing: `.BaseCommand` now accepts a generic with the class of the actor.
 
 * :release:`0.7.1 <2021-02-21>`
 * :feature:`-` Add the option to update the object of the parser object by setting `.ClickParser.context_obj`.
