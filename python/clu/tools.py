@@ -320,10 +320,9 @@ class CallbackMixIn(object):
                 # Check that the loop is running. There is a problem in which
                 # self.loop may be set before there is a running loop so we
                 # replace it with a properly running loop.
-                loop = self.loop
-                if not loop or loop.is_running() is False:
-                    loop = asyncio.get_event_loop()
-                task = loop.call_soon(cb, *args[:n_args])
+                if not self.loop or self.loop.is_running() is False:
+                    self.loop = asyncio.get_event_loop()
+                task = self.loop.call_soon(cb, *args[:n_args])
 
 
 def dict_depth(d: dict) -> int:
