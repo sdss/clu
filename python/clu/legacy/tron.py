@@ -102,7 +102,7 @@ class TronModel(BaseModel[TronKey]):
             self[key_name].value = [value.native for value in reply_key.values]
             self[key_name].key = reply_key
 
-            self.notify(self)
+            self.notify(self, self[key_name])
 
 
 class TronLoggingFilter(logging.Filter):
