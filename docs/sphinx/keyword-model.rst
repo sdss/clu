@@ -149,9 +149,10 @@ Adding callbacks
 
 One of the main advantages of having a self-updating model for an actor is that we can register callbacks to be executed when a keyword or model changes. We can register a callback directly to the model ::
 
+    >>> def model_callback(model, key): print(key)
     >>> client.models['guider'].register_callback(model_callback)
 
-``model_callback`` can be either a function or a coroutine and is called when the model is updated. The function receives the `.TronModel` instance as the only argument.
+``model_callback`` can be either a function or a coroutine and is called when the model is updated. The function receives the `.Model` instance as the first argument and the modified `.Property` as the second (`.TronModel` and `.TronKey` in the case of a Tron model).
 
 More likely, we'll want to add callbacks to specific keywords, which is done as ::
 

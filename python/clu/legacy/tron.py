@@ -58,8 +58,8 @@ class TronModel(BaseModel[TronKey]):
         A dictionary of keys that define the datamodel.
     callback
         A function or coroutine to call when the datamodel changes. The
-        function is called with the instance of `.TronModel`. If the callback
-        is a coroutine, it is scheduled as a task.
+        function is called with the instance of `.TronModel` and the modified keyword.
+        If the callback is a coroutine, it is scheduled as a task.
     log
         Where to log messages.
     """
