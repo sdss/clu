@@ -231,8 +231,7 @@ class Model(BaseModel[Property]):
         for key, value in instance.items():
             if key in self:
                 self[key].value = value
-
-        self.notify(self)
+                self.notify(self, self[key])
 
         return True, None
 

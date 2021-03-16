@@ -92,9 +92,11 @@ async def test_queue_locked(amqp_actor):
 
 
 async def test_model_callback(amqp_client, amqp_actor, mocker):
+    def callback(model, kw):
+        pass
 
-    callback = mocker.MagicMock()
-    amqp_client.models["amqp_actor"]["text"].register_callback(callback)
+    callback_mock = mocker.create_autospec(callback)
+    amqp_client.models["amqp_actor"].register_callback(callback_mock)
 
     kw = amqp_client.models["amqp_actor"]["text"]
     assert kw.value is None
@@ -102,7 +104,8 @@ async def test_model_callback(amqp_client, amqp_actor, mocker):
     cmd = await amqp_client.send_command("amqp_actor", "ping")
     await cmd
 
-    callback.assert_called()
+    callback_mock.assert_called()
+    assert len(callback_mock.call_args) == 2
 
     assert kw.value == "Pong."
     assert kw.flatten() == {"text": "Pong."}

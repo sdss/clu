@@ -12,6 +12,7 @@ import asyncio
 import contextlib
 import enum
 import functools
+import inspect
 import json
 import logging
 import re
@@ -309,13 +310,14 @@ class CallbackMixIn(object):
             return
 
         for cb in self._callbacks:
+            n_args = len(inspect.getfullargspec(cb).args)
             if asyncio.iscoroutinefunction(cb):
-                task = self.loop.create_task(cb(*args))
+                task = self.loop.create_task(cb(*args[:n_args]))
                 self._running.append(task)
                 # Auto-dispose of the task once it completes
                 task.add_done_callback(self._running.remove)
             else:
-                task = self.loop.call_soon(cb, *args)
+                task = self.loop.call_soon(cb, *args[:n_args])
 
 
 def dict_depth(d: dict) -> int:

@@ -11,7 +11,7 @@ import logging
 
 import pytest
 
-from clu.legacy import TronConnection
+from clu.legacy import TronConnection, TronKey
 from clu.legacy.types.parser import ParseError
 
 
@@ -43,6 +43,24 @@ async def test_update_model(tron_client, tron_server):
     assert act_alert.key[1].name == "alertID"
 
     assert repr(act_alert) == ("<TronKey (activeAlerts): ['Alert1', 'Alert2']>")
+
+
+@pytest.mark.xfail
+async def test_model_callback(tron_client, tron_server, mocker):
+    def callback(model, kw):
+        pass
+
+    callback_mock = mocker.create_autospec(callback)
+    tron_client.models["alerts"].register_callback(callback_mock)
+
+    client_transport = list(tron_server.transports.values())[0]
+    client_transport.write(".alerts 0 alerts i activeAlerts=Alert1,Alert2\n".encode())
+    await asyncio.sleep(0.01)
+
+    callback_mock.assert_called()
+    assert len(callback_mock.call_args) == 2
+    assert isinstance(callback_mock.call_args.args[-1], TronKey)
+    assert callback_mock.call_args.args[-1].value == ["Alert1", "Alert2"]
 
 
 async def test_parser_fails(tron_client, tron_server, caplog, mocker):

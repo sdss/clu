@@ -58,8 +58,8 @@ class TronModel(BaseModel[TronKey]):
         A dictionary of keys that define the datamodel.
     callback
         A function or coroutine to call when the datamodel changes. The
-        function is called with the instance of `.TronModel`. If the callback
-        is a coroutine, it is scheduled as a task.
+        function is called with the instance of `.TronModel` and the modified keyword.
+        If the callback is a coroutine, it is scheduled as a task.
     log
         Where to log messages.
     """
@@ -102,7 +102,7 @@ class TronModel(BaseModel[TronKey]):
             self[key_name].value = [value.native for value in reply_key.values]
             self[key_name].key = reply_key
 
-            self.notify(self)
+            self.notify(self, self[key_name])
 
 
 class TronLoggingFilter(logging.Filter):
