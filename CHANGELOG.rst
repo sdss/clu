@@ -4,6 +4,7 @@
 Changelog
 =========
 
+* :release:`0.7.2 <2021-03-16>`
 * :feature:`59` Fail AMQP client command when the consumer is not connected.
 * :support:`-` Typing: `.BaseCommand` now accepts a generic with the class of the actor.
 * :feature:`61` `.Model` and `.TronModel` callbacks receive the model and the updated keyword again. This is done in a backwards compatible manner; if the callback has a single argument in its signature it will receive only the model.
