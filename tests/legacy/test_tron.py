@@ -46,12 +46,13 @@ async def test_update_model(tron_client, tron_server):
     assert repr(act_alert) == ("<TronKey (activeAlerts): ['Alert1', 'Alert2']>")
 
 
-@pytest.mark.skipif(sys.version_info < (3, 8))
+@pytest.mark.skipif(sys.version_info < (3, 8), reason="Test fails in PY37")
 async def test_model_callback(tron_client, tron_server, mocker):
     def callback(model, kw):
         pass
 
     callback_mock = mocker.create_autospec(callback)
+    tron_client.models["alerts"].loop = None
     tron_client.models["alerts"].register_callback(callback_mock)
 
     client_transport = list(tron_server.transports.values())[0]

@@ -317,7 +317,13 @@ class CallbackMixIn(object):
                 # Auto-dispose of the task once it completes
                 task.add_done_callback(self._running.remove)
             else:
-                task = self.loop.call_soon(cb, *args[:n_args])
+                # Check that the loop is running. There is a problem in which
+                # self.loop may be set before there is a running loop so we
+                # replace it with a properly running loop.
+                loop = self.loop
+                if not loop or loop.is_running() is False:
+                    loop = asyncio.get_event_loop()
+                task = loop.call_soon(cb, *args[:n_args])
 
 
 def dict_depth(d: dict) -> int:
