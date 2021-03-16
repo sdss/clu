@@ -312,7 +312,7 @@ class CallbackMixIn(object):
         for cb in self._callbacks:
             n_args = len(inspect.getfullargspec(cb).args)
             if asyncio.iscoroutinefunction(cb):
-                task = self.loop.create_task(cb(*args[:n_args]))
+                task = asyncio.create_task(cb(*args[:n_args]))
                 self._running.append(task)
                 # Auto-dispose of the task once it completes
                 task.add_done_callback(self._running.remove)
