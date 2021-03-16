@@ -151,7 +151,7 @@ One of the main advantages of having a self-updating model for an actor is that 
 
     >>> client.models['guider'].register_callback(model_callback)
 
-``model_callback`` can be either a function or a coroutine and is called when the model is updated. The function receives the `.Model` instance as the only argument.
+``model_callback`` can be either a function or a coroutine and is called when the model is updated. The function receives the `.TronModel` instance as the only argument.
 
 More likely, we'll want to add callbacks to specific keywords, which is done as ::
 
