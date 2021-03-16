@@ -109,7 +109,7 @@ The keyword models used by legacy actors are different (of course) in that they 
 We can create a connection to ``tron`` and request that the client keeps track of the ``guider`` actor model ::
 
     >>> from clu.legacy.tron import TronConnection
-    >>> tron = TronConnection('localhost', 6093, model_names=['guider'])
+    >>> tron = TronConnection('localhost', 6093, models=['guider'])
     >>> await tron.start()
     >>> tron.models
     {'guider': <Model (guider)>}
