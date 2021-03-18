@@ -4,6 +4,8 @@
 Changelog
 =========
 
+* :support:`-` Remove leftover print statements used for testing.
+
 * :release:`0.7.2 <2021-03-16>`
 * :feature:`59` Fail AMQP client command when the consumer is not connected.
 * :support:`-` Typing: `.BaseCommand` now accepts a generic with the class of the actor.

@@ -108,7 +108,7 @@ async def test_send_command(actor, tron_server):
 
     assert b"test_actor.test_actor" in tron_server.received[-1]
     assert b"alerts ping" in tron_server.received[-1]
-    print(command.replies)
+
     assert len(command.replies) == 1
 
 

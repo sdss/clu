@@ -102,9 +102,6 @@ class TronModel(BaseModel[TronKey]):
             self[key_name].value = [value.native for value in reply_key.values]
             self[key_name].key = reply_key
 
-            loop = asyncio.get_event_loop()
-            print(loop)
-
             self.notify(self, self[key_name])
 
 
