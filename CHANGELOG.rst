@@ -4,6 +4,7 @@
 Changelog
 =========
 
+* :release:`0.7.3 <2021-03-17>`
 * :support:`-` Remove leftover print statements used for testing.
 
 * :release:`0.7.2 <2021-03-16>`
