@@ -149,7 +149,7 @@ class BaseLegacyActor(BaseActor):
             if self.tron:
                 await self.tron.start()
                 self.log.info(
-                    "started tron connection at " f"{self.tron.host}:{self.tron.port}"
+                    f"started tron connection at {self.tron.host}:{self.tron.port}"
                 )
             else:
                 warnings.warn(

@@ -89,9 +89,7 @@ class AMQPReply(object):
         if self.message_code is None:
             self.is_valid = False
             if self.log:
-                self.log.warning(
-                    f"received message without " f"message_code: {message}"
-                )
+                self.log.warning(f"received message without message_code: {message}")
             return
 
         self.sender = self.headers.get("sender", None)

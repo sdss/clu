@@ -87,7 +87,7 @@ class TronModel(BaseModel[TronKey]):
             key_name = reply_key.name.lower()
             if key_name not in self.keydict:
                 raise ParseError(
-                    "Cannot parse unknown keyword " f"{self.name}.{reply_key.name}."
+                    f"Cannot parse unknown keyword {self.name}.{reply_key.name}."
                 )
 
             # When parsed the values in reply_key are string. After consuming
@@ -96,7 +96,7 @@ class TronModel(BaseModel[TronKey]):
 
             if not result:
                 raise ParseError(
-                    "Failed parsing keyword " f"{self.name}.{reply_key.name}."
+                    f"Failed parsing keyword {self.name}.{reply_key.name}."
                 )
 
             self[key_name].value = [value.native for value in reply_key.values]
