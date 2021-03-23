@@ -5,6 +5,7 @@ Changelog
 =========
 
 * :support:`64` Use ``type_checker`` with ``jsonschema`` to allow lists and tuples to be be used as arrays (fixes deprecation of the ``type`` argument).
+* :bug:`-` For a legacy actor, strip the reply keyword and value strings when parsing them in `.MockReplyList`.
 
 * :release:`0.7.4 <2021-03-23>`
 * :support:`63` Breaking change. `.TronKey` is now set with two attributes (in addition to ``value``): ``key`` which contains the actorkeys ``Key`` instance, and ``keyword`` with the updated keyword as an opscore ``Keyword`` object. ``TronKey.value`` contains a list of the ``keyword`` values as Python native types. This is a breaking change because in previous versions ``TronKey.key`` contained the ``Keyword``, but this nomenclature is more consistent with the opscore class names.

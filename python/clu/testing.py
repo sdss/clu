@@ -125,7 +125,7 @@ class MockReplyList(list):
                 if keyword_raw.strip() == "":
                     continue
                 name, value = keyword_raw.split("=", maxsplit=1)
-                data[name] = value
+                data[name.strip()] = value.strip()
 
         elif issubclass(self.actor.__class__, clu.JSONActor):
             reply = cast(str, reply)
