@@ -149,6 +149,9 @@ If you are only interested int he list of value, the simplest is to used the ``v
 
 In practice, one can treat tron models the same way as other models, with the difference that the ``value`` of each keyword is always a list and one must know what each element represents.
 
+.. note::
+    Previous to CLU 0.7.4, ``TronKey.keyword`` did not exists and ``TronKey.key`` actually contained the ``Keyword`` object. CLU 0.7.4 introduces a breaking change to clarify the nomenclature and make it more consistent with ``opscore``.
+
 .. _keyword-model-callbacks:
 
 Adding callbacks
