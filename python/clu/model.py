@@ -17,6 +17,7 @@ from typing import Any, Callable, Dict, List, Optional, TypeVar, Union, cast
 
 import jsonschema
 import jsonschema.exceptions
+import jsonschema.validators
 
 import clu.base
 
@@ -170,7 +171,14 @@ class Model(BaseModel[Property]):
         if not self.check_schema(self.schema):
             raise ValueError(f"schema {name!r} is invalid.")
 
-        self.validator = self.VALIDATOR(self.schema, types={"array": (list, tuple)})
+        type_checker = self.VALIDATOR.TYPE_CHECKER.redefine(
+            "array", lambda checker, instance: isinstance(instance, (list, tuple))
+        )
+        self.VALIDATOR = jsonschema.validators.extend(
+            self.VALIDATOR,
+            type_checker=type_checker,
+        )
+        self.validator = self.VALIDATOR(self.schema)
 
         if (
             "type" not in self.schema

@@ -74,3 +74,18 @@ def test_schema_no_properties():
         Model("test_model", '{"type": "object"}')
 
     assert str(err.value) == "Schema must be of type object."
+
+
+def test_schema_array():
+
+    schema = """
+    {
+        "type": "object",
+        "properties": { "myarray": { "type": "array" } }
+    }
+    """
+
+    model = Model("test_model", schema)
+
+    assert model.validator.validate({"myarray": [1, 2, 3]}) is None
+    assert model.validator.validate({"myarray": (1, 2, 3)}) is None
