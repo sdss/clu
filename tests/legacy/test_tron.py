@@ -38,10 +38,10 @@ async def test_update_model(tron_client, tron_server):
     assert act_alert.value is not None
 
     assert act_alert.value[0] == "Alert1"
-    assert act_alert.key[0].name == "alertID"
+    assert act_alert.keyword[0].name == "alertID"
 
     assert act_alert.value[1] == "Alert2"
-    assert act_alert.key[1].name == "alertID"
+    assert act_alert.keyword[1].name == "alertID"
 
     assert repr(act_alert) == ("<TronKey (activeAlerts): ['Alert1', 'Alert2']>")
 

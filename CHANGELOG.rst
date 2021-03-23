@@ -4,6 +4,8 @@
 Changelog
 =========
 
+* :support:`63` Breaking change. `.TronKey` is now set with two attributes (in addition to ``value``): ``key`` which contains the actorkeys ``Key`` instance, and ``keyword`` with the updated keyword as an opscore ``Keyword`` object. ``TronKey.value`` contains a list of the ``keyword`` values as Python native types. This is a breaking change because in previous versions ``TronKey.key`` contained the ``Keyword``, but this nomenclature is more consistent with the opscore class names.
+
 * :release:`0.7.3 <2021-03-17>`
 * :support:`-` Remove leftover print statements used for testing.
 

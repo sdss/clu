@@ -116,7 +116,9 @@ We can create a connection to ``tron`` and request that the client keeps track o
     >>> tron.models['guider']
     <Model (guider)>
     >>> tron.models['guider']['fwhm']
-    <TronKey (fwhm): []>
+    <TronKey (fwhm): [572, nan, 0, 0, nan]>
+    >>> tron.models['guider']['fwhm'].value
+    [572, nan, 0, 0, nan]
     >>> tron.models['guider']['fwhm'].name
     'fwhm'
     >>> tron.models['guider']['fwhm'].key
@@ -131,16 +133,21 @@ Note that the key in this case is an ``opscore`` ``Key`` object, which contains 
     >>> [vtype.name for vtype in tron.models['guider']['fwhm'].key.typedValues.vtypes]
     ['expID', 'tmean', 'nKept', 'nReject', 'mean']
 
-The initial value of the keyword is ``None`` but once a reply updates it, we can access its values ::
+We can also access the ``keyword`` attribute which contains the last emitted keyword as an ``opscore`` ``Keyword`` object ::
 
-    >>> tron.models['guider']['fwhm'].value[0].name
-    'expID'
-    >>> tron.models['guider']['fwhm'].value[0]
-    12345
-    >>> tron.models['guider']['fwhm'].value[4]
-    1.23
+    >>> tron.models['guider']['fwhm'].keyword.values
+    [Int(568), Float(nan arcsec), Int(0), Int(0), Float(nan arcsec)]
+    >>> [value.name for value in tron.models['guider']["fwhm"].keyword.values]
+    ['expID', 'tmean', 'nKept', 'nReject', 'mean']
 
-In practice, one can treat tron models the same way as other models, with the difference that the value of each keyword is always a list and one must know what each element represents.
+If you are only interested int he list of value, the simplest is to used the ``value`` attribute to access a list of values as builtin Python types ::
+
+    >>> tron.models['guider']['fwhm'].value
+    [572, nan, 0, 0, nan]
+    >>> type(tron.models['guider']['fwhm'].value[0])
+    int
+
+In practice, one can treat tron models the same way as other models, with the difference that the ``value`` of each keyword is always a list and one must know what each element represents.
 
 .. _keyword-model-callbacks:
 

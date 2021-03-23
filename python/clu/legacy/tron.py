@@ -18,7 +18,8 @@ from clu.command import Command, CommandStatus
 from clu.model import BaseModel, Property
 from clu.protocol import open_connection
 
-from .types.keys import KeysDictionary
+from .types.keys import Key, KeysDictionary
+from .types.messages import Keyword
 from .types.parser import ParseError, ReplyParser
 
 
@@ -35,15 +36,28 @@ class TronKey(Property):
     def __init__(
         self,
         name: str,
-        value: List[Any] = [],
-        key: Optional[str] = None,
+        key: Key,
+        keyword: Optional[Keyword] = None,
         model: Optional[TronModel] = None,
         callback: Optional[Callable[[TronKey], Any]] = None,
     ):
 
-        super().__init__(name, value=value, model=model, callback=callback)
+        initial_value = [None] * len(key.typedValues.vtypes)
+        super().__init__(name, value=initial_value, model=model, callback=callback)
 
         self.key = key
+        self.keyword = None
+
+        self.update_keyword(keyword)
+
+    def update_keyword(self, keyword: Optional[Keyword]):
+        """Updates the keyword and value."""
+
+        if keyword is None:
+            return
+
+        self.keyword = keyword
+        self.value = [value.native for value in keyword.values]
 
     def __getitem__(self, sl):
         return self.value.__getitem__(sl)
@@ -77,7 +91,7 @@ class TronModel(BaseModel[TronKey]):
 
         for key in self.keydict.keys:
             key = self.keydict.keys[key]
-            self[key.name] = TronKey(key.name, key=key, model=self)
+            self[key.name] = TronKey(key.name, key, model=self)
 
     def parse_reply(self, reply):
         """Parses a reply and updates the datamodel."""
@@ -99,8 +113,7 @@ class TronModel(BaseModel[TronKey]):
                     f"Failed parsing keyword {self.name}.{reply_key.name}."
                 )
 
-            self[key_name].value = [value.native for value in reply_key.values]
-            self[key_name].key = reply_key
+            self[key_name].update_keyword(reply_key)
 
             self.notify(self, self[key_name])
 
