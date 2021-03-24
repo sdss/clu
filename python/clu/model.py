@@ -201,6 +201,14 @@ class Model(BaseModel[Property]):
                     ]
                 }
 
+        # These are required only for the LegacyActor, but we add them anyway.
+        if "yourUserID" not in props:
+            props["yourUserID"] = {"type": "integer"}
+        if "UserInfo" not in props:
+            props["UserInfo"] = {"type": "string"}
+        if "num_users" not in props:
+            props["num_users"] = {"type": "integer"}
+
         super().__init__(name, **kwargs)
 
         for name in props:
