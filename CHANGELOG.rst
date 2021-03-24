@@ -4,6 +4,7 @@
 Changelog
 =========
 
+* :release:`0.7.5 <2021-03-23>`
 * :support:`64` Use ``type_checker`` with ``jsonschema`` to allow lists and tuples to be be used as arrays (fixes deprecation of the ``type`` argument).
 * :bug:`-` For a legacy actor, strip the reply keyword and value strings when parsing them in `.MockReplyList`.
 
