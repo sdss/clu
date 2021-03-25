@@ -130,7 +130,12 @@ class BaseClient(metaclass=abc.ABCMeta):
         return cast("Dict[str, Any]", config)
 
     @classmethod
-    def from_config(cls, config: Dict[str, Any], *args, **kwargs):
+    def from_config(
+        cls,
+        config: Union[Dict[str, Any], pathlib.Path, str],
+        *args,
+        **kwargs,
+    ):
         """Parses a configuration file.
 
         Parameters
