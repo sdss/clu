@@ -4,6 +4,7 @@
 Changelog
 =========
 
+* :release:`0.7.6 <2021-03-26>`
 * :bug:`-` Add ``UserInfo``, ``num_users``, and ``yourUserID`` to the default schema.
 * :bug:`65` Fix a bug that prevented opening more than one ``clu`` CLI instance.
 
