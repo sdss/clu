@@ -284,13 +284,13 @@ class CallbackMixIn(object):
 
         self._running = []
 
-    def register_callback(self, callback_func: Callable[[Any], Any]):
+    def register_callback(self, callback_func: Callable[..., Any]):
         """Adds a callback function or coroutine function."""
 
         assert callable(callback_func), "callback_func must be a callable."
         self._callbacks.append(callback_func)
 
-    def remove_callback(self, callback_func: Callable[[Any], Any]):
+    def remove_callback(self, callback_func: Callable[..., Any]):
         """Removes a callback function."""
 
         assert (

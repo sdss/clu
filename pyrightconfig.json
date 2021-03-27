@@ -1,4 +1,5 @@
 {
-  "exclude": ["python/clu/legacy/types/**", "docs/sphinx/**"],
-  "ignore": ["python/clu/legacy/types/**", "tests/**", "docs/sphinx/**"]
+    "exclude": ["python/clu/legacy/types/**", "docs/sphinx/**"],
+    "ignore": ["python/clu/legacy/types/**", "tests/**", "docs/sphinx/**"],
+    "typeCheckingMode": "basic"
 }
