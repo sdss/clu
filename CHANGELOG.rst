@@ -5,6 +5,7 @@ Changelog
 =========
 
 * :bug:`-` Add ``UserInfo``, ``num_users``, and ``yourUserID`` to the default schema.
+* :bug:`65` Fix a bug that prevented opening more than one ``clu`` CLI instance.
 
 * :release:`0.7.5 <2021-03-23>`
 * :support:`64` Use ``type_checker`` with ``jsonschema`` to allow lists and tuples to be be used as arrays (fixes deprecation of the ``type`` argument).
