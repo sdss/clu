@@ -10,6 +10,7 @@ import asyncio
 import datetime
 import json
 import os
+import uuid
 
 import click
 import prompt_toolkit
@@ -112,8 +113,11 @@ async def shell_client_prompt(
     show_time=True,
 ):
 
+    # Give each client a unique name to ensure the queues are unique.
+    uid = str(uuid.uuid4()).split("-")[0]
+
     client = await ShellClient(
-        "shell_client",
+        f"shell_client_{uid}",
         url=url,
         user=user,
         password=password,
