@@ -274,7 +274,7 @@ class BaseLegacyActor(BaseActor):
         for user_id in user_id_list:
             transport = self.transports[user_id]
             peername = transport.get_extra_info("peername")[0]
-            msg = {"UserInfo": f"{user_id}, {peername}"}
+            msg = {"UserInfo": [user_id, peername]}
             self.write("i", msg)
 
     @staticmethod

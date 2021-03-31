@@ -205,7 +205,10 @@ class Model(BaseModel[Property]):
         if "yourUserID" not in props:
             props["yourUserID"] = {"type": "integer"}
         if "UserInfo" not in props:
-            props["UserInfo"] = {"type": "string"}
+            props["UserInfo"] = {
+                "type": "array",
+                "items": [{"type": "integer"}, {"type": "string"}],
+            }
         if "num_users" not in props:
             props["num_users"] = {"type": "integer"}
 
