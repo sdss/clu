@@ -402,7 +402,7 @@ class ClickParser:
             if not hasattr(ee, "message") and ctx:
                 message = f"{ee.__class__.__name__}:\n{ctx.get_help()}"
             else:
-                message = f"{ee.__class__.__name__}: {ee.message}"
+                message = f"{ee.__class__.__name__}: {ee.format_message()}"
 
             if isinstance(command.actor, (actor.AMQPActor, actor.JSONActor)):
                 command.warning(help=message.splitlines())
