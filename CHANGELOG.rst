@@ -4,10 +4,12 @@
 Changelog
 =========
 
+* :bug:`-` ``UserInfo`` must be an array of integer and string instead of a comma-separated string.
+* :feature:`67` All actor now have a ``model`` even if they are instantiated with ``schema=None``. The default schema imlpies ``additionalProperties=True``. Added a new default command ``keywords`` that prints information about a schema keyword in human-readable format.
+
 * :release:`0.7.6 <2021-03-26>`
 * :bug:`-` Add ``UserInfo``, ``num_users``, and ``yourUserID`` to the default schema.
 * :bug:`65` Fix a bug that prevented opening more than one ``clu`` CLI instance.
-* :bug:`-` ``UserInfo`` must be an array of integer and string instead of a comma-separated string.
 
 * :release:`0.7.5 <2021-03-23>`
 * :support:`64` Use ``type_checker`` with ``jsonschema`` to allow lists and tuples to be be used as arrays (fixes deprecation of the ``type`` argument).
