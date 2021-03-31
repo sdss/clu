@@ -176,3 +176,38 @@ async def test_command_neg_number(json_actor, click_parser, command_string):
         assert cmd.replies[-2]["recursive"] is True
     else:
         assert cmd.replies[-2]["recursive"] is False
+
+
+async def test_keyword(json_actor, click_parser):
+
+    cmd = Command(command_string="keyword version", actor=json_actor)
+    click_parser.parse_command(cmd)
+    await cmd
+
+    assert cmd.status.did_succeed
+    assert len(json_actor.mock_replies) == 5
+    assert json_actor.mock_replies[1]["text"].strip() == "version = {"
+
+
+async def test_keyword_bad_parameter(json_actor, click_parser):
+
+    cmd = Command(command_string="keyword bad_param", actor=json_actor)
+    click_parser.parse_command(cmd)
+    await cmd
+
+    assert cmd.status.did_fail
+    assert len(json_actor.mock_replies) == 2
+    assert "is not part of the data model" in json_actor.mock_replies[1]["error"]
+
+
+async def test_keyword_no_model(json_actor, click_parser):
+
+    json_actor.model = None
+
+    cmd = Command(command_string="keyword version", actor=json_actor)
+    click_parser.parse_command(cmd)
+    await cmd
+
+    assert cmd.status.did_fail
+    assert len(json_actor.mock_replies) == 2
+    assert "Actor does not have a data model" in json_actor.mock_replies[1]["error"]

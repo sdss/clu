@@ -139,3 +139,10 @@ async def test_write_no_validate(json_actor, json_client, mocker):
     json_actor.write("i", {"text": "Some message"}, validate=False)
 
     mock_func.assert_not_called()
+
+
+async def test_actor_no_schema(json_actor):
+
+    assert json_actor.model is not None
+    json_actor.load_schema(None)
+    assert json_actor.model is not None
