@@ -30,6 +30,30 @@ __all__ = ["Property", "BaseModel", "Model", "ModelSet"]
 
 SchemaType = Union[Dict[str, Any], PathLike, str]
 
+DEFAULT_SCHEMA = {
+    "text": {"type": "string"},
+    "schema": {"type": "string"},
+    "version": {"type": "string"},
+    "help": {
+        "oneOf": [
+            {"type": "array", "items": {"type": "string"}},
+            {"type": "string"},
+        ]
+    },
+    "error": {
+        "oneOf": [
+            {"type": "array", "items": {"type": "string"}},
+            {"type": "string"},
+        ]
+    },
+    "yourUserID": {"type": "integer"},
+    "UserInfo": {
+        "type": "array",
+        "items": [{"type": "integer"}, {"type": "string"}],
+    },
+    "num_users": {"type": "integer"},
+}
+
 
 class Property(CallbackMixIn):
     """A model property with callbacks.
@@ -188,33 +212,13 @@ class Model(BaseModel[Property]):
             raise ValueError("Schema must be of type object.")
 
         # All models must have these keys.
-        props = self.schema["properties"]
-        for default_prop in ["text", "schema", "version"]:
-            if default_prop not in props:
-                props[default_prop] = {"type": "string"}
-        for prop in ["help", "error"]:
-            if prop not in props:
-                props[prop] = {
-                    "oneOf": [
-                        {"type": "array", "items": {"type": "string"}},
-                        {"type": "string"},
-                    ]
-                }
-
-        # These are required only for the LegacyActor, but we add them anyway.
-        if "yourUserID" not in props:
-            props["yourUserID"] = {"type": "integer"}
-        if "UserInfo" not in props:
-            props["UserInfo"] = {
-                "type": "array",
-                "items": [{"type": "integer"}, {"type": "string"}],
-            }
-        if "num_users" not in props:
-            props["num_users"] = {"type": "integer"}
+        for prop in DEFAULT_SCHEMA:
+            if prop not in self.schema["properties"]:
+                self.schema["properties"][prop] = DEFAULT_SCHEMA[prop]
 
         super().__init__(name, **kwargs)
 
-        for name in props:
+        for name in self.schema["properties"]:
             self[name] = Property(name, model=self)
 
     @staticmethod
