@@ -314,6 +314,30 @@ def help_(ctx, *args, parser_command):
         return command.finish()
 
 
+@command_parser.command(name="keyword")
+@click.argument("KEYWORD", type=str, required=True)
+def keyword(command, *args, keyword):
+    """Prints human-readable information about a keyword."""
+
+    model = command.actor.model
+    if model is None or model.schema is None:
+        return command.fail(error="Actor does not have a data model.")
+
+    if keyword not in model.schema["properties"]:
+        return command.fail(error=f"Keyword {keyword!r} is not part of the data model.")
+
+    schema = model.schema["properties"][keyword]
+
+    lines = json.dumps(schema, indent=2).splitlines()[1:]
+    max_length = max([len(line) for line in lines])
+
+    command.info(text=f"{keyword} = {{".ljust(max_length, " "))
+    for line in lines:
+        command.info(text=line.replace('"', "").ljust(max_length, " "))
+
+    command.finish()
+
+
 T = TypeVar("T", bound=Command)
 
 
@@ -402,7 +426,7 @@ class ClickParser:
             if not hasattr(ee, "message") and ctx:
                 message = f"{ee.__class__.__name__}:\n{ctx.get_help()}"
             else:
-                message = f"{ee.__class__.__name__}: {ee.message}"
+                message = f"{ee.__class__.__name__}: {ee.format_message()}"
 
             if isinstance(command.actor, (actor.AMQPActor, actor.JSONActor)):
                 command.warning(help=message.splitlines())

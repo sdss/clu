@@ -253,15 +253,25 @@ class BaseActor(BaseClient):
 
         super().__init__(*args, **kwargs)
 
-        self.validate_schema(schema)
+        self.load_schema(schema)
 
-    def validate_schema(self, schema: Union[SchemaType, None]) -> Union[Model, None]:
+    def load_schema(
+        self,
+        schema: Union[SchemaType, None],
+        is_file=True,
+    ) -> Union[Model, None]:
         """Loads and validates the actor schema."""
 
         if schema is None:
-            return None
+            schema = {
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "properties": {},
+                "additionalProperties": True,
+            }
+            is_file = False
 
-        self.model = Model(self.name, schema, is_file=True, log=self.log)
+        self.model = Model(self.name, schema, is_file=is_file, log=self.log)
 
         return self.model
 

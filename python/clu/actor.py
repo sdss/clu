@@ -72,7 +72,7 @@ class AMQPActor(AMQPClient, ClickParser, BaseActor):
 
         # Not calling BaseClient.__init__() here because we already called
         # AMQPClient.__init__.
-        self.validate_schema(schema)
+        self.load_schema(schema)
 
     async def start(self, **kwargs):
         """Starts the connection to the AMQP broker."""

@@ -78,7 +78,9 @@ Each actor should know its own model, which is defined in a JSON file that lives
 
 This will load the schema as a `.Model` into the ``AMQPActor.model`` attribute. Any reply the actor writes will be first validated against its own schema and if fails, the reply won't be emitted.
 
-A number of keywords (``text``, ``help``, ``schema``, ``version``, and ``text``) are added automatically to all the schemas since they are used internally by CLU.
+The following keywords are added automatically to all schemas and should not be overridden unless you know what you are doing since they are internally used by CLU: ``text``, ``help``, ``schema``, ``version``, ``text``, ``error``, ``yourUserID``, ``UserInfo``, ``num_users``.
+
+Keywords are case-sensitive.
 
 
 Using a data model with an actor or client
