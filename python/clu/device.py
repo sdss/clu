@@ -109,7 +109,9 @@ class Device(CallbackMixIn):
 
         assert self.is_connected() and self._client.writer, "device is not connected"
 
-        message = message.strip() + newline
+        if not message.endswith(newline):
+            message = message + newline
+
         self._client.writer.write(message.encode())
 
     async def _listen(self):
