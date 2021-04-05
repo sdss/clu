@@ -85,7 +85,7 @@ class BaseClient(metaclass=abc.ABCMeta):
         self.version = version or "?"
 
         # Internally store the original configuration used to start the client.
-        self.config: Optional[Dict[str, Any]] = None
+        self.config: Dict[str, Any] = {}
 
     def __repr__(self):
         return f"<{str(self)} (name={self.name!r})>"
