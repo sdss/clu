@@ -7,6 +7,7 @@ Changelog
 * :bug:`-` ``UserInfo`` must be an array of integer and string instead of a comma-separated string.
 * :feature:`67` All actor now have a ``model`` even if they are instantiated with ``schema=None``. The default schema imlpies ``additionalProperties=True``. Added a new default command ``keywords`` that prints information about a schema keyword in human-readable format.
 * :support:`-` Do not strip message in `.Device.write`.
+* :support:`-` Improve typing of `.Command` and `.BaseCommand`.
 
 * :release:`0.7.6 <2021-03-26>`
 * :bug:`-` Add ``UserInfo``, ``num_users``, and ``yourUserID`` to the default schema.
