@@ -121,13 +121,13 @@ class AMQPClient(BaseClient):
     asyncio's ``run_forever`` or a similar system ::
 
         >>> loop = asyncio.get_event_loop()
-        >>> client = await Client('my_client', 'guest', 'localhost').start()
+        >>> client = await AMQPClient('my_client', host='localhost').start()
         >>> loop.run_forever()
 
     Parameters
     ----------
     name
-        The name of the actor.
+        The name of the client.
     url
         RFC3986 formatted broker address. When used, the other connection
         keyword arguments are ignored.
@@ -144,7 +144,7 @@ class AMQPClient(BaseClient):
     ssl
         Whether to use TLS/SSL connection.
     version
-        The version of the actor.
+        The version of the client.
     loop
         The event loop. If `None`, the current event loop will be used.
     log_dir

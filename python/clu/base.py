@@ -48,9 +48,9 @@ class BaseClient(metaclass=abc.ABCMeta):
     Parameters
     ----------
     name
-        The name of the actor.
+        The name of the client.
     version
-        The version of the actor.
+        The version of the client.
     loop
         The event loop. If `None`, the current event loop will be used.
     log_dir
