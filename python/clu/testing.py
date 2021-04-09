@@ -207,7 +207,7 @@ async def setup_test_actor(actor: T, user_id: int = 1) -> T:
             )
             return self.new_command(message, ack=False)
 
-    actor.start = CoroutineMock(return_value=actor)
+    actor.start = CoroutineMock(return_value=actor)  # type: ignore
 
     # Adds an invoke_mock_command method.
     # We use types.MethodType to bind a method to an existing instance
