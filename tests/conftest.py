@@ -11,7 +11,6 @@ import os
 import pathlib
 
 import pytest
-from pytest_rabbitmq import factories
 
 from clu import AMQPActor, AMQPClient, JSONActor
 from clu.protocol import open_connection
