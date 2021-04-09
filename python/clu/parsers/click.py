@@ -24,7 +24,7 @@ from sdsstools.logger import SDSSLogger
 
 from clu.command import Command
 
-from . import actor
+from .. import actor
 
 
 __all__ = ["CluCommand", "CluGroup", "command_parser", "ClickParser", "timeout"]
@@ -358,7 +358,7 @@ class ClickParser:
     name: str
 
     def parse_command(self, command: T) -> T:
-        """Parses an user command using the Click internals."""
+        """Parses a user command using the Click internals."""
 
         # This will pass the command as the first argument for each command.
         # If self.parser_args is defined, those arguments will be passed next.

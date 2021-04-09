@@ -14,7 +14,7 @@ import click
 import pytest
 
 from clu import Command
-from clu.parser import ClickParser, command_parser, pass_args
+from clu.parsers.click import ClickParser, command_parser, pass_args
 from clu.testing import setup_test_actor
 
 

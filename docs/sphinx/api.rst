@@ -21,6 +21,7 @@ Client
 Actor
 -----
 
+.. autoclass:: clu.actor.AMQPBaseActor
 .. autoclass:: clu.actor.AMQPActor
 .. autoclass:: clu.actor.JSONActor
 
@@ -67,11 +68,12 @@ Model
 Parser
 ------
 
-.. autoclass:: clu.parser.ClickParser
-.. autoclass:: clu.parser.CluCommand
-.. autoclass:: clu.parser.CluGroup
+.. autoclass:: clu.parsers.click.ClickParser
+.. autoclass:: clu.parsers.click.CluCommand
+.. autoclass:: clu.parsers.click.CluGroup
+.. autoclass:: clu.parsers.json.JSONParser
 
-.. autofunction:: clu.parser.timeout
+.. autofunction:: clu.parsers.click.timeout
 
 
 Sockets

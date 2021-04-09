@@ -30,8 +30,10 @@ A `.Command` is a `~asyncio.Future` and can be awaited. The Future returns once 
     True
 
 
-The default parser
-------------------
+.. _click-parser:
+
+The Click parser
+----------------
 
 `.BaseActor` is parser-sceptic and does not implement any specific command parser. We'll see :ref:`below <override-parser>` how to define your own parser. The default parser in CLU, which is used in `.AMQPActor`, `.JSONActor`, and `.LegacyActor`, is implemented in `.ClickParser`. `.ClickParser` uses `click <https://click.palletsprojects.com/en/7.x/>`__ to define callbacks with complicated argument and options, and to parse the command string into calling one of those callbacks. The result is that it's very simple to define new command callbacks as long as one understands the basics of click.
 
@@ -137,6 +139,32 @@ Normally one does not need to create its own parent command parser, but there ma
 Now you can add commands and groups to ``my_command_parser`` as above.
 
 
+.. _json-parser:
+
+JSON parser
+-----------
+
+Another available parser is `.JSONParser`, which assumes the command is a JSON string that can be deserialised into a dictionary. This is useful for actor to which we want to send complex arguments (for example a dictionary or a serialised object) which would be complicated using the Click parser. The downside is that the resulting parser is not user-friendly. Because of this, the JSON parser is best indicated for actors that will only be commanded programmatically and not over a command line interface. Because of this, the make for a good parser for devices that are controlled by a low-level actor.
+
+There are no ready-to-use actors that implement the JSON parser, but it's trivial to create one from a base actor. For example, using `.AMQPBaseActor` ::
+
+    async def command1(command, payload):
+        return command.finish()
+
+    class AMQPJSONActor(JSONParser, AMQPBaseActor):
+        callbacks = {"command1": command1}
+
+Note that the order of the imports is important. `.JSONParser` should be listed before the base actor to make sure that `.BaseActor.parse_command` is overridden. It's also possible to subclass from `.BaseLegacyActor` to use a TCP transport.
+
+The callbacks for the parser must be coroutines that accept the command as the first arguments and a payload (a dictionary with the deserialised JSON string) as the second one. The mapping of command "verb" to callback is defined in the ``callbacks`` attribute.
+
+The command strings sent to the actor must be a JSON string that contains at least a keyword ``command`` with the callback to be called. The ``command`` is unpacked and the corresponding callback is called with the `.Command` object and the rest of the payload. Callbacks are scheduled as tasks. For example, calling an instance of ``AMQPJSONActor`` with the command string ::
+
+    '{ "command": "command1", "option1": 1, "data": [1, 2, 3] }'
+
+will result in ``command1`` being called with the payload ``{'option1': 1, 'data': [1, 2, 3]}``.
+
+
 .. _override-parser:
 
 Building your own parser
@@ -156,7 +184,7 @@ Implementing your command parser is simple. One just needs to override the `.Bas
 
             ...
 
-    class MyActor(BaseActor, MyParser):
+    class MyActor(MyParser, BaseActor):
 
         def start(self):
             pass
@@ -165,18 +193,20 @@ Implementing your command parser is simple. One just needs to override the `.Bas
             command = Command(command_string=command_string)
             return self.parse_command(command)
 
-When ``MyActor`` receives a new command via its communication channel, it will wrap it into a `.Command` and send it to ``MyParser.parse_command``. ``parse_command`` is a normal function and must process the new command and execute the callback in a non-blocking way, for example by creating a new asyncio task. Note that the order of the subclasses in ``MyActor`` is important, the custom parser class must be the last subclass since we want ``parse_command`` to override `.BaseActor.parse_command`.
+When ``MyActor`` receives a new command via its communication channel, it will wrap it into a `.Command` and send it to ``MyParser.parse_command``. ``parse_command`` is a normal function and must process the new command and execute the callback in a non-blocking way, for example by creating a new asyncio task. Note that the order of the subclasses in ``MyActor`` is important, the custom parser class must be the first subclass since we want ``parse_command`` to override `.BaseActor.parse_command`.
 
 Of course, this is a *very* minimal example and things are more complicated in reality. For a relatively minimal but complete example of implementing a new actor with a parser, see the source code for `ClickParser <https://github.com/sdss/clu/blob/81f8a8bee783b15658a5a7348fad41b590698938/python/clu/parser.py#L256>`__ and `JSONActor <https://github.com/sdss/clu/blob/81f8a8bee783b15658a5a7348fad41b590698938/python/clu/actor.py#L147>`__.
 
 API
 ---
 
-.. autoclass:: clu.parser.ClickParser
+.. autoclass:: clu.parsers.click.ClickParser
     :noindex:
-.. autoclass:: clu.parser.CluCommand
+.. autoclass:: clu.parsers.click.CluCommand
     :noindex:
-.. autoclass:: clu.parser.CluGroup
+.. autoclass:: clu.parsers.click.CluGroup
     :noindex:
-.. autofunction:: clu.parser.timeout
+.. autofunction:: clu.parsers.click.timeout
+    :noindex:
+.. autoclass:: clu.parsers.json.JSONParser
     :noindex:

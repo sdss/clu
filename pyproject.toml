@@ -82,7 +82,10 @@ skip_glob = [
 [tool.pytest.ini_options]
 addopts = "--cov clu --cov-report xml --cov-report html --cov-report term -p no:warnings"
 rabbitmq_ctl = "/usr/local/sbin/rabbitmqctl"
-rabbitmq_server = "/usr/local/sbin/rabbitmq-server"
+rabbitmq_server = "/usr/local/sbin/rabbitmq-server -detached"
+rabbitmq_host = "localhost"
+rabbitmq_port = 18888
+rabbitmq_node = "pytest-rabbitmq-test"
 
 [tool.coverage.run]
 branch = true
