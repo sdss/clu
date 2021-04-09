@@ -45,7 +45,7 @@ class MockedActor(JSONActor, LegacyActor, AMQPBaseActor):
     mock_replies: List[MockReply]
 
 
-T = TypeVar("T")
+T = TypeVar("T", bound=MockedActor)
 
 
 class MockReply(dict):
