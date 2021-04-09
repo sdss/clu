@@ -28,7 +28,7 @@ from .protocol import TCPStreamServer
 from .tools import log_reply
 
 
-__all__ = ["AMQPActor", "JSONActor", "AMQPBaseActor"]
+__all__ = ["AMQPActor", "JSONActor", "AMQPBaseActor", "TCPBaseActor"]
 
 
 T = TypeVar("T")
@@ -179,8 +179,11 @@ class AMQPActor(ClickParser, AMQPBaseActor):
     pass
 
 
-class JSONActor(ClickParser, BaseActor):
-    """A TCP actor that replies using JSON.
+TCPBaseActor_co = TypeVar("TCPBaseActor_co", bound="TCPBaseActor")
+
+
+class TCPBaseActor(BaseActor):
+    """A TCP base actor that replies using JSON.
 
     This implementation of `.BaseActor` uses TCP as command/reply channel and
     replies to the user by sending a JSON-valid string. This makes it useful
@@ -191,6 +194,9 @@ class JSONActor(ClickParser, BaseActor):
     Commands received by this actor must be in the format
     ``[<uid>] <command string>``, where ``<uid>`` is any integer unique
     identifier that will be used as ``command_id`` and appended to any reply.
+
+    This is a base actor that does not include a parser. It must be subclassed with
+    a concrete parser that overrides ``parse_command``.
 
     Parameters
     ----------
@@ -236,10 +242,7 @@ class JSONActor(ClickParser, BaseActor):
 
         self.timed_commands = TimedCommandList(self)
 
-        # Add the multiline command
-        self.parser.add_command(multiline)
-
-    async def start(self) -> JSONActor:
+    async def start(self: TCPBaseActor_co) -> TCPBaseActor_co:
         """Starts the TCP server."""
 
         await self.server.start()
@@ -317,11 +320,6 @@ class JSONActor(ClickParser, BaseActor):
             return
 
         return self.parse_command(command)
-
-    def send_command(self, *args, **kwargs):
-        """Not implemented for `.JSONActor`."""
-
-        raise NotImplementedError("JSONActor cannot send commands to other actors.")
 
     def write(self, *args, **kwargs):
         """Writes a message to user(s) as a JSON.
@@ -403,6 +401,22 @@ class JSONActor(ClickParser, BaseActor):
 
         if self.log:
             log_reply(self.log, reply.message_code, message_json.strip())
+
+
+class JSONActor(ClickParser, TCPBaseActor):
+    """An implementation of `.TCPBaseActor` that uses a Click command parser."""
+
+    def __init__(self, *args, **kwargs):
+
+        super().__init__(*args, **kwargs)
+
+        # Add the multiline command
+        self.parser.add_command(multiline)
+
+    def send_command(self, *args, **kwargs):
+        """Not implemented for `.JSONActor`."""
+
+        raise NotImplementedError("JSONActor cannot send commands to other actors.")
 
 
 @click.command(cls=CluCommand)
