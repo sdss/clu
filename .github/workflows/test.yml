@@ -33,12 +33,14 @@ jobs:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip
 
-      - uses: getong/rabbitmq-action@v1.2
-        with:
-          rabbitmq version: '3.8.2-management-alpine'
-          host port: 5672
-          rabbitmq user: 'guest'
-          rabbitmq password: 'guest'
+      - name: Setup RabbitMQ
+        run: |
+          sudo apt-get install --assume-yes rabbitmq-server
+          # Stop the service. pytest-rabbitmq will spawn a new server.
+          sudo service rabbitmq-server stop
+          # Give permissions to user
+          sudo chown -R $USER:$USER /var/lib/rabbitmq
+          sudo chown -R $USER:$USER /var/log/rabbitmq
 
       - name: Set up Python
         uses: actions/setup-python@v2
