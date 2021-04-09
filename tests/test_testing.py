@@ -12,7 +12,7 @@ import pytest
 
 from clu.command import Command
 from clu.legacy import LegacyActor
-from clu.parser import command_parser, timeout
+from clu.parsers.click import command_parser, timeout
 from clu.testing import setup_test_actor
 
 

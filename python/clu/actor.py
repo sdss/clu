@@ -23,12 +23,12 @@ from .base import BaseActor, Reply
 from .client import AMQPClient
 from .command import Command, TimedCommandList
 from .exceptions import CommandError
-from .parser import ClickParser, CluCommand
+from .parsers import ClickParser, CluCommand
 from .protocol import TCPStreamServer
 from .tools import log_reply
 
 
-__all__ = ["AMQPActor", "JSONActor"]
+__all__ = ["AMQPActor", "JSONActor", "AMQPBaseActor"]
 
 
 T = TypeVar("T")
@@ -41,7 +41,7 @@ class CustomTransportType(asyncio.Transport):
     multiline: bool
 
 
-class AMQPActor(AMQPClient, ClickParser, BaseActor):
+class AMQPBaseActor(AMQPClient, BaseActor):
     """An actor class that uses AMQP message brokering.
 
     This class differs from `~clu.legacy.actor.LegacyActor` in that it uses
@@ -49,6 +49,8 @@ class AMQPActor(AMQPClient, ClickParser, BaseActor):
     actors in the system, instead of standard TCP sockets. Although the
     internals and protocols are different the entry points and behaviour for
     both classes should be almost identical.
+
+    This class needs to be subclassed with a command parser.
 
     See the documentation for `.AMQPActor` and `.AMQPClient` for additional
     parameter information.
@@ -169,6 +171,12 @@ class AMQPActor(AMQPClient, ClickParser, BaseActor):
 
         if self.log:
             log_reply(self.log, reply.message_code, message_json)
+
+
+class AMQPActor(ClickParser, AMQPBaseActor):
+    """An `AMQP actor <.AMQPBaseActor>` that uses a `click parser <.ClickParser>`."""
+
+    pass
 
 
 class JSONActor(ClickParser, BaseActor):

@@ -23,7 +23,7 @@ from aiormq.types import DeliveredMessage
 from pamqp.header import ContentHeader
 
 import clu
-from clu.actor import AMQPActor, JSONActor
+from clu.actor import AMQPBaseActor, JSONActor
 from clu.command import Command
 from clu.legacy.actor import LegacyActor
 
@@ -40,12 +40,12 @@ else:
 __all__ = ["MockReply", "MockReplyList", "setup_test_actor"]
 
 
-class MockedActor(JSONActor, LegacyActor, AMQPActor):
+class MockedActor(JSONActor, LegacyActor, AMQPBaseActor):
     invoke_mock_command: Any
     mock_replies: List[MockReply]
 
 
-T = TypeVar("T", bound=MockedActor)
+T = TypeVar("T")
 
 
 class MockReply(dict):

@@ -19,7 +19,7 @@ from .command import *
 from .device import *
 from .exceptions import *
 from .legacy import LegacyActor
-from .parser import ClickParser, command_parser
+from .parsers import *
 from .tools import (
     REPLY,
     ActorHandler,
@@ -28,6 +28,7 @@ from .tools import (
     escape,
     format_value,
 )
+
 
 # Add REPLY level to logging
 logging.addLevelName(REPLY, "REPLY")

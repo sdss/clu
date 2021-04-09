@@ -20,7 +20,7 @@ import clu
 from ..actor import CustomTransportType
 from ..base import BaseActor, Reply
 from ..command import Command, TimedCommandList, parse_legacy_command
-from ..parser import ClickParser
+from ..parsers import ClickParser
 from ..protocol import TCPStreamServer
 from ..tools import log_reply
 from .tron import TronConnection
