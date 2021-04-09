@@ -13,6 +13,7 @@ import functools
 import inspect
 import json
 import re
+import shlex
 
 from typing import Any, List, TypeVar
 
@@ -378,7 +379,7 @@ class ClickParser:
             command.body = command.body.replace(" --help", "")
 
         if not command.body.startswith("help"):
-            command_args = command.body.split()
+            command_args = shlex.split(command.body)
         else:
             command_args = ["help", '"{}"'.format(command.body[5:])]
 

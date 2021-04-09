@@ -50,9 +50,10 @@ def mygroup(command, object):
 @mygroup.command()
 @click.argument("NEGNUMBER", type=int)
 @click.option("-r", "--recursive", is_flag=True)
-async def neg_number_command(command, object, negnumber, recursive):
+@click.option("--text", type=str)
+async def neg_number_command(command, object, negnumber, recursive, text):
     # Add the values to command.replies so that the test can easily get them.
-    command.replies.append({"value": negnumber, "recursive": recursive})
+    command.replies.append({"value": negnumber, "recursive": recursive, "text": text})
     command.finish()
 
 
@@ -211,3 +212,13 @@ async def test_keyword_no_model(json_actor, click_parser):
     assert cmd.status.did_fail
     assert len(json_actor.mock_replies) == 2
     assert "Actor does not have a data model" in json_actor.mock_replies[1]["error"]
+
+
+async def test_string_with_spaces(json_actor, click_parser):
+
+    cmd = Command(command_string='mygroup neg-number-command --text "A test" -1')
+    click_parser.parse_command(cmd)
+    await cmd
+
+    assert cmd.status.did_succeed
+    assert cmd.replies[-1]["text"] == "A test"
