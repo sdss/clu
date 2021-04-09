@@ -23,6 +23,7 @@ Actor
 
 .. autoclass:: clu.actor.AMQPBaseActor
 .. autoclass:: clu.actor.AMQPActor
+.. autoclass:: clu.actor.TCPBaseActor
 .. autoclass:: clu.actor.JSONActor
 
 

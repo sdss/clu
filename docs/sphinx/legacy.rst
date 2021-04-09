@@ -127,4 +127,6 @@ Although the internals of parsing and validation are significantly different, th
 JSONActor
 ---------
 
-CLU also provides a simple `.JSONActor` which accepts commands following the same format as legacy actors but replies with a JSON string. This makes the replies more verbose and less human-readable but much more easy to parse, since they can be interpreted by just calling `json.loads` or the equivalent JSON loading routing for any programming language. `.JSONActor` is thus useful for devices that will be commanded by an actor but not directly replying to Tron or a user.
+CLU also provides a simple `.JSONActor` which accepts commands following almost the same format as legacy actors for input commands but replies with a JSON string. This makes the replies more verbose and less human-readable but much more easy to parse, since they can be interpreted by just calling `json.loads` or the equivalent JSON loading routing for any programming language. `.JSONActor` is thus useful for devices that will be commanded by an actor but not directly replying to Tron or a user.
+
+`.JSONActor` is an implementation of `.TCPBaseActor` using a :ref:`Click parser <click-parser>`.
