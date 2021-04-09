@@ -4,6 +4,7 @@
 Changelog
 =========
 
+* :release:`0.7.8 <2021-04-08>`
 * :bug:`-` Fix parsing of command strings in which parameters were a string with spaces. For example ``command --value "A value"`` would fail because it would be split into arguments without respeting the quoted string.
 
 * :release:`0.7.7 <2021-04-06>`
