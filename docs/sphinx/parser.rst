@@ -144,7 +144,7 @@ Now you can add commands and groups to ``my_command_parser`` as above.
 JSON parser
 -----------
 
-Another available parser is `.JSONParser`, which assumes the command is a JSON string that can be deserialised into a dictionary. This is useful for actor to which we want to send complex arguments (for example a dictionary or a serialised object) which would be complicated using the Click parser. The downside is that the resulting parser is not user-friendly. Because of this, the JSON parser is best indicated for actors that will only be commanded programmatically and not over a command line interface. Because of this, the make for a good parser for devices that are controlled by a low-level actor.
+Another available parser is `.JSONParser`, which assumes the command is a JSON string that can be deserialised into a dictionary. This is useful for actors to which we want to send complex arguments (for example a dictionary or a serialised object) which would be complicated using the Click parser. The downside is that the resulting parser is not user-friendly. Because of this, the JSON parser is best indicated for actors that will only be addressed programmatically and not over a command line interface. As such, they make for a good parser for devices that are controlled by a low-level actor.
 
 There are no ready-to-use actors that implement the JSON parser, but it's trivial to create one from a base actor. For example, using `.AMQPBaseActor` ::
 
@@ -158,11 +158,11 @@ Note that the order of the imports is important. `.JSONParser` should be listed 
 
 The callbacks for the parser must be coroutines that accept the command as the first arguments and a payload (a dictionary with the deserialised JSON string) as the second one. The mapping of command "verb" to callback is defined in the ``callbacks`` attribute.
 
-The command strings sent to the actor must be a JSON string that contains at least a keyword ``command`` with the callback to be called. The ``command`` is unpacked and the corresponding callback is called with the `.Command` object and the rest of the payload. Callbacks are scheduled as tasks. For example, calling an instance of ``AMQPJSONActor`` with the command string ::
+The command strings sent to the actor must be a JSON string that contains at least a keyword ``command`` with the callback to be called. The ``command`` is unpacked and the corresponding callback is called with the `.Command` object and the rest of the payload. Callbacks are scheduled as tasks. For example, sending a command to an instance of ``AMQPJSONActor`` with the command string ::
 
     '{ "command": "command1", "option1": 1, "data": [1, 2, 3] }'
 
-will result in ``command1`` being called with the payload ``{'option1': 1, 'data': [1, 2, 3]}``.
+will result in ``command1`` being scheduled with the payload ``{'option1': 1, 'data': [1, 2, 3]}``.
 
 
 .. _override-parser:
