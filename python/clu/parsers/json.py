@@ -9,7 +9,7 @@
 import asyncio
 import json
 
-from typing import Any, List, TypeVar
+from typing import Any, Callable, Coroutine, Dict, List, TypeVar
 
 from ..command import Command
 
@@ -24,14 +24,18 @@ DEFAULT_CALLBACKS = {}
 
 
 class JSONParser:
-    """A parser that receives commands and arguments as a JSON string."""
+    """A parser that receives commands and arguments as a JSON string.
 
-    #: list: Arguments to be passed to each command in the parser.
+    See :ref:`json-parser` for details on implementation and use-cases.
+
+    """
+
+    #: list: Additional arguments to be passed to each command in the parser.
     #: Note that the command is always passed first.
     parser_args: List[Any] = []
 
-    #: dict: Mapping of command verb to callback function.
-    callbacks = DEFAULT_CALLBACKS
+    #: dict: Mapping of command verb to callback coroutine.
+    callbacks: Dict[str, Callable[..., Coroutine]] = DEFAULT_CALLBACKS
 
     def parse_command(self, command: T) -> T:
         """Parses a user command.
