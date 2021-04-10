@@ -448,7 +448,7 @@ class TimedCommand(object):
     async def run(self, actor: clu.base.BaseActor):
         """Run the command."""
 
-        await Command(self.command_string, actor=actor).parse()
+        await Command(self.command_string, actor=actor, commander_id=actor.name).parse()
 
     def done(self, task):
         """Marks the execution of a command."""

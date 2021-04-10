@@ -268,9 +268,12 @@ class AMQPClient(BaseClient):
             return reply
 
         # Ignores message from self, because actors are also clients and they
-        # receive their own messages.
+        # receive their own messages. The exception is when the commander is also the
+        # actor (an actor sent a command to itself).
+        commander_id = reply.headers["commander_id"]
         if reply.sender and self.name == reply.sender:
-            return reply
+            if commander_id and commander_id != self.name:
+                return reply
 
         # Update the models
         if self.models and reply.sender in self.models:
