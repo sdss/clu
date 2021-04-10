@@ -4,6 +4,7 @@
 Changelog
 =========
 
+* :release:`0.8.0 <2021-04-09>`
 * :feature:`70` Add a new :ref:`json-parser` that receives a JSON command string that can be unpacked into a dictionary. The dictionary is then passed to the callback. This parser can be used for actors that won't be directly addressed by a user on a command line interface and it simplifies passing complex arguments to a command callback. The parser have been rearranged and compiled in the ``clu.parsers`` submodule so this can be a breaking changes for code that used advanced functions directly from the old ``clu.parser`` module. Also adds a `.AMQPBaseActor` that does not explicitely include a parser; `.AMQPActor` still uses the Click parser.
 * :feature:`72` Add a new `.TCPBaseActor` which is the same as the old `.JSONActor` but without a parser implementation. `.JSONActor` is now the implementation of the base TCP actor with a Click parser. `.TCPBaseActor` can be used to implement any actor that receives commands over a normal TCP socket.
 * :support:`69` Rewrite the :ref:`keyword model <keyword-model>` section of the documentation.
