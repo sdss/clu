@@ -5,6 +5,7 @@ Changelog
 =========
 
 * :bug:`-` If the property in a `.Model` being updated is a dictionary itself, update the `.Property` dictionary instead of replacing it. This ensures that if the dictionary output contains different number of keys on different issues, the complete information is kept.
+* :bug:`-` In an `.AMQPBaseActor` normally we ignore replies from the actor itself, because the actor is also a client and receives all the messages that it emits. An exception is when the commander of the command the caused that reply is the actor itself (the actor commanded itself). In that case we want to process the reply because we need to mark the command done.
 
 * :release:`0.8.0 <2021-04-09>`
 * :feature:`70` Add a new :ref:`json-parser` that receives a JSON command string that can be unpacked into a dictionary. The dictionary is then passed to the callback. This parser can be used for actors that won't be directly addressed by a user on a command line interface and it simplifies passing complex arguments to a command callback. The parser have been rearranged and compiled in the ``clu.parsers`` submodule so this can be a breaking changes for code that used advanced functions directly from the old ``clu.parser`` module. Also adds a `.AMQPBaseActor` that does not explicitly include a parser; `.AMQPActor` still uses the Click parser.
