@@ -253,7 +253,7 @@ class Model(BaseModel[Property]):
 
         for key, value in instance.items():
             if key in self:
-                if isinstance(self[key].value, dict):
+                if isinstance(self[key].value, dict) and isinstance(value, dict):
                     # Copy previous value and update it but then assign it to
                     # force the callback in the property.
                     new_value = self[key].value.copy()
