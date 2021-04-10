@@ -4,17 +4,15 @@
 The keyword model
 =================
 
-Each actor has an associated keyword model that must be defined in advance. The model determines the keywords that we can expect to receive from the actor and they data types. Based on that model a client or a different actor can keep track of the status of the actor and register callbacks to be executed when a keyword changes.
+Each actor has an associated keyword model defined in advance. The model determines the keywords that we can expect to receive from the actor and their data types. Based on that model a client or a different actor can keep track of the status of the actor and register callbacks to be executed when a keyword changes.
 
 ``CLU`` provides a uniform interface for defining keyword models regardless of the specific type of actor and its message broker.
 
 
-JSON validation
----------------
+JSON schema
+-----------
 
-New-style actors define their datamodels using a JSON file that support `validation <https://json-schema.org>`__.
-
-For example, let's say we have an actor called ``guider`` that can return two keyword: ``text``, with a random string value, and ``fwhm`` which must be a float. The datamodel for such actor can be defined in a file ``guider.json`` as
+Actors define their keyword datamodels using a `JSON-Schema <https://json-schema.org>`__ file. For example, let's say we have an actor called ``guider`` that can return two keywords: ``text``, with a random string value, and ``fwhm`` which must be a float. The schema for such actor can be defined in a file ``guider.json`` as
 
 .. code-block:: json
 
@@ -27,13 +25,31 @@ For example, let's say we have an actor called ``guider`` that can return two ke
         "additionalProperties": false
     }
 
-Note the ``additionalProperties`` entry which prevents undefined keywords to be parsed.
+Note the ``additionalProperties`` entry which prevents undefined keywords to be output. Refer to the JSON-Schema documentation for details on how to define properties.
+
+To associate this schema with an actor, we initiate or subclass the actor with it ::
+
+    actor = AMQPActor('my_actor', user='user`', schema='guider.json')
+
+or ::
+
+    class MyActor(AMQPActor):
+
+        schema = 'guider.json'
+
+        ...
+
+When the schema is present, the `write <.BaseActor.write>` method will validate the desired output against the schema and, if it does not match, will prevent the message from being output.
+
+The following keywords are added automatically to all schemas and should not be overridden unless you know what you are doing since they are internally used by CLU: ``text``, ``help``, ``schema``, ``version``, ``text``, ``error``, ``yourUserID``, ``UserInfo``, ``num_users``.
+
+Properties/keywords are case-sensitive.
 
 
-The model set
--------------
+The actor model
+---------------
 
-To instantiate a model from a JSON schema we use the `.Model` class ::
+When an actor is instantited with a keyword schema as seen above, it creates a `.Model` of its own datamodel, used both to validate replies and also to keep track of the current state of the actor. We can instantiate a `.Model` manually from the actor schema ::
 
     >>> from clu.model import Model
     >>> model = Model('guider', open('guider.json', 'r').read())
@@ -52,41 +68,24 @@ If the schema is invalid an error is raised. We can now validate a reply with a 
 
 When we instantiate the model we create a dictionary with the current values of each of the keywords. Each keyword is represented by a `.Property` instance. The values are set to ``None`` on initialisation ::
 
-    >>> model['fwhm']
+    >>> actor.model['fwhm']
     <Property (fwhm): None>
-    >>> print(model['fwhm'].value)
+    >>> print(actor.model['fwhm'].value)
     None
 
-In general, it's convenient to group all the models that we'll be monitoring in a `.ModelSet`. The `.ModelSet` is instantiated with the path to a directory that contains one or more schema definitions as JSON, an we indicate which ones we want to load ::
+When the actor outputs keywords as part of a reply, the values of the actor own model are update, so it's always possible to know the status of the actor. ::
 
-    >>> from clu.model import ModelSet
-    >>> model_set = ModelSet(client, actors=['sop', 'guider'])
-    >>> list(model_set)
-    ['sop', 'guider']
-    >>> model_set['guider']
-    <Model (guider)>
-
-Where`` client`` is a client or actor that can send command. In the background, what happens is that `.ModelSet` commands each one of the actors to send their own schema as a string, parses it, and loads the model.
+    >>> actor.write('i', message={'fwhm': 1.2})
+    >>> actor.model['fwhm']
+    <Property (fwhm): 1.2>
+    >>> print(actor.model['fwhm'].value)
+    1.2
 
 
-Defining the actor's own model
-------------------------------
+The model of other actors
+-------------------------
 
-Each actor should know its own model, which is defined in a JSON file that lives in the same repository as the actor. When the actor is instantiate we can then do ::
-
-    sop_actor = AMQPActor('sop', host='localhost', port=9999, schema='./sop_schema.json')
-
-This will load the schema as a `.Model` into the ``AMQPActor.model`` attribute. Any reply the actor writes will be first validated against its own schema and if fails, the reply won't be emitted.
-
-The following keywords are added automatically to all schemas and should not be overridden unless you know what you are doing since they are internally used by CLU: ``text``, ``help``, ``schema``, ``version``, ``text``, ``error``, ``yourUserID``, ``UserInfo``, ``num_users``.
-
-Keywords are case-sensitive.
-
-
-Using a data model with an actor or client
-------------------------------------------
-
-Frequently we have an actor or client that connects to the exchange or ``tron`` and we want to monitor a series of models, each one of them being updated by the replies received. When we instantiate a new actor or client we can pass ``model_path`` and ``model_names`` to automatically create a `.ModelSet` as we saw in the previous section ::
+Frequently we have an actor or client that connects to the exchange or ``tron`` and we want to monitor the status of a group of actors connected to the same message broker. When we instantiate a new actor or client we can pass a list of actor names as part of the ``models`` argument. This will create a `.ModelSet` (a mapping of actor name to `.Model`) with the models for each one of the actors ::
 
     >>> from clu.client import AMQPClient
     >>> client = AMQPClient('my_client', host='localhost', port=5672, models=['sop', 'guider'])
@@ -154,6 +153,7 @@ In practice, one can treat tron models the same way as other models, with the di
 .. note::
     Previous to CLU 0.7.4, ``TronKey.keyword`` did not exists and ``TronKey.key`` actually contained the ``Keyword`` object. CLU 0.7.4 introduces a breaking change to clarify the nomenclature and make it more consistent with ``opscore``.
 
+
 .. _keyword-model-callbacks:
 
 Adding callbacks
@@ -173,3 +173,25 @@ More likely, we'll want to add callbacks to specific keywords, which is done as 
 In this case ``fwhm_callaback`` is only called if ``guider.fwhm`` is updated, and receives the `.Property` (or `.TronKey` in case of a legacy-style keyword) as the only argument.
 
 Note that the callbacks are executed every time a reply that includes the model or keyword are received, even if the value of the keyword doesn't change.
+
+
+Retriving schema information
+----------------------------
+
+The :ref:`click-parser` includes two commands that allow a user or piece of code to retrieve information about another actor's schema. Calling ``get_schema`` on an actor will return a JSON string with the JSON-Schema for that actor. For example, a client can access the schema of a remote actor as ::
+
+    cmd = await client.send_command('actor', 'get_schema')
+    await cmd
+    if cmd.status.did_fail:
+        raise CluError(f"Failed getting schema for actor.")
+    else:
+        schema = json.loads(cmd.replies[-1].body["schema"])
+
+Sometimes one is just interested in knowing the expected format of a keyword that is output by an actor. In that case the ``keyword`` command prints a user-friendly message with that information ::
+
+    >>> actor keyword version
+    i text="version = {      "
+    i text="    type: string "
+    i text="}                "
+
+The ``keyword`` command is not indicated for programmatic access to the schema (use ``get_schema`` instead).

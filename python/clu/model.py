@@ -305,7 +305,7 @@ class ModelSet(dict):
         self.actors = actors
 
         self.__raise_exception = raise_exception
-        self.__get_schema = get_schema_command
+        self.__get_schema_command = get_schema_command
         self.__kwargs = kwargs
 
     async def load_schemas(self, actors: Optional[List[str]] = None):
@@ -318,7 +318,7 @@ class ModelSet(dict):
 
             try:
 
-                cmd = await self.client.send_command(actor, self.__get_schema)
+                cmd = await self.client.send_command(actor, self.__get_schema_command)
                 await cmd
 
                 if cmd.status.did_fail:
