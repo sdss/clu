@@ -256,7 +256,7 @@ def get_schema(*args):
     command = args[0]
 
     if command.actor.model is None:
-        return command.fail(text="The actor does not know its own schema.")
+        return command.fail(error="The actor does not know its own schema.")
 
     return command.finish(schema=json.dumps(command.actor.model.schema))
 
@@ -285,7 +285,7 @@ def help_(ctx, *args, parser_command):
             ctx_command_name = parser_command[ii].lower()
             command_name += f" {ctx_command_name}"
             if ctx_command_name not in ctx_commands:
-                return command.fail(text=f"command {ctx_command_name} not found.")
+                return command.fail(error=f"command {ctx_command_name} not found.")
             ctx_command = ctx_commands[ctx_command_name]
             if ii == len(parser_command) - 1:
                 # This is the last element in the command list
@@ -439,14 +439,14 @@ class ClickParser:
             msg = f"Command {command.body!r} failed."
 
             if not command.status.is_done:
-                command.fail(text=msg)
+                command.fail(error=msg)
             else:
-                command.write("e", text=msg)
+                command.write("e", error=msg)
 
         except (click.exceptions.Exit, click.exceptions.Abort):
 
             if not command.status.is_done:
-                command.fail(text=f"Command {command.body!r} was aborted.")
+                command.fail(error=f"Command {command.body!r} was aborted.")
 
         except Exception as err:
 
@@ -457,9 +457,9 @@ class ClickParser:
             )
 
             if command.status.is_done:
-                command.write(text=msg)
+                command.write("i", text=msg)
             else:
-                command.fail(text=msg)
+                command.fail(error=msg)
 
             log = self.log or command.ctx.obj.get("log", None)
             if log:

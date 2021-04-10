@@ -68,7 +68,7 @@ async def test_bad_command(amqp_client, amqp_actor):
     cmd = await amqp_client.send_command("amqp_actor", "bad_command")
     await cmd
 
-    assert "Command 'bad_command' failed." in cmd.replies[-1].body["text"]
+    assert "Command 'bad_command' failed." in cmd.replies[-1].body["error"]
 
 
 async def test_send_command_actor_not_connected(amqp_client, amqp_actor):

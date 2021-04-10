@@ -100,7 +100,7 @@ async def test_exit(json_actor, click_parser):
     await cmd
 
     assert cmd.status.did_fail
-    assert "Command 'command-exit' was aborted" in json_actor.mock_replies[-1]["text"]
+    assert "Command 'command-exit' was aborted" in json_actor.mock_replies[-1]["error"]
 
 
 async def test_exit_finish(json_actor, click_parser):
@@ -122,7 +122,7 @@ async def test_abort(json_actor, click_parser):
     await cmd
 
     assert cmd.status.did_fail
-    assert "Command 'command-abort' was aborted" in json_actor.mock_replies[-1]["text"]
+    assert "Command 'command-abort' was aborted" in json_actor.mock_replies[-1]["error"]
 
 
 async def test_uncaught_exception(json_actor, click_parser, caplog):
@@ -132,7 +132,7 @@ async def test_uncaught_exception(json_actor, click_parser, caplog):
     await cmd
 
     assert cmd.status.did_fail
-    assert "uncaught error" in json_actor.mock_replies[-1]["text"]
+    assert "uncaught error" in json_actor.mock_replies[-1]["error"]
 
     last_log = caplog.record_tuples[-1]
     assert last_log[1] == logging.ERROR

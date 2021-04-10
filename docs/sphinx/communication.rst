@@ -51,7 +51,7 @@ Now let's see how a ``CameraActor`` would talk to ``ShutterActor`` ::
         await shutter_cmd  # Block until the command is done (finished or failed)
         if shutter_cmd.status.did_fail:
             ...  # Do cleanup
-            return command.fail(text="Shutter failed to open")
+            return command.fail(error="Shutter failed to open")
 
         await asyncio.sleep(exptime)
 
@@ -88,7 +88,7 @@ Another way is to access the command `~.BaseCommand.replies` attribute. ``replie
     # just as the command finishes.
     shutter_status = replies[-1].body["shutter"]
     if shutter_status not in ["open", "closed"]:
-        return command.fail(text=f"Unknown shutter status {shutter_status!r}.")
+        return command.fail(error=f"Unknown shutter status {shutter_status!r}.")
 
     command.info(f"Shutter is now {shutter_status!r}.")
 
