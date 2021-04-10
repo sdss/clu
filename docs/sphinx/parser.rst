@@ -154,7 +154,7 @@ There are no ready-to-use actors that implement the JSON parser, but it's trivia
     class AMQPJSONActor(JSONParser, AMQPBaseActor):
         callbacks = {"command1": command1}
 
-Note that the order of the imports is important. `.JSONParser` should be listed before the base actor to make sure that `.BaseActor.parse_command` is overridden. It's also possible to subclass from `.BaseLegacyActor` to use a TCP transport.
+Note that the order of the imports is important. `.JSONParser` should be listed before the base actor to make sure that `.BaseActor.parse_command` is overridden. It's also possible to subclass from `.TCPBaseActor` or `.BaseLegacyActor` to use a TCP transport.
 
 The callbacks for the parser must be coroutines that accept the command as the first arguments and a payload (a dictionary with the deserialised JSON string) as the second one. The mapping of command "verb" to callback is defined in the ``callbacks`` attribute.
 
