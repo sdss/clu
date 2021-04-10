@@ -89,3 +89,21 @@ def test_schema_array():
 
     assert model.validator.validate({"myarray": [1, 2, 3]}) is None
     assert model.validator.validate({"myarray": (1, 2, 3)}) is None
+
+
+def test_model_update_dict():
+
+    schema = """
+    {
+        "type": "object",
+        "properties": { "prop": { "type": "object" } }
+    }
+    """
+
+    model = Model("test_model", schema)
+
+    model.update_model({"prop": {"subprop1": 1, "subprop2": 2}})
+    assert model["prop"].value == {"subprop1": 1, "subprop2": 2}
+
+    model.update_model({"prop": {"subprop2": 5}})
+    assert model["prop"].value == {"subprop1": 1, "subprop2": 5}
