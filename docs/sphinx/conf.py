@@ -119,6 +119,7 @@ intersphinx_mapping = {
 autodoc_mock_imports = ["_tkinter", "asynctest"]
 autodoc_member_order = "groupwise"
 autodoc_default_options = {"members": None, "show-inheritance": None}
+autodoc_typehints = "description"
 
 napoleon_use_rtype = False
 napoleon_use_ivar = True
