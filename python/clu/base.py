@@ -16,7 +16,7 @@ import pathlib
 import time
 from datetime import datetime
 
-from typing import Any, Optional, TypeVar, Union
+from typing import Any, Dict, Optional, TypeVar, Union
 
 from sdsstools import get_logger, read_yaml_file
 from sdsstools.logger import SDSSLogger
@@ -29,7 +29,7 @@ from .tools import REPLY
 
 __all__ = ["BaseClient", "BaseActor", "Reply"]
 
-SchemaType = Union[dict[str, Any], pathlib.Path, str]
+SchemaType = Union[Dict[str, Any], pathlib.Path, str]
 T = TypeVar("T", bound="BaseClient")
 
 

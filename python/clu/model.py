@@ -13,7 +13,7 @@ import pathlib
 import warnings
 from os import PathLike
 
-from typing import Any, Callable, Optional, TypeVar, Union
+from typing import Any, Callable, Dict, Optional, TypeVar, Union
 
 import jsonschema
 import jsonschema.exceptions
@@ -28,7 +28,7 @@ from .tools import CallbackMixIn, CaseInsensitiveDict
 __all__ = ["Property", "BaseModel", "Model", "ModelSet"]
 
 
-SchemaType = Union[dict[str, Any], PathLike, str]
+SchemaType = Union[Dict[str, Any], PathLike, str]
 
 DEFAULT_SCHEMA = {
     "text": {"type": "string"},

@@ -17,7 +17,7 @@ import json
 import logging
 import re
 
-from typing import Any, Awaitable, Callable, Generic, Optional, Type, TypeVar
+from typing import Any, Awaitable, Callable, Dict, Generic, Optional, Type, TypeVar
 
 
 __all__ = [
@@ -361,7 +361,7 @@ def escape(value: Any):
 T = TypeVar("T")
 
 
-class CaseInsensitiveDict(dict[str, T]):
+class CaseInsensitiveDict(Dict[str, T]):
     """A dictionary that performs case-insensitive operations."""
 
     def __init__(self, values: Any):
