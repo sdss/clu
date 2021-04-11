@@ -26,6 +26,7 @@ on_rtd = os.environ.get("READTHEDOCS") == "True"
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
+    "sphinx_autodoc_typehints",
     "sphinx.ext.autosummary",
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
@@ -119,7 +120,6 @@ intersphinx_mapping = {
 autodoc_mock_imports = ["_tkinter", "asynctest"]
 autodoc_member_order = "groupwise"
 autodoc_default_options = {"members": None, "show-inheritance": None}
-autodoc_typehints = "description"
 
 napoleon_use_rtype = False
 napoleon_use_ivar = True

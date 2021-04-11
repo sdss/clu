@@ -13,7 +13,7 @@ import re
 import time
 from contextlib import suppress
 
-from typing import Any, Callable, Generic, Optional, TypeVar
+from typing import Any, Callable, Dict, Generic, List, Optional, Tuple, TypeVar, Union
 
 import clu
 import clu.base
@@ -70,9 +70,9 @@ class BaseCommand(asyncio.Future, StatusMixIn[CommandStatus], Generic[Actor_co])
 
     def __init__(
         self,
-        commander_id: int | str = 0,
-        command_id: int | str = 0,
-        consumer_id: int | str = 0,
+        commander_id: Union[int, str] = 0,
+        command_id: Union[int, str] = 0,
+        consumer_id: Union[int, str] = 0,
         actor: Optional[Actor_co] = None,
         parent: Optional[BaseCommand[Actor_co]] = None,
         status_callback: Optional[Callable[[CommandStatus], Any]] = None,
@@ -92,7 +92,7 @@ class BaseCommand(asyncio.Future, StatusMixIn[CommandStatus], Generic[Actor_co])
         self.loop = loop or asyncio.get_event_loop()
 
         #: .Reply: A list of replies this command has received.
-        self.replies: list[clu.base.Reply] = []
+        self.replies: List[clu.base.Reply] = []
 
         asyncio.Future.__init__(self, loop=self.loop)
 
@@ -106,7 +106,7 @@ class BaseCommand(asyncio.Future, StatusMixIn[CommandStatus], Generic[Actor_co])
         )
 
     @property
-    def status(self) -> CommandStatus | None:
+    def status(self) -> Union[CommandStatus, None]:
         """Returns the status."""
 
         return self._status
@@ -130,8 +130,8 @@ class BaseCommand(asyncio.Future, StatusMixIn[CommandStatus], Generic[Actor_co])
 
     def set_status(
         self,
-        status: CommandStatus | str,
-        message: dict[str, Any] | None = None,
+        status: Union[CommandStatus, str],
+        message: Dict[str, Any] = None,
         silent: bool = False,
         **kwargs,
     ) -> BaseCommand:
@@ -213,7 +213,7 @@ class BaseCommand(asyncio.Future, StatusMixIn[CommandStatus], Generic[Actor_co])
     def write(
         self,
         message_code: str = "i",
-        message: dict[str, Any] | str | None = None,
+        message: Optional[Union[Dict[str, Any], str]] = None,
         broadcast: bool = False,
         **kwargs,
     ):
@@ -306,7 +306,7 @@ class Command(BaseCommand[Actor_co]):
         )
 
 
-def parse_legacy_command(command_string: str) -> tuple[int, str]:
+def parse_legacy_command(command_string: str) -> Tuple[int, str]:
     """Parses a command received by a legacy actor.
 
     Parameters

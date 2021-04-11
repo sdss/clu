@@ -16,7 +16,7 @@ import pathlib
 import time
 from datetime import datetime
 
-from typing import Any, Dict, Optional, TypeVar, Union
+from typing import Any, Dict, Optional, TypeVar, Union, cast
 
 from sdsstools import get_logger, read_yaml_file
 from sdsstools.logger import SDSSLogger
@@ -69,9 +69,9 @@ class BaseClient(metaclass=abc.ABCMeta):
         name: str,
         version: Optional[str] = None,
         loop: Optional[asyncio.AbstractEventLoop] = None,
-        log_dir: pathlib.Path | str | None = None,
+        log_dir: Optional[Union[pathlib.Path, str]] = None,
         log: Optional[SDSSLogger] = None,
-        verbose: bool | int = False,
+        verbose: Union[bool, int] = False,
     ):
 
         self.loop = loop or asyncio.get_event_loop()
@@ -85,7 +85,7 @@ class BaseClient(metaclass=abc.ABCMeta):
         self.version = version or "?"
 
         # Internally store the original configuration used to start the client.
-        self.config: dict[str, Any] = {}
+        self.config: Dict[str, Any] = {}
 
     def __repr__(self):
         return f"<{str(self)} (name={self.name!r})>"
@@ -116,7 +116,9 @@ class BaseClient(metaclass=abc.ABCMeta):
         self.loop.stop()
 
     @staticmethod
-    def _parse_config(input: dict[str, Any] | pathlib.Path | str) -> dict[str, Any]:
+    def _parse_config(
+        input: Union[Dict[str, Any], pathlib.Path, str]
+    ) -> Dict[str, Any]:
 
         if not isinstance(input, dict):
             input = pathlib.Path(input)
@@ -125,12 +127,12 @@ class BaseClient(metaclass=abc.ABCMeta):
         else:
             config = input
 
-        return config
+        return cast("Dict[str, Any]", config)
 
     @classmethod
     def from_config(
         cls,
-        config: dict[str, Any] | pathlib.Path | str,
+        config: Union[Dict[str, Any], pathlib.Path, str],
         *args,
         **kwargs,
     ):
@@ -187,8 +189,8 @@ class BaseClient(metaclass=abc.ABCMeta):
     def setup_logger(
         self,
         log: Any,
-        log_dir: Optional[pathlib.Path | str],
-        verbose: bool | int = False,
+        log_dir: Optional[Union[pathlib.Path, str]],
+        verbose: Union[bool, int] = False,
     ):
         """Starts the file logger."""
 
@@ -245,7 +247,7 @@ class BaseActor(BaseClient):
     which should be overridden by the specific actors.
     """
 
-    model: Model | None = None
+    model: Union[Model, None] = None
 
     def __init__(self, *args, schema: SchemaType = None, **kwargs):
 
@@ -253,7 +255,11 @@ class BaseActor(BaseClient):
 
         self.load_schema(schema)
 
-    def load_schema(self, schema: SchemaType | None, is_file=True) -> Model | None:
+    def load_schema(
+        self,
+        schema: Union[SchemaType, None],
+        is_file=True,
+    ) -> Union[Model, None]:
         """Loads and validates the actor schema."""
 
         if schema is None:
@@ -300,7 +306,7 @@ class BaseActor(BaseClient):
     def write(
         self,
         message_code: str = "i",
-        message: Optional[dict[str, Any] | str] = None,
+        message: Optional[Dict[str, Any] | str] = None,
         command: Optional[BaseCommand] = None,
         broadcast: bool = False,
         validate: bool = True,
@@ -398,7 +404,7 @@ class Reply:
     def __init__(
         self,
         message_code: str,
-        message: dict[str, Any],
+        message: Dict[str, Any],
         command: Optional[BaseCommand] = None,
         broadcast: bool = False,
         use_validation: bool = False,

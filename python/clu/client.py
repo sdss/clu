@@ -14,7 +14,7 @@ import logging
 import pathlib
 import uuid
 
-from typing import Any, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 import aio_pika as apika
 
@@ -77,7 +77,7 @@ class AMQPReply(object):
         # Acknowledges receipt of message
         message.ack()
 
-        self.info: dict[Any, Any] = message.info()
+        self.info: Dict[Any, Any] = message.info()
 
         self.headers = self.info["headers"]
         for key in self.headers:
@@ -178,7 +178,7 @@ class AMQPClient(BaseClient):
         loop: Optional[asyncio.AbstractEventLoop] = None,
         log_dir: Optional[PathLike] = None,
         log: Optional[SDSSLogger] = None,
-        models: list[str] = [],
+        models: List[str] = [],
     ):
 
         super().__init__(name, version=version, loop=loop, log_dir=log_dir, log=log)

@@ -15,7 +15,7 @@ import json
 import re
 import shlex
 
-from typing import Any, TypeVar
+from typing import Any, List, TypeVar
 
 import click
 from click.decorators import group, pass_obj
@@ -347,7 +347,7 @@ class ClickParser:
 
     #: list: Arguments to be passed to each command in the parser.
     #: Note that the command is always passed first.
-    parser_args: list[Any] = []
+    parser_args: List[Any] = []
     parser = command_parser
 
     #: dict: Parameters to be set in the context object.
