@@ -34,7 +34,6 @@ jobs:
           key: ${{ runner.os }}-pip
 
       - name: Setup RabbitMQ
-        continue-on-error: true
         run: |
           sudo apt-get install --assume-yes rabbitmq-server
 
