@@ -15,7 +15,7 @@ import sys
 import types
 import unittest.mock
 
-from typing import Any, Dict, List, Optional, TypeVar, Union, cast
+from typing import Any, Optional, TypeVar, cast
 
 import aio_pika
 import pamqp.specification
@@ -42,7 +42,7 @@ __all__ = ["MockReply", "MockReplyList", "setup_test_actor"]
 
 class MockedActor(TCPBaseActor, LegacyActor, AMQPBaseActor):
     invoke_mock_command: Any
-    mock_replies: List[MockReply]
+    mock_replies: list[MockReply]
 
 
 T = TypeVar("T", bound=MockedActor)
@@ -70,7 +70,7 @@ class MockReply(dict):
         command_id: int,
         user_id: int,
         flag: str,
-        data: Dict[str, Any] = {},
+        data: dict[str, Any] = {},
     ):
 
         self.command_id = command_id
@@ -101,7 +101,7 @@ class MockReplyList(list):
 
     def parse_reply(
         self,
-        reply: Union[bytes, str, aio_pika.Message],
+        reply: bytes | str | aio_pika.Message,
         routing_key: Optional[str] = None,
     ):
         """Parses a reply and construct a `.MockReply`, which is appended."""
@@ -129,7 +129,7 @@ class MockReplyList(list):
 
         elif issubclass(self.actor.__class__, clu.JSONActor):
             reply = cast(str, reply)
-            reply_dict: Dict[str, Any] = json.loads(reply)
+            reply_dict: dict[str, Any] = json.loads(reply)
 
             header = reply_dict["header"]
             user_id = header.pop("commander_id", None)

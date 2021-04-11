@@ -14,7 +14,7 @@ import pathlib
 import re
 import uuid
 
-from typing import Any, Dict, Optional, TypeVar, Union, cast
+from typing import Any, Optional, TypeVar, Union, cast
 
 import aio_pika as apika
 import click
@@ -33,11 +33,11 @@ __all__ = ["AMQPActor", "JSONActor", "AMQPBaseActor", "TCPBaseActor"]
 
 T = TypeVar("T")
 PathLike = Union[str, pathlib.Path]
-SchemaType = Union[Dict[str, Any], PathLike]
+SchemaType = Union[dict[str, Any], PathLike]
 
 
 class CustomTransportType(asyncio.Transport):
-    user_id: Union[str, int]
+    user_id: str | int
     multiline: bool
 
 

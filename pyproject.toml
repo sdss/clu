@@ -49,7 +49,7 @@ coverage = {version = ">=5.0", extras = ["toml"]}
 sdsstools = {version=">=0.2.0", extras=["dev"]}
 toml = ">=0.10.0"
 asynctest = ">=0.13.0"
-Sphinx = ">=2.3"
+Sphinx = ">=4.0.0b1"
 isort = ">=5.2.2"
 pytest-mock = "^3.2.0"
 ipdb = "^0.13.3"
@@ -57,7 +57,6 @@ pytest-rabbitmq = "^2.0.1"
 autopep8 = "^1.5.4"
 rstcheck = "^3.3.1"
 black = {version = "^20.8b1", allow-prereleases = true}
-sphinx-autodoc-typehints = "^1.11.1"
 
 [tool.black]
 line-length = 88

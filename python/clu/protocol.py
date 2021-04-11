@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import asyncio
 
-from typing import Any, Callable, Dict, List, Optional, TypeVar, Union
+from typing import Any, Callable, Optional, TypeVar
 
 import aio_pika as apika
 import aiormq
@@ -490,9 +490,9 @@ class TopicListener(object):
         self.connection: apika.RobustConnection
         self.channel: apika.Channel
         self.exchange: apika.Exchange
-        self.queues: List[apika.Queue] = []
+        self.queues: list[apika.Queue] = []
 
-        self._consumer_tag: Dict[apika.Queue, apika.queue.ConsumerTag] = {}
+        self._consumer_tag: dict[apika.Queue, apika.queue.ConsumerTag] = {}
 
     async def connect(
         self,
@@ -535,7 +535,7 @@ class TopicListener(object):
         self,
         queue_name: str,
         callback: Optional[Callable[[apika.IncomingMessage], Any]] = None,
-        bindings: Union[str, List[str]] = "*",
+        bindings: str | list[str] = "*",
     ) -> apika.Queue:
         """Adds a queue with bindings.
 

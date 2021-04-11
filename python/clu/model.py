@@ -13,7 +13,7 @@ import pathlib
 import warnings
 from os import PathLike
 
-from typing import Any, Callable, Dict, List, Optional, TypeVar, Union, cast
+from typing import Any, Callable, Optional, TypeVar, Union
 
 import jsonschema
 import jsonschema.exceptions
@@ -28,7 +28,7 @@ from .tools import CallbackMixIn, CaseInsensitiveDict
 __all__ = ["Property", "BaseModel", "Model", "ModelSet"]
 
 
-SchemaType = Union[Dict[str, Any], PathLike, str]
+SchemaType = Union[dict[str, Any], PathLike, str]
 
 DEFAULT_SCHEMA = {
     "text": {"type": "string"},
@@ -107,7 +107,7 @@ class Property(CallbackMixIn):
         self._value = new_value
         self.notify(self)
 
-    def flatten(self) -> Dict[str, Any]:
+    def flatten(self) -> dict[str, Any]:
         """Returns a dictionary with the name and value of the property."""
 
         return {self.name: self.value}
@@ -147,7 +147,7 @@ class BaseModel(CaseInsensitiveDict[T], CallbackMixIn):
     def __str__(self):
         return str(self.flatten())
 
-    def flatten(self) -> Dict[str, Any]:
+    def flatten(self) -> dict[str, Any]:
         """Returns a dictionary of values.
 
         Return a dictionary in which the `Property` instances are replaced
@@ -181,7 +181,7 @@ class Model(BaseModel[Property]):
     def __init__(self, name: str, schema: SchemaType, is_file: bool = False, **kwargs):
 
         if is_file:
-            schema = cast(PathLike, schema)
+            assert isinstance(schema, (str, pathlib.Path))
             schema = open(pathlib.Path(schema).expanduser(), "r").read()
 
         if isinstance(schema, str):
@@ -190,7 +190,8 @@ class Model(BaseModel[Property]):
             except json.JSONDecodeError:
                 raise ValueError("cannot parse input schema.")
 
-        self.schema = cast("Dict[str, Any]", schema)
+        assert isinstance(schema, dict)
+        self.schema = schema
 
         if not self.check_schema(self.schema):
             raise ValueError(f"schema {name!r} is invalid.")
@@ -222,7 +223,7 @@ class Model(BaseModel[Property]):
             self[name] = Property(name, model=self)
 
     @staticmethod
-    def check_schema(schema: Dict[str, Any]) -> bool:
+    def check_schema(schema: dict[str, Any]) -> bool:
         """Checks whether a JSON schema is valid.
 
         Parameters
@@ -243,7 +244,7 @@ class Model(BaseModel[Property]):
         except jsonschema.SchemaError:
             return False
 
-    def update_model(self, instance: Dict[str, Any]):
+    def update_model(self, instance: dict[str, Any]):
         """Validates a new instance and updates the model."""
 
         try:
@@ -300,7 +301,7 @@ class ModelSet(dict):
     def __init__(
         self,
         client: clu.base.BaseClient,
-        actors: List[str] = [],
+        actors: list[str] = [],
         get_schema_command: str = "get_schema",
         raise_exception: bool = True,
         **kwargs,
@@ -315,7 +316,7 @@ class ModelSet(dict):
         self.__get_schema_command = get_schema_command
         self.__kwargs = kwargs
 
-    async def load_schemas(self, actors: Optional[List[str]] = None):
+    async def load_schemas(self, actors: Optional[list[str]] = None):
         """Loads the actor schames."""
 
         actors = actors or self.actors or []
