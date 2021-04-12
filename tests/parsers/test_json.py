@@ -13,7 +13,7 @@ import pytest
 from clu.actor import AMQPBaseActor
 from clu.parsers import JSONParser
 
-from ..conftest import DATA_DIR, RMQ_PORT
+from ..conftest import DATA_DIR
 
 
 pytestmark = [pytest.mark.asyncio]
@@ -33,13 +33,11 @@ class AMQPJSONActor(JSONParser, AMQPBaseActor):
 
 
 @pytest.fixture
-async def json_parser_actor(rabbitmq, rabbitmq_proc, event_loop):
-
-    rabbitmq_proc.rabbitctl_output("start_app")
+async def json_parser_actor(rabbitmq, event_loop):
 
     actor = AMQPJSONActor(
         name="amqp_json_actor",
-        port=RMQ_PORT,
+        port=rabbitmq.args["port"],
         schema=DATA_DIR / "schema.json",
     )
 

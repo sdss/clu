@@ -18,8 +18,6 @@ from clu.protocol import (
     open_connection,
 )
 
-from .conftest import RMQ_PORT
-
 
 pytestmark = [pytest.mark.asyncio]
 
@@ -77,7 +75,9 @@ async def test_periodic_server(unused_tcp_port_factory, mocker):
 
 async def test_topic_listener_url(amqp_actor):
 
-    url = f"amqp://guest:guest@localhost:{RMQ_PORT}"
+    port = amqp_actor.connection.port
+
+    url = f"amqp://guest:guest@localhost:{port}"
     exchange = "test"
 
     listener = TopicListener(url)

@@ -16,8 +16,6 @@ from clu import REPLY, AMQPActor, CluError, CommandError
 from clu.client import AMQPReply
 from clu.model import Model
 
-from .conftest import RMQ_PORT
-
 
 pytestmark = [pytest.mark.asyncio]
 
@@ -83,7 +81,7 @@ async def test_send_command_actor_not_connected(amqp_client, amqp_actor):
 async def test_queue_locked(amqp_actor):
 
     with pytest.raises(CluError) as error:
-        actor2 = AMQPActor(name="amqp_actor", port=RMQ_PORT)
+        actor2 = AMQPActor(name="amqp_actor", port=amqp_actor.connection.port)
         await actor2.start()
 
     assert "This may indicate that another instance" in str(error)
