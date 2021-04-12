@@ -93,6 +93,14 @@ class TronModel(BaseModel[TronKey]):
             key = self.keydict.keys[key]
             self[key.name] = TronKey(key.name, key, model=self)
 
+    def reload(self):
+        """Reloads the model. Clears callbacks."""
+
+        model = self.keydict.name
+        keydict = KeysDictionary.load(model)
+
+        self.__init__(keydict)
+
     def parse_reply(self, reply):
         """Parses a reply and updates the datamodel."""
 

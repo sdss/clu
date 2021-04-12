@@ -147,3 +147,12 @@ async def test_tron_server_closes(tron_client, tron_server, caplog):
     await asyncio.sleep(0.01)
 
     assert "Client received EOF." in caplog.record_tuples[-1][2]
+
+
+async def test_reload_model(tron_client):
+
+    assert tron_client.models["alerts"]["version"].value[0] == "2.0.1"
+
+    tron_client.models["alerts"].reload()
+
+    assert tron_client.models["alerts"]["version"].value[0] is None
