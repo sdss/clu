@@ -4,6 +4,8 @@
 Changelog
 =========
 
+* :feature:`46` Add an option to `.TronModel` to reload the model from actorkeys.
+
 * :release:`0.8.1 <2021-04-10>`
 * :bug:`-` If the property in a `.Model` being updated is a dictionary itself, update the `.Property` dictionary instead of replacing it. This ensures that if the dictionary output contains different number of keys on different issues, the complete information is kept.
 * :bug:`-` In an `.AMQPBaseActor` normally we ignore replies from the actor itself, because the actor is also a client and receives all the messages that it emits. An exception is when the commander of the command the caused that reply is the actor itself (the actor commanded itself). In that case we want to process the reply because we need to mark the command done.
