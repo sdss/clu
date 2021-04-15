@@ -15,7 +15,7 @@ import sys
 import types
 import unittest.mock
 
-from typing import Any, Dict, List, Optional, TypeVar, Union, cast
+from typing import Any, Dict, List, Optional, TypeVar
 
 import aio_pika
 import pamqp.specification
@@ -101,7 +101,7 @@ class MockReplyList(list):
 
     def parse_reply(
         self,
-        reply: Union[bytes, str, aio_pika.Message],
+        reply: bytes | str | aio_pika.Message,
         routing_key: Optional[str] = None,
     ):
         """Parses a reply and construct a `.MockReply`, which is appended."""
@@ -110,7 +110,7 @@ class MockReplyList(list):
             reply = reply.decode()
 
         if issubclass(self.actor.__class__, clu.LegacyActor):
-            reply = cast(str, reply)
+            assert isinstance(reply, str)
             match = self.LEGACY_REPLY_PATTERN.match(reply)
             if not match:
                 return
@@ -128,7 +128,7 @@ class MockReplyList(list):
                 data[name.strip()] = value.strip()
 
         elif issubclass(self.actor.__class__, clu.JSONActor):
-            reply = cast(str, reply)
+            assert isinstance(reply, str)
             reply_dict: Dict[str, Any] = json.loads(reply)
 
             header = reply_dict["header"]
@@ -139,7 +139,7 @@ class MockReplyList(list):
             data = reply_dict["data"]
 
         elif issubclass(self.actor.__class__, clu.AMQPActor):
-            reply = cast(aio_pika.Message, reply)
+            assert isinstance(reply, aio_pika.Message)
 
             header = reply.headers
 
@@ -228,7 +228,7 @@ async def setup_test_actor(actor: T, user_id: int = 1) -> T:
             side_effect=actor.mock_replies.parse_reply
         )
 
-    actor = cast(T, await actor.start())
+    await actor.start()
 
     return actor
 
