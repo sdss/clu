@@ -5,6 +5,7 @@ Changelog
 =========
 
 * :feature:`46` Add an option to `.TronModel` to reload the model from actorkeys.
+* :feature:`75` Add flag ``--ignore-broadcasts/-b`` to the CLI tool to prevent broadcast replies from being shown.
 
 * :release:`0.8.1 <2021-04-10>`
 * :bug:`-` If the property in a `.Model` being updated is a dictionary itself, update the `.Property` dictionary instead of replacing it. This ensures that if the dictionary output contains different number of keys on different issues, the complete information is kept.
