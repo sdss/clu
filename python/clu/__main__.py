@@ -12,6 +12,7 @@ import json
 import os
 import uuid
 
+import aio_pika
 import click
 import prompt_toolkit
 import prompt_toolkit.styles
@@ -50,16 +51,22 @@ class ShellClient(clu.AMQPClient):
 
     indent = False
     show_time = True
+    ignore_broadcasts = False
 
-    async def handle_reply(self, message):
+    async def handle_reply(self, message: aio_pika.IncomingMessage):
         """Prints the formatted reply."""
 
-        message = await super().handle_reply(message)
+        reply = await super().handle_reply(message)
 
-        if message is None:
+        if reply is None:
             return
 
-        message_info = message.info
+        routing_key = message.routing_key
+        is_broadcast = routing_key == "reply.broadcast" or reply.command_id is None
+        if self.ignore_broadcasts and is_broadcast:
+            return
+
+        message_info = reply.info
         headers = message_info["headers"]
 
         message_code = headers.get("message_code", "")
@@ -72,7 +79,7 @@ class ShellClient(clu.AMQPClient):
             f'fg="{color_codes[message_code]}">{message_code_esc}</style>'
         )
 
-        body = message.body
+        body = reply.body
 
         indent = 4 if self.indent is True else None
         body_tokens = list(
@@ -111,6 +118,7 @@ async def shell_client_prompt(
     port=None,
     indent=True,
     show_time=True,
+    ignore_broadcasts=False,
 ):
 
     # Give each client a unique name to ensure the queues are unique.
@@ -125,36 +133,39 @@ async def shell_client_prompt(
         port=port,
         log=None,
     ).start()
+
     client.indent = indent
     client.show_time = show_time
+    client.ignore_broadcasts = ignore_broadcasts
 
     history = FileHistory(os.path.expanduser("~/.clu_history"))
 
     session = prompt_toolkit.PromptSession("", history=history)
 
     while True:
-        try:
-            text = await session.prompt_async()
-        except KeyboardInterrupt:
-            break
-        except EOFError:
-            break
-        else:
-            text = text.strip()
-            if text.startswith("quit"):
+        with patch_stdout():
+            try:
+                text = await session.prompt_async("")
+            except KeyboardInterrupt:
                 break
-            elif text == "":
-                continue
+            except EOFError:
+                break
             else:
-                chunks = text.split()
-                if len(chunks) < 2:
-                    print(f"Invalid command {text!r}")
+                text = text.strip()
+                if text.startswith("quit"):
+                    break
+                elif text == "":
                     continue
+                else:
+                    chunks = text.split()
+                    if len(chunks) < 2:
+                        print(f"Invalid command {text!r}")
+                        continue
 
-                actor = chunks[0]
-                command_string = " ".join(chunks[1:])
+                    actor = chunks[0]
+                    command_string = " ".join(chunks[1:])
 
-                await client.send_command(actor, command_string)
+                    await client.send_command(actor, command_string)
 
 
 @click.command(name="clu")
@@ -199,25 +210,35 @@ async def shell_client_prompt(
     help="Do not indent the output JSONs.",
 )
 @click.option(
-    "--no-time", "-t", is_flag=True, default=False, help="Do not show the message time."
+    "--ignore-broadcasts",
+    "-b",
+    is_flag=True,
+    default=False,
+    help="Only show replies to client commands.",
 )
-def clu_cli(url, user, password, host, port, no_indent, no_time):
+@click.option(
+    "--no-time",
+    "-t",
+    is_flag=True,
+    default=False,
+    help="Do not show the message time.",
+)
+def clu_cli(url, user, password, host, port, no_indent, no_time, ignore_broadcasts):
     """Runs the AMQP command line interpreter."""
 
-    with patch_stdout():
-
-        shell_task = loop.create_task(
-            shell_client_prompt(
-                url=url,
-                user=user,
-                password=password,
-                host=host,
-                port=port,
-                indent=not no_indent,
-                show_time=not no_time,
-            )
+    shell_task = loop.create_task(
+        shell_client_prompt(
+            url=url,
+            user=user,
+            password=password,
+            host=host,
+            port=port,
+            indent=not no_indent,
+            show_time=not no_time,
+            ignore_broadcasts=ignore_broadcasts,
         )
-        loop.run_until_complete(shell_task)
+    )
+    loop.run_until_complete(shell_task)
 
 
 def main():
