@@ -169,7 +169,7 @@ async def shell_client_prompt(
 )
 @click.option(
     "--password",
-    "-U",
+    "-P",
     type=str,
     show_default=True,
     default="guest",
