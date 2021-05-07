@@ -4,6 +4,9 @@
 Changelog
 =========
 
+* :release:`0.9.1 <2021-05-06>`
+* :bug:`-` The ``clu`` CLI now only outputs replies to commands initiated by the command line client itself (and broadcasts if ``--ignore-broadcasts`` is not passed).
+
 * :release:`0.9.0 <2021-05-06>`
 * :feature:`46` Add an option to `.TronModel` to reload the model from actorkeys.
 * :feature:`75` Add flag ``--ignore-broadcasts/-b`` to the CLI tool to prevent broadcast replies from being shown.
