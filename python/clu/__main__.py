@@ -201,7 +201,7 @@ async def shell_client_prompt(
 )
 @click.option(
     "--port",
-    "-P",
+    "-p",
     type=int,
     show_default=True,
     default=5672,
