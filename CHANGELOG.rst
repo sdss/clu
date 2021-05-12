@@ -4,6 +4,8 @@
 Changelog
 =========
 
+* :release:`1.0.0 <2021-05-12>`
+* :feature:`-` Transition CLU to stable!
 * :support:`-` Upgrade ``click`` to ``^8.0.0``.
 
 * :release:`0.9.1 <2021-05-06>`
