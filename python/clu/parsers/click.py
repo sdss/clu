@@ -95,8 +95,6 @@ class CluCommand(click.Command):
     def invoke(self, ctx):
         """As :py:class:`click.Command.invoke` but passes the actor and command."""
 
-        click.core._maybe_show_deprecated_notice(self)  # type: ignore
-
         if self.callback is not None:
 
             with ctx:

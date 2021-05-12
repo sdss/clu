@@ -4,6 +4,8 @@
 Changelog
 =========
 
+* :support:`-` Upgrade ``click`` to ``^8.0.0``.
+
 * :release:`0.9.1 <2021-05-06>`
 * :bug:`-` The ``clu`` CLI now only outputs replies to commands initiated by the command line client itself (and broadcasts if ``--ignore-broadcasts`` is not passed).
 
