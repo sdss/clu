@@ -150,3 +150,12 @@ To run this code we need to execute ``python camera_actor.py`` and ``python shut
    }
 
 Note how we are receiving the replies from both actors, and how we use the reply from ``shutter_actor`` to output the status of the shutter in ``camera_actor``.
+
+
+Running an actor
+----------------
+
+See the detailed explanation :ref:`here <running-actor>`.
+
+.. literalinclude:: examples/run_actor.py
+   :language: python

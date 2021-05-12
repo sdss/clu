@@ -28,11 +28,11 @@ A new actor can be created by simply instantiating the `.AMQPActor` class ::
     from clu import AMQPActor
     my_actor = AMQPActor('my_actor', 'guest', 'localhost', version='0.1.0')
 
-This will create the instance but will not start the actor yet. For that you need to ``await`` the coroutine `~.AMQPActor.start` ::
+This will create the instance but will not start the actor yet. For that you need to ``await`` the coroutine ``start`` ::
 
     await my_actor.start()
 
-which will create the connection to RabbitMQ, set up the exchanges and queues, and get the actor ready to receive commands. Note that awaiting `~.AMQPActor.start` does not block the event loop so you will need to run the loop forever. A simple implementation is ::
+which will create the connection to RabbitMQ, set up the exchanges and queues, and get the actor ready to receive commands. Note that awaiting ``start`` does not block the event loop so you will need to run the loop forever. A simple implementation is ::
 
     import asyncio
     from clu import AMQPActor
@@ -47,6 +47,45 @@ which will create the connection to RabbitMQ, set up the exchanges and queues, a
     loop.run_forever()
 
 In these examples we have used the new-style `.AMQPActor` class, but it's trivial to replace it with the legacy actor class `.LegacyActor`. The parameters to start a `.LegacyActor` are the same with the exception that we pass the hostname and port where the actor will be serving, and we can provide the ``tron_host`` and ``tron_port`` to connect to an instance of ``Tron``. We'll talk more about legacy actor in a :ref:`following section <legacy-actors>`.
+
+Normally an actor will run on the background as a daemon or service. There are multiple ways to accomplish this, from setting up the process as a `systemd service <https://medium.com/@benmorel/creating-a-linux-service-with-systemd-611b5c8b91d6>`__ to using `nohup <https://linux.die.net/man/1/nohup>`__ or one of the multiple solutions to create a Unix `daemon <https://en.wikipedia.org/wiki/Daemon_(computing)>`__.
+
+CLU doesn't provide a specific way to run an actor as a daemon, but a simple solution is to use `daemonocle <https://pypi.org/project/daemonocle/>`__ for this purpose. Here's a very simple example ::
+
+    import asyncio
+    from functools import wraps
+    import click
+    from clu import AMQPActor
+    from daemonocle import DaemonCLI
+
+    def cli_coro(f):
+        """Decorator function that allows defining coroutines with click."""
+
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            loop = asyncio.get_event_loop()
+            return loop.run_until_complete(f(*args, **kwargs))
+
+        return wrapper
+
+
+    @click.command(cls=DaemonCLI, daemon_params={'pid_file': '/var/tmp/myactor.pid'})
+    @cli_coro
+    async def main():
+
+        actor = AMQPActor('myactor')  # Assuming RabbitMQ runs on localhost
+        await actor.start()
+        await actor.run_forever()
+
+
+    if __name__ == '__main__':
+        main()
+
+
+Note that the only difference with respect to the standard daemonocle `example <https://pypi.org/project/daemonocle/#integration-with-click>`__ is that we need to make the click command a coroutine. This is achieved with the custom ``cli_coro`` wrapper.
+
+For more complex CLI, especially if you are implementing click groups with multiple commands, check the ``sdsstools`` `DaemonGroup class <https://github.com/sdss/sdsstools#click-daemon-command>`__.
+
 
 
 Configuration files
