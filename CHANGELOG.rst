@@ -4,6 +4,7 @@
 Changelog
 =========
 
+* :release:`1.0.1 <2021-05-16>`
 * :support:`-` `.BaseActor` receives a ``validate`` parameter that can be used to globally define whether the actor should validate its own messages against the model.
 
 * :release:`1.0.0 <2021-05-12>`
