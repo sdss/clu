@@ -4,6 +4,8 @@
 Changelog
 =========
 
+* :support:`-` `.BaseActor` receives a ``validate`` parameter that can be used to globally define whether the actor should validate its own messages against the model.
+
 * :release:`1.0.0 <2021-05-12>`
 * :feature:`-` Transition CLU to stable!
 * :support:`-` Upgrade ``click`` to ``^8.0.0``.

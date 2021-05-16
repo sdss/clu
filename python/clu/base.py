@@ -60,6 +60,10 @@ class BaseClient(metaclass=abc.ABCMeta):
         a new one.
     verbose
         Whether to log to stdout. Can be an integer logging level.
+    validate
+        Whether to actor should validate its own messages against its model (if it
+        has one). This is a global parameter that can be overridden when calling
+        `.write`.
     """
 
     name: str
@@ -72,6 +76,7 @@ class BaseClient(metaclass=abc.ABCMeta):
         log_dir: Optional[Union[pathlib.Path, str]] = None,
         log: Optional[SDSSLogger] = None,
         verbose: Union[bool, int] = False,
+        validate: bool = True,
     ):
 
         self.loop = loop or asyncio.get_event_loop()
@@ -86,6 +91,8 @@ class BaseClient(metaclass=abc.ABCMeta):
 
         # Internally store the original configuration used to start the client.
         self.config: Dict[str, Any] = {}
+
+        self.validate = validate
 
     def __repr__(self):
         return f"<{str(self)} (name={self.name!r})>"
@@ -309,7 +316,7 @@ class BaseActor(BaseClient):
         message: Optional[Dict[str, Any] | str] = None,
         command: Optional[BaseCommand] = None,
         broadcast: bool = False,
-        validate: bool = True,
+        validate: bool | None = None,
         call_internal: bool = True,
         **kwargs,
     ) -> Reply:
@@ -354,7 +361,8 @@ class BaseActor(BaseClient):
             commander.
         validate
             Validate the reply against the actor schema. This is ignored if the actor
-            was not started with knowledge of its own schema.
+            was not started with knowledge of its own schema. If `None`, defaults to
+            the actor global behaviour.
         call_internal
             Whether to call the actor internal write method. Should be `True` but
             it's sometimes useful to call `.write` with ``call_internal=False`` when
@@ -375,7 +383,8 @@ class BaseActor(BaseClient):
 
         reply = Reply(message_code, message, command=command, broadcast=broadcast)
 
-        if validate and self.model is not None:
+        do_validate = validate if validate is not None else self.validate
+        if do_validate and self.model is not None:
             reply.use_validation = True
             result, err = self.model.update_model(message)
             if result is False:
