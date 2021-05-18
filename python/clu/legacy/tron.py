@@ -136,9 +136,9 @@ class TronLoggingFilter(logging.Filter):
 class TronClientProtocol(ReconnectingTCPClientProtocol):
     """A reconnecting protocol for the Tron connection."""
 
-    def __init__(self, on_received, loop):
+    def __init__(self, on_received, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._on_received = on_received
-        self._loop = loop
 
     def data_received(self, data):
         self._loop.call_soon(self._on_received, data)
@@ -209,7 +209,7 @@ class TronConnection(BaseClient):
 
         loop = asyncio.get_running_loop()
         self.transport, self.protocol = await loop.create_connection(  # type: ignore
-            lambda: TronClientProtocol(self._handle_reply, loop),
+            lambda: TronClientProtocol(self._handle_reply),
             self.host,
             self.port,
         )
@@ -232,7 +232,7 @@ class TronConnection(BaseClient):
 
         return not self.transport.is_closing()
 
-    async def run_forever(self):
+    async def run_forever(self):  # pragma: no cover
 
         # Keep alive until the connection is closed.
         while True:
