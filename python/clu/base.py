@@ -63,7 +63,7 @@ class BaseClient(metaclass=abc.ABCMeta):
     validate
         Whether to actor should validate its own messages against its model (if it
         has one). This is a global parameter that can be overridden when calling
-        `.write`.
+        `~.BaseClient.write`.
     """
 
     name: str
