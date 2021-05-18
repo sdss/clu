@@ -16,7 +16,7 @@ from typing import Any, Callable, List, Optional
 from clu.base import BaseClient
 from clu.command import Command, CommandStatus
 from clu.model import BaseModel, Property
-from clu.protocol import open_connection
+from clu.protocol import ReconnectingTCPClientProtocol
 
 from .types.keys import Key, KeysDictionary
 from .types.messages import Keyword
@@ -133,6 +133,17 @@ class TronLoggingFilter(logging.Filter):
         return not record.getMessage().startswith("Failed parsing reply")
 
 
+class TronClientProtocol(ReconnectingTCPClientProtocol):
+    """A reconnecting protocol for the Tron connection."""
+
+    def __init__(self, on_received, loop):
+        self._on_received = on_received
+        self._loop = loop
+
+    def data_received(self, data):
+        self._loop.call_soon(self._on_received, data)
+
+
 class TronConnection(BaseClient):
     """Allows to send commands to Tron and manages the feed of replies.
 
@@ -174,11 +185,14 @@ class TronConnection(BaseClient):
         #: dict: The model and values of each actor being tracked.
         self.models = {model: TronModel(self.keyword_dicts[model]) for model in models}
 
-        self._parser = None
         self.rparser: Any = ReplyParser()
 
-        self._client = None
+        self.transport: asyncio.Transport | None = None
+        self.protocol: TronClientProtocol | None = None
+
         self.running_commands = {}
+
+        self.buffer = b""
 
         # We want to log problems with the Tron parser, but not to the console.
         if self.log.sh:
@@ -193,9 +207,12 @@ class TronConnection(BaseClient):
             If `True`, gets all the keys in the models.
         """
 
-        self._client = await open_connection(self.host, self.port)
-
-        self._parser = asyncio.create_task(self._handle_reply())
+        loop = asyncio.get_running_loop()
+        self.transport, self.protocol = await loop.create_connection(  # type: ignore
+            lambda: TronClientProtocol(self._handle_reply, loop),
+            self.host,
+            self.port,
+        )
 
         if get_keys:
             asyncio.create_task(self.get_keys())
@@ -205,21 +222,23 @@ class TronConnection(BaseClient):
     def stop(self):
         """Closes the connection."""
 
-        self._client.close()
-        self._parser.cancel()
+        self.transport.close()
 
     def connected(self):
         """Checks whether the client is connected."""
 
-        if self._client is None:
+        if self.transport is None:
             return False
 
-        return not self._client.writer.is_closing()
+        return not self.transport.is_closing()
 
     async def run_forever(self):
 
         # Keep alive until the connection is closed.
-        await self._client.writer.wait_closed()
+        while True:
+            await asyncio.sleep(1)
+            if self.transport.is_closing():
+                return
 
     def send_command(self, target, command_string, commander="tron.tron", mid=None):
         """Sends a command through the hub.
@@ -254,7 +273,7 @@ class TronConnection(BaseClient):
         command.set_status("RUNNING")
         self.running_commands[mid] = command
 
-        self._client.writer.write(command_string.encode())
+        self.transport.write(command_string.encode())
 
         self._mid += 1
 
@@ -284,21 +303,18 @@ class TronConnection(BaseClient):
 
                 self.send_command("keys", command_string)
 
-    async def _handle_reply(self):
+    def _handle_reply(self, data: bytes):
         """Tracks new replies from Tron and updates the model."""
 
-        while True:
+        self.buffer += data
 
-            line = await self._client.reader.readline()
+        lines = self.buffer.splitlines()
+        if not self.buffer.endswith(b"\n"):
+            self.buffer = lines.pop()
+        else:
+            self.buffer = b""
 
-            if self._client.reader.at_eof():
-                self.log.error(
-                    "Client received EOF. This usually means that "
-                    "Tron is not responding. Closing the connection."
-                )
-                self.stop()
-                return
-
+        for line in lines:
             try:
                 # Do not strip here or that will cause parsing problems.
                 line = line.decode()
