@@ -208,6 +208,14 @@ class TronConnection(BaseClient):
         self._client.close()
         self._parser.cancel()
 
+    def connected(self):
+        """Checks whether the client is connected."""
+
+        if self._client is None:
+            return False
+
+        return not self._client.writer.is_closing()
+
     async def run_forever(self):
 
         # Keep alive until the connection is closed.
