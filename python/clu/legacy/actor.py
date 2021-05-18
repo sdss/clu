@@ -334,14 +334,13 @@ class BaseLegacyActor(BaseActor):
             know what you're doing.
         """
 
-        if self.tron:
+        if self.tron and self.tron.connected():
             command = self.tron.send_command(
                 target,
                 command_string,
                 commander=f"{self.name}.{self.name}",
                 mid=command_id,
             )
-            # command.actor = self
             return command
 
         else:

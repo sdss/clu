@@ -156,3 +156,12 @@ async def test_reload_model(tron_client):
     tron_client.models["alerts"].reload()
 
     assert tron_client.models["alerts"]["version"].value[0] is None
+
+
+async def test_tron_connected(actor, tron_server):
+
+    assert actor.tron.connected()
+
+    actor.tron._client.writer.close()
+
+    assert actor.tron.connected() is False
