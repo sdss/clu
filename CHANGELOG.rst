@@ -4,10 +4,11 @@
 Changelog
 =========
 
-* :bug:`78` Fixes a bug in which an actor with a defined `.TronConnection` that had failed to start would still try to send commands to Tron.
+* :bug:`78 major` Fixes a bug in which an actor with a defined `.TronConnection` that had failed to start would still try to send commands to Tron.
+* :support:`79` `.TronConnection` now uses a `.ReconnectingTCPClientProtocol` that will try to keep the socket to Tron open, allowing Tron to restart without losing connection.
 
 * :release:`1.0.1 <2021-05-16>`
-* :support:`-` `.BaseActor` receives a ``validate`` parameter that can be used to globally define whether the actor should validate its own messages against the model.
+* :bug:`-` `.BaseActor` receives a ``validate`` parameter that can be used to globally define whether the actor should validate its own messages against the model.
 
 * :release:`1.0.0 <2021-05-12>`
 * :feature:`-` Transition CLU to stable!

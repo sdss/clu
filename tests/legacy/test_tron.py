@@ -138,17 +138,6 @@ async def test_mid_out_of_range(tron_client, tron_server):
     assert 2 in tron_client.running_commands
 
 
-async def test_tron_server_closes(tron_client, tron_server, caplog):
-
-    # Simulate sending an EOF, which happens when the connection is severed.
-    client_transport = list(tron_server.transports.values())[0]
-    client_transport.write_eof()
-
-    await asyncio.sleep(0.01)
-
-    assert "Client received EOF." in caplog.record_tuples[-1][2]
-
-
 async def test_reload_model(tron_client):
 
     assert tron_client.models["alerts"]["version"].value[0] == "2.0.1"
@@ -162,6 +151,6 @@ async def test_tron_connected(actor, tron_server):
 
     assert actor.tron.connected()
 
-    actor.tron._client.writer.close()
+    actor.tron.transport.close()
 
     assert actor.tron.connected() is False

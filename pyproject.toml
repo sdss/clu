@@ -51,12 +51,12 @@ toml = ">=0.10.0"
 asynctest = ">=0.13.0"
 Sphinx = ">=4.0.0"
 isort = ">=5.2.2"
-pytest-mock = "^3.2.0"
-ipdb = "^0.13.3"
-pytest-rabbitmq = "^2.0.1"
-autopep8 = "^1.5.4"
-rstcheck = "^3.3.1"
-black = {version = "^20.8b1", allow-prereleases = true}
+pytest-mock = ">=3.2.0"
+ipdb = ">=0.13.3"
+pytest-rabbitmq = ">=2.0.1"
+autopep8 = ">=1.5.4"
+rstcheck = ">=3.3.1"
+black = {version = ">=20.8b1", allow-prereleases = true}
 
 [tool.black]
 line-length = 88
@@ -103,7 +103,8 @@ exclude_lines = [
     "class TCPProtocol",
     "class PeriodicTCPServer",
     "class CaseInsensitiveDict",
-    "def cli_coro"
+    "def cli_coro",
+    "class ReconnectingTCPClientProtocol"
 ]
 
 [build-system]
