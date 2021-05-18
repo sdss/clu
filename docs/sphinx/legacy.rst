@@ -83,8 +83,8 @@ Tron is very flexible and the protocol defined above is only one of the several 
         safeCmdsList = ['info', 'ping', 'version', 'status']
         safeCmds = r'^\s*({0})\s*$'.format('|'.join(safeCmdsList))
 
-        d = ASCIIReplyDecoder(debug=1)
-        e = ASCIICmdEncoder(sendCommander=True, useCID=False, debug=1)
+        d = ASCIIReplyDecoder(CIDfirst=False, debug=1)
+        e = ASCIICmdEncoder(useCID=False, CIDfirst=False, debug=1)
         nub = SocketActorNub(poller, cfg['host'], cfg['port'],
                              name=name, encoder=e, decoder=d,
                              grabCID=True, initCmds=initCmds,
