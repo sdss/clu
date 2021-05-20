@@ -1,5 +1,9 @@
 # Changelog
 
+### ✨ Improved
+
+* When tracking the status of a command sent to Tron, update the status with each received reply, and store all the replies.
+
 ## 1.0.2 - May 18, 2021
 
 ### 🔧 Fixed

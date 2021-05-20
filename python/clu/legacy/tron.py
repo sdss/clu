@@ -342,7 +342,7 @@ class TronConnection(BaseClient):
             status = CommandStatus.code_to_status(reply.header.code.lower())
 
             if mid in self.running_commands:
+                self.running_commands[mid].replies.append(reply)
+                self.running_commands[mid].set_status(status)
                 if status.is_done:
-                    self.running_commands[mid].replies.append(reply)
-                    command = self.running_commands.pop(mid)
-                    command.set_status(status)
+                    self.running_commands.pop(mid)
