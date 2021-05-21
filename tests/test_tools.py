@@ -9,12 +9,20 @@
 import asyncio
 import json
 import logging
+import sys
 import warnings
+from unittest import mock
 
 import pytest
 
 from clu import ActorHandler, CluWarning
-from clu.tools import CallbackMixIn, CommandStatus, StatusMixIn, format_value
+from clu.tools import (
+    CallbackMixIn,
+    CommandStatus,
+    StatusMixIn,
+    as_complete_failer,
+    format_value,
+)
 
 
 @pytest.fixture
@@ -172,7 +180,10 @@ class TestStatusMixIn:
         callback = mocker.MagicMock()
 
         StatusMixIn(
-            CommandStatus, CommandStatus.READY, callback_func=callback, call_now=True
+            CommandStatus,
+            CommandStatus.READY,
+            callback_func=callback,
+            call_now=True,
         )
 
         await asyncio.sleep(0.01)
@@ -302,3 +313,31 @@ class TestCommandStatus:
     def test_code_to_status(self, code, status):
 
         assert self.CS.code_to_status(code) == status
+
+
+@pytest.mark.asyncio
+class TestAsCompleteFailer:
+    async def f(self):
+        return True
+
+    async def raise_error(self):
+        raise ValueError("error!")
+
+    async def test_basic(self):
+        result, error = await as_complete_failer([self.f(), self.f()])
+
+        assert result
+        assert error is None
+
+    async def test_raises(self):
+        result, error = await as_complete_failer([self.f(), self.raise_error()])
+
+        assert result is False
+        assert error == "error!"
+
+    @pytest.mark.skipif(sys.version_info < (3, 8), reason="requires PY38 or higher")
+    @pytest.mark.parametrize("cb", [mock.MagicMock(), mock.AsyncMock()])
+    async def test_on_error_callback(self, cb):
+        await as_complete_failer(self.raise_error(), on_fail_callback=cb)
+
+        cb.assert_called_once()

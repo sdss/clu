@@ -430,7 +430,7 @@ async def as_complete_failer(
     aws: List[Awaitable],
     on_fail_callback: Optional[Callable] = None,
     **kwargs,
-) -> Tuple[bool, str | None]:  # pragma: no cover
+) -> Tuple[bool, str | None]:
     """Similar to `~asyncio.as_complete` but cancels all the tasks
     if any of them returns `False`.
 
@@ -478,7 +478,7 @@ async def as_complete_failer(
         # Cancel tasks
         [task.cancel() for task in tasks]
 
-        with contextlib.suppress(asyncio.CancelledError):
+        with contextlib.suppress(BaseException):
             await asyncio.gather(*[task for task in tasks])
 
         if on_fail_callback:
