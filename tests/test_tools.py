@@ -335,9 +335,15 @@ class TestAsCompleteFailer:
         assert result is False
         assert error == "error!"
 
+    async def test_on_error_callback(self):
+        cb = mock.MagicMock()
+        await as_complete_failer(self.raise_error(), on_fail_callback=cb)
+
+        cb.assert_called_once()
+
     @pytest.mark.skipif(sys.version_info < (3, 8), reason="requires PY38 or higher")
-    @pytest.mark.parametrize("cb", [mock.MagicMock(), mock.AsyncMock()])
-    async def test_on_error_callback(self, cb):
+    async def test_on_error_callback_coro(self):
+        cb = mock.AsyncMock()
         await as_complete_failer(self.raise_error(), on_fail_callback=cb)
 
         cb.assert_called_once()
