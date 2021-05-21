@@ -7,6 +7,7 @@
 * When tracking the status of a command sent to Tron, update the status with each received reply, and store all the replies.
 * When `as_complete_failer` cancels the tasks after an exception, suppress all possible exceptions, not only `CancelledError`, since the original exception will be raised again. Add tests for `as_complete_failer`.
 
+
 ## 1.0.2 - May 18, 2021
 
 ### 🔧 Fixed
