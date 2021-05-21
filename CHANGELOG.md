@@ -1,7 +1,6 @@
 # Changelog
 
-
-## Next version
+## 1.0.3 - May 20, 2021
 
 ### ✨ Improved
 
