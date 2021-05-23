@@ -34,7 +34,7 @@ Client_co = TypeVar("Client_co", bound="clu.base.BaseClient", covariant=True)
 Future_co = TypeVar("Future_co", bound="BaseCommand", covariant=True)
 
 
-if sys.version_info > (3, 8):
+if sys.version_info >= (3, 9, 0):
     Future = asyncio.Future
 else:
 
