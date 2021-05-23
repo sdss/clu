@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### ✨ Improved
+
+* [#81](https://github.com/sdss/clu/issues/81) Improve typing of `BaseCommand` and command replies.
+
+
 ## 1.0.3 - May 20, 2021
 
 ### ✨ Improved
@@ -16,7 +23,7 @@
 
 ### ✨ Improved
 
-* [#78](https://github.com/sdss/clu/issues/79): `TronConnection` now uses a `ReconnectingTCPClientProtocol` that will try to keep the socket to Tron open, allowing Tron to restart without losing connection.
+* [#79](https://github.com/sdss/clu/issues/79): `TronConnection` now uses a `ReconnectingTCPClientProtocol` that will try to keep the socket to Tron open, allowing Tron to restart without losing connection.
 
 ### 🧹 Cleanup
 
