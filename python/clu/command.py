@@ -91,8 +91,9 @@ Client_co = TypeVar("Client_co", bound="clu.base.BaseClient", covariant=True)
         self.default_keyword = default_keyword
         self.loop = loop or asyncio.get_event_loop()
 
-        #: .Reply: A list of replies this command has received.
-        self.replies: List[clu.base.Reply] = []
+        #: A list of replies this command has received. The type of
+        #: reply object dependson the actor or client issuing the command.
+        self.replies: List[Any] = []
 
         asyncio.Future.__init__(self, loop=self.loop)
 
