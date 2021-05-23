@@ -42,7 +42,11 @@ else:
         pass
 
 
-class BaseCommand(Future, StatusMixIn[CommandStatus], Generic[Client_co, Future_co]):
+class BaseCommand(
+    Future[Future_co],
+    StatusMixIn[CommandStatus],
+    Generic[Client_co, Future_co],
+):
     """Base class for commands of all types (user and device).
 
     A `BaseCommand` instance is a `~asyncio.Future` whose result gets set
