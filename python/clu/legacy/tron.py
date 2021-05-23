@@ -269,7 +269,7 @@ class TronConnection(BaseClient):
 
         command_string = f"{commander} {mid} {target} {command_string}\n"
 
-        command = Command(command_string=command_string)
+        command: Command[TronConnection] = Command(command_string=command_string)
         command.set_status("RUNNING")
         self.running_commands[mid] = command
 

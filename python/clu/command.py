@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import re
+import sys
 import time
 from contextlib import suppress
 
@@ -29,10 +30,23 @@ __all__ = [
 ]
 
 
-Actor_co = TypeVar("Actor_co", bound="clu.base.BaseActor", covariant=True)
+Client_co = TypeVar("Client_co", bound="clu.base.BaseClient", covariant=True)
+Future_co = TypeVar("Future_co", bound="BaseCommand", covariant=True)
 
 
-class BaseCommand(asyncio.Future, StatusMixIn[CommandStatus], Generic[Actor_co]):
+if sys.version_info >= (3, 9, 0):
+    Future = asyncio.Future
+else:
+
+    class Future(asyncio.Future, Generic[Future_co]):
+        pass
+
+
+class BaseCommand(
+    Future[Future_co],
+    StatusMixIn[CommandStatus],
+    Generic[Client_co, Future_co],
+):
     """Base class for commands of all types (user and device).
 
     A `BaseCommand` instance is a `~asyncio.Future` whose result gets set
@@ -73,8 +87,8 @@ class BaseCommand(asyncio.Future, StatusMixIn[CommandStatus], Generic[Actor_co])
         commander_id: Union[int, str] = 0,
         command_id: Union[int, str] = 0,
         consumer_id: Union[int, str] = 0,
-        actor: Optional[Actor_co] = None,
-        parent: Optional[BaseCommand[Actor_co]] = None,
+        actor: Optional[clu.base.BaseActor] = None,
+        parent: Optional[BaseCommand[Client_co, Future_co]] = None,
         status_callback: Optional[Callable[[CommandStatus], Any]] = None,
         call_now: bool = False,
         default_keyword: str = "text",
@@ -91,8 +105,9 @@ class BaseCommand(asyncio.Future, StatusMixIn[CommandStatus], Generic[Actor_co])
         self.default_keyword = default_keyword
         self.loop = loop or asyncio.get_event_loop()
 
-        #: .Reply: A list of replies this command has received.
-        self.replies: List[clu.base.Reply] = []
+        #: A list of replies this command has received. The type of
+        #: reply object dependson the actor or client issuing the command.
+        self.replies: List[Any] = []
 
         asyncio.Future.__init__(self, loop=self.loop)
 
@@ -253,7 +268,7 @@ class BaseCommand(asyncio.Future, StatusMixIn[CommandStatus], Generic[Actor_co])
         )
 
 
-class Command(BaseCommand[Actor_co]):
+class Command(BaseCommand[Client_co, "Command"]):
     """A command from a user.
 
     Parameters
