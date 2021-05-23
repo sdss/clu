@@ -30,9 +30,14 @@ __all__ = [
 
 
 Client_co = TypeVar("Client_co", bound="clu.base.BaseClient", covariant=True)
+Future_co = TypeVar("Future_co", bound="BaseCommand", covariant=True)
 
 
-    Generic[Client_co],
+class BaseCommand(
+    asyncio.Future[Future_co],
+    StatusMixIn[CommandStatus],
+    Generic[Client_co, Future_co],
+):
     """Base class for commands of all types (user and device).
 
     A `BaseCommand` instance is a `~asyncio.Future` whose result gets set
@@ -74,7 +79,7 @@ Client_co = TypeVar("Client_co", bound="clu.base.BaseClient", covariant=True)
         command_id: Union[int, str] = 0,
         consumer_id: Union[int, str] = 0,
         actor: Optional[clu.base.BaseActor] = None,
-        parent: Optional[BaseCommand[Client_co]] = None,
+        parent: Optional[BaseCommand[Client_co, Future_co]] = None,
         status_callback: Optional[Callable[[CommandStatus], Any]] = None,
         call_now: bool = False,
         default_keyword: str = "text",
@@ -254,7 +259,7 @@ Client_co = TypeVar("Client_co", bound="clu.base.BaseClient", covariant=True)
         )
 
 
-class Command(BaseCommand[Client_co]):
+class Command(BaseCommand[Client_co, "Command"]):
     """A command from a user.
 
     Parameters
