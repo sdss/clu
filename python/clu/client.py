@@ -315,7 +315,7 @@ class AMQPClient(BaseClient):
         command_id = command_id or str(uuid.uuid4())
 
         # Creates and registers a command.
-        command = Command(
+        command: Command[AMQPClient] = Command(
             command_string=command_string,
             command_id=command_id,
             commander_id=self.name,
