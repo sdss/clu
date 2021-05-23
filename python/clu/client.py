@@ -67,12 +67,14 @@ class AMQPReply(object):
         log: Optional[logging.Logger] = None,
     ):
 
+        self.command_id: int | None = None
+        self.sender: str | None = None
+        self.body = {}
+
         self.message = message
-        self.log = log
+        self._log = log
 
         self.is_valid = True
-
-        self.body = None
 
         # Acknowledges receipt of message
         message.ack()
@@ -88,20 +90,20 @@ class AMQPReply(object):
 
         if self.message_code is None:
             self.is_valid = False
-            if self.log:
-                self.log.warning(f"received message without message_code: {message}")
+            if self._log:
+                self._log.warning(f"received message without message_code: {message}")
             return
 
         self.sender = self.headers.get("sender", None)
-        if self.sender is None and self.log:
-            self.log.warning(f"received message without sender: {message}")
+        if self.sender is None and self._log:
+            self._log.warning(f"received message without sender: {message}")
 
         self.command_id = message.correlation_id
 
         command_id_header = self.headers.get("command_id", None)
         if command_id_header and command_id_header != self.command_id:
-            if self.log:
-                self.log.error(
+            if self._log:
+                self._log.error(
                     f"mismatch between message "
                     f"correlation_id={self.command_id} "
                     f"and header command_id={command_id_header} "
