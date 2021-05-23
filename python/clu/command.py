@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import re
+import sys
 import time
 from contextlib import suppress
 
@@ -33,11 +34,15 @@ Client_co = TypeVar("Client_co", bound="clu.base.BaseClient", covariant=True)
 Future_co = TypeVar("Future_co", bound="BaseCommand", covariant=True)
 
 
-class BaseCommand(
-    asyncio.Future[Future_co],
-    StatusMixIn[CommandStatus],
-    Generic[Client_co, Future_co],
-):
+if sys.version_info > (3, 8):
+    Future = asyncio.Future
+else:
+
+    class Future(asyncio.Future, Generic[Future_co]):
+        pass
+
+
+class BaseCommand(Future, StatusMixIn[CommandStatus], Generic[Client_co, Future_co]):
     """Base class for commands of all types (user and device).
 
     A `BaseCommand` instance is a `~asyncio.Future` whose result gets set
