@@ -512,23 +512,28 @@ class TopicListener(object):
             The type of exchange to create.
         """
 
-        if self.url:
-            self.connection = await apika.connect_robust(self.url)
-        else:
-            self.connection = await apika.connect_robust(
-                login=self.user,
-                host=self.host,
-                port=self.port,
-                password=self.password,
-                virtualhost=self.virtualhost,
-                ssl=self.ssl,
-            )
+        try:
+            if self.url:
+                self.connection = await apika.connect_robust(self.url)
+            else:
+                self.connection = await apika.connect_robust(
+                    login=self.user,
+                    host=self.host,
+                    port=self.port,
+                    password=self.password,
+                    virtualhost=self.virtualhost,
+                    ssl=self.ssl,
+                )
+        except ConnectionError as err:
+            raise ConnectionError(f"Failed conneting to the AMQP server: {err}.")
 
         self.channel = await self.connection.channel(on_return_raises=on_return_raises)
         await self.channel.set_qos(prefetch_count=1)
 
         self.exchange = await self.channel.declare_exchange(
-            exchange_name, type=exchange_type, auto_delete=True
+            exchange_name,
+            type=exchange_type,
+            auto_delete=True,
         )
 
         return self
