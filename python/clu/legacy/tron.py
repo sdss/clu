@@ -10,11 +10,13 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import warnings
 
 from typing import Any, Callable, List, Optional
 
 from clu.base import BaseClient
 from clu.command import Command, CommandStatus
+from clu.exceptions import CluWarning
 from clu.model import BaseModel, Property
 from clu.protocol import ReconnectingTCPClientProtocol
 
@@ -108,17 +110,20 @@ class TronModel(BaseModel[TronKey]):
 
             key_name = reply_key.name.lower()
             if key_name not in self.keydict:
-                raise ParseError(
-                    f"Cannot parse unknown keyword {self.name}.{reply_key.name}."
+                warnings.warn(
+                    f"Cannot parse unknown keyword {self.name}.{reply_key.name}.",
+                    CluWarning,
                 )
+                continue
 
             # When parsed the values in reply_key are string. After consuming
             # it with the Key, the values become typed values.
             result = self.keydict.keys[key_name].consume(reply_key)
 
             if not result:
-                raise ParseError(
-                    f"Failed parsing keyword {self.name}.{reply_key.name}."
+                warnings.warn(
+                    f"Failed parsing keyword {self.name}.{reply_key.name}.",
+                    CluWarning,
                 )
 
             self[key_name].update_keyword(reply_key)

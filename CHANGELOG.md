@@ -5,6 +5,7 @@
 ### ✨ Improved
 
 * [#81](https://github.com/sdss/clu/issues/81) Improve typing of `BaseCommand` and command replies.
+* In `TronConnection`, do not fail with a `ParseError` if one of the keywords cannot be parsed. Instead, issue a warning and move on to the next one.
 
 
 ## 1.0.3 - May 20, 2021
