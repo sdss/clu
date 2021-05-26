@@ -15,14 +15,14 @@ import uuid
 import aio_pika
 import click
 import prompt_toolkit
-import prompt_toolkit.styles
 import pygments
 import pygments.lexers
-import pygments.styles
 from prompt_toolkit import print_formatted_text as print
 from prompt_toolkit.formatted_text import PygmentsTokens
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.patch_stdout import patch_stdout
+from prompt_toolkit.styles import style_from_pygments_cls
+from pygments.styles import STYLE_MAP, get_style_by_name
 
 import clu
 
@@ -30,9 +30,8 @@ import clu
 loop = asyncio.get_event_loop()
 
 
-style = prompt_toolkit.styles.style_from_pygments_cls(
-    pygments.styles.get_style_by_name("solarized-dark")
-)
+style_name = "solarized-dark" if "solarized-dark" in STYLE_MAP else "default"
+style = style_from_pygments_cls(get_style_by_name(style_name))
 
 
 color_codes = {
