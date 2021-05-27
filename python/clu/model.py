@@ -13,6 +13,7 @@ import pathlib
 import warnings
 from copy import copy
 from os import PathLike
+from time import time
 
 from typing import Any, Callable, Dict, List, Optional, TypeVar, Union, cast
 
@@ -84,6 +85,7 @@ class Property(CallbackMixIn):
 
         self.name = name
         self._value = value
+        self.last_seen = None
 
         self.model = model
 
@@ -106,6 +108,7 @@ class Property(CallbackMixIn):
         """Sets the value of the key and schedules the callback."""
 
         self._value = new_value
+        self.last_seen = time()
         self.notify(self)
 
     def copy(self):
@@ -143,6 +146,7 @@ class BaseModel(CaseInsensitiveDict[T], CallbackMixIn):
     ):
 
         self.name = name
+        self.last_seen = None
 
         CaseInsensitiveDict.__init__(self, {})
         CallbackMixIn.__init__(self, [callback] if callback else [])
@@ -256,6 +260,8 @@ class Model(BaseModel[Property]):
             self.validator.validate(instance)
         except jsonschema.exceptions.ValidationError as err:
             return False, err
+
+        self.last_seen = time()
 
         for key, value in instance.items():
             if key in self:

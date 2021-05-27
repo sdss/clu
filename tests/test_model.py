@@ -105,5 +105,8 @@ def test_model_update_dict():
     model.update_model({"prop": {"subprop1": 1, "subprop2": 2}})
     assert model["prop"].value == {"subprop1": 1, "subprop2": 2}
 
+    assert model["prop"].last_seen is not None
+    assert model.last_seen is not None
+
     model.update_model({"prop": {"subprop2": 5}})
     assert model["prop"].value == {"subprop1": 1, "subprop2": 5}

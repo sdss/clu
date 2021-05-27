@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 import warnings
 
 from typing import Any, Callable, List, Optional
@@ -107,6 +108,8 @@ class TronModel(BaseModel[TronKey]):
         """Parses a reply and updates the datamodel."""
 
         for reply_key in reply.keywords:
+
+            self.last_seen = time.time()
 
             key_name = reply_key.name.lower()
             if key_name not in self.keydict:
