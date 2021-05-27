@@ -10,6 +10,7 @@
 * Copy `Property` before notifying the callbacks. This prevents the value passed being updated in the time that it takes for the callback to go out.
 * `Property`, `BaseModel`, and `TronModel` now have a `last_seen` attribute that is updated with the Unix time when the model or property/key are updated.
 
+
 ## 1.0.3 - May 20, 2021
 
 ### ✨ Improved
