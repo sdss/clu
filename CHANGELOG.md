@@ -7,6 +7,7 @@
 * [#81](https://github.com/sdss/clu/issues/81) Improve typing of `BaseCommand` and command replies.
 * In `TronConnection`, do not fail with a `ParseError` if one of the keywords cannot be parsed. Instead, issue a warning and move on to the next one.
 * The CLI now checks that the preferred style (`solarized-dark`) is available. Otherwise defaults to `pygments` default style.
+* Copy `Property` before notifying the callbacks. This prevents the value passed being updated in the time that it takes for the callback to go out.
 
 
 ## 1.0.3 - May 20, 2021

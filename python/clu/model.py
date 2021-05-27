@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 import pathlib
 import warnings
+from copy import copy
 from os import PathLike
 
 from typing import Any, Callable, Dict, List, Optional, TypeVar, Union, cast
@@ -106,6 +107,11 @@ class Property(CallbackMixIn):
 
         self._value = new_value
         self.notify(self)
+
+    def copy(self):
+        """Returns a copy of self."""
+
+        return copy(self)
 
     def flatten(self) -> Dict[str, Any]:
         """Returns a dictionary with the name and value of the property."""
@@ -261,7 +267,7 @@ class Model(BaseModel[Property]):
                     self[key].value = new_value
                 else:
                     self[key].value = value
-                self.notify(self, self[key])
+                self.notify(self, self[key].copy())
 
         return True, None
 

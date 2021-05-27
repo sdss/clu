@@ -128,7 +128,7 @@ class TronModel(BaseModel[TronKey]):
 
             self[key_name].update_keyword(reply_key)
 
-            self.notify(self, self[key_name])
+            self.notify(self, self[key_name].copy())
 
 
 class TronLoggingFilter(logging.Filter):
