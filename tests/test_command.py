@@ -135,9 +135,10 @@ async def test_status_callback(command):
     global result
     result = 0
 
-    def callback():
+    def callback(status):
         global result
         result = result + 1
+        assert isinstance(status, CommandStatus)
 
     command.callbacks.append(callback)
     command.finish()

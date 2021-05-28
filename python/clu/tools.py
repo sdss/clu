@@ -174,7 +174,7 @@ class StatusMixIn(Generic[MaskbitType]):
     initial_status
         The initial status.
     callback_func
-        The function to call if the status changes.
+        The function to call if the status changes. It receives the status.
     call_now
         Whether the callback function should be called when initialising.
 
@@ -214,7 +214,7 @@ class StatusMixIn(Generic[MaskbitType]):
         loop = asyncio.get_event_loop()
 
         for func in self.callbacks:
-            loop.call_soon(func)
+            loop.call_soon(func, self.status)
 
     @property
     def status(self):
