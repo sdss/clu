@@ -160,6 +160,7 @@ async def test_tron_connected(actor, tron_server):
     assert actor.tron.connected() is False
 
 
+@pytest.mark.skipif(sys.version_info < (3, 8), reason="Test fails in PY37")
 async def test_reply_callback(actor, tron_server, mocker):
 
     callback_mock = mocker.MagicMock()
