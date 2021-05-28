@@ -285,13 +285,15 @@ class AMQPClient(BaseClient):
         # the command is done and, if so, sets the result in the Future.
         # Also, add the reply to the command list of replies.
         if reply.command_id in self.running_commands:
-            self.running_commands[reply.command_id].replies.append(reply)
+            command = self.running_commands[reply.command_id]
+            command.replies.append(reply)
             status = CommandStatus.code_to_status(reply.message_code)
-            if status.is_done:
-                command = self.running_commands.pop(reply.command_id)
+            if command.status != status:
                 command.set_status(status)
+            if status.is_done:
                 if not command.done():
                     command.set_result(command)
+                    del self.running_commands[reply.command_id]
 
         return reply
 

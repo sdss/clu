@@ -9,6 +9,7 @@
 * The CLI now checks that the preferred style (`solarized-dark`) is available. Otherwise defaults to `pygments` default style.
 * Copy `Property` before notifying the callbacks. This prevents the value passed being updated in the time that it takes for the callback to go out.
 * `Property`, `BaseModel`, and `TronModel` now have a `last_seen` attribute that is updated with the Unix time when the model or property/key are updated.
+* When the AMQP client is handling replies for a command, it will update the status every time it changes, not only when it is done or failed.
 
 
 ## 1.0.3 - May 20, 2021
