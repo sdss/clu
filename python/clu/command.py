@@ -70,6 +70,9 @@ class BaseCommand(
     parent
         Another `.BaseCommand` object that is issuing this subcommand.
         Messages emitted by the command will use the parent ``command_id``.
+    reply_callback
+        A callback that gets called when a client command receives a reply from the
+        actor.
     status_callback
         A function to call when the status changes.
     call_now
@@ -89,6 +92,7 @@ class BaseCommand(
         consumer_id: Union[int, str] = 0,
         actor: Optional[clu.base.BaseActor] = None,
         parent: Optional[BaseCommand[Client_co, Future_co]] = None,
+        reply_callback: Optional[Callable[[Any], None]] = None,
         status_callback: Optional[Callable[[CommandStatus], Any]] = None,
         call_now: bool = False,
         default_keyword: str = "text",
@@ -102,6 +106,8 @@ class BaseCommand(
         self.actor = actor
         self.parent = parent
 
+        self._reply_callback = reply_callback
+
         self.default_keyword = default_keyword
         self.loop = loop or asyncio.get_event_loop()
 
@@ -109,7 +115,7 @@ class BaseCommand(
         #: reply object dependson the actor or client issuing the command.
         self.replies: List[Any] = []
 
-        asyncio.Future.__init__(self, loop=self.loop)
+        asyncio.Future.__init__(self)
 
         self._status: CommandStatus
         StatusMixIn.__init__(

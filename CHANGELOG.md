@@ -2,6 +2,10 @@
 
 ## Next version
 
+### 🚀 New
+
+* [#82](https://github.com/sdss/clu/issues/82) `send_command` now accepts a `callback` argument. If set, the callback will be called each time the actor replies and will receive the reply itself (`AMQPReply` in case of `AMQPClient/Actor` and `clu.legacy.types.messages.Reply` for `Tron/TronConnection`). Thanks to Florian Briegel for the idea.
+
 ### ✨ Improved
 
 * [#81](https://github.com/sdss/clu/issues/81) Improve typing of `BaseCommand` and command replies.

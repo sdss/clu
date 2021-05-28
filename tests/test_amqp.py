@@ -8,6 +8,7 @@
 
 import asyncio
 import logging
+import sys
 
 import pytest
 from asynctest import CoroutineMock
@@ -247,3 +248,15 @@ class TestHandleReply:
         assert reply.is_valid is True
         if log:
             assert "message without sender" in caplog.record_tuples[-1][2]
+
+
+@pytest.mark.skipif(sys.version_info < (3, 8), reason="Test fails in PY37")
+async def test_client_send_command_callback(amqp_client, amqp_actor, mocker):
+
+    callback_mock = mocker.MagicMock()
+
+    cmd = await amqp_client.send_command("amqp_actor", "ping", callback=callback_mock)
+    await cmd
+
+    callback_mock.assert_called()
+    assert isinstance(callback_mock.mock_calls[0].args[0], AMQPReply)
