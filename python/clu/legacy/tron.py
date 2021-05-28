@@ -22,7 +22,7 @@ from clu.model import BaseModel, Property
 from clu.protocol import ReconnectingTCPClientProtocol
 
 from .types.keys import Key, KeysDictionary
-from .types.messages import Keyword
+from .types.messages import Keyword, Reply
 from .types.parser import ParseError, ReplyParser
 
 
@@ -254,7 +254,7 @@ class TronConnection(BaseClient):
         command_string,
         commander="tron.tron",
         mid=None,
-        callback: Optional[Callable[[Any], None]] = None,
+        callback: Optional[Callable[[Reply], None]] = None,
     ):
         """Sends a command through the hub.
 
