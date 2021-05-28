@@ -9,7 +9,8 @@ The term "command" is somewhat overused and employed to represent several relate
 - The *string* that is received by an actor indicating that it must perform a certain task.
 - A *command parser* is the code that interprets the command string and executed a certain function.
 - The callback function called by the command parser is also called a command.
-- When a command is received by the actor, an instance of `.Command` is used to store the the command string and to keep track of its status.
+- When a command is received by the actor, an instance of `.Command` is used to store the the command string and to keep track of its status. We refer to this object as an *actor-side command* or *actor command*.
+- When a command is sent from a client to the actor, the same `.Command` class is used to track its status. While the class is the same, these commands cannot write to the users (since clients can't) but are aware of the replies that they receive from the actor being commanded. We refer to these commands as *client-side command* or *client command* and its specific features are described in more detail in :ref:`actor-communication`.
 
 When an actor received a command string via its communication channel, it creates a `.Command` object with information about the string, the commander, the command id, and other parameters specific to the type of actor. The `.Command` is then processed by `~.BaseActor.parse_command`, which determines the command callback to execute. At that point the `status <.CommandStatus>` of the `.Command` is set to `~.CommandStatus.RUNNING`.
 

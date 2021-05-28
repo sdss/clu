@@ -93,3 +93,18 @@ Another way is to access the command `~.BaseCommand.replies` attribute. ``replie
     command.info(f"Shutter is now {shutter_status!r}.")
 
 For `.TronConnection`, the returned replies are of the old ``opscore`` type ``Reply``, which is not well documented. In general, it's possible to access the keywords via ``reply.keywords``. For more details, check the code directly `here <https://github.com/sdss/clu/blob/5c8bcfa5d4cdfaaac09ffb259d236e4fd52e1ace/python/clu/legacy/types/messages.py#L436>`__.
+
+
+Client-side command callbacks
+-----------------------------
+
+When calling ``send_command``, we can specify a callback that will be invoked with each reply the client receives from the actor and that is associated with that command. ::
+
+    def callback(reply):
+        print(reply.command_id)
+
+    await amqp_client.send_command('my_actor', 'do_something', callback=callback)
+
+The callback will receive an `.AMQPReply` in the case of `AMQP actors <.AMQPActor>` and `clients <.AMQPClient>`, and an opscore ``Reply`` for `.LegacyActor` and `.TronConnection`.
+
+An advantage of using callback in ``send_command`` is that the actor being commanded does not need to have an schema, which is necessary when using callbacks with the :ref:`keyword model <keyword-model>`.
