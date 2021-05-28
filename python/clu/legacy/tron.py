@@ -248,7 +248,14 @@ class TronConnection(BaseClient):
             if self.transport.is_closing():
                 return
 
-    def send_command(self, target, command_string, commander="tron.tron", mid=None):
+    def send_command(
+        self,
+        target,
+        command_string,
+        commander="tron.tron",
+        mid=None,
+        callback: Optional[Callable[[Any], None]] = None,
+    ):
         """Sends a command through the hub.
 
         Parameters
@@ -267,6 +274,9 @@ class TronConnection(BaseClient):
             The message id. If `None`, a sequentially increasing value will
             be used. You should not specify a ``mid`` unless you really know
             what you're doing.
+        callback
+            A callback to invoke with each reply received from the actor.
+
         """
 
         mid = mid or self._mid
@@ -277,8 +287,11 @@ class TronConnection(BaseClient):
 
         command_string = f"{commander} {mid} {target} {command_string}\n"
 
-        command: Command[TronConnection] = Command(command_string=command_string)
-        command.set_status("RUNNING")
+        command: Command[TronConnection] = Command(
+            command_string=command_string,
+            reply_callback=callback,
+        )
+        # command.set_status("RUNNING")
         self.running_commands[mid] = command
 
         self.transport.write(command_string.encode())
@@ -352,5 +365,7 @@ class TronConnection(BaseClient):
             if mid in self.running_commands:
                 self.running_commands[mid].replies.append(reply)
                 self.running_commands[mid].set_status(status)
+                if self.running_commands[mid]._reply_callback is not None:
+                    self.running_commands[mid]._reply_callback(reply)
                 if status.is_done:
                     self.running_commands.pop(mid)

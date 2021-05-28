@@ -14,7 +14,7 @@ import logging
 import pathlib
 import uuid
 
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
 import aio_pika as apika
 
@@ -67,7 +67,7 @@ class AMQPReply(object):
         log: Optional[logging.Logger] = None,
     ):
 
-        self.command_id: int | None = None
+        self.command_id: str | None = None
         self.sender: str | None = None
         self.body = {}
 
@@ -199,7 +199,7 @@ class AMQPClient(BaseClient):
         )
 
         #: dict: External commands currently running.
-        self.running_commands = {}
+        self.running_commands: Dict[str, Command] = {}
 
         self.models = ModelSet(self, actors=models, raise_exception=False, log=self.log)
 
@@ -284,9 +284,11 @@ class AMQPClient(BaseClient):
         # If the command is running we check if the message code indicates
         # the command is done and, if so, sets the result in the Future.
         # Also, add the reply to the command list of replies.
-        if reply.command_id in self.running_commands:
+        if reply.command_id and reply.command_id in self.running_commands:
             command = self.running_commands[reply.command_id]
             command.replies.append(reply)
+            if command._reply_callback is not None:
+                command._reply_callback(reply)
             status = CommandStatus.code_to_status(reply.message_code)
             if command.status != status:
                 command.set_status(status)
@@ -301,7 +303,8 @@ class AMQPClient(BaseClient):
         self,
         consumer: str,
         command_string: str,
-        command_id: Optional[str] = None,
+        command_id: str | None = None,
+        callback: Optional[Callable[[AMQPReply], None]] = None,
     ):
         """Commands another actor over its RCP queue.
 
@@ -326,6 +329,7 @@ class AMQPClient(BaseClient):
             consumer_id=consumer,
             actor=None,
             loop=self.loop,
+            reply_callback=callback,
         )
 
         self.running_commands[command_id] = command

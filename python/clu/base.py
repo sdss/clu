@@ -29,6 +29,7 @@ from .tools import REPLY
 
 __all__ = ["BaseClient", "BaseActor", "Reply"]
 
+
 SchemaType = Union[Dict[str, Any], pathlib.Path, str]
 T = TypeVar("T", bound="BaseClient")
 
@@ -295,11 +296,6 @@ class BaseActor(BaseClient):
     def parse_command(self, command: BaseCommand):
         """Parses and executes a `.Command`. Must be overridden."""
         pass
-
-    def send_command(self):
-        """Sends a command to another actor."""
-
-        raise NotImplementedError("Sending commands is not implemented for this actor.")
 
     @abc.abstractmethod
     def _write_internal(self, reply: Reply):
