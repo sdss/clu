@@ -1,6 +1,6 @@
 # Changelog
 
-## Next version
+## 1.1.0 - May 29, 2021
 
 ### 🚀 New
 
@@ -33,7 +33,7 @@
 
 ### ✨ Improved
 
-* [#79](https://github.com/sdss/clu/issues/79): `TronConnection` now uses a `ReconnectingTCPClientProtocol` that will try to keep the socket to Tron open, allowing Tron to restart without losing connection.
+* [#79](https://github.com/sdss/clu/issues/79) `TronConnection` now uses a `ReconnectingTCPClientProtocol` that will try to keep the socket to Tron open, allowing Tron to restart without losing connection.
 
 ### 🧹 Cleanup
 
