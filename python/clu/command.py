@@ -90,7 +90,7 @@ class BaseCommand(
         commander_id: Union[int, str] = 0,
         command_id: Union[int, str] = 0,
         consumer_id: Union[int, str] = 0,
-        actor: Optional[clu.base.BaseActor] = None,
+        actor: Optional[Client_co] = None,
         parent: Optional[BaseCommand[Client_co, Future_co]] = None,
         reply_callback: Optional[Callable[[Any], None]] = None,
         status_callback: Optional[Callable[[CommandStatus], Any]] = None,

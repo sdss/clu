@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### 🔧 Fixed
+
+* Correctly assign the type of the actor in a `Command`.
+
+
 ## 1.1.0 - May 29, 2021
 
 ### 🚀 New
