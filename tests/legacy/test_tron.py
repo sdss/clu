@@ -170,3 +170,14 @@ async def test_reply_callback(actor, tron_server, mocker):
 
     callback_mock.assert_called()
     assert isinstance(callback_mock.mock_calls[0].args[0], Reply)
+
+
+async def test_client_send_command_args(tron_server, actor):
+
+    command = actor.send_command("alerts", "ping", "--help")
+    await command
+
+    assert b"test_actor.test_actor" in tron_server.received[-1]
+    assert b"alerts ping --help" in tron_server.received[-1]
+
+    assert len(command.replies) == 1

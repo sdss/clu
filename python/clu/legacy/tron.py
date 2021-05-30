@@ -252,6 +252,7 @@ class TronConnection(BaseClient):
         self,
         target,
         command_string,
+        *args,
         commander="tron.tron",
         mid=None,
         callback: Optional[Callable[[Reply], None]] = None,
@@ -264,6 +265,8 @@ class TronConnection(BaseClient):
             The actor to command.
         command_string
             The command to send.
+        args
+            Arguments to concatenate to the command string.
         commander
             The actor or client sending the command. The format for Tron is
             "commander message_id target command" where commander needs to
@@ -277,6 +280,13 @@ class TronConnection(BaseClient):
         callback
             A callback to invoke with each reply received from the actor.
 
+        Examples
+        --------
+        These two are equivalent ::
+
+            >>> tron.send_command('my_actor', 'do_something --now')
+            >>> tron.send_command('my_actor', 'do_something', '--now')
+
         """
 
         mid = mid or self._mid
@@ -285,13 +295,15 @@ class TronConnection(BaseClient):
         if mid >= 2 ** 32:
             self._mid = mid = mid % 2 ** 32
 
+        if len(args) > 0:
+            command_string += " " + " ".join(map(str, args))
+
         command_string = f"{commander} {mid} {target} {command_string}\n"
 
         command: Command[TronConnection] = Command(
             command_string=command_string,
             reply_callback=callback,
         )
-        # command.set_status("RUNNING")
         self.running_commands[mid] = command
 
         self.transport.write(command_string.encode())

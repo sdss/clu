@@ -303,6 +303,7 @@ class AMQPClient(BaseClient):
         self,
         consumer: str,
         command_string: str,
+        *args,
         command_id: str | None = None,
         callback: Optional[Callable[[AMQPReply], None]] = None,
     ):
@@ -314,12 +315,27 @@ class AMQPClient(BaseClient):
             The actor we are commanding.
         command_string
             The command string that will be parsed by the remote actor.
+        args
+            Arguments to concatenate to the command string.
         command_id
             The command ID associated with this command. If empty, an unique
             identifier will be attached.
+        callback
+            A callback to invoke with each reply received from the actor.
+
+        Examples
+        --------
+        These two are equivalent ::
+
+            >>> client.send_command('my_actor', 'do_something --now')
+            >>> client.send_command('my_actor', 'do_something', '--now')
+
         """
 
         command_id = command_id or str(uuid.uuid4())
+
+        if len(args) > 0:
+            command_string += " " + " ".join(map(str, args))
 
         # Creates and registers a command.
         command: Command[AMQPClient] = Command(
