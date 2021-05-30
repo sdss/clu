@@ -338,7 +338,7 @@ class AMQPClient(BaseClient):
             command_string += " " + " ".join(map(str, args))
 
         # Creates and registers a command.
-        command: Command[AMQPClient] = Command(
+        command = Command(
             command_string=command_string,
             command_id=command_id,
             commander_id=self.name,
