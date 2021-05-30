@@ -30,7 +30,7 @@ __all__ = [
 ]
 
 
-Client_co = TypeVar("Client_co", bound="clu.base.BaseClient", covariant=True)
+Actor_co = TypeVar("Actor_co", bound="clu.base.BaseActor", covariant=True)
 Future_co = TypeVar("Future_co", bound="BaseCommand", covariant=True)
 
 
@@ -45,7 +45,7 @@ else:
 class BaseCommand(
     Future[Future_co],
     StatusMixIn[CommandStatus],
-    Generic[Client_co, Future_co],
+    Generic[Actor_co, Future_co],
 ):
     """Base class for commands of all types (user and device).
 
@@ -90,8 +90,8 @@ class BaseCommand(
         commander_id: Union[int, str] = 0,
         command_id: Union[int, str] = 0,
         consumer_id: Union[int, str] = 0,
-        actor: Optional[clu.base.BaseActor | Any] = None,
-        parent: Optional[BaseCommand[Client_co, Future_co]] = None,
+        actor: Optional[Actor_co] = None,
+        parent: Optional[BaseCommand[Actor_co, Future_co]] = None,
         reply_callback: Optional[Callable[[Any], None]] = None,
         status_callback: Optional[Callable[[CommandStatus], Any]] = None,
         call_now: bool = False,
@@ -274,7 +274,7 @@ class BaseCommand(
         )
 
 
-class Command(BaseCommand[Client_co, "Command"]):
+class Command(BaseCommand[Actor_co, "Command"]):
     """A command from a user.
 
     Parameters
