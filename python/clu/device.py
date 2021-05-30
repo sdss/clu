@@ -11,13 +11,16 @@ from __future__ import annotations
 import asyncio
 import contextlib
 
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, TypeVar
 
 from .protocol import open_connection
 from .tools import CallbackMixIn
 
 
 __all__ = ["Device"]
+
+
+T = TypeVar("T", bound="Device")
 
 
 class Device(CallbackMixIn):
@@ -76,7 +79,7 @@ class Device(CallbackMixIn):
         callback = callback or self.process_message
         CallbackMixIn.__init__(self, callbacks=[callback])
 
-    async def start(self):
+    async def start(self: T) -> T:
         """Opens the connection and starts the listener."""
 
         if self.is_connected():
@@ -84,6 +87,8 @@ class Device(CallbackMixIn):
 
         self._client = await open_connection(self.host, self.port)
         self.listener = asyncio.create_task(self._listen())
+
+        return self
 
     async def stop(self):
         """Closes the connection and stops the listener."""
