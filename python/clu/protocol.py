@@ -489,7 +489,7 @@ class TopicListener(object):
         self.virtualhost = virtualhost
         self.ssl = ssl
 
-        self.connection: apika.RobustConnection
+        self.connection: apika.RobustConnection | None = None
         self.channel: apika.Channel
         self.exchange: apika.Exchange
         self.queues: List[apika.Queue] = []
@@ -592,7 +592,8 @@ class TopicListener(object):
             if hasattr(queue, "consumer_tag") and consumer_tag is not None:
                 await queue.cancel(consumer_tag)
 
-        await self.connection.close()
+        if self.connection:
+            await self.connection.close()
 
 
 class ReconnectingTCPClientProtocol(asyncio.Protocol):

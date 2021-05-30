@@ -5,7 +5,7 @@
 ### 🔧 Fixed
 
 * Correctly assign the type of the actor in a `Command`.
-
+* Fix error when `TopicListener.stop()` is called and there is not an active connection.
 
 ## 1.1.0 - May 29, 2021
 
