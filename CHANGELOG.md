@@ -10,6 +10,7 @@
 ### ✨ Improved
 
 * `Device.start()` now returns `self`.
+* [#84](https://github.com/sdss/clu/issues/84) `send_command` now accepts multiple arguments before the keyword arguments. If they are passed, they will be concatenated to create the full command string. For example: `client.send_command('my_actor', 'sum', '-v', 2, 4, command_id=5)` is equivalent to `client.send_command('my_actor', 'sum -v 2 4', command_id=5)`
 
 
 ## 1.1.0 - May 29, 2021

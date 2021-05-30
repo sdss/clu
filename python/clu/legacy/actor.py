@@ -319,6 +319,7 @@ class BaseLegacyActor(BaseActor):
         self,
         target: str,
         command_string: str,
+        *args,
         command_id: Optional[int] = None,
         callback: Optional[Callable[[OpsReply], None]] = None,
     ):
@@ -330,6 +331,8 @@ class BaseLegacyActor(BaseActor):
             The actor to command.
         command_string
             The command to send.
+        args
+            Arguments to concatenate to the command string.
         command_id
             The command id. If `None`, a sequentially increasing value will
             be used. You should not specify a ``command_id`` unless you really
@@ -337,12 +340,20 @@ class BaseLegacyActor(BaseActor):
         callback
             A callback to invoke with each reply received from the actor.
 
+        Examples
+        --------
+        These two are equivalent ::
+
+            >>> actor.send_command('my_actor', 'do_something --now')
+            >>> actor.send_command('my_actor', 'do_something', '--now')
+
         """
 
         if self.tron and self.tron.connected():
             command = self.tron.send_command(
                 target,
                 command_string,
+                *args,
                 commander=f"{self.name}.{self.name}",
                 mid=command_id,
                 callback=callback,

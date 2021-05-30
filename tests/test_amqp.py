@@ -52,6 +52,16 @@ async def test_client_send_command(amqp_client, amqp_actor):
     assert cmd.replies[-1].body["text"] == "Pong."
 
 
+async def test_client_send_command_args(amqp_client, amqp_actor):
+
+    cmd = await amqp_client.send_command("amqp_actor", "ping", "--help")
+    await cmd
+
+    assert len(cmd.replies) == 2
+    assert cmd.replies[-1].message_code == ":"
+    assert "help" in cmd.replies[-1].body
+
+
 async def test_get_version(amqp_client, amqp_actor):
 
     cmd = await amqp_client.send_command("amqp_actor", "version")

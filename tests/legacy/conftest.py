@@ -49,7 +49,7 @@ async def tron_server(unused_tcp_port_factory):
         if "getFor=alerts" in data.decode():
             transport.write(get_keys_reply.encode())
         else:
-            cmdr_name, mid, actor, __ = data.decode().strip().split()
+            cmdr_name, mid, actor, *__ = data.decode().strip().split()
             reply = f'{cmdr_name}.{cmdr_name} {mid} {actor} : text="value"\n'
             transport.write(reply.encode())
 
