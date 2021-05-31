@@ -115,7 +115,7 @@ python-versions = "*"
 
 [[package]]
 name = "black"
-version = "21.5b1"
+version = "21.5b2"
 description = "The uncompromising code formatter."
 category = "dev"
 optional = false
@@ -133,8 +133,9 @@ typing-extensions = {version = ">=3.7.4", markers = "python_version < \"3.8\""}
 
 [package.extras]
 colorama = ["colorama (>=0.4.3)"]
-d = ["aiohttp (>=3.6.0)", "aiohttp-cors"]
+d = ["aiohttp (>=3.6.0)", "aiohttp-cors (>=0.4.0)"]
 python2 = ["typed-ast (>=1.4.2)"]
+uvloop = ["uvloop (>=0.15.2)"]
 
 [[package]]
 name = "certifi"
@@ -262,7 +263,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 
 [[package]]
 name = "importlib-metadata"
-version = "4.3.1"
+version = "4.4.0"
 description = "Read metadata from Python packages"
 category = "main"
 optional = false
@@ -470,7 +471,7 @@ testing = ["coverage", "pytest (>=3.6,<4)", "pytest-cov", "pytest-regressions"]
 
 [[package]]
 name = "mirakuru"
-version = "2.4.0"
+version = "2.4.1"
 description = "Process executor (not only) for tests."
 category = "dev"
 optional = false
@@ -605,11 +606,14 @@ dev = ["pre-commit", "tox"]
 
 [[package]]
 name = "port-for"
-version = "0.5.0"
-description = "Utility that helps with local TCP ports managment.     It can find an unused TCP localhost port and remember the association."
+version = "0.6.0"
+description = "Utility that helps with local TCP ports management. It can find an unused TCP localhost port and remember the association."
 category = "dev"
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.7"
+
+[package.extras]
+tests = ["pytest", "pytest-cov", "mock"]
 
 [[package]]
 name = "prompt-toolkit"
@@ -1159,8 +1163,8 @@ backcall = [
     {file = "backcall-0.2.0.tar.gz", hash = "sha256:5cbdbf27be5e7cfadb448baf0aa95508f91f2bbc6c6437cd9cd06e2a4c215e1e"},
 ]
 black = [
-    {file = "black-21.5b1-py3-none-any.whl", hash = "sha256:8a60071a0043876a4ae96e6c69bd3a127dad2c1ca7c8083573eb82f92705d008"},
-    {file = "black-21.5b1.tar.gz", hash = "sha256:23695358dbcb3deafe7f0a3ad89feee5999a46be5fec21f4f1d108be0bcdb3b1"},
+    {file = "black-21.5b2-py3-none-any.whl", hash = "sha256:e5cf21ebdffc7a9b29d73912b6a6a9a4df4ce70220d523c21647da2eae0751ef"},
+    {file = "black-21.5b2.tar.gz", hash = "sha256:1fc0e0a2c8ae7d269dfcf0c60a89afa299664f3e811395d40b1922dff8f854b5"},
 ]
 certifi = [
     {file = "certifi-2021.5.30-py2.py3-none-any.whl", hash = "sha256:50b1e4f8446b06f41be7dd6338db18e0990601dce795c2b1686458aa7e8fa7d8"},
@@ -1259,8 +1263,8 @@ imagesize = [
     {file = "imagesize-1.2.0.tar.gz", hash = "sha256:b1f6b5a4eab1f73479a50fb79fcf729514a900c341d8503d62a62dbc4127a2b1"},
 ]
 importlib-metadata = [
-    {file = "importlib_metadata-4.3.1-py3-none-any.whl", hash = "sha256:c2e27fa8b6c8b34ebfcd4056ae2ca290e36250d1fbeceec85c1c67c711449fac"},
-    {file = "importlib_metadata-4.3.1.tar.gz", hash = "sha256:2d932ea08814f745863fd20172fe7de4794ad74567db78f2377343e24520a5b6"},
+    {file = "importlib_metadata-4.4.0-py3-none-any.whl", hash = "sha256:960d52ba7c21377c990412aca380bf3642d734c2eaab78a2c39319f67c6a5786"},
+    {file = "importlib_metadata-4.4.0.tar.gz", hash = "sha256:e592faad8de1bda9fe920cf41e15261e7131bcf266c30306eec00e8e225c1dd5"},
 ]
 iniconfig = [
     {file = "iniconfig-1.1.1-py2.py3-none-any.whl", hash = "sha256:011e24c64b7f47f6ebd835bb12a743f2fbe9a26d4cecaa7f53bc4f35ee9da8b3"},
@@ -1351,8 +1355,8 @@ mdit-py-plugins = [
     {file = "mdit_py_plugins-0.2.8-py3-none-any.whl", hash = "sha256:1833bf738e038e35d89cb3a07eb0d227ed647ce7dd357579b65343740c6d249c"},
 ]
 mirakuru = [
-    {file = "mirakuru-2.4.0-py3-none-any.whl", hash = "sha256:3e6a554e2f9c849a71cd1667d06347d233894e19e3e78f293c8b0ec6881893ee"},
-    {file = "mirakuru-2.4.0.tar.gz", hash = "sha256:86e3ed7a40a915b30584927665a90e0421e388fbc71f448e1cfdef09030f4b35"},
+    {file = "mirakuru-2.4.1-py3-none-any.whl", hash = "sha256:097324abe7479b3e6a8b745d0e3980664c8f6d3aec06cdeff8fc38cb2c9abc93"},
+    {file = "mirakuru-2.4.1.tar.gz", hash = "sha256:7025d121d2f04e957bd6ae3239531d60ebba787839c89d6052479beb58b0cd0b"},
 ]
 multidict = [
     {file = "multidict-5.1.0-cp36-cp36m-macosx_10_14_x86_64.whl", hash = "sha256:b7993704f1a4b204e71debe6095150d43b2ee6150fa4f44d6d966ec356a8d61f"},
@@ -1434,8 +1438,8 @@ pluggy = [
     {file = "pluggy-0.13.1.tar.gz", hash = "sha256:15b2acde666561e1298d71b523007ed7364de07029219b604cf808bfa1c765b0"},
 ]
 port-for = [
-    {file = "port-for-0.5.0.tar.gz", hash = "sha256:a945d9b9e58c19ed57a9ada959829eb83c618ece27eb796440b53cd6596b8a3e"},
-    {file = "port_for-0.5.0-py2.py3-none-any.whl", hash = "sha256:2f069b088956ff4c4e74752a3076c0c84f489210c4eb0e7efb8b4f48c05255cc"},
+    {file = "port-for-0.6.0.tar.gz", hash = "sha256:2e3aa378fc64cc8696b2c091af1887843d2f76725f1e31d482831ac13200a120"},
+    {file = "port_for-0.6.0-py3-none-any.whl", hash = "sha256:2ff4f0d93559d06139826596f1b220100ea708f5d7fb7443728ef27fcf99cc72"},
 ]
 prompt-toolkit = [
     {file = "prompt_toolkit-3.0.18-py3-none-any.whl", hash = "sha256:bf00f22079f5fadc949f42ae8ff7f05702826a97059ffcc6281036ad40ac6f04"},
