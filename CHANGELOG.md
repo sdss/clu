@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.2 - May 31, 2021
+
+### 🔧 Fixed
+
+* Revert previous changes to the typing of `Command` that were causing problems, but keep the generic for the command future.
+
+
 ## 1.1.1 - May 30, 2021
 
 ### 🔧 Fixed
