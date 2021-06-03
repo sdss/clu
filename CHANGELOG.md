@@ -4,11 +4,12 @@
 
 ### 🚀 New
 
-* `Command` and `BaseActor.write()` now accept a `silent` argument that if `True` will execute the command normally and update the status and internal model, but won't write to the user.
+* `Command` and `BaseActor.write()` now accept a `silent` argument that if `True` will execute the command normally and update the status and internal model, but won't write to the user. Timed command can be run in silent mode the first iteration by initialising them with `first_silent=True`.
 
 ### ✨ Improved
 
 * [#77](https://github.com/sdss/clu/issues/77) Child commands will never emit ``:`` or ``f`` messages that may be confused as the parent being done.
+* Timed commands are run immediately when started.
 
 
 ## 1.1.2 - May 31, 2021

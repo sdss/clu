@@ -417,16 +417,19 @@ class TimedCommandList(list):
         """The polling loop."""
 
         current_time = time.time()
+        first_time = True
 
         while True:
 
             for timed_command in self:
                 elapsed = current_time - timed_command.last_run
-                if elapsed > timed_command.delay:
+                if first_time or elapsed > timed_command.delay:
                     timed_command_task = self.loop.create_task(
                         timed_command.run(self.actor)
                     )
                     timed_command_task.add_done_callback(timed_command.done)
+
+            first_time = False
 
             self._sleep_task = self.loop.create_task(asyncio.sleep(self.resolution))
 
@@ -473,19 +476,30 @@ class TimedCommand(object):
         The command string to run.
     delay
         How many seconds to wait between repeated calls.
+    first_silent
+        Runs the command in silent mode the first one (useful to internally update the
+        model).
+
     """
 
-    def __init__(self, command_string: str, delay: float = 1):
+    def __init__(self, command_string: str, delay: float = 1, first_silent=False):
 
         self.command_string = command_string
         self.delay = delay
 
         self.last_run = 0.0
+        self.first_silent = first_silent
 
     async def run(self, actor: clu.base.BaseActor):
         """Run the command."""
 
-        await Command(self.command_string, actor=actor, commander_id=actor.name).parse()
+        silent = True if self.first_silent and self.last_run == 0.0 else False
+        await Command(
+            self.command_string,
+            actor=actor,
+            commander_id=actor.name,
+            silent=silent,
+        ).parse()
 
     def done(self, task):
         """Marks the execution of a command."""
