@@ -265,6 +265,14 @@ class BaseCommand(
 
         command = self if not self.parent else self.parent
 
+        # If the parent has a command, do not output : or f since it would
+        # confuse the stream and potentially Tron.
+        if self.parent:
+            if message_code == ":":
+                message_code = "i"
+            elif message_code == "f":
+                message_code = "e"
+
         self.actor.write(
             message_code,
             message=message,
