@@ -2,6 +2,10 @@
 
 ## Next version
 
+### 🚀 New
+
+* `Command` and `BaseActor.write()` now accept a `silent` argument that if `True` will execute the command normally and update the status and internal model, but won't write to the user.
+
 ### ✨ Improved
 
 * [#77](https://github.com/sdss/clu/issues/77) Child commands will never emit ``:`` or ``f`` messages that may be confused as the parent being done.

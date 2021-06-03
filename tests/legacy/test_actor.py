@@ -188,11 +188,20 @@ async def test_write_update_model_fails(actor, actor_client, mocker):
     )
 
 
-async def test_write_no_validate(actor, actor_client, mocker):
+async def test_write_no_validate(actor, mocker):
 
     mock_func = mocker.patch.object(actor.model, "update_model")
 
     actor.write("i", {"text": "Some message"}, validate=False)
+
+    mock_func.assert_not_called()
+
+
+async def test_write_silent(actor, mocker):
+
+    mock_func = mocker.patch.object(actor, "_write_internal")
+
+    actor.write("i", {"text": "Some message"}, silent=True)
 
     mock_func.assert_not_called()
 

@@ -204,6 +204,15 @@ async def test_write_no_validate(amqp_actor, mocker):
     mock_func.assert_not_called()
 
 
+async def test_write_silent(amqp_actor, mocker):
+
+    mock_func = mocker.patch.object(amqp_actor, "_write_internal")
+
+    amqp_actor.write("i", {"text": "Some message"}, silent=True)
+
+    mock_func.assert_not_called()
+
+
 async def test_new_command_fails(amqp_actor, mocker):
 
     # Use CoroutineMock for Python 3.7-3.8 compatibility.

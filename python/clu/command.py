@@ -80,6 +80,10 @@ class BaseCommand(
     default_keyword
         The keyword to use when writing a message that does not specify a
         keyword.
+    silent
+        A silent command will call the actor ``write`` method with ``silent=True``,
+        which will update the internal model and record all the output replies but
+        will not write them to the users.
     loop
         The event loop.
 
@@ -96,6 +100,7 @@ class BaseCommand(
         status_callback: Optional[Callable[[CommandStatus], Any]] = None,
         call_now: bool = False,
         default_keyword: str = "text",
+        silent: bool = False,
         loop: Optional[asyncio.AbstractEventLoop] = None,
     ):
 
@@ -105,6 +110,8 @@ class BaseCommand(
 
         self.actor = actor
         self.parent = parent
+
+        self.silent = silent
 
         self._reply_callback = reply_callback
 
@@ -278,6 +285,7 @@ class BaseCommand(
             message=message,
             command=command,
             broadcast=broadcast,
+            silent=self.silent,
             **kwargs,
         )
 

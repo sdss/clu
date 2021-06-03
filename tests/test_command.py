@@ -82,7 +82,12 @@ def test_child_command_write(command):
 
     child.write("i", "hello")
     command.actor.write.assert_called_with(
-        "i", message={"text": "hello"}, command=command, broadcast=False, **{}
+        "i",
+        message={"text": "hello"},
+        command=command,
+        broadcast=False,
+        silent=False,
+        **{},
     )
 
 
@@ -92,7 +97,13 @@ def test_child_command_finished(command):
 
     child.finish(text="Finished")
     command.actor.write.assert_called_with(
-        "i", message={}, text="Finished", command=command, broadcast=False, **{}
+        "i",
+        message={},
+        text="Finished",
+        command=command,
+        broadcast=False,
+        silent=False,
+        **{},
     )
 
     assert child.status.did_succeed
@@ -104,7 +115,13 @@ def test_child_command_failed(command):
 
     child.fail(error="Failed")
     command.actor.write.assert_called_with(
-        "e", message={}, error="Failed", command=command, broadcast=False, **{}
+        "e",
+        message={},
+        error="Failed",
+        command=command,
+        broadcast=False,
+        silent=False,
+        **{},
     )
 
     assert child.status.did_fail
@@ -114,7 +131,12 @@ def test_write_str(command):
 
     command.write("i", "hello")
     command.actor.write.assert_called_with(
-        "i", message={"text": "hello"}, command=command, broadcast=False, **{}
+        "i",
+        message={"text": "hello"},
+        command=command,
+        broadcast=False,
+        silent=False,
+        **{},
     )
 
 
@@ -122,7 +144,12 @@ def test_write_dict(command):
 
     command.write("i", {"key": "hello"})
     command.actor.write.assert_called_with(
-        "i", message={"key": "hello"}, command=command, broadcast=False, **{}
+        "i",
+        message={"key": "hello"},
+        command=command,
+        broadcast=False,
+        silent=False,
+        **{},
     )
 
 

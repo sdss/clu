@@ -313,6 +313,7 @@ class BaseActor(BaseClient):
         command: Optional[BaseCommand] = None,
         broadcast: bool = False,
         validate: bool | None = None,
+        silent: bool = False,
         call_internal: bool = True,
         **kwargs,
     ) -> Reply:
@@ -359,6 +360,10 @@ class BaseActor(BaseClient):
             Validate the reply against the actor schema. This is ignored if the actor
             was not started with knowledge of its own schema. If `None`, defaults to
             the actor global behaviour.
+        silent
+            When `True` does not output the message to the users. This can be used to
+            issue internal commands that update the internal model but that don't
+            clutter the output.
         call_internal
             Whether to call the actor internal write method. Should be `True` but
             it's sometimes useful to call `.write` with ``call_internal=False`` when
@@ -394,7 +399,7 @@ class BaseActor(BaseClient):
         if command:
             command.replies.append(reply)
 
-        if call_internal:
+        if call_internal and silent is False:
             if asyncio.iscoroutinefunction(self._write_internal):
                 asyncio.create_task(self._write_internal(reply))  # type: ignore
             else:

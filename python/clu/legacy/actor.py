@@ -419,12 +419,13 @@ class BaseLegacyActor(BaseActor):
             **kwargs,
         )
 
-        self._write_internal(
-            reply,
-            user_id=user_id,
-            command_id=command_id,
-            concatenate=concatenate,
-        )
+        if kwargs.get("silent", False) is False:
+            self._write_internal(
+                reply,
+                user_id=user_id,
+                command_id=command_id,
+                concatenate=concatenate,
+            )
 
     def _write_internal(self, reply: Reply, user_id=0, command_id=0, concatenate=True):
         """Writes reply to users."""
