@@ -488,12 +488,20 @@ class TimedCommand(object):
         self.delay = delay
 
         self.last_run = 0.0
+        self.is_running = False
+
         self.first_silent = first_silent
 
     async def run(self, actor: clu.base.BaseActor):
         """Run the command."""
 
+        if self.is_running:
+            return
+
         silent = True if self.first_silent and self.last_run == 0.0 else False
+
+        self.is_running = True
+
         await Command(
             self.command_string,
             actor=actor,
@@ -505,3 +513,4 @@ class TimedCommand(object):
         """Marks the execution of a command."""
 
         self.last_run = time.time()
+        self.is_running = False

@@ -11,6 +11,7 @@
 * [#77](https://github.com/sdss/clu/issues/77) Child commands will never emit ``:`` or ``f`` messages that may be confused as the parent being done.
 * Timed commands are run immediately when started.
 * `from_config()` now passes the configuration to the client `__init__()` so that it is accessible during initialisation.
+* If a timed command takes longer to run than the interval at which the poller checks if new timed commands should be run, prevent it from being issued multiple times.
 
 
 ## 1.1.2 - May 31, 2021
