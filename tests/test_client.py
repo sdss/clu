@@ -24,10 +24,17 @@ class SimpleClientTester(BaseClient):
         log=None,
         verbose=False,
         custom_kw=None,
+        config={},
     ):
 
         super().__init__(
-            name, version=version, loop=loop, log_dir=log_dir, log=log, verbose=verbose
+            name,
+            version=version,
+            loop=loop,
+            log_dir=log_dir,
+            log=log,
+            verbose=verbose,
+            config=config,
         )
 
         self.custom_kw = custom_kw

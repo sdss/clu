@@ -65,6 +65,8 @@ class BaseClient(metaclass=abc.ABCMeta):
         Whether to actor should validate its own messages against its model (if it
         has one). This is a global parameter that can be overridden when calling
         `~.BaseClient.write`.
+    config
+        A dictionary of configuration parameters that will be accessible to the client.
     """
 
     name: str
@@ -78,6 +80,7 @@ class BaseClient(metaclass=abc.ABCMeta):
         log: Optional[SDSSLogger] = None,
         verbose: Union[bool, int] = False,
         validate: bool = True,
+        config: dict = {},
     ):
 
         self.loop = loop or asyncio.get_event_loop()
@@ -94,6 +97,7 @@ class BaseClient(metaclass=abc.ABCMeta):
         self.config: Dict[str, Any] = {}
 
         self.validate = validate
+        self.config = config
 
     def __repr__(self):
         return f"<{str(self)} (name={self.name!r})>"
@@ -186,11 +190,7 @@ class BaseClient(metaclass=abc.ABCMeta):
 
         # We also pass *args in case the actor has been subclassed
         # and the subclass' __init__ accepts different arguments.
-        new_client = cls(*args, **config_dict)
-
-        # Store original config. This may not be complete since from_config
-        # may have been super'd from somewhere else.
-        new_client.config = orig_config_dict
+        new_client = cls(*args, config=orig_config_dict, **config_dict)
 
         return new_client
 
