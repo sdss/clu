@@ -86,6 +86,30 @@ def test_child_command_write(command):
     )
 
 
+def test_child_command_finished(command):
+
+    child = Command(command_string="new-command", parent=command)
+
+    child.finish(text="Finished")
+    command.actor.write.assert_called_with(
+        "i", message={}, text="Finished", command=command, broadcast=False, **{}
+    )
+
+    assert child.status.did_succeed
+
+
+def test_child_command_failed(command):
+
+    child = Command(command_string="new-command", parent=command)
+
+    child.fail(error="Failed")
+    command.actor.write.assert_called_with(
+        "e", message={}, error="Failed", command=command, broadcast=False, **{}
+    )
+
+    assert child.status.did_fail
+
+
 def test_write_str(command):
 
     command.write("i", "hello")

@@ -424,7 +424,7 @@ class JSONActor(ClickParser, TCPBaseActor):
 async def multiline(command: Command, on: bool):
     """Set multiline mode for the transport."""
 
-    transport: CustomTransportType = getattr(command, "transport", None)
+    transport = getattr(command, "transport", None)
     if not transport:
         return command.fail("The command has no transport.")
 
