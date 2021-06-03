@@ -181,9 +181,17 @@ class AMQPClient(BaseClient):
         log_dir: Optional[PathLike] = None,
         log: Optional[SDSSLogger] = None,
         models: List[str] = [],
+        **kwargs,
     ):
 
-        super().__init__(name, version=version, loop=loop, log_dir=log_dir, log=log)
+        super().__init__(
+            name,
+            version=version,
+            loop=loop,
+            log_dir=log_dir,
+            log=log,
+            **kwargs,
+        )
 
         self.replies_queue = None
 
