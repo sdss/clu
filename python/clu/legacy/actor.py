@@ -75,6 +75,8 @@ class BaseLegacyActor(BaseActor):
         If the schema is provided all replies will be validated against it.
         An invalid reply will fail and not be emitted. The schema can also be
         set when subclassing by setting the class ``schema`` attribute.
+    config
+        A dictionary of configuration parameters that will be accessible to the actor.
     """
 
     def __init__(
@@ -91,6 +93,7 @@ class BaseLegacyActor(BaseActor):
         log: Optional[logging.Logger] = None,
         verbose: bool = False,
         schema: Optional[PathLike] = None,
+        config: Dict[str, Any] = {},
     ):
 
         super().__init__(
@@ -101,6 +104,7 @@ class BaseLegacyActor(BaseActor):
             log=log,
             verbose=verbose,
             schema=schema,
+            config=config,
         )
 
         #: Mapping of user_id to transport

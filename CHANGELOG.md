@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### 🔧 Fixed
+
+* `LegacyActor` now accepts the `config` parameter sent by `from_config()`.
+
+
 ## 1.2.0 - June 3, 2021
 
 ### 🚀 New
