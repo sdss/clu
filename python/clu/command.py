@@ -30,8 +30,8 @@ __all__ = [
 ]
 
 
-Actor_co = TypeVar("Actor_co", bound="clu.base.BaseActor", covariant=True)
-Future_co = TypeVar("Future_co", bound="BaseCommand", covariant=True)
+Actor_co = TypeVar("Actor_co", bound="clu.base.BaseActor")
+Future_co = TypeVar("Future_co", bound="BaseCommand")
 
 
 if sys.version_info >= (3, 9, 0):
@@ -275,6 +275,8 @@ class BaseCommand(
         # If the parent has a command, do not output : or f since it would
         # confuse the stream and potentially Tron.
         if self.parent:
+            if message_code == ">":
+                return
             if message_code == ":":
                 message_code = "i"
             elif message_code == "f":

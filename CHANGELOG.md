@@ -7,6 +7,11 @@
 * `LegacyActor` now accepts the `config` parameter sent by `from_config()`.
 
 
+### ✨ Improved
+
+* Subcommands now won't write to the users when they start running.
+
+
 ## 1.2.0 - June 3, 2021
 
 ### 🚀 New

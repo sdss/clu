@@ -109,6 +109,14 @@ def test_child_command_finished(command):
     assert child.status.did_succeed
 
 
+def test_child_command_running(command):
+
+    child = Command(command_string="new-command", parent=command)
+
+    child.set_status("RUNNING")
+    command.actor.write.assert_not_called()
+
+
 def test_child_command_failed(command):
 
     child = Command(command_string="new-command", parent=command)
