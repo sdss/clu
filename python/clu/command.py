@@ -276,6 +276,7 @@ class BaseCommand(
         # confuse the stream and potentially Tron.
         if self.parent:
             if message_code == ">":
+                # The parent is already running and > never includes a message.
                 return
             if message_code == ":":
                 message_code = "i"
