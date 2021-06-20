@@ -11,6 +11,7 @@ Contents
 
 .. toctree::
   :maxdepth: 2
+  :caption: Guides
 
   getting-started
   new-actor
@@ -20,8 +21,20 @@ Contents
   communication
   testing
   examples
-  api
+
+.. toctree::
+  :maxdepth: 2
+  :caption: Reference
+
+  API <api>
+
+.. toctree::
+  :maxdepth: 2
+  :caption: Development
+
   changelog
+  GitHub Repository <https://github.com/sdss/clu>
+  Issues <https://github.com/sdss/clu/issues>
 
 
 Indices and tables

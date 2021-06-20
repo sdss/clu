@@ -33,6 +33,7 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx.ext.inheritance_diagram",
     "myst_parser",
+    "sphinx_copybutton",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -120,6 +121,9 @@ autodoc_typehints = "description"
 napoleon_use_rtype = False
 napoleon_use_ivar = True
 
+copybutton_prompt_text = r">>> |\$ "
+copybutton_prompt_is_regexp = True
+
 rst_epilog = f"""
 .. |clu_version| replace:: {__version__}
 """
@@ -127,24 +131,9 @@ rst_epilog = f"""
 
 # -- Options for HTML output ----------------------------------------------
 
-# The theme to use for HTML and HTML Help pages.  See the documentation for
-# a list of builtin themes.
-html_theme = "alabaster"
-
-# Theme options are theme-specific and customize the look and feel of a theme
-# further.  For a list of options available for each theme, see the
-# documentation.
-html_theme_options = {
-    "logo": "sdssv_logo.png",
-    "github_user": "sdss",
-    "github_repo": "clu",
-    "github_button": True,
-    "github_type": "star",
-    "sidebar_collapse": True,
-    "github_banner": True,
-    "page_width": "80%",
-}
-
+html_theme = "furo"
+html_logo = "_static/sdssv_logo.png"
+html_title = "CLU"
 html_favicon = "./_static/favicon.ico"
 
 # Add any paths that contain custom static files (such as style sheets) here,
@@ -156,13 +145,3 @@ if on_rtd:
     html_static_path = []
 else:
     html_static_path = ["_static"]
-
-# Sidebar templates
-html_sidebars = {
-    "**": [
-        "about.html",
-        "navigation.html",
-        "relations.html",
-        "searchbox.html",
-    ]
-}
