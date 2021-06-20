@@ -2,10 +2,13 @@
 
 ## Next version
 
+### 🚀 New
+
+* [#89](https://github.com/sdss/clu/issues/89) Use [furo](https://pradyunsg.me/furo/) Sphinx theme.
+
 ### 🔧 Fixed
 
 * `LegacyActor` now accepts the `config` parameter sent by `from_config()`.
-
 
 ### ✨ Improved
 
