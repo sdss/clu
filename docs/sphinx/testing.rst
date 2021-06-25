@@ -13,11 +13,12 @@ CLU provides several tools to test actors. A typical example is as follows ::
     async def greeter(command, name):
         command.finish(text=f'Hi {name}!')
 
+    @pytest.mark.asyncio
     async def test_actor():
 
-        test_actor = setup_test_actor(LegacyActor('my_actor',
-                                                  host='localhost',
-                                                  port=9999))
+        test_actor = await setup_test_actor(LegacyActor('my_actor',
+                                                        host='localhost',
+                                                        port=9999))
 
         # The following is not needed, start() is replaced with a MagicMock()
         await test_actor.start()
@@ -32,7 +33,7 @@ CLU provides several tools to test actors. A typical example is as follows ::
         # Get the last reply and check its "text" keyword
         last_reply = test_actor.mock_replies[-1]
         assert last_reply.flag == ':'
-        assert last_reply['text'] == 'Hi John!'
+        assert last_reply['text'] == '"Hi John!"'
 
 What `.setup_test_actor` does is to replace the `~.BaseLegacyActor.start` method with a mock so that it's not necessary to establish a real connection over TCP/IP. It also adds an ``invoke_command`` method that can be used to send test commands to the actor. Instead of replying via the normal actor channel, replies are stored in ``mock_replies`` as `.MockReply` objects.
 

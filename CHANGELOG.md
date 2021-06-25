@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### 🔧 Fixed
+
+* [#91](https://github.com/sdss/clu/issues/91) Documentation example for testing with CLU.
+
+
 ## 1.2.1 - June 20, 2021
 
 ### 🚀 New
