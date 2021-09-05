@@ -246,13 +246,6 @@ class BaseClient(metaclass=abc.ABCMeta):
             "Sending commands is not implemented for this client."
         )
 
-    def invoke_mock_command(self, command_str, command_id=0):
-        """Send a new command to an actor for testing.
-
-        Requires calling `.setup_test_actor`."""
-
-        raise NotImplementedError("setup_test_actor() has not been called.")
-
 
 class BaseActor(BaseClient):
     """An actor based on `asyncio`.
@@ -413,6 +406,13 @@ class BaseActor(BaseClient):
                 self._write_internal(reply)
 
         return reply
+
+    def invoke_mock_command(self, command_str, command_id=0):
+        """Send a new command to an actor for testing.
+
+        Requires calling `.setup_test_actor`."""
+
+        raise NotImplementedError("setup_test_actor() has not been called.")
 
 
 class Reply:
