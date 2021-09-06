@@ -94,7 +94,9 @@ class Device(CallbackMixIn):
         """Closes the connection and stops the listener."""
 
         if self._client:
-            self._client.close()
+            assert self._client.writer
+            self._client.writer.close()
+            await self._client.writer.wait_closed()
 
         with contextlib.suppress(asyncio.CancelledError):
             if self.listener:
@@ -107,11 +109,14 @@ class Device(CallbackMixIn):
         if self._client is None:
             return False
 
+        assert self._client.writer
+
         return not self._client.writer.is_closing()
 
     def write(self, message: str, newline="\n"):
         """Write to the device. The message is encoded and a new line added."""
 
+        assert self._client and self._client.writer
         assert self.is_connected() and self._client.writer, "device is not connected"
 
         if not message.endswith(newline):
@@ -122,11 +127,13 @@ class Device(CallbackMixIn):
     async def _listen(self):
         """Listens to the reader stream and callbacks on message received."""
 
-        if not self._client:
+        if not self._client or not self._client.reader:
             raise RuntimeError("connection is not open.")
 
         while True:
             line = await self._client.reader.readline()
+            if line == b"" or self._client.reader.at_eof():
+                break
             line = line.decode().strip()
             self.notify(line)
 

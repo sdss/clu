@@ -264,14 +264,18 @@ class TCPStreamServer(object):
     def stop(self):
         """Stops the server."""
 
+        assert self._server
         self._server.close()
 
     def serve_forever(self):
         """Exposes ``TCPStreamServer.server.serve_forever``."""
 
+        assert self._server
         return self._server.serve_forever()
 
     def is_serving(self) -> bool:
+
+        assert self._server
         return self._server.is_serving()
 
     async def _do_callback(self, cb, *args, **kwargs):
@@ -307,16 +311,23 @@ class TCPStreamServer(object):
             try:
                 data = await reader.readuntil()
             except asyncio.IncompleteReadError:
-                writer.close()
                 self.transports.pop(writer.transport)
                 if self.connection_callback:
                     await self._do_callback(self.connection_callback, writer.transport)
                 break
 
+            if data == b"" or reader.at_eof():
+                break
+
             if self.data_received_callback:
                 await self._do_callback(
-                    self.data_received_callback, writer.transport, data
+                    self.data_received_callback,
+                    writer.transport,
+                    data,
                 )
+
+        writer.close()
+        await writer.wait_closed()
 
 
 class TCPStreamClient:
@@ -421,8 +432,9 @@ class TCPStreamPeriodicServer(TCPStreamServer):
         return self._server
 
     def stop(self):
+        if self.periodic_task:
+            self.periodic_task.cancel()
 
-        self.periodic_task.cancel()
         super().stop()
 
     @property
