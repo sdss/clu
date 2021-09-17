@@ -1,4 +1,9 @@
 {
   "type": "object",
-  "properties": { "fwhm": { "type": "number" }, "text": { "type": "string" } }
+  "properties": {
+    "fwhm": { "type": "number" },
+    "text": { "type": "string" },
+    "info": { "type": "string" },
+    "test1": { "type": "object" }
+  }
 }

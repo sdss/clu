@@ -227,13 +227,16 @@ async def test_write_concatenate_false(actor, actor_client, mocker):
 
     actor.write(
         "i",
-        {"text": "Some message", "key": "value"},
+        {"text": "Some message", "info": "value"},
         concatenate=False,
-        no_validate=True,
+        validate=False,
     )
 
     actor.transports[1].write.assert_has_calls(
-        [mocker.call(b'0 0 i text="Some message"\n'), mocker.call(b"0 0 i key=value\n")]
+        [
+            mocker.call(b'0 0 i text="Some message"\n'),
+            mocker.call(b"0 0 i info=value\n"),
+        ]
     )
 
 

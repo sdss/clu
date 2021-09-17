@@ -55,13 +55,13 @@ async def test_amqp_json_actor(json_parser_actor):
 
 async def test_command(json_parser_actor, amqp_client):
 
-    command_data = json.dumps({"command": "command1", "parameter1": 1})
+    command_data = json.dumps({"command": "command1", "text": "Some value"})
 
     command = await amqp_client.send_command("amqp_json_actor", command_data)
     await command
 
     assert command.status.did_succeed
-    assert command.replies[-1].body["parameter1"] == 1
+    assert command.replies[-1].body["text"] == "Some value"
 
 
 async def test_bad_command_string(json_parser_actor, amqp_client):
