@@ -2,6 +2,10 @@
 
 ## Next version
 
+### 💥 Breaking changes
+
+* [#86](https://github.com/sdss/clu/issues/86) `additionalProperties` is set to `false` by default if not specified, including if `schema=None` when initialising an actor.
+
 ### 🔧 Fixed
 
 * [#91](https://github.com/sdss/clu/issues/91) Documentation example for testing with CLU.
