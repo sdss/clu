@@ -26,9 +26,9 @@ def group1():
 
 @group1.command()
 async def command1(command):
-    command.debug(debug="A debug message")
-    command.info(info="A info message")
-    command.warning(warning="A warning message")
+    command.debug(text="A debug message")
+    command.info(text="A info message")
+    command.warning(text="A warning message")
     command.error(error="An error message")
     command.finish("This command is finished")
 

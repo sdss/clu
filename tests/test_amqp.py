@@ -124,6 +124,8 @@ async def test_model_callback(amqp_client, amqp_actor, mocker):
         "error": None,
         "schema": None,
         "fwhm": None,
+        "info": None,
+        "test1": None,
         "help": None,
         "version": None,
         "UserInfo": None,
@@ -132,7 +134,7 @@ async def test_model_callback(amqp_client, amqp_actor, mocker):
     }
 
     json = (
-        '{"fwhm": null, "text": "Pong.", "schema": null, '
+        '{"fwhm": null, "text": "Pong.", "info": null, "test1": null, "schema": null, '
         '"version": null, "help": null, "error": null, '
         '"yourUserID": null, "UserInfo": null, "num_users": null}'
     )

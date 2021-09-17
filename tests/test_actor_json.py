@@ -58,13 +58,13 @@ async def test_json_actor_pong(json_client):
 
 async def test_json_actor_broadcast(json_actor, json_client):
 
-    json_actor.write(message={"my_key": "hola"}, broadcast=True)
+    json_actor.write(message={"text": "hola"}, broadcast=True)
 
     data = await json_client.reader.readline()
     data_json = json.loads(data.decode())
     assert data_json["header"]["message_code"] == "i"
     assert data_json["header"]["sender"] == "json_actor"
-    assert data_json["data"] == {"my_key": "hola"}
+    assert data_json["data"] == {"text": "hola"}
 
 
 async def test_multiline_on(json_actor, json_client):

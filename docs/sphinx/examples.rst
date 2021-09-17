@@ -59,7 +59,7 @@ If you run the code and try to invoke the ``say-goodbye`` command, you'll get an
    hello_actor say-goodbye
    hello_actor >
    hello_actor i {
-   "error": "Failed validating the reply: Additional properties are not allowed ('invalid_key' was unexpected)\n\nFailed validating 'additionalProperties' in schema:\n    {'additionalProperties': False,\n     'properties': {'error': {'type': 'string'},\n                    'schema': {'type': 'string'},\n                    'text': {'type': 'string'}},\n     'type': 'object'}\n\nOn instance:\n    {'invalid_key': 'Bye!'}"
+   "error": "Failed validating the reply: message {'invalid_key': 'Bye!'} does not match the schema."
    }
    hello_actor :
 

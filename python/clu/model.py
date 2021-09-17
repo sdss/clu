@@ -138,12 +138,7 @@ class BaseModel(CaseInsensitiveDict[T], CallbackMixIn):
         changed.
     """
 
-    def __init__(
-        self,
-        name: str,
-        callback: Optional[Callable[[Any], Any]] = None,
-        **kwargs,
-    ):
+    def __init__(self, name: str, callback: Optional[Callable[[Any], Any]] = None):
 
         self.name = name
         self.last_seen = None
@@ -184,11 +179,26 @@ class Model(BaseModel[Property]):
         A valid JSON schema, to be used for validation.
     is_file
         Whether the input schema is a filepath or a dictionary.
+    additional_properties
+        Whether to allow additional properties in the schema, other than the
+        ones defined by the schema. This parameter only is used if
+        ``schema=None`` or if ``additionalProperties`` is not defined in
+        the schema.
+    kwargs
+        Additional parameters to pass to `.BaseModel` on initialisation.
+
     """
 
     VALIDATOR = jsonschema.Draft7Validator
 
-    def __init__(self, name: str, schema: SchemaType, is_file: bool = False, **kwargs):
+    def __init__(
+        self,
+        name: str,
+        schema: SchemaType,
+        is_file: bool = False,
+        additional_properties: bool = False,
+        **kwargs,
+    ):
 
         if is_file:
             schema = cast(PathLike, schema)
@@ -225,6 +235,9 @@ class Model(BaseModel[Property]):
         for prop in DEFAULT_SCHEMA:
             if prop not in self.schema["properties"]:
                 self.schema["properties"][prop] = DEFAULT_SCHEMA[prop]
+
+        if "additionalProperties" not in self.schema:
+            self.schema["additionalProperties"] = additional_properties
 
         super().__init__(name, **kwargs)
 
