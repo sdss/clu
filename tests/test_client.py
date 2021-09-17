@@ -177,3 +177,14 @@ def test_client_config_extra_kwarg_varkw():
     assert client.name == "test_client_from_config"
     assert client.version == "0.1.0"
     assert client.custom_kw == "my custom value"
+
+
+def test_client_proxy(mocker):
+
+    client = SimpleClientTester("test_client")
+    send_command_mocker = mocker.patch.object(client, "send_command")
+
+    proxy = client.proxy("some_actor")
+    proxy.send_command("command1", "--param", "value")
+
+    send_command_mocker.assert_called_with("some_actor", "command1 --param value")
