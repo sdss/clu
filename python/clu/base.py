@@ -18,6 +18,8 @@ from datetime import datetime
 
 from typing import Any, Dict, Optional, TypeVar, Union, cast
 
+import jsonschema.exceptions
+
 from sdsstools import get_logger, read_yaml_file
 from sdsstools.logger import SDSSLogger
 
@@ -413,7 +415,14 @@ class BaseActor(BaseClient):
             reply.use_validation = True
             result, err = self.model.update_model(message)
             if result is False:
-                message = {"error": f"Failed validating the reply: {err}"}
+                if isinstance(err, jsonschema.exceptions.ValidationError):
+                    message = {
+                        "error": f"Failed validating the reply: message {message} "
+                        "does not match the schema."
+                    }
+                else:
+                    message = {"error": f"Failed validating the reply: {err}"}
+
                 reply.message_code = "e"
                 reply.message = message
                 reply.validated = False
