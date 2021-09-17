@@ -14,6 +14,10 @@
 
 * [#91](https://github.com/sdss/clu/issues/91) Documentation example for testing with CLU.
 
+### 🧹 Cleanup
+
+* Add `invoke_mock_command()` stub method to `BaseClient` to simplify type checking.
+
 
 ## 1.2.1 - June 20, 2021
 
