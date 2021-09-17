@@ -8,6 +8,7 @@
 
 ### ✨ Improved
 
+* [#90](https://github.com/sdss/clu/issues/90) If an exception object is passed as a keyword in a command or actor message, it will be unpacked into the exception type and message.
 * Make the error output when a reply fails to validate more clear.
 
 ### 🔧 Fixed
