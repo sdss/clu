@@ -6,6 +6,10 @@
 
 * [#86](https://github.com/sdss/clu/issues/86) `additionalProperties` is set to `false` by default if not specified, including if `schema=None` when initialising an actor.
 
+### ✨ Improved
+
+* Make the error output when a reply fails to validate more clear.
+
 ### 🔧 Fixed
 
 * [#91](https://github.com/sdss/clu/issues/91) Documentation example for testing with CLU.
