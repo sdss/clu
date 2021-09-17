@@ -209,7 +209,7 @@ class AMQPClient(BaseClient):
         #: dict: External commands currently running.
         self.running_commands: Dict[str, Command] = {}
 
-        self.models = ModelSet(self, actors=models, raise_exception=False, log=self.log)
+        self.models = ModelSet(self, actors=models, raise_exception=False)
 
     def __repr__(self):
 

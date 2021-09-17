@@ -253,20 +253,39 @@ class BaseActor(BaseClient):
     This class expands `.BaseClient` with a parsing system for new commands
     and placeholders for methods for handling new commands and writing replies,
     which should be overridden by the specific actors.
+
+    Parameters
+    ----------
+    schema
+        The schema for the actor replies, as a JSONschema dictionary or path
+        to a JSON file. If `None`, defaults to the internal basic schema.
+    additional_properties
+        Whether to allow additional properties in the schema, other than the
+        ones defined by the schema. This parameter only is used if
+        ``schema=None`` or if ``additionalProperties`` is not defined in
+        the schema.
+
     """
 
     model: Union[Model, None] = None
 
-    def __init__(self, *args, schema: SchemaType = None, **kwargs):
+    def __init__(
+        self,
+        *args,
+        schema: SchemaType = None,
+        additional_properties: bool = False,
+        **kwargs,
+    ):
 
         super().__init__(*args, **kwargs)
 
-        self.load_schema(schema)
+        self.load_schema(schema, additional_properties=additional_properties)
 
     def load_schema(
         self,
         schema: Union[SchemaType, None],
         is_file=True,
+        additional_properties=False,
     ) -> Union[Model, None]:
         """Loads and validates the actor schema."""
 
@@ -275,11 +294,16 @@ class BaseActor(BaseClient):
                 "$schema": "http://json-schema.org/draft-07/schema#",
                 "type": "object",
                 "properties": {},
-                "additionalProperties": True,
+                "additionalProperties": additional_properties,
             }
             is_file = False
 
-        self.model = Model(self.name, schema, is_file=is_file, log=self.log)
+        self.model = Model(
+            self.name,
+            schema,
+            is_file=is_file,
+            additional_properties=additional_properties,
+        )
 
         return self.model
 

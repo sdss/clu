@@ -77,18 +77,16 @@ class TronModel(BaseModel[TronKey]):
         A function or coroutine to call when the datamodel changes. The
         function is called with the instance of `.TronModel` and the modified keyword.
         If the callback is a coroutine, it is scheduled as a task.
-    log
-        Where to log messages.
+
     """
 
     def __init__(
         self,
         keydict: KeysDictionary,
         callback: Callable[[TronModel], Any] = None,
-        log: Optional[logging.Logger] = None,
     ):
 
-        super().__init__(keydict.name, callback=callback, log=log)
+        super().__init__(keydict.name, callback=callback)
 
         self.keydict = keydict
 
