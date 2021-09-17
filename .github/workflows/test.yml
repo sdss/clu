@@ -53,7 +53,7 @@ jobs:
           node-version: '15'
 
       - name: Install poetry
-        uses: abatilo/actions-poetry@v2.0.0
+        uses: abatilo/actions-poetry@master
 
       - name: Install dependencies
         run: |

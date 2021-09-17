@@ -6,6 +6,10 @@
 
 * [#86](https://github.com/sdss/clu/issues/86) `additionalProperties` is set to `false` by default if not specified, including if `schema=None` when initialising an actor.
 
+### 🚀 New
+
+* [#85](https://github.com/sdss/clu/issues/85) Added `BaseClient.proxy()` method.
+
 ### ✨ Improved
 
 * [#90](https://github.com/sdss/clu/issues/90) If an exception object is passed as a keyword in a command or actor message, it will be unpacked into the exception type and message.
