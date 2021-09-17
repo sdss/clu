@@ -228,6 +228,8 @@ class TronConnection(BaseClient):
     def stop(self):
         """Closes the connection."""
 
+        assert self.transport
+
         self.transport.close()
 
     def connected(self):
@@ -239,6 +241,8 @@ class TronConnection(BaseClient):
         return not self.transport.is_closing()
 
     async def run_forever(self):  # pragma: no cover
+
+        assert self.transport
 
         # Keep alive until the connection is closed.
         while True:
@@ -286,6 +290,8 @@ class TronConnection(BaseClient):
             >>> tron.send_command('my_actor', 'do_something', '--now')
 
         """
+
+        assert self.transport
 
         mid = mid or self._mid
 

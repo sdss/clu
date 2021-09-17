@@ -223,6 +223,8 @@ class AMQPClient(BaseClient):
     async def start(self, exchange_name: str = __EXCHANGE_NAME__):
         """Starts the connection to the AMQP broker."""
 
+        assert self.connection
+
         # Starts the connection and creates the exchange
         await self.connection.connect(exchange_name)
 
@@ -233,10 +235,9 @@ class AMQPClient(BaseClient):
             bindings=["reply.#"],
         )
 
-        self.log.info(
-            f"replies queue {self.replies_queue.name!r} "
-            f"bound to {self.connection.connection.url!s}"
-        )
+        url = self.connection.connection.url if self.connection.connection else "???"
+
+        self.log.info(f"replies queue {self.replies_queue.name!r} bound to {url!s}")
 
         # Initialises the models.
         await self.models.load_schemas()
@@ -246,10 +247,14 @@ class AMQPClient(BaseClient):
     async def stop(self):
         """Cancels queues and closes the connection."""
 
+        assert self.connection
+
         await self.connection.stop()
 
     async def run_forever(self):
         """Runs the event loop forever."""
+
+        assert self.connection and self.connection.connection
 
         while not self.connection.connection.is_closed:
             await asyncio.sleep(1)
@@ -339,6 +344,8 @@ class AMQPClient(BaseClient):
             >>> client.send_command('my_actor', 'do_something', '--now')
 
         """
+
+        assert self.connection and self.replies_queue
 
         command_id = command_id or str(uuid.uuid4())
 
