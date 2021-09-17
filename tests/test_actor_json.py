@@ -146,3 +146,21 @@ async def test_actor_no_schema(json_actor):
     assert json_actor.model is not None
     json_actor.load_schema(None)
     assert json_actor.model is not None
+
+
+async def test_write_exception(json_actor):
+
+    command = Command(
+        command_string="ping",
+        actor=json_actor,
+    )
+
+    command.set_status("RUNNING")
+    command.write("e", error=ValueError("Error message"))
+
+    assert len(command.replies) == 2
+    assert command.replies[1].message_code == "e"
+    assert command.replies[1].message["error"] == {
+        "exception_type": "ValueError",
+        "exception_message": "Error message",
+    }

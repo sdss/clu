@@ -8,11 +8,16 @@
 
 ### ✨ Improved
 
+* [#90](https://github.com/sdss/clu/issues/90) If an exception object is passed as a keyword in a command or actor message, it will be unpacked into the exception type and message.
 * Make the error output when a reply fails to validate more clear.
 
 ### 🔧 Fixed
 
 * [#91](https://github.com/sdss/clu/issues/91) Documentation example for testing with CLU.
+
+### 🧹 Cleanup
+
+* Add `invoke_mock_command()` stub method to `BaseClient` to simplify type checking.
 
 
 ## 1.2.1 - June 20, 2021

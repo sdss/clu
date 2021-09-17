@@ -15,6 +15,7 @@ from asynctest import CoroutineMock
 
 from clu import REPLY, AMQPActor, CluError, CommandError
 from clu.client import AMQPReply
+from clu.command import Command
 from clu.model import Model
 
 
@@ -281,3 +282,21 @@ async def test_client_send_command_callback(amqp_client, amqp_actor, mocker):
 
     callback_mock.assert_called()
     assert isinstance(callback_mock.mock_calls[0].args[0], AMQPReply)
+
+
+async def test_write_exception(amqp_actor):
+
+    command = Command(
+        command_string="ping",
+        actor=amqp_actor,
+    )
+
+    command.set_status("RUNNING")
+    command.write("e", error=ValueError("Error message"))
+
+    assert len(command.replies) == 2
+    assert command.replies[1].message_code == "e"
+    assert command.replies[1].message["error"] == {
+        "exception_type": "ValueError",
+        "exception_message": "Error message",
+    }
