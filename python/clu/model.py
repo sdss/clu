@@ -46,6 +46,13 @@ DEFAULT_SCHEMA = {
         "oneOf": [
             {"type": "array", "items": {"type": "string"}},
             {"type": "string"},
+            {
+                "type": "object",
+                "properties": {
+                    "exception_type": {"type": "string"},
+                    "exception_message": {"type": "string"},
+                },
+            },
         ]
     },
     "yourUserID": {"type": "integer"},

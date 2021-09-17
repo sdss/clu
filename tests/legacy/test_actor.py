@@ -10,7 +10,7 @@ import asyncio
 
 import pytest
 
-from clu.command import CommandStatus
+from clu.command import Command, CommandStatus
 from clu.exceptions import CluError, CluWarning
 from clu.legacy import LegacyActor
 
@@ -257,3 +257,18 @@ async def test_write_dict(actor, actor_client):
 async def test_write_dict_max_depth(actor, actor_client):
     with pytest.raises(TypeError):
         actor.write("i", message={"test1": {"subtest1": {"subtest2": 2}}})
+
+
+async def test_write_exception(actor):
+
+    command = Command(
+        command_string="ping",
+        actor=actor,
+    )
+
+    command.set_status("RUNNING")
+    command.write("e", error=ValueError("Error message"))
+
+    assert len(command.replies) == 2
+    assert command.replies[1].message_code == "e"
+    assert command.replies[1].message["error"] == "Error message"

@@ -339,6 +339,7 @@ class BaseActor(BaseClient):
         command: Optional[BaseCommand] = None,
         broadcast: bool = False,
         validate: bool | None = None,
+        expand_exceptions: bool = True,
         silent: bool = False,
         call_internal: bool = True,
         **kwargs,
@@ -386,6 +387,11 @@ class BaseActor(BaseClient):
             Validate the reply against the actor schema. This is ignored if the actor
             was not started with knowledge of its own schema. If `None`, defaults to
             the actor global behaviour.
+        expand_exceptions
+            If the value of one of the keywords is an exception object and
+            `expand_exception=True`, the exception value will be converted into
+            a dictionary of ``exception_type`` and ``exception_message``. Otherwise
+            the exception will just be stringified.
         silent
             When `True` does not output the message to the users. This can be used to
             issue internal commands that update the internal model but that don't
@@ -404,9 +410,19 @@ class BaseActor(BaseClient):
         else:
             message = message or {}
             if not isinstance(message, dict):
-                raise TypeError("message must be a dictionary")
+                raise TypeError("message must be a string or a dictionary.")
 
         message.update(kwargs)
+
+        for key, value in message.items():
+            if isinstance(value, Exception):
+                if expand_exceptions is True:
+                    message[key] = {
+                        "exception_type": value.__class__.__name__,
+                        "exception_message": str(value),
+                    }
+                else:
+                    message[key] = str(value)
 
         reply = Reply(message_code, message, command=command, broadcast=broadcast)
 
