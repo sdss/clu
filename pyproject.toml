@@ -31,7 +31,7 @@ python = "^3.7"
 click = "^8.0"
 aio_pika = "^6.4.1"
 jsonschema = "^3.0.1"
-sdsstools = ">=0.2.0"
+sdsstools = "^0.4.13"
 prompt_toolkit = "^3.0.6"
 aiormq = "^3.2.0"
 
