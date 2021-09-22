@@ -1,5 +1,12 @@
 # Changelog
 
+## Next release
+
+### ✨ Improved
+
+* [#95](https://github.com/sdss/clu/issues/95) Cast all arguments to string in `ProxyClient.send_command()`.
+
+
 ## 1.3.0 - September 17, 2021
 
 ### 💥 Breaking changes
