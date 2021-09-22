@@ -298,7 +298,7 @@ class ProxyClient:
 
         """
 
-        command = " ".join(args)
+        command = " ".join(map(str, args))
 
         return self.client.send_command(self.actor, command)
 
