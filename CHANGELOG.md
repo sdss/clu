@@ -6,6 +6,10 @@
 
 * [#95](https://github.com/sdss/clu/issues/95) Cast all arguments to string in `ProxyClient.send_command()`.
 
+### 🔧 Fixed
+
+* Avoid and error in the callback when a connection to the TCP server is closed.
+
 
 ## 1.3.0 - September 17, 2021
 

@@ -312,8 +312,6 @@ class TCPStreamServer(object):
                 data = await reader.readuntil()
             except asyncio.IncompleteReadError:
                 self.transports.pop(writer.transport)
-                if self.connection_callback:
-                    await self._do_callback(self.connection_callback, writer.transport)
                 break
 
             if data == b"" or reader.at_eof():
@@ -327,6 +325,10 @@ class TCPStreamServer(object):
                 )
 
         writer.close()
+
+        if self.connection_callback:
+            await self._do_callback(self.connection_callback, writer.transport)
+
         await writer.wait_closed()
 
 
