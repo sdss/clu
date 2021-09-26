@@ -104,3 +104,5 @@ ENV/
 setup.py
 
 *.dump
+
+pyrightconfig.json
