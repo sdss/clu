@@ -383,7 +383,7 @@ def help_(ctx, *args, parser_command):
         ctx_commands = ctx.command.commands
 
         for ii in range(len(parser_command)):
-            ctx_command_name = parser_command[ii].lower()
+            ctx_command_name = parser_command[ii]
             command_name += f" {ctx_command_name}"
             if ctx_command_name not in ctx_commands:
                 return command.fail(error=f"command {ctx_command_name} not found.")
