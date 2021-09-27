@@ -31,7 +31,7 @@ loop = asyncio.get_event_loop()
 
 
 style_name = "solarized-dark" if "solarized-dark" in STYLE_MAP else "default"
-style = style_from_pygments_cls(get_style_by_name(style_name))
+style = style_from_pygments_cls(get_style_by_name(style_name))  # type: ignore
 
 
 color_codes = {

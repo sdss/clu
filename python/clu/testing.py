@@ -223,6 +223,7 @@ async def setup_test_actor(actor: T, user_id: int = 1) -> T:
         mock_transport.write.side_effect = actor.mock_replies.parse_reply
         actor.transports["mock_user"] = mock_transport
     elif issubclass(actor.__class__, clu.AMQPActor):
+        assert actor.connection
         actor.connection.exchange = unittest.mock.MagicMock()
         actor.connection.exchange.publish = CoroutineMock(
             side_effect=actor.mock_replies.parse_reply

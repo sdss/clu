@@ -82,6 +82,8 @@ class AMQPBaseActor(AMQPClient, BaseActor):
         # This sets the replies queue but not a commands one.
         await AMQPClient.start(self, **kwargs)
 
+        assert self.connection and self.connection.connection
+
         # Binds the commands queue.
         self.commands_queue = await self.connection.add_queue(
             f"{self.name}_commands",
@@ -138,6 +140,8 @@ class AMQPBaseActor(AMQPClient, BaseActor):
 
     async def _write_internal(self, reply: Reply):
         """Writes a message to user(s)."""
+
+        assert self.connection
 
         message = reply.message
         message_json = json.dumps(message)
@@ -292,7 +296,12 @@ class TCPBaseActor(BaseActor):
         if not message:
             return
 
-        command_id, command_string = re.match(r"([0-9]*)\s*(.+)", message).groups()
+        match = re.match(r"([0-9]*)\s*(.+)", message)
+        if match is None:
+            self.write("f", {"error": "Cannot match command string text."})
+            return
+
+        command_id, command_string = match.groups()
 
         if command_id == "":
             command_id = 0
@@ -315,7 +324,7 @@ class TCPBaseActor(BaseActor):
             )
         except CommandError as ee:
             self.write(
-                "f", {"text": f"Could not parse the following as a command: {ee!r}"}
+                "f", {"error": f"Could not parse the following as a command: {ee!r}"}
             )
             return
 
