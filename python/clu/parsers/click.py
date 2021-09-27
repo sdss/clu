@@ -290,7 +290,7 @@ def cancellable():
             running_tasks = get_running_tasks(name)
 
             if stop is True:
-                if running_tasks is None:
+                if running_tasks is None or len(running_tasks) == 1:
                     return command.fail(error=f"Cannot find a running command {name}.")
                 else:
                     # Cancel the oldest running one (i.e., not us)
