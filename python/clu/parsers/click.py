@@ -36,6 +36,7 @@ __all__ = [
     "timeout",
     "unique",
     "cancellable",
+    "get_running_tasks",
 ]
 
 
