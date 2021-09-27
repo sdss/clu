@@ -94,7 +94,7 @@ class CommandStatus(Maskbit):
 
     def __init__(self, *args):
 
-        if self.name.upper() in COMMAND_STATUS_TO_CODE:
+        if self.name and self.name.upper() in COMMAND_STATUS_TO_CODE:
             self.code = COMMAND_STATUS_TO_CODE[self.name.upper()]
         else:
             self.code = None
@@ -578,7 +578,7 @@ class ActorHandler(logging.Handler):
         message = record.getMessage()
         message_lines = message.splitlines()
 
-        if record.exc_info:
+        if record.exc_info is not None and record.exc_info[0] is not None:
             message_lines.append(f"{record.exc_info[0].__name__}: {record.exc_info[1]}")
 
         if record.levelno <= logging.DEBUG:
