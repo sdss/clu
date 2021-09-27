@@ -14,6 +14,7 @@ import inspect
 import json
 import re
 import shlex
+import time
 
 from typing import Any, List, TypeVar
 
@@ -27,7 +28,16 @@ from clu.command import Command
 from .. import actor
 
 
-__all__ = ["CluCommand", "CluGroup", "command_parser", "ClickParser", "timeout"]
+__all__ = [
+    "CluCommand",
+    "CluGroup",
+    "command_parser",
+    "ClickParser",
+    "timeout",
+    "unique",
+    "cancellable",
+    "get_running_tasks",
+]
 
 
 def coroutine(fn):
@@ -86,7 +96,14 @@ class CluCommand(click.Command):
             if command:
                 command.set_status(
                     command.status.TIMEDOUT,
-                    f"command timed out after {timeout} seconds.",
+                    f"Command timed out after {timeout} seconds.",
+                )
+            return False
+        except asyncio.CancelledError:
+            if command:
+                command.set_status(
+                    command.status.CANCELLED,
+                    "This command has been cancelled.",
                 )
             return False
 
@@ -121,6 +138,10 @@ class CluCommand(click.Command):
                 ctx.task = loop.create_task(
                     self._schedule_callback(ctx, timeout=timeout)
                 )
+
+                ctx.task._command_name = self.name  # type: ignore # Needed in PY<38
+                ctx.task._date = time.time()  # type: ignore
+
                 ctx.task.add_done_callback(done_callback)
 
                 # Add some attributes to the task because it's
@@ -184,6 +205,13 @@ class CluGroup(click.Group):
         return decorator
 
 
+async def coro_helper(f, *args, **kwargs):
+    if asyncio.iscoroutinefunction(f):
+        return await f(*args, **kwargs)
+    else:
+        return f(*args, **kwargs)
+
+
 def timeout(seconds: float):
     """A decorator to timeout the command after a number of ``seconds``."""
 
@@ -193,17 +221,93 @@ def timeout(seconds: float):
         # we add the timeout directly to the callback function.
         f.timeout = seconds
 
-        async def helper(f, *args, **kwargs):
-            if asyncio.iscoroutinefunction(f):
-                return await f(*args, **kwargs)
-            else:
-                return f(*args, **kwargs)
-
         @functools.wraps(f)
         async def wrapper(*args, **kwargs):
-            return await helper(f, *args, **kwargs)
+            return await coro_helper(f, *args, **kwargs)
 
         return functools.update_wrapper(wrapper, f)
+
+    return decorator
+
+
+def get_running_tasks(cmd_name) -> list[asyncio.Task] | None:
+    """Returns the list of tasks for a given command name, sorted by start date."""
+
+    all_tasks = [(t, getattr(t, "_command_name", None)) for t in asyncio.all_tasks()]
+
+    # Sort by date but exclude potential tasks without our added _date
+    matching = [t[0] for t in all_tasks if t[1] == cmd_name]
+    matching_dated = [(m, getattr(m, "_date")) for m in matching if hasattr(m, "_date")]
+
+    if len(matching) == 0:
+        return None
+
+    return [m[0] for m in sorted(matching_dated, key=lambda x: x[1])]
+
+
+def unique():
+    """Allow the execution of only one of these commands at a time."""
+
+    def decorator(f):
+        @functools.wraps(f)
+        async def new_func(command, *args, **kwargs):
+
+            ctx = click.get_current_context()
+            name = ctx.invoked_subcommand
+
+            tasks = get_running_tasks(name)
+
+            # Fails if there are two tasks with the same name, the current one and
+            # an already running one.
+            if tasks is not None and len(tasks) > 1:
+                return command.fail(
+                    error=f"Another command with name {name} is already running."
+                )
+
+            return await f(command, *args, **kwargs)
+
+        return functools.update_wrapper(new_func, f)
+
+    return decorator
+
+
+def cancellable():
+    """Allows to cancel a currently running command.
+
+    This decorator adds a ``--stop`` flag to the command which, if issued, will
+    stop the currently running command. Implies that the command can only have one
+    instance running
+
+    """
+
+    def decorator(f):
+        @functools.wraps(f)
+        @click.option("--stop", is_flag=True, help="Cancels the command.")
+        async def new_func(command, *args, stop=False, **kwargs):
+
+            ctx = click.get_current_context()
+            name = ctx.invoked_subcommand
+
+            running_tasks = get_running_tasks(name)
+
+            if stop is True:
+                if running_tasks is None or len(running_tasks) == 1:
+                    return command.fail(error=f"Cannot find a running command {name}.")
+                else:
+                    # Cancel the oldest running one (i.e., not us)
+                    running_tasks[0].cancel()
+                    await running_tasks[0]
+
+                    return command.finish(text="Command has been stopped.")
+
+            if running_tasks is not None and len(running_tasks) > 1:
+                return command.fail(
+                    error=f"Another command with name {name} is already running."
+                )
+
+            return await f(command, *args, **kwargs)
+
+        return functools.update_wrapper(new_func, f)
 
     return decorator
 
@@ -280,7 +384,7 @@ def help_(ctx, *args, parser_command):
         ctx_commands = ctx.command.commands
 
         for ii in range(len(parser_command)):
-            ctx_command_name = parser_command[ii].lower()
+            ctx_command_name = parser_command[ii]
             command_name += f" {ctx_command_name}"
             if ctx_command_name not in ctx_commands:
                 return command.fail(error=f"command {ctx_command_name} not found.")
@@ -368,6 +472,7 @@ class ClickParser:
             command.done()
             return command
 
+        assert command.status
         command.set_status(command.status.RUNNING)
 
         # If the command contains the --help flag,
