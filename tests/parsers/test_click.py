@@ -13,8 +13,15 @@ import os
 import click
 import pytest
 
+import clu.parsers.click
 from clu import Command
-from clu.parsers.click import ClickParser, command_parser, pass_args
+from clu.parsers.click import (
+    ClickParser,
+    cancellable,
+    command_parser,
+    pass_args,
+    unique,
+)
 from clu.testing import setup_test_actor
 
 
@@ -55,6 +62,20 @@ async def neg_number_command(command, object, negnumber, recursive, text):
     # Add the values to command.replies so that the test can easily get them.
     command.replies.append({"value": negnumber, "recursive": recursive, "text": text})
     command.finish()
+
+
+@command_parser.command()
+@unique()
+async def unique_command(command, object):
+    await asyncio.sleep(0.5)
+    return command.finish()
+
+
+@command_parser.command()
+@cancellable()
+async def cancellable_command(command, object):
+    await asyncio.sleep(0.5)
+    return command.finish()
 
 
 @pytest.fixture
@@ -222,3 +243,77 @@ async def test_string_with_spaces(json_actor, click_parser):
 
     assert cmd.status.did_succeed
     assert cmd.replies[-1]["text"] == "A test"
+
+
+async def test_unique(json_actor, click_parser):
+
+    cmd = Command("unique-command", actor=json_actor)
+    click_parser.parse_command(cmd)
+    await asyncio.sleep(0.01)
+
+    cmd2 = Command("unique-command", actor=json_actor)
+    click_parser.parse_command(cmd2)
+    await cmd2
+
+    assert cmd2.status.did_fail
+    assert (
+        "Another command with name unique-command" in cmd2.replies[-1].message["error"]
+    )
+
+
+async def test_cancellable(json_actor, click_parser):
+
+    cmd = Command("cancellable-command", actor=json_actor)
+    click_parser.parse_command(cmd)
+    await asyncio.sleep(0.01)
+
+    cmd2 = Command("cancellable-command --stop", actor=json_actor)
+    click_parser.parse_command(cmd2)
+    await cmd2
+    await cmd
+
+    assert cmd.status.did_fail
+    assert cmd2.status.did_succeed
+    assert "This command has been cancelled." in cmd.replies[-1].message["error"]
+    assert "Command has been stopped." in cmd2.replies[-1].message["text"]
+
+
+async def test_cancellable_cannot_find(json_actor, click_parser, mocker):
+
+    mocker.patch.object(clu.parsers.click, "get_running_tasks", return_value=None)
+
+    cmd = Command("cancellable-command --stop", actor=json_actor)
+    click_parser.parse_command(cmd)
+    await cmd
+
+    assert cmd.status.did_fail
+    assert "Cannot find a running command" in cmd.replies[-1].message["error"]
+
+
+async def test_cancellable_cannot_find(json_actor, click_parser, mocker):
+
+    mocker.patch.object(clu.parsers.click, "get_running_tasks", return_value=None)
+
+    cmd = Command("cancellable-command --stop", actor=json_actor)
+    click_parser.parse_command(cmd)
+    await cmd
+
+    assert cmd.status.did_fail
+    assert "Cannot find a running command" in cmd.replies[-1].message["error"]
+
+
+async def test_cancellable_duplicate(json_actor, click_parser):
+
+    cmd = Command("cancellable-command", actor=json_actor)
+    click_parser.parse_command(cmd)
+    await asyncio.sleep(0.01)
+
+    cmd2 = Command("cancellable-command", actor=json_actor)
+    click_parser.parse_command(cmd2)
+    await cmd2
+
+    assert cmd2.status.did_fail
+    assert (
+        "Another command with name cancellable-command"
+        in cmd2.replies[-1].message["error"]
+    )
