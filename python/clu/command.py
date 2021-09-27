@@ -320,7 +320,7 @@ class Command(BaseCommand[Actor_co, "Command"]):
         #: The body of the command.
         self.body = command_string
 
-        if not self.actor and kwargs.get("parent", None):
+        if not self.actor and self.parent:
             self.actor = self.parent.actor
 
         #: The `~click.Context` running this command. Only relevant if
