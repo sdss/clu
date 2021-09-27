@@ -471,6 +471,7 @@ class ClickParser:
             command.done()
             return command
 
+        assert command.status
         command.set_status(command.status.RUNNING)
 
         # If the command contains the --help flag,
