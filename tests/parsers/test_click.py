@@ -290,18 +290,6 @@ async def test_cancellable_cannot_find(json_actor, click_parser, mocker):
     assert "Cannot find a running command" in cmd.replies[-1].message["error"]
 
 
-async def test_cancellable_cannot_find(json_actor, click_parser, mocker):
-
-    mocker.patch.object(clu.parsers.click, "get_running_tasks", return_value=None)
-
-    cmd = Command("cancellable-command --stop", actor=json_actor)
-    click_parser.parse_command(cmd)
-    await cmd
-
-    assert cmd.status.did_fail
-    assert "Cannot find a running command" in cmd.replies[-1].message["error"]
-
-
 async def test_cancellable_duplicate(json_actor, click_parser):
 
     cmd = Command("cancellable-command", actor=json_actor)
