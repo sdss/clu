@@ -110,7 +110,7 @@ async def test_send_command(actor, tron_server):
     command = actor.send_command("alerts", "ping")
     await command
 
-    assert b"test_actor.test_actor" in tron_server.received[-1]
+    assert b"test_actor.alerts" in tron_server.received[-1]
     assert b"alerts ping" in tron_server.received[-1]
 
     assert len(command.replies) == 1
@@ -177,7 +177,7 @@ async def test_client_send_command_args(tron_server, actor):
     command = actor.send_command("alerts", "ping", "--help")
     await command
 
-    assert b"test_actor.test_actor" in tron_server.received[-1]
+    assert b"test_actor.alerts" in tron_server.received[-1]
     assert b"alerts ping --help" in tron_server.received[-1]
 
     assert len(command.replies) == 1
