@@ -134,7 +134,7 @@ class BaseCommand(
         )
 
     @property
-    def status(self) -> Union[CommandStatus, None]:
+    def status(self) -> CommandStatus:
         """Returns the status."""
 
         return self._status
