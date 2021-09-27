@@ -310,7 +310,7 @@ class TCPStreamServer(object):
 
             try:
                 data = await reader.readuntil()
-            except asyncio.IncompleteReadError:
+            except (asyncio.IncompleteReadError, ConnectionResetError):
                 self.transports.pop(writer.transport)
                 break
 
