@@ -134,7 +134,7 @@ class BaseLegacyActor(BaseActor):
             self.tron = None
 
         #: dict: Actor models.
-        self.models = self.tron.models if self.tron else None
+        self.models = self.tron.models if self.tron else {}
 
         self.timed_commands = TimedCommandList(self)
 
