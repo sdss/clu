@@ -184,6 +184,13 @@ class CluGroup(click.Group):
         return decorator
 
 
+async def coro_helper(f, *args, **kwargs):
+    if asyncio.iscoroutinefunction(f):
+        return await f(*args, **kwargs)
+    else:
+        return f(*args, **kwargs)
+
+
 def timeout(seconds: float):
     """A decorator to timeout the command after a number of ``seconds``."""
 
@@ -193,15 +200,9 @@ def timeout(seconds: float):
         # we add the timeout directly to the callback function.
         f.timeout = seconds
 
-        async def helper(f, *args, **kwargs):
-            if asyncio.iscoroutinefunction(f):
-                return await f(*args, **kwargs)
-            else:
-                return f(*args, **kwargs)
-
         @functools.wraps(f)
         async def wrapper(*args, **kwargs):
-            return await helper(f, *args, **kwargs)
+            return await coro_helper(f, *args, **kwargs)
 
         return functools.update_wrapper(wrapper, f)
 
