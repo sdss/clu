@@ -159,17 +159,20 @@ class BaseCommand(
     def set_status(
         self,
         status: Union[CommandStatus, str],
-        message: Dict[str, Any] = None,
+        message: Dict[str, Any] | str = None,
         silent: bool = False,
         **kwargs,
     ) -> BaseCommand:
         """Same as `.status` but allows to specify a message to the users."""
+
+        assert self.status
 
         if self.status.is_done:
             raise RuntimeError("cannot modify a done command.")
 
         if isinstance(status, str):
             for bit in self.flags:
+                assert bit.name
                 if status.lower() == bit.name.lower():
                     status = bit
                     break
@@ -188,6 +191,9 @@ class BaseCommand(
             status_code = status.code
             if status_code is None:
                 raise ValueError(f"Invalid status code {status_code!r}.")
+
+            if isinstance(message, str) and status_code in ["f", "e"]:
+                message = {"error": message}
 
             if self.actor and not silent:
                 self.write(status_code, message, **kwargs)
