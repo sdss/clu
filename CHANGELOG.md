@@ -2,6 +2,10 @@
 
 ## Next release
 
+### 🚀 New
+
+* [#98](https://github.com/sdss/clu/issues/98) Add `unique()` and `cancellable()` decorators for Click command parsers.
+
 ### ✨ Improved
 
 * [#95](https://github.com/sdss/clu/issues/95) Cast all arguments to string in `ProxyClient.send_command()`.
