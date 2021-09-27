@@ -358,7 +358,7 @@ class BaseLegacyActor(BaseActor):
                 target,
                 command_string,
                 *args,
-                commander=f"{self.name}.{self.name}",
+                commander=f"{self.name}.{target}",
                 mid=command_id,
                 callback=callback,
             )
