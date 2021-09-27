@@ -9,6 +9,7 @@
 ### ✨ Improved
 
 * [#95](https://github.com/sdss/clu/issues/95) Cast all arguments to string in `ProxyClient.send_command()`.
+* Add `get_keys` parameter to `LegacyActor.start()` that is passed to `TronConnection.start()`
 
 ### 🔧 Fixed
 

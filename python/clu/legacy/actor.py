@@ -143,7 +143,7 @@ class BaseLegacyActor(BaseActor):
             f"<{str(self)} (name={self.name!r}, host={self.host!r}, port={self.port})>"
         )
 
-    async def start(self: T) -> T:
+    async def start(self: T, get_keys: bool = True) -> T:
         """Starts the server and the Tron client connection."""
 
         await self._server.start()
@@ -152,7 +152,7 @@ class BaseLegacyActor(BaseActor):
         # Start tron connection
         try:
             if self.tron:
-                await self.tron.start()
+                await self.tron.start(get_keys=get_keys)
                 self.log.info(
                     f"started tron connection at {self.tron.host}:{self.tron.port}"
                 )
