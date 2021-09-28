@@ -369,7 +369,7 @@ def parse_legacy_command(command_string: str) -> Tuple[int, str]:
     """
 
     _HEADER_BODY_RE = re.compile(
-        r"((?P<cmdID>\d+)(?:\s+\d+)?\s+)?((?P<cmdBody>[A-Za-z_].*))?$"
+        r"((?P<cmdID>\d+)(?:\s+\d+)?\s+)?((?P<cmdBody>[A-Za-z_].*|--help))?$"
     )
 
     command_match = _HEADER_BODY_RE.match(command_string)

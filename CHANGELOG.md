@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### ✨ Improved
+
+* Actors now accept `<actor> --help` with the same result as `<actor> help`.
+
+
 ## 1.4.0 - September 27, 2021
 
 ### 🚀 New

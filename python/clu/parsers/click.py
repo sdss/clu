@@ -477,12 +477,14 @@ class ClickParser:
 
         # If the command contains the --help flag,
         # redirects it to the help command.
-        if "--help" in command.body:
+        if "--help" in command.body and command.body != "--help":
             command.body = "help " + command.body
             command.body = command.body.replace(" --help", "")
 
-        if not command.body.startswith("help"):
+        if command.body != "--help" and not command.body.startswith("help"):
             command_args = shlex.split(command.body)
+        elif command.body == "--help":
+            command_args = ["help", '""']
         else:
             command_args = ["help", '"{}"'.format(command.body[5:])]
 

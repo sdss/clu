@@ -305,3 +305,14 @@ async def test_cancellable_duplicate(json_actor, click_parser):
         "Another command with name cancellable-command"
         in cmd2.replies[-1].message["error"]
     )
+
+
+@pytest.mark.parametrize("cmd_str", ["help", "--help"])
+async def test_parser_full_help(json_actor, click_parser, cmd_str):
+
+    cmd = Command(command_string=cmd_str, actor=json_actor)
+    click_parser.parse_command(cmd)
+    await cmd
+
+    assert cmd.status.is_done
+    assert "Usage: json_actor" in cmd.replies[-1].message["help"][0]
