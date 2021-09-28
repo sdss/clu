@@ -299,6 +299,7 @@ class TCPStreamServer(object):
 
         if self.max_connections and len(self.transports) == self.max_connections:
             writer.write("Max number of connections reached.\n".encode())
+            await writer.drain()
             return
 
         self.transports[writer.transport] = writer
@@ -311,7 +312,6 @@ class TCPStreamServer(object):
             try:
                 data = await reader.readuntil()
             except (asyncio.IncompleteReadError, ConnectionResetError):
-                self.transports.pop(writer.transport)
                 break
 
             if data == b"" or reader.at_eof():
@@ -324,6 +324,7 @@ class TCPStreamServer(object):
                     data,
                 )
 
+        self.transports.pop(writer.transport)
         writer.close()
 
         if self.connection_callback:

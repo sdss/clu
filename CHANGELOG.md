@@ -10,6 +10,7 @@
 ### 🔧 Fixed
 
 * Use `clu.client` for `TronConnection.send_command()`.
+* If a command in a `LegacySurvey` actor is left running after the client closes the connection, it would still try to output messages to it, causing a `socket.send() raised exception` error. Now if the client exists the command continues running, but outputs to that client are ignored.
 
 
 ## 1.4.0 - September 27, 2021

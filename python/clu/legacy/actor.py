@@ -479,7 +479,9 @@ class BaseLegacyActor(BaseActor):
                 for transport in self.transports.values():
                     transport.write(msg)
             else:
-                transport.write(msg)
+                global_transport = self.transports.get(transport.user_id, None)
+                if global_transport is not None and global_transport == transport:
+                    transport.write(msg)
 
             if self.log:
                 log_reply(self.log, reply.message_code, full_msg_str)
