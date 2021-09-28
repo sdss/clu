@@ -222,15 +222,6 @@ class Model(BaseModel[Property]):
         if not self.check_schema(self.schema):
             raise ValueError(f"schema {name!r} is invalid.")
 
-        type_checker = self.VALIDATOR.TYPE_CHECKER.redefine(
-            "array", lambda checker, instance: isinstance(instance, (list, tuple))
-        )
-        self.VALIDATOR = jsonschema.validators.extend(
-            self.VALIDATOR,
-            type_checker=type_checker,
-        )
-        self.validator = self.VALIDATOR(self.schema)
-
         if (
             "type" not in self.schema
             or self.schema["type"] != "object"
@@ -245,6 +236,15 @@ class Model(BaseModel[Property]):
 
         if "additionalProperties" not in self.schema:
             self.schema["additionalProperties"] = additional_properties
+
+        type_checker = self.VALIDATOR.TYPE_CHECKER.redefine(
+            "array", lambda checker, instance: isinstance(instance, (list, tuple))
+        )
+        self.VALIDATOR = jsonschema.validators.extend(
+            self.VALIDATOR,
+            type_checker=type_checker,
+        )
+        self.validator = self.VALIDATOR(self.schema)
 
         super().__init__(name, **kwargs)
 

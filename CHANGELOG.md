@@ -5,6 +5,7 @@
 ### ✨ Improved
 
 * Actors now accept `<actor> --help` with the same result as `<actor> help`.
+* Add `additional_properties` parameter to `LegacyActor`.
 
 ### 🔧 Fixed
 

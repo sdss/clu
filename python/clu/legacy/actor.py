@@ -93,6 +93,7 @@ class BaseLegacyActor(BaseActor):
         log: Optional[logging.Logger] = None,
         verbose: bool = False,
         schema: Optional[PathLike] = None,
+        additional_properties: bool = False,
         config: Dict[str, Any] = {},
     ):
 
@@ -104,6 +105,7 @@ class BaseLegacyActor(BaseActor):
             log=log,
             verbose=verbose,
             schema=schema,
+            additional_properties=additional_properties,
             config=config,
         )
 
