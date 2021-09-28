@@ -255,7 +255,7 @@ class TronConnection(BaseClient):
         target,
         command_string,
         *args,
-        commander=".client",
+        commander="clu.client",
         mid=None,
         callback: Optional[Callable[[Reply], None]] = None,
     ):

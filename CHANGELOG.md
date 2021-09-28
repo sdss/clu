@@ -6,6 +6,10 @@
 
 * Actors now accept `<actor> --help` with the same result as `<actor> help`.
 
+### 🔧 Fixed
+
+* Use `clu.client` for `TronConnection.send_command()`.
+
 
 ## 1.4.0 - September 27, 2021
 
@@ -17,7 +21,7 @@
 
 * [#95](https://github.com/sdss/clu/issues/95) Cast all arguments to string in `ProxyClient.send_command()`.
 * Add `get_keys` parameter to `LegacyActor.start()` that is passed to `TronConnection.start()`
-* Use `.{client}` as default commander for `TronConnection` and `{actor}.{target}` for actor.
+* Use `.client` as default commander for `TronConnection` and `{actor}.{target}` for actor.
 
 ### 🔧 Fixed
 
