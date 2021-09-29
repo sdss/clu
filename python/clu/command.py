@@ -203,7 +203,7 @@ class BaseCommand(
             self.do_callbacks()
 
             # If the command is done, set the result of the future.
-            if self._status.is_done:
+            if self._status.is_done and not self.done():
                 self.set_result(self)
 
             # Set the status watcher
