@@ -4,6 +4,7 @@
 
 ### ✨ Improved
 
+* [#99](https://github.com/sdss/clu/issues/99) Add `exception_module` value to the output of an exception.
 * Actors now accept `<actor> --help` with the same result as `<actor> help`.
 * Add `additional_properties` parameter to `LegacyActor`.
 
