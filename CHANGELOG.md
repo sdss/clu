@@ -5,6 +5,7 @@
 ### ✨ Improved
 
 * [#99](https://github.com/sdss/clu/issues/99) Add `exception_module` value to the output of an exception.
+* [sdss/sdsstools#29](https://github.com/sdss/sdsstools/issues/29) Allow to pass a custom PyYAML loader in `from_config()` that will be forwarded to `read_yaml_file()`.
 * Actors now accept `<actor> --help` with the same result as `<actor> help`.
 * Add `additional_properties` parameter to `LegacyActor`.
 * When a legacy actor starts, if there is a `TronConnection` available it will try to send a `hub startNubs <actor>` to initiate the connection.

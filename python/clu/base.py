@@ -16,9 +16,10 @@ import pathlib
 import time
 from datetime import datetime
 
-from typing import Any, Dict, Optional, TypeVar, Union, cast
+from typing import Any, Dict, Optional, Type, TypeVar, Union, cast
 
 import jsonschema.exceptions
+import yaml
 
 from sdsstools import get_logger, read_yaml_file
 from sdsstools.logger import SDSSLogger
@@ -131,13 +132,14 @@ class BaseClient(metaclass=abc.ABCMeta):
 
     @staticmethod
     def _parse_config(
-        input: Union[Dict[str, Any], pathlib.Path, str]
+        input: Union[Dict[str, Any], pathlib.Path, str],
+        loader=yaml.FullLoader,
     ) -> Dict[str, Any]:
 
         if not isinstance(input, dict):
             input = pathlib.Path(input)
             assert input.exists(), "configuration path does not exist."
-            config = read_yaml_file(str(input))
+            config = read_yaml_file(str(input), loader=loader)
         else:
             config = input
 
@@ -148,6 +150,7 @@ class BaseClient(metaclass=abc.ABCMeta):
         cls,
         config: Union[Dict[str, Any], pathlib.Path, str],
         *args,
+        loader=yaml.FullLoader,
         **kwargs,
     ):
         """Parses a configuration file.
@@ -161,7 +164,7 @@ class BaseClient(metaclass=abc.ABCMeta):
             file.
         """
 
-        orig_config_dict = cls._parse_config(config)
+        orig_config_dict = cls._parse_config(config, loader=loader)
 
         config_dict = orig_config_dict.copy()
 
