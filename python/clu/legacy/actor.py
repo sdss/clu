@@ -145,8 +145,20 @@ class BaseLegacyActor(BaseActor):
             f"<{str(self)} (name={self.name!r}, host={self.host!r}, port={self.port})>"
         )
 
-    async def start(self: T, get_keys: bool = True) -> T:
-        """Starts the server and the Tron client connection."""
+    async def start(self: T, get_keys: bool = True, start_nubs: bool = True) -> T:
+        """Starts the server and the Tron client connection.
+
+        Parameters
+        ----------
+        get_keys
+            Whether to issue ``keys getFor`` commands against the hub to retrieve
+            the current values for the model keys.
+        start_nubs
+            If `True`, and a `.TronConnection` has been created, sends a
+            ``hub startNubs <name>`` where ``<name>`` is the name of the
+            actor to attempt to automatically connect it to the hub.
+
+        """
 
         await self._server.start()
         self.log.info(f"running TCP server on {self.host}:{self.port}")
@@ -158,9 +170,13 @@ class BaseLegacyActor(BaseActor):
                 self.log.info(
                     f"started tron connection at {self.tron.host}:{self.tron.port}"
                 )
+                if start_nubs:
+                    self.log.debug("Asking Tron to connect back.")
+                    await self.send_command("hub", f"startNubs {self.name}")
             else:
                 warnings.warn(
-                    "starting LegacyActor without Tron connection.", clu.CluWarning
+                    "starting LegacyActor without Tron connection.",
+                    clu.CluWarning,
                 )
         except (ConnectionRefusedError, OSError) as ee:
             warnings.warn(

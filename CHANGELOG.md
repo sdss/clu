@@ -7,6 +7,7 @@
 * [#99](https://github.com/sdss/clu/issues/99) Add `exception_module` value to the output of an exception.
 * Actors now accept `<actor> --help` with the same result as `<actor> help`.
 * Add `additional_properties` parameter to `LegacyActor`.
+* When a legacy actor starts, if there is a `TronConnection` available it will try to send a `hub startNubs <actor>` to initiate the connection.
 
 ### 🔧 Fixed
 
