@@ -297,6 +297,7 @@ async def test_write_exception(amqp_actor):
     assert len(command.replies) == 2
     assert command.replies[1].message_code == "e"
     assert command.replies[1].message["error"] == {
+        "exception_module": "builtins",
         "exception_type": "ValueError",
         "exception_message": "Error message",
     }

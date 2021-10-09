@@ -49,6 +49,7 @@ DEFAULT_SCHEMA = {
             {
                 "type": "object",
                 "properties": {
+                    "exception_module": {"type": "string"},
                     "exception_type": {"type": "string"},
                     "exception_message": {"type": "string"},
                 },
