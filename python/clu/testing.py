@@ -162,7 +162,7 @@ class MockReplyList(list):
         return any([m in reply[kw] for reply in self for kw in reply.keys()])
 
 
-async def setup_test_actor(actor: T, user_id: int = 1) -> T:
+async def setup_test_actor(actor: T, user_id: int = 666) -> T:
     """Setups an actor for testing, mocking the client transport.
 
     Takes an ``actor`` and modifies it in two ways:
@@ -186,7 +186,7 @@ async def setup_test_actor(actor: T, user_id: int = 1) -> T:
             if isinstance(command_str, str):
                 command_str = command_str.encode("utf-8")
             full_command = f" {command_id} ".encode("utf-8") + command_str
-            return self.new_command(actor.transports["mock_user"], full_command)
+            return self.new_command(actor.transports[user_id], full_command)
         elif issubclass(actor.__class__, clu.AMQPActor):
             command_id = str(command_id)
             headers = {"command_id": command_id, "commander_id": "mock_test_client"}
@@ -221,7 +221,7 @@ async def setup_test_actor(actor: T, user_id: int = 1) -> T:
         mock_transport = unittest.mock.MagicMock(spec=asyncio.Transport)
         mock_transport.user_id = user_id
         mock_transport.write.side_effect = actor.mock_replies.parse_reply
-        actor.transports["mock_user"] = mock_transport
+        actor.transports[user_id] = mock_transport
     elif issubclass(actor.__class__, clu.AMQPActor):
         assert actor.connection
         actor.connection.exchange = unittest.mock.MagicMock()

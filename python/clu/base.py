@@ -472,6 +472,7 @@ class BaseActor(BaseClient):
             if isinstance(value, Exception):
                 if expand_exceptions is True:
                     message[key] = {
+                        "exception_module": value.__class__.__module__,
                         "exception_type": value.__class__.__name__,
                         "exception_message": str(value),
                     }
