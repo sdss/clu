@@ -16,7 +16,7 @@ import pathlib
 import time
 from datetime import datetime
 
-from typing import Any, Dict, Optional, Type, TypeVar, Union, cast
+from typing import Any, Dict, Optional, TypeVar, Union, cast
 
 import jsonschema.exceptions
 import yaml
