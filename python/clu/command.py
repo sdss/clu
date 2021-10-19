@@ -265,7 +265,7 @@ class BaseCommand(
             message = {}
         elif isinstance(message, dict):
             pass
-        elif isinstance(message, str):
+        elif isinstance(message, (str, Exception)):
             message = {self.default_keyword: message}
         else:
             raise ValueError(f"invalid message {message!r}")
