@@ -357,6 +357,9 @@ class BaseActor(BaseClient):
             }
             is_file = False
 
+        if isinstance(schema, dict):
+            is_file = False
+
         self.model = Model(
             self.name,
             schema,
