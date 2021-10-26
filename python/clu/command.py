@@ -14,10 +14,22 @@ import sys
 import time
 from contextlib import suppress
 
-from typing import Any, Callable, Dict, Generic, List, Optional, Tuple, TypeVar, Union
+from typing import (
+    Any,
+    Awaitable,
+    Callable,
+    Dict,
+    Generic,
+    List,
+    Optional,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
 import clu
 import clu.base
+from clu.exceptions import CommandError
 from clu.tools import CommandStatus, StatusMixIn
 
 
@@ -298,6 +310,26 @@ class BaseCommand(
             **kwargs,
         )
 
+    def send_command(
+        self,
+        target: str,
+        command_string: str,
+        *args,
+        **kwargs,
+    ) -> BaseCommand | Awaitable[Command]:
+        """Sends a command to an actor using the commander ID of this command."""
+
+        if self.actor is None:
+            raise CommandError("The actor need to be defined to send commands.")
+
+        return self.actor.send_command(
+            target,
+            command_string,
+            *args,
+            command=self,
+            **kwargs,
+        )
+
 
 class Command(BaseCommand[Actor_co, "Command"]):
     """A command from a user.
@@ -516,7 +548,7 @@ class TimedCommand(object):
         await Command(
             self.command_string,
             actor=actor,
-            commander_id=actor.name,
+            commander_id=f".{actor.name}",
             silent=silent,
         ).parse()
 
