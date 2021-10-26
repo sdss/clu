@@ -284,6 +284,7 @@ async def test_client_send_command_callback(amqp_client, amqp_actor, mocker):
     assert isinstance(callback_mock.mock_calls[0].args[0], AMQPReply)
 
 
+@pytest.mark.skipif(sys.version_info < (3, 8), reason="Test fails in PY37")
 async def test_write_exception(amqp_actor):
 
     command = Command(
