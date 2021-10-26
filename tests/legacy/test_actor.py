@@ -103,7 +103,7 @@ async def test_new_command(actor, actor_client):
     # to the client, while actor_client.writer.transport belongs to the client.
     transport = actor.transports[1]
 
-    command = actor.new_command(transport, b"0 ping\n")
+    command = actor.new_command(transport, b"APO.Jose 0 ping\n")
     await command.wait_for_status(CommandStatus.DONE)
 
     await asyncio.sleep(0.01)  # Wait for last message to arrive
@@ -246,6 +246,27 @@ async def test_send_command_no_tron(actor):
 
     with pytest.raises(CluError):
         actor.send_command("actor2", "command")
+
+
+async def test_send_command_from_command(actor, mocker):
+
+    send_command_mock = mocker.patch.object(actor.tron, "send_command")
+
+    command = Command(
+        command_string="",
+        commander_id="APO.Jose",
+        command_id=5,
+        actor=actor,
+    )
+    command.send_command("otheractor", "command1 --option")
+
+    send_command_mock.assert_called_once_with(
+        "otheractor",
+        "command1 --option",
+        commander="APO.Jose.otheractor",
+        mid=None,
+        callback=None,
+    )
 
 
 async def test_write_dict(actor, actor_client):

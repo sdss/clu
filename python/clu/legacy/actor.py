@@ -228,17 +228,17 @@ class BaseLegacyActor(BaseActor):
     def new_command(self, transport: CustomTransportType, command_str: bytes):
         """Handles a new command received by the actor."""
 
-        commander_id = getattr(transport, "user_id", 0)
+        user_id = getattr(transport, "user_id", 0)
         command_str_s = command_str.decode().strip()
 
         if not command_str_s:
             return
         try:
-            command_id, command_body = parse_legacy_command(command_str_s)
+            commander_id, command_id, command_body = parse_legacy_command(command_str_s)
 
             command = Command(
                 command_string=command_body,
-                commander_id=commander_id,
+                commander_id=commander_id or user_id,
                 command_id=command_id,
                 consumer_id=self.name,
                 actor=self,
@@ -249,7 +249,7 @@ class BaseLegacyActor(BaseActor):
             self.write(
                 "f",
                 {"text": f"Could not parse the command string: {ee!r}"},
-                user_id=commander_id,
+                user_id=user_id,
             )
             return
 
@@ -342,7 +342,9 @@ class BaseLegacyActor(BaseActor):
         target: str,
         command_string: str,
         *args,
+        commander: Optional[str] = None,
         command_id: Optional[int] = None,
+        command: Optional[Command] = None,
         callback: Optional[Callable[[OpsReply], None]] = None,
     ):
         """Sends a command through the hub.
@@ -355,6 +357,9 @@ class BaseLegacyActor(BaseActor):
             The command to send.
         args
             Arguments to concatenate to the command string.
+        commander
+            The commander string to send to Tron. If not provided, a valid
+            string is built using the name of the actor and the target.
         command_id
             The command id. If `None`, a sequentially increasing value will
             be used. You should not specify a ``command_id`` unless you really
@@ -371,12 +376,17 @@ class BaseLegacyActor(BaseActor):
 
         """
 
+        if command and isinstance(command.commander_id, str):
+            commander = command.commander_id + f".{target}"
+        else:
+            commander = f"{self.name}.{target}"
+
         if self.tron and self.tron.connected():
             command = self.tron.send_command(
                 target,
                 command_string,
                 *args,
-                commander=f"{self.name}.{target}",
+                commander=commander,
                 mid=command_id,
                 callback=callback,
             )
