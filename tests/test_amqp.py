@@ -301,3 +301,18 @@ async def test_write_exception(amqp_actor):
         "exception_type": "ValueError",
         "exception_message": "Error message",
     }
+
+
+async def test_send_command_from_command(amqp_actor, mocker):
+
+    send_command_mock = mocker.patch.object(amqp_actor.connection.exchange, "publish")
+
+    command = Command(
+        command_string="",
+        commander_id="APO.Jose",
+        command_id=5,
+        actor=amqp_actor,
+    )
+    await command.send_command("otheractor", "command1 --option")
+
+    send_command_mock.assert_called()
