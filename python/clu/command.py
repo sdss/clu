@@ -91,7 +91,7 @@ class BaseCommand(
 
     def __init__(
         self,
-        commander_id: Union[int, str] = 0,
+        commander_id: Union[int, str, None] = None,
         command_id: Union[int, str] = 0,
         consumer_id: Union[int, str] = 0,
         actor: Optional[Actor_co] = None,

@@ -319,6 +319,7 @@ class AMQPClient(BaseClient):
         *args,
         command_id: str | None = None,
         callback: Optional[Callable[[AMQPReply], None]] = None,
+        command: Optional[Command] = None,
     ):
         """Commands another actor over its RCP queue.
 
@@ -335,6 +336,9 @@ class AMQPClient(BaseClient):
             identifier will be attached.
         callback
             A callback to invoke with each reply received from the actor.
+        command
+            The `.Command` that initiated the new command. Only relevant for
+            actors.
 
         Examples
         --------
@@ -352,11 +356,16 @@ class AMQPClient(BaseClient):
         if len(args) > 0:
             command_string += " " + " ".join(map(str, args))
 
+        if command and isinstance(command.commander_id, str):
+            commander_id = command.commander_id + f".{consumer}"
+        else:
+            commander_id = f"{self.name}.{consumer}"
+
         # Creates and registers a command.
         command = Command(
             command_string=command_string,
             command_id=command_id,
-            commander_id=self.name,
+            commander_id=commander_id,
             consumer_id=consumer,
             actor=None,
             loop=self.loop,
@@ -365,7 +374,7 @@ class AMQPClient(BaseClient):
 
         self.running_commands[command_id] = command
 
-        headers = {"command_id": command_id, "commander_id": self.name}
+        headers = {"command_id": command_id, "commander_id": commander_id}
 
         # The routing key has the topic command and the name of
         # the commanded actor.
@@ -397,7 +406,7 @@ class AMQPClient(BaseClient):
                     headers=headers,
                     correlation_id=command_id,
                 ),
-                routing_key=f"reply.{command.commander_id}",
+                routing_key=f"reply.{self.name}",
             )
 
         return command
