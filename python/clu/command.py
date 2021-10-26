@@ -352,7 +352,7 @@ class Command(BaseCommand[Actor_co, "Command"]):
         )
 
 
-def parse_legacy_command(command_string: str) -> Tuple[int, str]:
+def parse_legacy_command(command_string: str) -> Tuple[Union[str, None], int, str]:
     """Parses a command received by a legacy actor.
 
     Parameters
@@ -369,24 +369,26 @@ def parse_legacy_command(command_string: str) -> Tuple[int, str]:
     """
 
     _HEADER_BODY_RE = re.compile(
-        r"((?P<cmdID>\d+)(?:\s+\d+)?\s+)?((?P<cmdBody>[A-Za-z_].*|--help))?$"
+        r"(?:([a-z0-9]*\.[a-z0-9_\.]+)\s+)?"
+        r"(?:(\d+)(?:\s+\d+)?\s+)?"
+        r"(?:([a-z_].*|--help))?$",
+        re.IGNORECASE,
     )
 
     command_match = _HEADER_BODY_RE.match(command_string)
     if not command_match:
         raise clu.CommandError(f"Could not parse command {command_string!r}")
 
-    command_dict = command_match.groupdict("")
+    commander, command_id_str, command_body = command_match.groups()
 
-    command_id_str = command_dict["cmdID"]
     if command_id_str:
         command_id = int(command_id_str)
     else:
         command_id = 0
 
-    command_body = command_dict.get("cmdBody", "").strip()
+    command_body = command_body.strip()
 
-    return command_id, command_body
+    return commander, command_id, command_body
 
 
 class TimedCommandList(list):
