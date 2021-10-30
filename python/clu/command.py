@@ -277,8 +277,11 @@ class BaseCommand(
             message = {}
         elif isinstance(message, dict):
             pass
-        elif isinstance(message, (str, Exception)):
-            message = {self.default_keyword: message}
+        elif isinstance(message, str):
+            keyword = "error" if message_code in ["f", "e"] else self.default_keyword
+            message = {keyword: message}
+        elif isinstance(message, Exception):
+            message = {"error": message}
         else:
             raise ValueError(f"invalid message {message!r}")
 
