@@ -131,7 +131,7 @@ class BaseCommand(
         self.loop = loop or asyncio.get_event_loop()
 
         #: A list of replies this command has received. The type of
-        #: reply object dependson the actor or client issuing the command.
+        #: reply object depends on the actor or client issuing the command.
         self.replies: List[Any] = []
 
         asyncio.Future.__init__(self)
