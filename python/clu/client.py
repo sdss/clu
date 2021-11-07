@@ -292,7 +292,7 @@ class AMQPClient(BaseClient):
 
         # Update the models
         if self.models and reply.sender in self.models:
-            self.models[reply.sender].update_model(reply.body)
+            self.models[reply.sender].validate(reply.body, update_model=True)
 
         # If the command is running we check if the message code indicates
         # the command is done and, if so, sets the result in the Future.
