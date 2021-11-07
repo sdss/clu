@@ -97,7 +97,7 @@ t_CPP_FLOAT = r"((\d+)(\.\d+)(e(\+|-)?(\d+))? | (\d+)e(\+|-)?(\d+))([lL]|[fF])?"
 
 # String literal
 def t_CPP_STRING(t):
-    r"\"([^\\\n]|(\\(.|\n)))*?\""
+    r"\"([^\\\n]|(\\(.|\n)))*?\" "
     t.lexer.lineno += t.value.count("\n")
     return t
 

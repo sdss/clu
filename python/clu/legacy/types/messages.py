@@ -507,7 +507,7 @@ class CommandHeader(Canonized):
 
     @property
     def program(self):
-        """ Return program part of cmdrname. """
+        """Return program part of cmdrname."""
         return self.cmdrName.split(".", 1)[0]
 
     def canonical(self):

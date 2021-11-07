@@ -69,7 +69,7 @@ class ReplyParser(TemporaryBase):
         p[0] = Reply(header=self.header, keywords=p[1], string=self.string)
 
     def p_empty_reply(self, p):
-        "reply : "
+        "reply :"
         p[0] = Reply(header=self.header, keywords=[], string=self.string)
 
     def p_reply_keywords(self, p):
@@ -169,7 +169,7 @@ class CommandParser(TemporaryBase):
         p[0].append(p[2])
 
     def p_no_keywords(self, p):
-        "keywords : "
+        "keywords :"
         p[0] = []
 
     def p_raw_keyword(self, p):

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "sdss-clu"
-version = "1.5.1-alpha.0"
+version = "1.5.1"
 description = "A new protocol for SDSS actors."
 authors = ["José Sánchez-Gallego <gallegoj@uw.edu>"]
 license = "BSD-3-Clause"
@@ -65,7 +65,7 @@ furo = "^2021.6.18-beta.36"
 
 [tool.black]
 line-length = 88
-target-version = ['py38']
+target-version = ['py39']
 fast = true
 exclude = 'docs/sphinx/examples/.+\.py'
 
