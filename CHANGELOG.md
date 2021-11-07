@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.5.2 - November 7, 2021
+
+### 🔧 Fixed
+
+* Fixed a bug in which commanders with multiple dot-separated components would not be correctly interpreted by `handle_reply()` and the CLI.
+* Command code `e` does not fail the command. This prevents cases of finishing/failing the command after it has already been failed.
+* Improved the performance of the CLI by outputting all the parts of the message at once.
+
+
 ## 1.5.1 - November 6, 2021
 
 ### 🚀 New
