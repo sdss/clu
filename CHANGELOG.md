@@ -5,7 +5,7 @@
 ### ✨ Improved
 
 * [#101](https://github.com/sdss/clu/issues/101) The legacy actor now accepts command strings with a commander id (e.g., `APO.Jose 10 status`). The commander id is stored in the `Command` object. Added a `Command.send_command()` that will call the remote command propagating the commander ID. For example, if a command has commander `APO.Jose` and sends a command to `guider`, the `guider` actor will receive a command with commander `APO.Jose.guider`.
-
+* [#102](https://github.com/sdss/clu/issues/102) When calling a model or property callback, ensure that the arguments sent are a frozen copy of the state of the model/property at the time of the callback. This prevents that if a model is updated twice in quick succession, the callback may receive only the second value. A consequence of this change is that the model callback now receives a flattened dictionary with all the model keywords as the first argument.
 * If not specified, a message with code `e` or `f`, or an exception, will use the keyword `error`.
 
 

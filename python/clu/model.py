@@ -8,6 +8,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import pathlib
 import warnings
@@ -117,7 +118,7 @@ class Property(CallbackMixIn):
 
         self._value = new_value
         self.last_seen = time()
-        self.notify(self)
+        self.notify(self.copy())
 
     def copy(self):
         """Returns a copy of self."""
@@ -142,8 +143,9 @@ class BaseModel(CaseInsensitiveDict[T], CallbackMixIn):
         The name of the model.
     callback
         A function or coroutine to call when the datamodel changes. The
-        function is called with the instance of `.BaseModel` and the key that
-        changed.
+        function is called with the flattened instance of `.BaseModel`
+        and the key that changed.
+
     """
 
     def __init__(self, name: str, callback: Optional[Callable[[Any], Any]] = None):
@@ -247,6 +249,8 @@ class Model(BaseModel[Property]):
         )
         self.validator = self.VALIDATOR(self.schema)
 
+        self._lock = asyncio.Lock()
+
         super().__init__(name, **kwargs)
 
         for name in self.schema["properties"]:
@@ -274,29 +278,37 @@ class Model(BaseModel[Property]):
         except jsonschema.SchemaError:
             return False
 
-    def update_model(self, instance: Dict[str, Any]):
-        """Validates a new instance and updates the model."""
+    def validate(self, instance: Dict[str, Any], update_model: bool = True):
+        """Validates a new instance."""
 
         try:
             self.validator.validate(instance)
         except jsonschema.exceptions.ValidationError as err:
             return False, err
 
-        self.last_seen = time()
-
-        for key, value in instance.items():
-            if key in self:
-                if isinstance(self[key].value, dict) and isinstance(value, dict):
-                    # Copy previous value and update it but then assign it to
-                    # force the callback in the property.
-                    new_value = self[key].value.copy()
-                    new_value.update(value)
-                    self[key].value = new_value
-                else:
-                    self[key].value = value
-                self.notify(self, self[key].copy())
+        if update_model:
+            asyncio.create_task(self.update_model(instance))
 
         return True, None
+
+    async def update_model(self, instance: Dict[str, Any]):
+        """Validates a new instance and updates the model."""
+
+        self.last_seen = time()
+
+        async with self._lock:
+            for key, value in instance.items():
+                if key in self:
+                    if isinstance(self[key].value, dict) and isinstance(value, dict):
+                        # Copy previous value and update it but then assign it to
+                        # force the callback in the property.
+                        new_value = self[key].value.copy()
+                        new_value.update(value)
+                        self[key].value = new_value
+                    else:
+                        self[key].value = value
+
+                    self.notify(self.flatten().copy(), self[key].copy())
 
 
 class ModelSet(dict):

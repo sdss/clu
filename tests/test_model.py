@@ -6,6 +6,9 @@
 # @Filename: test_model.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
+import asyncio
+import sys
+
 import pytest
 
 from clu.model import Model
@@ -91,7 +94,8 @@ def test_schema_array():
     assert model.validator.validate({"myarray": (1, 2, 3)}) is None
 
 
-def test_model_update_dict():
+@pytest.mark.asyncio
+async def test_model_update_dict():
 
     schema = """
     {
@@ -102,11 +106,32 @@ def test_model_update_dict():
 
     model = Model("test_model", schema)
 
-    model.update_model({"prop": {"subprop1": 1, "subprop2": 2}})
+    await model.update_model({"prop": {"subprop1": 1, "subprop2": 2}})
     assert model["prop"].value == {"subprop1": 1, "subprop2": 2}
 
     assert model["prop"].last_seen is not None
     assert model.last_seen is not None
 
-    model.update_model({"prop": {"subprop2": 5}})
+    await model.update_model({"prop": {"subprop2": 5}})
     assert model["prop"].value == {"subprop1": 1, "subprop2": 5}
+
+
+@pytest.mark.skipif(sys.version_info < (3, 8), reason="Fails on PY37")
+@pytest.mark.asyncio
+async def test_update_model_simulataneous(mocker):
+
+    schema = {"type": "object", "properties": {"text": {"type": "string"}}}
+
+    model = Model("test_model", schema)
+
+    # This callback will only receive the first argument, the model.
+    cb = mocker.MagicMock()
+    model.register_callback(cb)
+
+    await model.update_model({"text": "hi"})
+    await model.update_model({"text": "bye"})
+
+    await asyncio.sleep(0.01)
+
+    assert cb.call_args_list[0].args[0]["text"] == "hi"
+    assert cb.call_args_list[1].args[0]["text"] == "bye"

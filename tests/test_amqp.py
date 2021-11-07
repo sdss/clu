@@ -114,6 +114,9 @@ async def test_model_callback(amqp_client, amqp_actor, mocker):
     cmd = await amqp_client.send_command("amqp_actor", "ping")
     await cmd
 
+    # The callback is on a task so it may take a bit to be called.
+    await asyncio.sleep(0.01)
+
     callback_mock.assert_called()
     assert len(callback_mock.call_args) == 2
 
@@ -182,7 +185,7 @@ async def test_write_update_model_fails(amqp_actor, mocker):
 
     mocker.patch.object(
         amqp_actor.model,
-        "update_model",
+        "validate",
         return_value=(False, "failed updating model."),
     )
     mocker.patch.object(

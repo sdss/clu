@@ -120,7 +120,7 @@ async def test_write_update_model_fails(json_actor, json_client, mocker):
 
     mocker.patch.object(
         json_actor.model,
-        "update_model",
+        "validate",
         return_value=(False, "failed updating model."),
     )
 

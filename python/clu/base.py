@@ -490,7 +490,7 @@ class BaseActor(BaseClient):
         do_validate = validate if validate is not None else self.validate
         if do_validate and self.model is not None:
             reply.use_validation = True
-            result, err = self.model.update_model(message)
+            result, err = self.model.validate(message, update_model=True)
             if result is False:
                 if isinstance(err, jsonschema.exceptions.ValidationError):
                     message = {
