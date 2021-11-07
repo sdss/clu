@@ -287,7 +287,7 @@ class AMQPClient(BaseClient):
         # actor (an actor sent a command to itself).
         commander_id = reply.headers["commander_id"]
         if reply.sender and self.name == reply.sender:
-            if commander_id and commander_id != self.name:
+            if commander_id and self.name in commander_id:
                 return reply
 
         # Update the models
