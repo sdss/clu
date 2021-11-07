@@ -27,9 +27,6 @@ from pygments.styles import STYLE_MAP, get_style_by_name
 import clu
 
 
-loop = asyncio.get_event_loop()
-
-
 style_name = "solarized-dark" if "solarized-dark" in STYLE_MAP else "default"
 style = style_from_pygments_cls(get_style_by_name(style_name))  # type: ignore
 
@@ -233,7 +230,7 @@ async def shell_client_prompt(
 def clu_cli(url, user, password, host, port, no_indent, no_time, ignore_broadcasts):
     """Runs the AMQP command line interpreter."""
 
-    shell_task = loop.create_task(
+    shell_task = asyncio.get_event_loop().create_task(
         shell_client_prompt(
             url=url,
             user=user,
@@ -245,7 +242,7 @@ def clu_cli(url, user, password, host, port, no_indent, no_time, ignore_broadcas
             ignore_broadcasts=ignore_broadcasts,
         )
     )
-    loop.run_until_complete(shell_task)
+    asyncio.get_event_loop().run_until_complete(shell_task)
 
 
 def main():
