@@ -305,7 +305,7 @@ class TestCommandStatus:
         [
             (":", CommandStatus.DONE),
             ("f", CommandStatus.FAILED),
-            ("e", CommandStatus.FAILED),
+            ("e", CommandStatus.RUNNING),
             ("!", CommandStatus.FAILED),
             (">", CommandStatus.RUNNING),
         ],

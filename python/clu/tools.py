@@ -94,6 +94,7 @@ class CommandStatus(Maskbit):
 
     def __init__(self, *args):
 
+        self.code: str | None
         if self.name and self.name.upper() in COMMAND_STATUS_TO_CODE:
             self.code = COMMAND_STATUS_TO_CODE[self.name.upper()]
         else:
@@ -149,7 +150,6 @@ class CommandStatus(Maskbit):
         statuses = {
             ":": CommandStatus.DONE,
             "f": CommandStatus.FAILED,
-            "e": CommandStatus.FAILED,
             "!": CommandStatus.FAILED,
             ">": CommandStatus.RUNNING,
         }
