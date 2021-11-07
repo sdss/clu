@@ -164,7 +164,7 @@ One of the main advantages of having a self-updating model for an actor is that 
     >>> def model_callback(key): print(key)
     >>> client.models['guider'].register_callback(model_callback)
 
-``model_callback`` can be either a function or a coroutine and is called when the model is updated. The function receives the `.Model` instance as the first argument and the modified `.Property` as the second (`.TronModel` and `.TronKey` in the case of a Tron model).
+``model_callback`` can be either a function or a coroutine and is called when the model is updated. The function receives a flatten dictionary of the `.Model` instance as the first argument and the modified `.Property` as the second (`.TronModel` and `.TronKey` in the case of a Tron model). Note that in both cases the arguments received by the callback are frozen and won't change as the model or keyword change due to other updates.
 
 More likely, we'll want to add callbacks to specific keywords, which is done as ::
 
