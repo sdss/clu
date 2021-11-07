@@ -12,7 +12,7 @@ import asyncio
 import json
 import pathlib
 import warnings
-from copy import copy, deepcopy
+from copy import copy
 from os import PathLike
 from time import time
 
