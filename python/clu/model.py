@@ -117,7 +117,7 @@ class Property(CallbackMixIn):
 
         self._value = new_value
         self.last_seen = time()
-        self.notify(self)
+        self.notify(self.copy())
 
     def copy(self):
         """Returns a copy of self."""
