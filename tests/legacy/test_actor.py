@@ -175,7 +175,7 @@ async def test_write_update_model_fails(actor, actor_client, mocker):
 
     mocker.patch.object(
         actor.model,
-        "update_model",
+        "validate",
         return_value=(False, "failed updating model."),
     )
 
