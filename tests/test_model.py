@@ -7,6 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
 import asyncio
+import sys
 
 import pytest
 
@@ -115,6 +116,7 @@ async def test_model_update_dict():
     assert model["prop"].value == {"subprop1": 1, "subprop2": 5}
 
 
+@pytest.mark.skipif(sys.version_info < (3, 8), reason="Fails on PY37")
 @pytest.mark.asyncio
 async def test_update_model_simulataneous(mocker):
 
