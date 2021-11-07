@@ -2,6 +2,10 @@
 
 ## Next version
 
+### 🚀 New
+
+* Support Python 3.10.
+
 ### ✨ Improved
 
 * [#101](https://github.com/sdss/clu/issues/101) The legacy actor now accepts command strings with a commander id (e.g., `APO.Jose 10 status`). The commander id is stored in the `Command` object. Added a `Command.send_command()` that will call the remote command propagating the commander ID. For example, if a command has commander `APO.Jose` and sends a command to `guider`, the `guider` actor will receive a command with commander `APO.Jose.guider`.
