@@ -93,25 +93,26 @@ class ShellClient(clu.AMQPClient):
             )
         )
 
+        print_chunks = []
+
         if self.show_time:
             time = datetime.datetime.utcnow().isoformat().split("T")[1]
             time = time[0:12]  # Milliseconds
-            print(
-                prompt_toolkit.formatted_text.HTML(f'<style fg="Gray">{time}</style> '),
-                end="",
+            print_chunks.append(
+                prompt_toolkit.formatted_text.HTML(f'<style fg="Gray">{time}</style>'),
             )
 
         if sender:
-            print(f"{sender} ", end="")
+            print_chunks.append(f"{sender}")
 
         if message_code:
-            print(message_code_formatted, end="")
-            print(" ", end="")
+            print_chunks.append(message_code_formatted)
 
         if body:
-            print(PygmentsTokens(body_tokens), end="", style=style)
+            print_chunks.append(PygmentsTokens(body_tokens))
+            print(*print_chunks, style=style, end="")
         else:
-            print()  # Newline
+            print(*print_chunks)  # Newline
 
 
 async def shell_client_prompt(
