@@ -12,6 +12,7 @@ import asyncio
 import logging
 import time
 import warnings
+from threading import Lock
 
 from typing import Any, Callable, List, Optional
 
@@ -94,6 +95,8 @@ class TronModel(BaseModel[TronKey]):
             key = self.keydict.keys[key]
             self[key.name] = TronKey(key.name, key, model=self)
 
+        self._lock = Lock()
+
     def reload(self):
         """Reloads the model. Clears callbacks."""
 
@@ -105,31 +108,32 @@ class TronModel(BaseModel[TronKey]):
     def parse_reply(self, reply):
         """Parses a reply and updates the datamodel."""
 
-        for reply_key in reply.keywords:
+        with self._lock:
+            for reply_key in reply.keywords:
 
-            self.last_seen = time.time()
+                self.last_seen = time.time()
 
-            key_name = reply_key.name.lower()
-            if key_name not in self.keydict:
-                warnings.warn(
-                    f"Cannot parse unknown keyword {self.name}.{reply_key.name}.",
-                    CluWarning,
-                )
-                continue
+                key_name = reply_key.name.lower()
+                if key_name not in self.keydict:
+                    warnings.warn(
+                        f"Cannot parse unknown keyword {self.name}.{reply_key.name}.",
+                        CluWarning,
+                    )
+                    continue
 
-            # When parsed the values in reply_key are string. After consuming
-            # it with the Key, the values become typed values.
-            result = self.keydict.keys[key_name].consume(reply_key)
+                # When parsed the values in reply_key are string. After consuming
+                # it with the Key, the values become typed values.
+                result = self.keydict.keys[key_name].consume(reply_key)
 
-            if not result:
-                warnings.warn(
-                    f"Failed parsing keyword {self.name}.{reply_key.name}.",
-                    CluWarning,
-                )
+                if not result:
+                    warnings.warn(
+                        f"Failed parsing keyword {self.name}.{reply_key.name}.",
+                        CluWarning,
+                    )
 
-            self[key_name].update_keyword(reply_key)
+                self[key_name].update_keyword(reply_key)
 
-            self.notify(self, self[key_name].copy())
+                self.notify(self.flatten(), self[key_name].copy())
 
 
 class TronLoggingFilter(logging.Filter):
