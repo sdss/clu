@@ -106,13 +106,13 @@ async def test_model_update_dict():
 
     model = Model("test_model", schema)
 
-    await model.update_model({"prop": {"subprop1": 1, "subprop2": 2}})
+    model.update_model({"prop": {"subprop1": 1, "subprop2": 2}})
     assert model["prop"].value == {"subprop1": 1, "subprop2": 2}
 
     assert model["prop"].last_seen is not None
     assert model.last_seen is not None
 
-    await model.update_model({"prop": {"subprop2": 5}})
+    model.update_model({"prop": {"subprop2": 5}})
     assert model["prop"].value == {"subprop1": 1, "subprop2": 5}
 
 
@@ -128,8 +128,8 @@ async def test_update_model_simulataneous(mocker):
     cb = mocker.MagicMock()
     model.register_callback(cb)
 
-    await model.update_model({"text": "hi"})
-    await model.update_model({"text": "bye"})
+    model.update_model({"text": "hi"})
+    model.update_model({"text": "bye"})
 
     await asyncio.sleep(0.01)
 
