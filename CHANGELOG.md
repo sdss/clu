@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### 🔧 Fixed
+
+* Do not use a task to update the model. This caused failures when messges where being sent from a function called with an executor.
+
+
 ## 1.5.2 - November 7, 2021
 
 ### 🔧 Fixed

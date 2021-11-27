@@ -287,28 +287,27 @@ class Model(BaseModel[Property]):
             return False, err
 
         if update_model:
-            asyncio.create_task(self.update_model(instance))
+            self.update_model(instance)
 
         return True, None
 
-    async def update_model(self, instance: Dict[str, Any]):
+    def update_model(self, instance: Dict[str, Any]):
         """Validates a new instance and updates the model."""
 
         self.last_seen = time()
 
-        async with self._lock:
-            for key, value in instance.items():
-                if key in self:
-                    if isinstance(self[key].value, dict) and isinstance(value, dict):
-                        # Copy previous value and update it but then assign it to
-                        # force the callback in the property.
-                        new_value = self[key].value.copy()
-                        new_value.update(value)
-                        self[key].value = new_value
-                    else:
-                        self[key].value = value
+        for key, value in instance.items():
+            if key in self:
+                if isinstance(self[key].value, dict) and isinstance(value, dict):
+                    # Copy previous value and update it but then assign it to
+                    # force the callback in the property.
+                    new_value = self[key].value.copy()
+                    new_value.update(value)
+                    self[key].value = new_value
+                else:
+                    self[key].value = value
 
-                    self.notify(self.flatten().copy(), self[key].copy())
+                self.notify(self.flatten().copy(), self[key].copy())
 
 
 class ModelSet(dict):
