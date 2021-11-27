@@ -1,6 +1,6 @@
 # Changelog
 
-## Next version
+## 1.5.3 - November 26, 2021
 
 ### 🔧 Fixed
 
