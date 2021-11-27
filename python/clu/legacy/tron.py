@@ -130,6 +130,7 @@ class TronModel(BaseModel[TronKey]):
                         f"Failed parsing keyword {self.name}.{reply_key.name}.",
                         CluWarning,
                     )
+                    return
 
                 self[key_name].update_keyword(reply_key)
 

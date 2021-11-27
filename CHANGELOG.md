@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### 🔧 Fixed
+
+* Do not try to update model when a keyword from Tron cannot be parsed.
+
+
 ## 1.5.3 - November 26, 2021
 
 ### 🔧 Fixed
