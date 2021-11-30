@@ -127,6 +127,7 @@ class BaseLegacyActor(BaseActor):
         if tron_host and tron_port:
             #: TronConnection: The client connection to Tron.
             self.tron = TronConnection(
+                f"{self.name}.{self.name}",
                 host=tron_host,
                 port=tron_port,
                 models=models,

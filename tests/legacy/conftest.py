@@ -75,7 +75,12 @@ async def tron_client(tron_server, request):
 
     models = ["alerts"]
 
-    _tron = TronConnection(host="localhost", port=tron_server.port, models=models)
+    _tron = TronConnection(
+        "tester.tron",
+        host="localhost",
+        port=tron_server.port,
+        models=models,
+    )
 
     await _tron.start()
     await asyncio.sleep(0.01)

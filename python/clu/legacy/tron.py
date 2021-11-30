@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import re
 import time
 import warnings
 from threading import Lock
@@ -160,8 +161,9 @@ class TronConnection(BaseClient):
 
     Parameters
     ----------
-    name
-        The name of the client.
+    commander
+        The name of the commander that will send commands to Tron. Must be
+        in the form ``program.user``, for example ``foo.bar``.
     host
         The host on which Tron is running.
     port
@@ -174,6 +176,7 @@ class TronConnection(BaseClient):
 
     def __init__(
         self,
+        commander: str,
         host: str,
         port: int = 6093,
         name: str = "tron",
@@ -182,6 +185,10 @@ class TronConnection(BaseClient):
     ):
 
         super().__init__(name, **kwargs)
+
+        self.commander = commander
+        if not re.match(r"[A-Za-z_]+\.[A-Za-z_]+", self.commander):
+            raise ValueError("Invalid commander format.")
 
         self.host = host
         self.port = port
@@ -260,7 +267,7 @@ class TronConnection(BaseClient):
         target,
         command_string,
         *args,
-        commander="clu.client",
+        commander=None,
         mid=None,
         callback: Optional[Callable[[Reply], None]] = None,
     ):
@@ -279,7 +286,8 @@ class TronConnection(BaseClient):
             "commander message_id target command" where commander needs to
             start with a letter and have a program and a user joined by a dot.
             Otherwise the command will be accepted but the reply will fail
-            to parse.
+            to parse. If ``commander=None``, the instance ``commander`` value
+            will be used.
         mid
             The message id. If `None`, a sequentially increasing value will
             be used. You should not specify a ``mid`` unless you really know
@@ -306,6 +314,8 @@ class TronConnection(BaseClient):
 
         if len(args) > 0:
             command_string += " " + " ".join(map(str, args))
+
+        commander = commander or self.commander
 
         command_string = f"{commander} {mid} {target} {command_string}\n"
 

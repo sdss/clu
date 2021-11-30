@@ -129,7 +129,7 @@ async def test_parse_reply_unknown_actor(tron_client, tron_server, caplog):
 
 async def test_tron_no_models():
 
-    tron = TronConnection(host="localhost", port=6093)
+    tron = TronConnection("test.test", host="localhost", port=6093)
 
     assert tron.models == {}
     assert tron.keyword_dicts == {}
