@@ -2,6 +2,10 @@
 
 ## 1.5.4 - November 26, 2021
 
+### ✨ Improved
+
+* [#104](https://github.com/sdss/clu/issues/104) The existing `@cancellable` decorator did not work in subcommands. The decorator has been removed and now it's possible to pass `cancellable=True` to the command decorator (e.g., `@command.parser.command(cancellable=True)`). This takes care of adding a `--stop` option to the command. The underlying behaviour of command cancellation has not changed.
+
 ### 🔧 Fixed
 
 * Do not try to update model when a keyword from Tron cannot be parsed.
