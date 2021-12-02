@@ -35,7 +35,6 @@ __all__ = [
     "ClickParser",
     "timeout",
     "unique",
-    "cancellable",
     "get_running_tasks",
 ]
 
@@ -64,9 +63,22 @@ class CluCommand(click.Command):
             context_settings = context_settings or {}
             context_settings["ignore_unknown_options"] = True
 
+        self.cancellable = kwargs.pop("cancellable", False)
+
+        if self.cancellable is True:
+            kwargs["params"].append(
+                click.Option(
+                    ["--stop"],
+                    is_flag=True,
+                    help="Stops the execution of the command.",
+                )
+            )
+
+        self.full_path = None
+
         super().__init__(
             *args,
-            context_settings=context_settings,  # type: ignore
+            context_settings=context_settings,
             **kwargs,
         )
 
@@ -118,6 +130,11 @@ class CluCommand(click.Command):
 
                 loop = asyncio.get_event_loop()
 
+                self.full_path = ctx.command_path.replace(" ", "_")
+
+                if self.cancellable and self._cancel_command(ctx):
+                    return
+
                 # Makes sure the callback is a coroutine
                 if not asyncio.iscoroutinefunction(self.callback):
                     self.callback = coroutine(self.callback)
@@ -139,7 +156,7 @@ class CluCommand(click.Command):
                     self._schedule_callback(ctx, timeout=timeout)
                 )
 
-                ctx.task._command_name = self.name  # type: ignore # Needed in PY<38
+                ctx.task._command_name = self.full_path  # type: ignore For PY<38
                 ctx.task._date = time.time()  # type: ignore
 
                 ctx.task.add_done_callback(done_callback)
@@ -150,6 +167,36 @@ class CluCommand(click.Command):
                 ctx.task.log = log  # type: ignore
 
             return ctx
+
+    def _cancel_command(self, ctx):
+        """Stops a cancellable command."""
+
+        parser_args = ctx.obj.get("parser_args", [])
+        if len(parser_args) == 0:  # The Command should always be there.
+            return
+
+        command = parser_args[0]
+        stopping = "stop" in ctx.params and ctx.params.pop("stop") is True
+
+        running_tasks = get_running_tasks(self.full_path)
+
+        if not stopping:
+            if running_tasks is not None:
+                command.fail(f"Another command {self.full_path} is already running.")
+                return True
+            else:
+                print("here")
+                return False
+
+        if running_tasks is None:
+            command.fail(error=f"Cannot find running command {self.full_path}.")
+            return False
+        else:
+            # Cancel the oldest running one (although there should only be one)
+            running_tasks[0].cancel()
+
+            command.finish(text="Command has been scheduled for cancellation.")
+            return True
 
 
 class CluGroup(click.Group):
@@ -253,54 +300,15 @@ def unique():
         async def new_func(command, *args, **kwargs):
 
             ctx = click.get_current_context()
-            name = ctx.invoked_subcommand
+
+            subcmd = ctx.invoked_subcommand or ""
+            name = (ctx.command_path + " " + subcmd).replace(" ", "_")
 
             tasks = get_running_tasks(name)
 
             # Fails if there are two tasks with the same name, the current one and
             # an already running one.
             if tasks is not None and len(tasks) > 1:
-                return command.fail(
-                    error=f"Another command with name {name} is already running."
-                )
-
-            return await f(command, *args, **kwargs)
-
-        return functools.update_wrapper(new_func, f)
-
-    return decorator
-
-
-def cancellable():
-    """Allows to cancel a currently running command.
-
-    This decorator adds a ``--stop`` flag to the command which, if issued, will
-    stop the currently running command. Implies that the command can only have one
-    instance running
-
-    """
-
-    def decorator(f):
-        @functools.wraps(f)
-        @click.option("--stop", is_flag=True, help="Cancels the command.")
-        async def new_func(command, *args, stop=False, **kwargs):
-
-            ctx = click.get_current_context()
-            name = ctx.invoked_subcommand
-
-            running_tasks = get_running_tasks(name)
-
-            if stop is True:
-                if running_tasks is None or len(running_tasks) == 1:
-                    return command.fail(error=f"Cannot find a running command {name}.")
-                else:
-                    # Cancel the oldest running one (i.e., not us)
-                    running_tasks[0].cancel()
-                    await running_tasks[0]
-
-                    return command.finish(text="Command has been stopped.")
-
-            if running_tasks is not None and len(running_tasks) > 1:
                 return command.fail(
                     error=f"Another command with name {name} is already running."
                 )

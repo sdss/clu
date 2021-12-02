@@ -15,13 +15,7 @@ import pytest
 
 import clu.parsers.click
 from clu import Command
-from clu.parsers.click import (
-    ClickParser,
-    cancellable,
-    command_parser,
-    pass_args,
-    unique,
-)
+from clu.parsers.click import ClickParser, command_parser, pass_args, unique
 from clu.testing import setup_test_actor
 
 
@@ -71,8 +65,7 @@ async def unique_command(command, object):
     return command.finish()
 
 
-@command_parser.command()
-@cancellable()
+@command_parser.command(cancellable=True)
 async def cancellable_command(command, object):
     await asyncio.sleep(0.5)
     return command.finish()
@@ -257,7 +250,8 @@ async def test_unique(json_actor, click_parser):
 
     assert cmd2.status.did_fail
     assert (
-        "Another command with name unique-command" in cmd2.replies[-1].message["error"]
+        "Another command with name my-parser-command-parser_unique-command"
+        in cmd2.replies[-1].message["error"]
     )
 
 
@@ -274,8 +268,8 @@ async def test_cancellable(json_actor, click_parser):
 
     assert cmd.status.did_fail
     assert cmd2.status.did_succeed
-    assert "This command has been cancelled." in cmd.replies[-1].message["error"]
-    assert "Command has been stopped." in cmd2.replies[-1].message["text"]
+    assert "has been cancelled." in cmd.replies[-1].message["error"]
+    assert "has been scheduled for cancellation" in cmd2.replies[-1].message["text"]
 
 
 async def test_cancellable_cannot_find(json_actor, click_parser, mocker):
@@ -287,7 +281,7 @@ async def test_cancellable_cannot_find(json_actor, click_parser, mocker):
     await cmd
 
     assert cmd.status.did_fail
-    assert "Cannot find a running command" in cmd.replies[-1].message["error"]
+    assert "Cannot find running command" in cmd.replies[-1].message["error"]
 
 
 async def test_cancellable_duplicate(json_actor, click_parser):
@@ -302,7 +296,7 @@ async def test_cancellable_duplicate(json_actor, click_parser):
 
     assert cmd2.status.did_fail
     assert (
-        "Another command with name cancellable-command"
+        "Another command my-parser-command-parser_cancellable-command"
         in cmd2.replies[-1].message["error"]
     )
 

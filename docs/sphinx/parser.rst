@@ -99,13 +99,13 @@ Invoking other commands
 Sometimes one needs to call a command from another command. This can be accomplished by creating a child command. Say that, while exposing, we want to output the status of the camera ::
 
     @command_parser.command()
-        @click.argument('EXPTIME', type=float)
-        @click.option('--imagetype', type=click.Choice(['science', 'bias'],
-                    default='science', help='The type of image')
-        async def expose(command, exptime, imagetype):
-            ...
-            await clu.Command('status', parent=command).parse()
-            ...
+    @click.argument('EXPTIME', type=float)
+    @click.option('--imagetype', type=click.Choice(['science', 'bias'],
+                default='science', help='The type of image')
+    async def expose(command, exptime, imagetype):
+        ...
+        await clu.Command('status', parent=command).parse()
+        ...
 
 Here we are creating a new `.Command` with ``command`` as parent. `.Command.parse` automatically parses the command and executes the ``status`` callback.
 
@@ -138,6 +138,19 @@ Normally one does not need to create its own parent command parser, but there ma
         parser = my_command_parser
 
 Now you can add commands and groups to ``my_command_parser`` as above.
+
+Cancellable commands
+^^^^^^^^^^^^^^^^^^^^
+
+It's possible to pass a ``cancellable=True`` parameter to the ``CluCommand.command()`` decorator (note that this is not a standard Click parameters) as in ::
+
+    @command_parser.command(cancellable=True)
+    async def cancellable_command(command):
+        ...
+
+If ``cancellable=True``, a new option ``--stop`` will be added to the command. When the command is called the first time it will run normally. If during the execution of the command we call ``cancellable-command --stop``, the first instance will be cancelled where it stands.
+
+If while an instance of ``cancellable-command`` is running we invoke another (without ``--stop``), the second command will fail to start, i.e., ``cancellable=True`` implies command uniqueness.
 
 
 .. _json-parser:
