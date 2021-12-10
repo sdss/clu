@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import re
 import sys
 import time
@@ -560,3 +561,33 @@ class TimedCommand(object):
 
         self.last_run = time.time()
         self.is_running = False
+
+
+class FakeCommand(BaseCommand):
+    """A fake command that output to a logger."""
+
+    def __init__(self, log: logging.Logger, actor=None):
+
+        self.log = log
+
+        super().__init__(actor=actor)
+
+    def write(
+        self,
+        message_code: str = "i",
+        message: Optional[Union[Dict[str, Any], str]] = None,
+        *kwargs,
+    ):
+
+        if message_code == "d":
+            level = logging.DEBUG
+        elif message_code == "i":
+            level = logging.INFO
+        elif message_code == "w":
+            level = logging.WARNING
+        elif message_code in ["f", "e"]:
+            level = logging.ERROR
+        else:
+            return
+
+        self.log.log(level, message)
