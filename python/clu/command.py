@@ -40,6 +40,7 @@ __all__ = [
     "parse_legacy_command",
     "TimedCommand",
     "TimedCommandList",
+    "FakeCommand",
 ]
 
 
@@ -576,7 +577,7 @@ class FakeCommand(BaseCommand):
         self,
         message_code: str = "i",
         message: Optional[Union[Dict[str, Any], str]] = None,
-        *kwargs,
+        **kwargs,
     ):
 
         if message_code == "d":
@@ -590,4 +591,18 @@ class FakeCommand(BaseCommand):
         else:
             return
 
-        self.log.log(level, message)
+        if message is None:
+            message = {}
+        elif isinstance(message, dict):
+            pass
+        elif isinstance(message, str):
+            keyword = "error" if message_code in ["f", "e"] else self.default_keyword
+            message = {keyword: message}
+        elif isinstance(message, Exception):
+            message = {"error": message}
+        else:
+            raise ValueError(f"invalid message {message!r}")
+
+        message.update(kwargs)
+
+        self.log.log(level, str(message))
