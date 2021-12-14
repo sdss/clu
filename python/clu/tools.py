@@ -349,10 +349,10 @@ def format_value(value: Any) -> str:
     if isinstance(value, str):
         if " " in value and not (value.startswith("'") or value.startswith('"')):
             value = escape(value)
-        for char in ",/:_-":
-            if char in value:
-                value = escape(value)
-                break
+        # for char in ",/:_-":
+        #     if char in value:
+        #         value = escape(value)
+        #         break
     elif isinstance(value, bool):
         value = "T" if value else "F"
     elif isinstance(value, (tuple, list)):
