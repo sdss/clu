@@ -2,6 +2,10 @@
 
 ## Next version
 
+### 🚀 New
+
+* Added a `FakeCommand` that writes to the log and that can be used when a command may not be present.
+
 ### ✨ Improved
 
 * [#104](https://github.com/sdss/clu/issues/104) The existing `@cancellable` decorator did not work in subcommands. The decorator has been removed and now it's possible to pass `cancellable=True` to the command decorator (e.g., `@command.parser.command(cancellable=True)`). This takes care of adding a `--stop` option to the command. The underlying behaviour of command cancellation has not changed.
