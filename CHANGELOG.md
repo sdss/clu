@@ -4,7 +4,7 @@
 
 ### 🚀 New
 
-* `Command` now accepts a `time_limit` argument that will mark it as `TIMED_OUT` and done after an interval. `time_limit` can also be passed to `send_command()`.
+* [#106](https://github.com/sdss/clu/issues/106) `Command` now accepts a `time_limit` argument that will mark it as `TIMED_OUT` and done after an interval. `time_limit` can also be passed to `send_command()`.
 
 
 ## 1.5.5 - December 14, 2021
