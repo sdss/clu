@@ -273,6 +273,7 @@ class TronConnection(BaseClient):
         commander=None,
         mid=None,
         callback: Optional[Callable[[Reply], None]] = None,
+        time_limit: Optional[float] = None,
     ):
         """Sends a command through the hub.
 
@@ -297,6 +298,8 @@ class TronConnection(BaseClient):
             what you're doing.
         callback
             A callback to invoke with each reply received from the actor.
+        time_limit
+            A delay after which the command is marked as timed out and done.
 
         Examples
         --------
@@ -322,7 +325,11 @@ class TronConnection(BaseClient):
 
         command_string = f"{commander} {mid} {target} {command_string}\n"
 
-        command = Command(command_string=command_string, reply_callback=callback)
+        command = Command(
+            command_string=command_string,
+            reply_callback=callback,
+            time_limit=time_limit,
+        )
         self.running_commands[mid] = command
 
         self.transport.write(command_string.encode())

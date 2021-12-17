@@ -17,6 +17,7 @@ from clu import REPLY, AMQPActor, CluError, CommandError
 from clu.client import AMQPReply
 from clu.command import Command
 from clu.model import Model
+from clu.tools import CommandStatus
 
 
 pytestmark = [pytest.mark.asyncio]
@@ -320,3 +321,15 @@ async def test_send_command_from_command(amqp_actor, mocker):
     await command.send_command("otheractor", "command1 --option")
 
     send_command_mock.assert_called()
+
+
+async def test_send_command_time_limit(amqp_actor):
+    @amqp_actor.parser.command()
+    async def slow_command(command):
+        await asyncio.sleep(1)
+
+    cmd = await amqp_actor.send_command("amqp_actor", "slow-command", time_limit=0.1)
+
+    await asyncio.sleep(0.2)
+
+    assert cmd.status == CommandStatus.TIMEDOUT

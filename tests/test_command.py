@@ -204,3 +204,12 @@ async def test_status_callback(command):
     await asyncio.sleep(0.01)
 
     assert result
+
+
+@pytest.mark.asyncio
+async def test_time_limit(event_loop):
+
+    command = Command(command_string="new-command", time_limit=0.5)
+    await asyncio.sleep(0.6)
+
+    assert command.status == CommandStatus.TIMEDOUT

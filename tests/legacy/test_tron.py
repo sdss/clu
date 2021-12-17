@@ -15,6 +15,7 @@ import pytest
 from clu.legacy import TronConnection, TronKey
 from clu.legacy.types.messages import Reply
 from clu.legacy.types.parser import ParseError
+from clu.tools import CommandStatus
 
 
 pytestmark = [pytest.mark.asyncio]

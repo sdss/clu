@@ -347,6 +347,7 @@ class BaseLegacyActor(BaseActor):
         command_id: Optional[int] = None,
         command: Optional[Command] = None,
         callback: Optional[Callable[[OpsReply], None]] = None,
+        time_limit: Optional[float] = None,
     ):
         """Sends a command through the hub.
 
@@ -367,6 +368,8 @@ class BaseLegacyActor(BaseActor):
             know what you're doing.
         callback
             A callback to invoke with each reply received from the actor.
+        time_limit
+            A delay after which the command is marked as timed out and done.
 
         Examples
         --------
@@ -390,6 +393,7 @@ class BaseLegacyActor(BaseActor):
                 commander=commander,
                 mid=command_id,
                 callback=callback,
+                time_limit=time_limit,
             )
             return command
 
