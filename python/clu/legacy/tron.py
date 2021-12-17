@@ -67,6 +67,9 @@ class TronKey(Property):
     def __getitem__(self, sl):
         return self.value.__getitem__(sl)
 
+    def __len__(self):
+        return len(self.value)
+
 
 class TronModel(BaseModel[TronKey]):
     """A JSON-compliant model for actor keywords.
