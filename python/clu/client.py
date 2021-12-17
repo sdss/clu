@@ -320,6 +320,7 @@ class AMQPClient(BaseClient):
         command_id: str | None = None,
         callback: Optional[Callable[[AMQPReply], None]] = None,
         command: Optional[Command] = None,
+        time_limit: Optional[float] = None,
     ):
         """Commands another actor over its RCP queue.
 
@@ -339,6 +340,8 @@ class AMQPClient(BaseClient):
         command
             The `.Command` that initiated the new command. Only relevant for
             actors.
+        time_limit
+            A delay after which the command is marked as timed out and done.
 
         Examples
         --------
@@ -370,6 +373,7 @@ class AMQPClient(BaseClient):
             actor=None,
             loop=self.loop,
             reply_callback=callback,
+            time_limit=time_limit,
         )
 
         self.running_commands[command_id] = command

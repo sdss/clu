@@ -266,6 +266,7 @@ async def test_send_command_from_command(actor, mocker):
         commander="APO.Jose.otheractor",
         mid=None,
         callback=None,
+        time_limit=None,
     )
 
 
