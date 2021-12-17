@@ -213,3 +213,4 @@ async def test_time_limit(event_loop):
     await asyncio.sleep(0.6)
 
     assert command.status == CommandStatus.TIMEDOUT
+    assert command.done()
