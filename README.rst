@@ -1,7 +1,7 @@
 `CLU <https://tron.fandom.com/wiki/Clu>`__
 ==========================================
 
-|py| |pypi| |black| |Build Status| |docs| |Coverage Status|
+|py| |pypi| |black| |Build Status| |docs| |Coverage Status| |zenodo|
 
 
 `CLU <https://tron.fandom.com/wiki/Clu>`_ implements a new protocol for SDSS actor while providing support for legacy-style actor.
@@ -110,3 +110,6 @@ Say whatever you want about it, the `current SDSS message passing protocol <http
 
 .. |black| image:: https://img.shields.io/badge/code%20style-black-000000.svg
     :target: https://github.com/psf/black
+
+.. |zenodo| image:: https://zenodo.org/badge/183817446.svg
+   :target: https://zenodo.org/badge/latestdoi/183817446
