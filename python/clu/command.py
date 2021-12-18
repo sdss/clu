@@ -16,7 +16,6 @@ import time
 from contextlib import suppress
 
 from typing import (
-    TYPE_CHECKING,
     Any,
     Awaitable,
     Callable,
