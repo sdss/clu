@@ -99,6 +99,8 @@ class BaseCommand(
         A silent command will call the actor ``write`` method with ``silent=True``,
         which will update the internal model and record all the output replies but
         will not write them to the users.
+    time_limit
+        Time out the command if it has been running for this long.
     loop
         The event loop.
 
