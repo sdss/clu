@@ -117,6 +117,7 @@ class BaseCommand(
         call_now: bool = False,
         default_keyword: str = "text",
         silent: bool = False,
+        time_limit: float | None = None,
         loop: Optional[asyncio.AbstractEventLoop] = None,
     ):
 
@@ -151,6 +152,14 @@ class BaseCommand(
             call_now=call_now,
         )
 
+        self._timer_handler = None
+        if time_limit:
+            self._timer_handler = asyncio.get_running_loop().call_later(
+                time_limit,
+                self.set_status,
+                CommandStatus.TIMEDOUT,
+            )
+
     @property
     def status(self) -> CommandStatus:
         """Returns the status."""
@@ -184,6 +193,11 @@ class BaseCommand(
         """Same as `.status` but allows to specify a message to the users."""
 
         assert self.status
+
+        # Don't do anything if the command is done. This means the command
+        # finished before the timeout happened.
+        if status == CommandStatus.TIMEDOUT and self.done():
+            return self
 
         if self.status.is_done:
             raise RuntimeError("cannot modify a done command.")
@@ -223,6 +237,8 @@ class BaseCommand(
             # If the command is done, set the result of the future.
             if self._status.is_done and not self.done():
                 self.set_result(self)
+                if self._timer_handler:
+                    self._timer_handler.cancel()
 
             # Set the status watcher
             if self.watcher is not None:
