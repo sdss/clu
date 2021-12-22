@@ -185,7 +185,6 @@ class CluCommand(click.Command):
                 command.fail(f"Another command {self.full_path} is already running.")
                 return True
             else:
-                print("here")
                 return False
 
         if running_tasks is None:
