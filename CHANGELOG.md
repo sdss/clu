@@ -1,10 +1,14 @@
 # Changelog
 
-## Next version
+## 1.5.6 - January 6, 2022
 
 ### 🚀 New
 
 * [#106](https://github.com/sdss/clu/issues/106) `Command` now accepts a `time_limit` argument that will mark it as `TIMED_OUT` and done after an interval. `time_limit` can also be passed to `send_command()`.
+
+### ✨ Improved
+
+* `Command.actor` is always typed as an actor type.
 
 
 ## 1.5.5 - December 14, 2021
