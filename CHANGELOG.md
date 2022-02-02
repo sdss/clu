@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### ✨ Improved
+
+* `Command.replies` is now a list of `Reply` instances with a ``get`` method. Replies are unified for all kinds of clients.
+
+
 ## 1.5.6 - January 6, 2022
 
 ### 🚀 New

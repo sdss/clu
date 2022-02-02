@@ -51,7 +51,7 @@ async def test_client_send_command(amqp_client, amqp_actor):
 
     assert len(cmd.replies) == 2
     assert cmd.replies[-1].message_code == ":"
-    assert cmd.replies[-1].body["text"] == "Pong."
+    assert cmd.replies[-1].message["text"] == "Pong."
 
 
 async def test_client_send_command_args(amqp_client, amqp_actor):
@@ -61,7 +61,7 @@ async def test_client_send_command_args(amqp_client, amqp_actor):
 
     assert len(cmd.replies) == 2
     assert cmd.replies[-1].message_code == ":"
-    assert "help" in cmd.replies[-1].body
+    assert "help" in cmd.replies[-1].message
 
 
 async def test_get_version(amqp_client, amqp_actor):
@@ -71,7 +71,7 @@ async def test_get_version(amqp_client, amqp_actor):
 
     assert len(cmd.replies) == 2
     assert cmd.replies[-1].message_code == ":"
-    assert cmd.replies[-1].body["version"] == "?"
+    assert cmd.replies[-1].message["version"] == "?"
 
 
 async def test_bad_command(amqp_client, amqp_actor):
@@ -79,7 +79,7 @@ async def test_bad_command(amqp_client, amqp_actor):
     cmd = await amqp_client.send_command("amqp_actor", "bad_command")
     await cmd
 
-    assert "Command 'bad_command' failed." in cmd.replies[-1].body["error"]
+    assert "Command 'bad_command' failed." in cmd.replies[-1].message["error"]
 
 
 async def test_send_command_actor_not_connected(amqp_client, amqp_actor):
@@ -88,7 +88,7 @@ async def test_send_command_actor_not_connected(amqp_client, amqp_actor):
     await cmd
 
     assert cmd.status.did_fail
-    assert "Failed routing message" in cmd.replies[-1].body["error"]
+    assert "Failed routing message" in cmd.replies[-1].message["error"]
 
 
 async def test_queue_locked(amqp_actor):
@@ -300,7 +300,7 @@ async def test_write_exception(amqp_actor):
 
     assert len(command.replies) == 2
     assert command.replies[1].message_code == "e"
-    assert command.replies[1].message["error"] == {
+    assert command.replies.get("error") == {
         "exception_module": "builtins",
         "exception_type": "ValueError",
         "exception_message": "Error message",

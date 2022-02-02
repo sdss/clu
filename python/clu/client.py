@@ -20,7 +20,7 @@ import aio_pika as apika
 
 from sdsstools.logger import SDSSLogger
 
-from .base import BaseClient
+from .base import BaseClient, Reply
 from .command import Command
 from .model import ModelSet
 from .protocol import TopicListener
@@ -299,7 +299,14 @@ class AMQPClient(BaseClient):
         # Also, add the reply to the command list of replies.
         if reply.command_id and reply.command_id in self.running_commands:
             command = self.running_commands[reply.command_id]
-            command.replies.append(reply)
+            command.replies.append(
+                Reply(
+                    message=reply.body,
+                    message_code=reply.message_code,
+                    command=command,
+                    validated=True,
+                )
+            )
             if command._reply_callback is not None:
                 command._reply_callback(reply)
             status = CommandStatus.code_to_status(reply.message_code)

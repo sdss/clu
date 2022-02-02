@@ -47,7 +47,7 @@ __all__ = [
 
 Actor_co = TypeVar("Actor_co", bound="clu.base.BaseActor")
 Future_co = TypeVar("Future_co", bound="BaseCommand")
-
+Reply_co = TypeVar("Reply_co", bound="clu.base.Reply")
 
 if sys.version_info >= (3, 9, 0):
     Future = asyncio.Future
@@ -55,6 +55,16 @@ else:
 
     class Future(asyncio.Future, Generic[Future_co]):
         pass
+
+
+class ReplyList(list[Reply_co]):
+    """A list of replies to a command."""
+
+    def get(self, keyword: str):
+
+        for reply in self:
+            if keyword in reply.message:
+                return reply.message[keyword]
 
 
 class BaseCommand(
@@ -140,7 +150,7 @@ class BaseCommand(
 
         #: A list of replies this command has received. The type of
         #: reply object depends on the actor or client issuing the command.
-        self.replies: List[Any] = []
+        self.replies = ReplyList([])
 
         asyncio.Future.__init__(self)
 

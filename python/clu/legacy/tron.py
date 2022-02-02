@@ -17,7 +17,7 @@ from threading import Lock
 
 from typing import Any, Callable, List, Optional
 
-from clu.base import BaseClient
+import clu.base
 from clu.command import Command, CommandStatus
 from clu.exceptions import CluWarning
 from clu.model import BaseModel, Property
@@ -112,6 +112,8 @@ class TronModel(BaseModel[TronKey]):
     def parse_reply(self, reply):
         """Parses a reply and updates the datamodel."""
 
+        parsed: dict[str, Any] = {}
+
         with self._lock:
             for reply_key in reply.keywords:
 
@@ -134,11 +136,14 @@ class TronModel(BaseModel[TronKey]):
                         f"Failed parsing keyword {self.name}.{reply_key.name}.",
                         CluWarning,
                     )
-                    return
+                    return parsed
 
                 self[key_name].update_keyword(reply_key)
+                parsed[key_name] = self[key_name].value
 
                 self.notify(self.flatten(), self[key_name].copy())
+
+        return parsed
 
 
 class TronLoggingFilter(logging.Filter):
@@ -159,7 +164,7 @@ class TronClientProtocol(ReconnectingTCPClientProtocol):
         self._loop.call_soon(self._on_received, data)
 
 
-class TronConnection(BaseClient):
+class TronConnection(clu.base.BaseClient):
     """Allows to send commands to Tron and manages the feed of replies.
 
     Parameters
@@ -389,9 +394,10 @@ class TronConnection(BaseClient):
             if actor.startswith("keys_"):
                 actor = actor.split("_")[1]
 
+            parsed_data = {}
             if actor in self.models:
                 try:
-                    self.models[actor].parse_reply(reply)
+                    parsed_data = self.models[actor].parse_reply(reply)
                 except ParseError as ee:
                     self.log.warning(
                         f"Failed parsing reply {reply!r} with error: {ee!s}"
@@ -401,7 +407,14 @@ class TronConnection(BaseClient):
             status = CommandStatus.code_to_status(reply.header.code.lower())
 
             if mid in self.running_commands:
-                self.running_commands[mid].replies.append(reply)
+                self.running_commands[mid].replies.append(
+                    clu.base.Reply(
+                        message={k: v for k, v in parsed_data.items()},
+                        message_code=reply.header.code.lower(),
+                        command=self.running_commands[mid],
+                        validated=True,
+                    )
+                )
                 self.running_commands[mid].set_status(status)
                 if self.running_commands[mid]._reply_callback is not None:
                     self.running_commands[mid]._reply_callback(reply)

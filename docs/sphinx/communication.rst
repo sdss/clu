@@ -86,13 +86,11 @@ Another way is to access the command `~.BaseCommand.replies` attribute. ``replie
 
     # Use replies[-1] because we know the shutter keyword is output
     # just as the command finishes.
-    shutter_status = replies[-1].body["shutter"]
+    shutter_status = replies.get("shutter")
     if shutter_status not in ["open", "closed"]:
         return command.fail(error=f"Unknown shutter status {shutter_status!r}.")
 
     command.info(f"Shutter is now {shutter_status!r}.")
-
-For `.TronConnection`, the returned replies are of the old ``opscore`` type ``Reply``, which is not well documented. In general, it's possible to access the keywords via ``reply.keywords``. For more details, check the code directly `here <https://github.com/sdss/clu/blob/5c8bcfa5d4cdfaaac09ffb259d236e4fd52e1ace/python/clu/legacy/types/messages.py#L436>`__.
 
 
 Client-side command callbacks

@@ -376,8 +376,8 @@ class ModelSet(dict):
                     raise CluError(f"Failed getting schema for {actor}.")
                 else:
                     for reply in cmd.replies:
-                        if "schema" in reply.body:
-                            schema = json.loads(reply.body["schema"])
+                        if "schema" in reply.message:
+                            schema = json.loads(reply.message["schema"])
                             break
                     if schema is None:
                         raise CluError(f"{actor} did not reply with a model.")

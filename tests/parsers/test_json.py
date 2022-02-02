@@ -61,7 +61,7 @@ async def test_command(json_parser_actor, amqp_client):
     await command
 
     assert command.status.did_succeed
-    assert command.replies[-1].body["text"] == "Some value"
+    assert command.replies[-1].message["text"] == "Some value"
 
 
 async def test_bad_command_string(json_parser_actor, amqp_client):
@@ -69,7 +69,7 @@ async def test_bad_command_string(json_parser_actor, amqp_client):
     command = await amqp_client.send_command("amqp_json_actor", "bad_string")
     await command
     assert command.status.did_fail
-    assert "Cannot deserialise command string" in command.replies[-1].body["error"]
+    assert "Cannot deserialise command string" in command.replies[-1].message["error"]
 
 
 async def test_no_command(json_parser_actor, amqp_client):
@@ -79,7 +79,7 @@ async def test_no_command(json_parser_actor, amqp_client):
     command = await amqp_client.send_command("amqp_json_actor", command_data)
     await command
     assert command.status.did_fail
-    assert "does not contain a 'command'" in command.replies[-1].body["error"]
+    assert "does not contain a 'command'" in command.replies[-1].message["error"]
 
 
 async def test_bad_callback(json_parser_actor, amqp_client):
@@ -89,7 +89,7 @@ async def test_bad_callback(json_parser_actor, amqp_client):
     command = await amqp_client.send_command("amqp_json_actor", command_data)
     await command
     assert command.status.did_fail
-    assert "Cannot find a callback for command" in command.replies[-1].body["error"]
+    assert "Cannot find a callback for command" in command.replies[-1].message["error"]
 
 
 async def test_callback_no_coro(json_parser_actor, amqp_client):
@@ -99,4 +99,4 @@ async def test_callback_no_coro(json_parser_actor, amqp_client):
     command = await amqp_client.send_command("amqp_json_actor", command_data)
     await command
     assert command.status.did_fail
-    assert "is not a coroutine function" in command.replies[-1].body["error"]
+    assert "is not a coroutine function" in command.replies[-1].message["error"]

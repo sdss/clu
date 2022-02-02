@@ -185,7 +185,7 @@ The :ref:`click-parser` includes two commands that allow a user or piece of code
     if cmd.status.did_fail:
         raise CluError(f"Failed getting schema for actor.")
     else:
-        schema = json.loads(cmd.replies[-1].body["schema"])
+        schema = json.loads(cmd.replies[-1].message["schema"])
 
 Sometimes one is just interested in knowing the expected format of a keyword that is output by an actor. In that case the ``keyword`` command prints a user-friendly message with that information ::
 
