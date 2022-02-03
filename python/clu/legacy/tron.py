@@ -136,10 +136,10 @@ class TronModel(BaseModel[TronKey]):
                         f"Failed parsing keyword {self.name}.{reply_key.name}.",
                         CluWarning,
                     )
-                    return parsed
+                    continue
 
                 self[key_name].update_keyword(reply_key)
-                parsed[key_name] = self[key_name].value
+                parsed[key_name] = self[key_name].value.copy()
 
                 self.notify(self.flatten(), self[key_name].copy())
 
@@ -320,8 +320,8 @@ class TronConnection(clu.base.BaseClient):
         mid = mid or self._mid
 
         # The mid must be a 32-bit unsigned number.
-        if mid >= 2 ** 32:
-            self._mid = mid = mid % 2 ** 32
+        if mid >= 2**32:
+            self._mid = mid = mid % 2**32
 
         if len(args) > 0:
             command_string += " " + " ".join(map(str, args))
@@ -402,6 +402,10 @@ class TronConnection(clu.base.BaseClient):
                     self.log.warning(
                         f"Failed parsing reply {reply!r} with error: {ee!s}"
                     )
+            else:
+                # Fallback in case the actor of the reply is not in the models.
+                # In this case the values will be strings.
+                parsed_data = {kw.name: kw.values for kw in reply.keywords}
 
             mid = reply.header.commandId
             status = CommandStatus.code_to_status(reply.header.code.lower())
