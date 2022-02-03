@@ -21,6 +21,7 @@ from typing import (
     Callable,
     Dict,
     Generic,
+    List,
     Optional,
     Tuple,
     TypeVar,
@@ -56,7 +57,7 @@ else:
         pass
 
 
-class ReplyList(list[Reply_co]):
+class ReplyList(List[Reply_co]):
     """A list of replies to a command."""
 
     def get(self, keyword: str):
