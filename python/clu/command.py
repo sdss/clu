@@ -21,7 +21,6 @@ from typing import (
     Callable,
     Dict,
     Generic,
-    List,
     Optional,
     Tuple,
     TypeVar,
@@ -247,7 +246,7 @@ class BaseCommand(
 
             # If the command is done, set the result of the future.
             if self._status.is_done and not self.done():
-                self.set_result(self)
+                self.set_result(self)  # type: ignore
                 if self._timer_handler:
                     self._timer_handler.cancel()
 
@@ -352,7 +351,7 @@ class BaseCommand(
         command_string: str,
         *args,
         **kwargs,
-    ) -> BaseCommand | Awaitable[Command]:
+    ) -> BaseCommand[Actor_co, BaseCommand] | Awaitable[BaseCommand]:
         """Sends a command to an actor using the commander ID of this command."""
 
         if self.actor is None:
