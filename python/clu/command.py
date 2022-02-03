@@ -60,10 +60,13 @@ class ReplyList(list[Reply_co]):
     """A list of replies to a command."""
 
     def get(self, keyword: str):
+        """Return the value of the reply that matches the key."""
 
         for reply in self:
             if keyword in reply.message:
                 return reply.message[keyword]
+
+        raise KeyError(f"Keyword {keyword} not found.")
 
 
 class BaseCommand(
