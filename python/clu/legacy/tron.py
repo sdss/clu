@@ -382,7 +382,7 @@ class TronConnection(clu.base.BaseClient):
             try:
                 # Do not strip here or that will cause parsing problems.
                 line = line.decode()
-                reply = self.rparser.parse(line)
+                reply: Reply = self.rparser.parse(line)
             except ParseError:
                 self.log.warning(f"Failed parsing reply '{line.strip()}'.")
                 continue
@@ -417,6 +417,7 @@ class TronConnection(clu.base.BaseClient):
                         message_code=reply.header.code.lower(),
                         command=self.running_commands[mid],
                         validated=True,
+                        keywords=reply.keywords,
                     )
                 )
                 self.running_commands[mid].set_status(status)

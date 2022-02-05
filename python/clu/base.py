@@ -16,7 +16,7 @@ import pathlib
 import time
 from datetime import datetime
 
-from typing import Any, Dict, Optional, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, Dict, Optional, TypeVar, Union, cast
 
 import jsonschema.exceptions
 import yaml
@@ -28,6 +28,10 @@ from clu.command import BaseCommand
 
 from .model import Model
 from .tools import REPLY
+
+
+if TYPE_CHECKING:
+    from clu.legacy.types.messages import Keywords
 
 
 __all__ = ["BaseClient", "BaseActor", "Reply"]
@@ -536,6 +540,7 @@ class Reply:
         broadcast: bool = False,
         use_validation: bool = False,
         validated: bool = False,
+        keywords: Optional[Keywords] = None,
     ):
         self.date = datetime.utcnow()
         self.message_code = message_code
@@ -544,3 +549,4 @@ class Reply:
         self.broadcast = broadcast
         self.use_validation = use_validation
         self.validated = validated
+        self.keywords = keywords
