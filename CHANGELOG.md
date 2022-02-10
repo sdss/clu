@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.8 - February 10, 2022
+
+### 🔧 Fixed
+
+* [#107](https://github.com/sdss/clu/issues/107) Add an alias `Reply.body` to `Reply.message` to allow backwards compatibility.
+
+
 ## 1.5.7 - February 5, 2022
 
 ### ✨ Improved

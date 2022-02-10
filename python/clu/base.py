@@ -550,3 +550,9 @@ class Reply:
         self.use_validation = use_validation
         self.validated = validated
         self.keywords = keywords
+
+    @property
+    def body(self):
+        """"Alias to ``message``."""
+
+        return self.message
