@@ -19,6 +19,7 @@ Contents
   keyword-model
   parser
   communication
+  client
   testing
   examples
 
