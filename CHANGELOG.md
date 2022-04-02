@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### 🚀 New
+
+* Actors can use `set_message_processor()` to set a function that will receive the message dictionary before being output to the users and can make modification on before it's emitted. This is useful, for example, to improve compatibility in actors that can be run as legacy or AMQP actors.
+
+
 ## 1.5.8 - February 10, 2022
 
 ### 🔧 Fixed

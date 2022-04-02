@@ -16,7 +16,7 @@ import pathlib
 import time
 from datetime import datetime
 
-from typing import TYPE_CHECKING, Any, Dict, Optional, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, Callable, Dict, Optional, TypeVar, Union, cast
 
 import jsonschema.exceptions
 import yaml
@@ -331,11 +331,12 @@ class BaseActor(BaseClient):
     """
 
     model: Union[Model, None] = None
+    _message_processor: Callable[[dict], dict] | None = None
 
     def __init__(
         self,
         *args,
-        schema: SchemaType = None,
+        schema: SchemaType | None = None,
         additional_properties: bool = False,
         **kwargs,
     ):
@@ -372,6 +373,20 @@ class BaseActor(BaseClient):
         )
 
         return self.model
+
+    def set_message_processor(self, processor: Callable[[dict], dict] | None):
+        """Sets the message processor.
+
+        Parameters
+        ----------
+        processor
+            A function that receives the messsages to output to the users, as a
+            dictionary, and reformats them, returning a new dictionary. If `None`,
+            no processing is done.
+
+        """
+
+        self._message_processor = processor
 
     @abc.abstractmethod
     def new_command(self):
@@ -477,6 +492,9 @@ class BaseActor(BaseClient):
                 raise TypeError("message must be a string or a dictionary.")
 
         message.update(kwargs)
+
+        if self._message_processor:
+            message = self._message_processor(message)
 
         for key, value in message.items():
             if isinstance(value, Exception):
