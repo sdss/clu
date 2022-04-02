@@ -553,6 +553,6 @@ class Reply:
 
     @property
     def body(self):
-        """"Alias to ``message``."""
+        """Alias to ``message``."""
 
         return self.message
