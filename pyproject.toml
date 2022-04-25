@@ -31,7 +31,7 @@ python = "^3.7,<4.0"
 click = "^8.0"
 aio_pika = "^6.4.1"
 jsonschema = "^3.0.1"
-sdsstools = "^0.4.13"
+sdsstools = ">=0.4.13"
 prompt_toolkit = "^3.0.6"
 aiormq = "^3.2.0"
 
@@ -116,5 +116,5 @@ exclude_lines = [
 ]
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
+requires = ["poetry-core>=1.1.0a7"]
 build-backend = "poetry.core.masonry.api"
