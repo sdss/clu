@@ -282,14 +282,6 @@ class AMQPClient(BaseClient):
             self.log.error("Invalid message received.")
             return reply
 
-        # Ignores message from self, because actors are also clients and they
-        # receive their own messages. The exception is when the commander is also the
-        # actor (an actor sent a command to itself).
-        commander_id = reply.headers["commander_id"]
-        if reply.sender and self.name == reply.sender:
-            if commander_id and self.name in commander_id:
-                return reply
-
         # Update the models
         if self.models and reply.sender in self.models:
             self.models[reply.sender].validate(reply.body, update_model=True)

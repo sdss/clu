@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### ✨ Improved
+
+* Allow AMQP clients to listen to their own replies. This allows an actor sending a command to itself to know when the command is done.
+
+
 ## 1.6.0 - April 25, 2022
 
 ### 🚀 New
