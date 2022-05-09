@@ -353,7 +353,10 @@ class AMQPClient(BaseClient):
 
         assert self.connection and self.replies_queue
 
-        command_id = command_id or str(uuid.uuid4())
+        if command and command.command_id:
+            command_id = str(command.command_id)
+        else:
+            command_id = command_id or str(uuid.uuid4())
 
         if len(args) > 0:
             command_string += " " + " ".join(map(str, args))
