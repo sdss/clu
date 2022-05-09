@@ -200,7 +200,7 @@ class BaseCommand(
     def set_status(
         self,
         status: Union[CommandStatus, str],
-        message: Dict[str, Any] | str = None,
+        message: Dict[str, Any] | str | None = None,
         silent: bool = False,
         **kwargs,
     ) -> BaseCommand:
