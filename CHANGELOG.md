@@ -9,6 +9,7 @@
 ### ✨ Improved
 
 * Allow AMQP clients to listen to their own replies. This allows an actor sending a command to itself to know when the command is done.
+* `Command.send_command()` now accepts a `new_command` argument. When `new_command=True`, the new command will receive a new command ID and the commander ID will be the actor running the command (to all effects this is equivalent to `BaseClient.send_command()`). If `new_command=False`, the command ID and commander of the current actor will be used. In this case, and if the target actor is the same actor running the current command, consider using `Command.child_command()` instead.
 
 
 ## 1.6.0 - April 25, 2022
