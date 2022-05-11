@@ -106,10 +106,6 @@ async def test_client_stop(caplog):
     assert client.loop.is_closed
     assert task.cancelled
 
-    assert (
-        caplog.records[-1].message == "cancelling all pending tasks and shutting down."
-    )
-
 
 def test_client_config(tmpdir):
 
