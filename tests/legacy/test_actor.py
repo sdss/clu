@@ -248,7 +248,8 @@ async def test_send_command_no_tron(actor):
         actor.send_command("actor2", "command")
 
 
-async def test_send_command_from_command(actor, mocker):
+@pytest.mark.parametrize("new_command", [True, False])
+async def test_send_command_from_command(actor, mocker, new_command: bool):
 
     send_command_mock = mocker.patch.object(actor.tron, "send_command")
 
@@ -258,12 +259,17 @@ async def test_send_command_from_command(actor, mocker):
         command_id=5,
         actor=actor,
     )
-    command.send_command("otheractor", "command1 --option")
+    command.send_command("otheractor", "command1 --option", new_command=new_command)
+
+    if new_command:
+        commander = "test_actor.otheractor"
+    else:
+        commander = "APO.Jose.otheractor"
 
     send_command_mock.assert_called_once_with(
         "otheractor",
         "command1 --option",
-        commander="APO.Jose.otheractor",
+        commander=commander,
         mid=None,
         callback=None,
         time_limit=None,

@@ -353,6 +353,7 @@ class BaseCommand(
         self,
         target: str,
         command_string: str,
+        new_command: bool = True,
         *args,
         **kwargs,
     ) -> BaseCommand[Actor_co, BaseCommand] | Awaitable[BaseCommand]:
@@ -365,7 +366,7 @@ class BaseCommand(
             target,
             command_string,
             *args,
-            command=self,
+            command=self if new_command is False else None,
             **kwargs,
         )
 
