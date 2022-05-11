@@ -409,6 +409,21 @@ class Command(BaseCommand[Actor_co, "Command"]):
 
         self.transport = transport
 
+    def child_command(self, command_string):
+        """Starts a sub-command on the actor currently running this command.
+
+        The practical effect is to run another of the same actor's commands as
+        if it were part of the current `.Command`.
+
+        """
+
+        return Command(
+            command_string,
+            actor=self.actor,
+            commander_id=self.actor.name,
+            parent=self,
+        ).parse()
+
     def parse(self) -> Command:
         """Parses the command."""
 

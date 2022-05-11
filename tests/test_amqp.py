@@ -323,6 +323,21 @@ async def test_send_command_from_command(amqp_actor, mocker):
     send_command_mock.assert_called()
 
 
+async def test_child_command(amqp_actor, mocker):
+
+    send_command_mock = mocker.patch.object(amqp_actor.connection.exchange, "publish")
+
+    command = Command(
+        command_string="",
+        commander_id="APO.Jose",
+        command_id=5,
+        actor=amqp_actor,
+    )
+    await command.child_command("help")
+
+    send_command_mock.assert_called()
+
+
 async def test_send_command_time_limit(amqp_actor):
     @amqp_actor.parser.command()
     async def timeout_command(command):

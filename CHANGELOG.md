@@ -2,6 +2,10 @@
 
 ## Next version
 
+### 🚀 New
+
+* New `Command.child_command()` method that allows to run a child command in the same actor already running `Command`. The practical effect is to run another of the same actor's commands as if it were part of the current `Command`.
+
 ### ✨ Improved
 
 * Allow AMQP clients to listen to their own replies. This allows an actor sending a command to itself to know when the command is done.
