@@ -53,7 +53,8 @@ jobs:
           node-version: '15'
 
       - name: Install poetry
-        uses: abatilo/actions-poetry@master
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 - --preview
 
       - name: Install dependencies
         run: |
