@@ -337,6 +337,8 @@ class BaseCommand(
                 return
             if message_code == ":":
                 message_code = "i"
+                if message == {} or not message:
+                    return
             elif message_code == "f":
                 message_code = "e"
 
