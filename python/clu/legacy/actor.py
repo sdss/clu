@@ -304,8 +304,8 @@ class BaseLegacyActor(BaseActor):
     @staticmethod
     def get_user_command_id(
         command: Optional[Command] = None,
-        user_id: Optional[int] = 0,
-        command_id: Optional[int] = 0,
+        user_id: int = 0,
+        command_id: int = 0,
     ) -> Tuple[int, int]:
         """Returns commander_id, command_id based on user-supplied information.
 
@@ -331,7 +331,7 @@ class BaseLegacyActor(BaseActor):
         command_id = command_id or cid
         return (user_id, command_id)
 
-    def show_version(self, user_id: Optional[int] = None):
+    def show_version(self, user_id: int = 0):
         """Shows actor version."""
 
         msg = {"version": repr(self.version)}
@@ -403,10 +403,10 @@ class BaseLegacyActor(BaseActor):
     def write(
         self,
         message_code: str = "i",
-        message: Dict[str, Any] = None,
+        message: Optional[Dict[str, Any]] = None,
         command: Optional[Command] = None,
-        user_id: Optional[int] = None,
-        command_id: Optional[int] = None,
+        user_id: int = 0,
+        command_id: int = 0,
         concatenate: bool = True,
         broadcast: bool = False,
         validate: bool = True,

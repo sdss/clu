@@ -88,7 +88,7 @@ class TronModel(BaseModel[TronKey]):
     def __init__(
         self,
         keydict: KeysDictionary,
-        callback: Callable[[TronModel], Any] = None,
+        callback: Optional[Callable[[TronModel], Any]] = None,
     ):
 
         super().__init__(keydict.name, callback=callback)
