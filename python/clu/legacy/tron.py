@@ -334,6 +334,7 @@ class TronConnection(clu.base.BaseClient):
             command_string=command_string,
             reply_callback=callback,
             time_limit=time_limit,
+            commander_id=commander,
         )
         self.running_commands[mid] = command
 
@@ -387,17 +388,18 @@ class TronConnection(clu.base.BaseClient):
                 self.log.warning(f"Failed parsing reply '{line.strip()}'.")
                 continue
 
-            actor = reply.header.actor
+            reply_actor = reply.header.actor
+            reply_commander_id = reply.header.cmdrName
 
             # The keys command returns keywords as if from the actor
             # keys_<actor> (e.g. keys_tcc).
-            if actor.startswith("keys_"):
-                actor = actor.split("_")[1]
+            if reply_actor.startswith("keys_"):
+                reply_actor = reply_actor.split("_")[1]
 
             parsed_data = {}
-            if actor in self.models:
+            if reply_actor in self.models:
                 try:
-                    parsed_data = self.models[actor].parse_reply(reply)
+                    parsed_data = self.models[reply_actor].parse_reply(reply)
                 except ParseError as ee:
                     self.log.warning(
                         f"Failed parsing reply {reply!r} with error: {ee!s}"
@@ -411,17 +413,21 @@ class TronConnection(clu.base.BaseClient):
             status = CommandStatus.code_to_status(reply.header.code.lower())
 
             if mid in self.running_commands:
-                self.running_commands[mid].replies.append(
-                    clu.base.Reply(
-                        message={k: v for k, v in parsed_data.items()},
-                        message_code=reply.header.code.lower(),
-                        command=self.running_commands[mid],
-                        validated=True,
-                        keywords=reply.keywords,
+                # We may be receiving messages from a command with the same MID
+                # that's not managed by this instance of the tron client, so we
+                # also check the commander.
+                if self.running_commands[mid].commander_id == reply_commander_id:
+                    self.running_commands[mid].replies.append(
+                        clu.base.Reply(
+                            message={k: v for k, v in parsed_data.items()},
+                            message_code=reply.header.code.lower(),
+                            command=self.running_commands[mid],
+                            validated=True,
+                            keywords=reply.keywords,
+                        )
                     )
-                )
-                self.running_commands[mid].set_status(status)
-                if self.running_commands[mid]._reply_callback is not None:
-                    self.running_commands[mid]._reply_callback(reply)
-                if status.is_done:
-                    self.running_commands.pop(mid)
+                    self.running_commands[mid].set_status(status)
+                    if self.running_commands[mid]._reply_callback is not None:
+                        self.running_commands[mid]._reply_callback(reply)
+                    if status.is_done:
+                        self.running_commands.pop(mid)

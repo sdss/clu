@@ -7,6 +7,10 @@
 * The commander of a command sent to Tron is now `actor.actor` by default, instead of `actor.actor.target_actor`.
 
 ### 🔧 Fixed
+
+* Prompted by [COS-74](https://jira.sdss.org/browse/COS-74), it was possible for a reply from a command with the same MID but different commander to be processed and mark a running command as complete. Now we are checking now only the MID but the commander as well.
+
+
 ## 1.6.1 - May 11, 2022
 
 ### 🚀 New
