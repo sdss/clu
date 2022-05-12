@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### ✨ Improved
+
+* The commander of a command sent to Tron is now `actor.actor` by default, instead of `actor.actor.target_actor`.
+
+### 🔧 Fixed
 ## 1.6.1 - May 11, 2022
 
 ### 🚀 New

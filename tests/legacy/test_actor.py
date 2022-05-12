@@ -261,15 +261,10 @@ async def test_send_command_from_command(actor, mocker, new_command: bool):
     )
     command.send_command("otheractor", "command1 --option", new_command=new_command)
 
-    if new_command:
-        commander = "test_actor.otheractor"
-    else:
-        commander = "APO.Jose.otheractor"
-
     send_command_mock.assert_called_once_with(
         "otheractor",
         "command1 --option",
-        commander=commander,
+        commander="APO.Jose" if new_command is False else None,
         mid=None,
         callback=None,
         time_limit=None,

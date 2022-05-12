@@ -381,9 +381,9 @@ class BaseLegacyActor(BaseActor):
         """
 
         if command and isinstance(command.commander_id, str):
-            commander = command.commander_id + f".{target}"
+            commander = command.commander_id
         else:
-            commander = f"{self.name}.{target}"
+            commander = None
 
         if self.tron and self.tron.connected():
             command = self.tron.send_command(
