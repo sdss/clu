@@ -11,6 +11,7 @@ import asyncio
 import pytest
 
 from clu import Command, CommandError, CommandStatus
+from clu.exceptions import CluWarning
 
 
 @pytest.fixture
@@ -36,7 +37,7 @@ def test_set_done_command(command):
 
     command.set_status(CommandStatus.DONE)
 
-    with pytest.raises(RuntimeError):
+    with pytest.warns(CluWarning):
         command.set_status(CommandStatus.DONE)
 
 

@@ -5,6 +5,7 @@
 ### ✨ Improved
 
 * The commander of a command sent to Tron is now `actor.actor` by default, instead of `actor.actor.target_actor`.
+* Trying to change the status of a done command will issue a `CluWarning` and return, instead of raising a `RuntimeError`.
 
 ### 🔧 Fixed
 

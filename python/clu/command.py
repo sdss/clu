@@ -13,6 +13,7 @@ import logging
 import re
 import sys
 import time
+import warnings
 from contextlib import suppress
 
 from typing import (
@@ -31,7 +32,7 @@ from typing import (
 
 import clu
 import clu.base
-from clu.exceptions import CommandError
+from clu.exceptions import CluWarning, CommandError
 from clu.tools import CommandStatus, StatusMixIn
 
 
@@ -214,9 +215,13 @@ class BaseCommand(
             return self
 
         if self.status.is_done:
-            raw_command_string = getattr(self, 'raw_command_string', "NA")
-            raise RuntimeError(f"{raw_command_string}: cannot modify a "
-                               f"done command with status {status!r}.")
+            raw_command_string = getattr(self, "raw_command_string", "NA")
+            warnings.warn(
+                f"{raw_command_string}: cannot modify a "
+                f"done command with status {status!r}.",
+                CluWarning,
+            )
+            return self
 
         if isinstance(status, str):
             for bit in self.flags:
