@@ -214,7 +214,9 @@ class BaseCommand(
             return self
 
         if self.status.is_done:
-            raise RuntimeError("cannot modify a done command.")
+            raw_command_string = getattr(self, 'raw_command_string', "NA")
+            raise RuntimeError(f"{raw_command_string}: cannot modify a "
+                               f"done command with status {status!r}.")
 
         if isinstance(status, str):
             for bit in self.flags:
