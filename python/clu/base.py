@@ -24,7 +24,7 @@ import yaml
 from sdsstools import get_logger, read_yaml_file
 from sdsstools.logger import SDSSLogger
 
-from clu.command import BaseCommand
+from clu.command import BaseCommand, Command
 
 from .model import Model
 from .tools import REPLY
@@ -539,7 +539,7 @@ class BaseActor(BaseClient):
 
         return reply
 
-    def invoke_mock_command(self, command_str, command_id=0):
+    def invoke_mock_command(self, command_str, command_id=0) -> Command:
         """Send a new command to an actor for testing.
 
         Requires calling `.setup_test_actor`."""
