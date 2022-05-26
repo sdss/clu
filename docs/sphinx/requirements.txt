@@ -2,3 +2,4 @@ sphinx>=4.0.0
 myst-parser>=0.15.0
 furo>=2021.6.18-beta.36
 sphinx-copybutton>=0.3.3
+jinja2==3.0.0
