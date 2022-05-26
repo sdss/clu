@@ -59,10 +59,12 @@ jobs:
 
       - name: Lint with flake8
         run: |
+          poetry run pip install flake8
           poetry run flake8 . --count --show-source --statistics
 
       - name: Lint with isort
         run: |
+          poetry run pip install isort
           poetry run isort -c python/
 
       # - name: Run type checking
