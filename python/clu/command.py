@@ -301,7 +301,7 @@ class BaseCommand(
 
     def write(
         self,
-        message_code: str = "i",
+        message_code: str | int = "i",
         message: Optional[Union[Dict[str, Any], str]] = None,
         broadcast: bool = False,
         **kwargs,
@@ -335,6 +335,20 @@ class BaseCommand(
             )
 
         command = self if not self.parent else self.parent
+
+        # If the message code is an integer, interpret that as if it's a logging
+        # level and translate it to SDSS codes.
+        if isinstance(message_code, int):
+            if message_code == logging.DEBUG:
+                message_code = "d"
+            elif message_code == logging.INFO:
+                message_code = "i"
+            elif message_code == logging.WARNING:
+                message_code = "w"
+            elif message_code == logging.ERROR:
+                message_code = "e"
+            else:
+                raise ValueError(f"Invalid message code {message_code}.")
 
         # If the parent has a command, do not output : or f since it would
         # confuse the stream and potentially Tron.

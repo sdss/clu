@@ -7,6 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
 import asyncio
+import logging
 
 import pytest
 
@@ -215,3 +216,31 @@ async def test_time_limit(event_loop):
 
     assert command.status == CommandStatus.TIMEDOUT
     assert command.done()
+
+
+@pytest.mark.parametrize(
+    "logcode,sdss_code",
+    [
+        (logging.DEBUG, "d"),
+        (logging.INFO, "i"),
+        (logging.WARNING, "w"),
+        (logging.ERROR, "e"),
+    ],
+)
+def test_write_logging_code(command, logcode, sdss_code):
+
+    command.write(logcode, "hello")
+    command.actor.write.assert_called_with(
+        sdss_code,
+        message={"text": "hello"},
+        command=command,
+        broadcast=False,
+        silent=False,
+        **{},
+    )
+
+
+def test_write_bad_logging_code(command):
+
+    with pytest.raises(ValueError):
+        command.write(2, "hello")

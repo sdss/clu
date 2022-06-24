@@ -1,5 +1,12 @@
 # Changelog
 
+## Next release
+
+### 🚀 New
+
+* `Command.write()` can now be called with a `logging` level instead of a string message code. For example `Command.write(logging.DEBUG, text="Hi")` is equivalent to `Command.write("d", text="Hi")`.
+
+
 ## 1.6.2 - May 25, 2022
 
 ### ✨ Improved
