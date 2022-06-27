@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "sdss-clu"
-version = "1.6.3a0"
+version = "1.7.0a0"
 description = "A new protocol for SDSS actors."
 authors = ["José Sánchez-Gallego <gallegoj@uw.edu>"]
 license = "BSD-3-Clause"
@@ -97,6 +97,7 @@ skip_glob = [
 addopts = "--cov clu --cov-report xml --cov-report html --cov-report term -p no:warnings"
 rabbitmq_ctl = "/usr/local/sbin/rabbitmqctl"
 rabbitmq_server = "/usr/local/sbin/rabbitmq-server"
+asyncio_mode = "auto"
 
 [tool.coverage.run]
 branch = true

@@ -2,6 +2,10 @@
 
 ## Next release
 
+### 💥 Breaking changes
+
+* The client model for an actor is now updated if the actor outputs a property that is not in its schema. This is not necessarily a breaking change, but it modifies the expectation that the client will validate replies against the actor schema. With this change we indicate that validating and respecting its own schema is a task for the actor and not for the client. There are at least a couple cases for which having the client enforce the actor schema was problematic: if the actor has `patternProperties` those are legal properties but are not updated in the client model; and if the actor decides to output a non-validated message. With this change, if the client receives a property that is not in the actor schema, a new `Property` is created int eh actor `Model` and its value is updated. That `Property` has `Property.in_schema=False` to indicate that the property has not been validated. Note that this change does not affect the `TronConnection` models since those are defined by actorkeys.
+
 ### 🚀 New
 
 * `Command.write()` can now be called with a `logging` level instead of a string message code. For example `Command.write(logging.DEBUG, text="Hi")` is equivalent to `Command.write("d", text="Hi")`.

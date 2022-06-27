@@ -348,3 +348,25 @@ async def test_send_command_time_limit(amqp_actor):
     await asyncio.sleep(0.2)
 
     assert cmd.status == CommandStatus.TIMEDOUT
+
+
+async def test_model_patternProperties(amqp_client, amqp_actor):
+
+    amqp_actor.model = Model(
+        "amqp_actor",
+        {
+            "type": "object",
+            "properties": {},
+            "patternProperties": {
+                "prop[0-9]": {"type": "integer"},
+                "additionalProperties": False,
+            },
+        },
+    )
+
+    amqp_actor.write("i", {"prop1": 5})
+
+    await asyncio.sleep(0.01)
+    assert "prop1" in amqp_client.models["amqp_actor"]
+    assert amqp_client.models["amqp_actor"]["prop1"].value == 5
+    assert amqp_client.models["amqp_actor"]["prop1"].in_schema is False

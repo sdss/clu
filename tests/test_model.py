@@ -135,3 +135,21 @@ async def test_update_model_simulataneous(mocker):
 
     assert cb.call_args_list[0].args[0]["text"] == "hi"
     assert cb.call_args_list[1].args[0]["text"] == "bye"
+
+
+async def test_update_model_key_not_in_schema():
+
+    schema = """
+    {
+        "type": "object",
+        "properties": { "prop": { "type": "object" } }
+    }
+    """
+
+    model = Model("test_model", schema)
+
+    model.update_model({"another_property": 5})
+
+    assert "another_property" in model
+    assert model["another_property"].value == 5
+    assert model["another_property"].in_schema is False

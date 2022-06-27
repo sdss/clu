@@ -94,9 +94,10 @@ class Property(CallbackMixIn):
 
         self.name = name
         self._value = value
-        self.last_seen = None
+        self.last_seen: float | None = None
 
         self.model = model
+        self.in_schema: bool = True
 
         CallbackMixIn.__init__(self, [callback] if callback else [])
 
@@ -297,17 +298,28 @@ class Model(BaseModel[Property]):
         self.last_seen = time()
 
         for key, value in instance.items():
-            if key in self:
-                if isinstance(self[key].value, dict) and isinstance(value, dict):
-                    # Copy previous value and update it but then assign it to
-                    # force the callback in the property.
-                    new_value = self[key].value.copy()
-                    new_value.update(value)
-                    self[key].value = new_value
-                else:
-                    self[key].value = value
+            if (
+                key in self
+                and isinstance(self[key].value, dict)
+                and isinstance(value, dict)
+            ):
+                # Copy previous value and update it but then assign it to
+                # force the callback in the property.
+                new_value = self[key].value.copy()
+                new_value.update(value)
+                self[key].value = new_value
+            else:
+                # The enforcement of the schema is on the actor side. In
+                # addition, there may be legal properties that we have not
+                # considered, e.g., patternProperties. If the key is not
+                # in the Model, we add it as a new property.
+                if key not in self:
+                    self[key] = Property(key, model=self)
+                    self[key].in_schema = False
 
-                self.notify(self.flatten().copy(), self[key].copy())
+                self[key].value = value
+
+            self.notify(self.flatten().copy(), self[key].copy())
 
 
 class ModelSet(dict):
