@@ -19,8 +19,8 @@ import re
 
 from typing import (
     Any,
-    Awaitable,
     Callable,
+    Coroutine,
     Dict,
     Generic,
     List,
@@ -431,7 +431,7 @@ def cli_coro(f):
 
 
 async def as_complete_failer(
-    aws: List[Awaitable],
+    aws: List[Coroutine],
     on_fail_callback: Optional[Callable] = None,
     **kwargs,
 ) -> Tuple[bool, str | None]:
