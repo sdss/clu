@@ -13,9 +13,9 @@ import json
 import pathlib
 import re
 import uuid
+from datetime import datetime
 
 from typing import Any, Dict, Optional, TypeVar, Union, cast
-from datetime import datetime
 
 import aio_pika as apika
 import click
