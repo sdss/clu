@@ -15,6 +15,7 @@ import re
 import uuid
 
 from typing import Any, Dict, Optional, TypeVar, Union, cast
+from datetime import datetime
 
 import aio_pika as apika
 import click
@@ -169,6 +170,7 @@ class AMQPBaseActor(AMQPClient, BaseActor):
                 content_type="text/json",
                 headers=headers,
                 correlation_id=command_id,
+                timestamp=datetime.now()
             ),
             routing_key=routing_key,
         )
