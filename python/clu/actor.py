@@ -170,7 +170,7 @@ class AMQPBaseActor(AMQPClient, BaseActor):
                 content_type="text/json",
                 headers=headers,
                 correlation_id=command_id,
-                timestamp=datetime.now()
+                timestamp=datetime.utcnow()
             ),
             routing_key=routing_key,
         )
