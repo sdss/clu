@@ -13,6 +13,7 @@ import json
 import pathlib
 import re
 import uuid
+from datetime import datetime
 
 from typing import Any, Dict, Optional, TypeVar, Union, cast
 
@@ -169,6 +170,7 @@ class AMQPBaseActor(AMQPClient, BaseActor):
                 content_type="text/json",
                 headers=headers,
                 correlation_id=command_id,
+                timestamp=datetime.utcnow()
             ),
             routing_key=routing_key,
         )
