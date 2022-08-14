@@ -57,7 +57,7 @@ class TCPProtocol(asyncio.Protocol):
 
     def __init__(
         self,
-        loop: asyncio.AbstractEventLoop = None,
+        loop: asyncio.AbstractEventLoop | None = None,
         connection_callback: Optional[ConnectionCallbackType] = None,
         data_received_callback: Optional[Callable[[str], Any]] = None,
         max_connections: Optional[int] = None,
@@ -487,7 +487,7 @@ class TopicListener(object):
 
     def __init__(
         self,
-        url: str = None,
+        url: str | None = None,
         user: str = "guest",
         password: str = "guest",
         host: str = "localhost",
