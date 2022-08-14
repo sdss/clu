@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import random
+from contextlib import suppress
 
 from typing import Any, Callable, Dict, List, Optional, TypeVar, Union
 
@@ -330,7 +331,8 @@ class TCPStreamServer(object):
         if self.connection_callback:
             await self._do_callback(self.connection_callback, writer.transport)
 
-        await writer.wait_closed()
+        with suppress(ConnectionResetError):
+            await writer.wait_closed()
 
 
 class TCPStreamClient:

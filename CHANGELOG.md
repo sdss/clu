@@ -10,6 +10,10 @@
 
 * `Command.write()` can now be called with a `logging` level instead of a string message code. For example `Command.write(logging.DEBUG, text="Hi")` is equivalent to `Command.write("d", text="Hi")`.
 
+### 🔧 Fixed
+
+* Fixed a `ConnectionResetError` when closing the connection to a `TCPStreamServer`.
+
 
 ## 1.6.2 - May 25, 2022
 
