@@ -1,6 +1,6 @@
 # Changelog
 
-## Next release
+## 1.7.0 - August 14, 2022
 
 ### 💥 Breaking changes
 
