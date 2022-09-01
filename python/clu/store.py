@@ -22,7 +22,17 @@ __all__ = ["KeywordStore", "KeywordOutput"]
 
 
 class KeywordStore(defaultdict[str, list]):
-    """Stores the keywords output by an actor."""
+    """Stores the keywords output by an actor.
+
+    Parameters
+    ----------
+    actor
+        The actor to which this store is attached to.
+    filter
+        A list of keyword names to filter. If provided, only those keywords
+        will be tracked.
+
+    """
 
     def __init__(self, actor: BaseActor, filter: list[str] | None = None):
 
@@ -34,7 +44,15 @@ class KeywordStore(defaultdict[str, list]):
         defaultdict.__init__(self, list)
 
     def add_reply(self, reply: Reply):
-        """Processes a reply and adds new entries to the store."""
+        """Processes a reply and adds new entries to the store.
+
+        Parameters
+        ----------
+        reply
+            The `.Reply` object containing the keywords output in a message
+            from the actor.
+
+        """
 
         for keyword, value in reply.message.items():
 
@@ -49,19 +67,51 @@ class KeywordStore(defaultdict[str, list]):
                 self[keyword] = [key_out]
 
     def head(self, keyword: str, n: int = 1):
-        """Returns the first N output values of a keyword."""
+        """Returns the first N output values of a keyword.
+
+        Parameters
+        ----------
+        keyword
+            The name of the keyword to search for.
+        n
+            Return the first ``n`` times the keyword was output.
+
+        """
 
         return self[keyword][:n]
 
     def tail(self, keyword: str, n: int = 1):
-        """Returns the last N output values of a keyword."""
+        """Returns the last N output values of a keyword.
+
+        Parameters
+        ----------
+        keyword
+            The name of the keyword to search for.
+        n
+            Return the last ``n`` times the keyword was output.
+
+        """
 
         return self[keyword][-n:]
 
 
 @dataclass
 class KeywordOutput:
-    """Records a single output of a keyword."""
+    """Records a single output of a keyword.
+
+    Parameters
+    ----------
+    name
+        The name of the keyword.
+    message_code
+        The message code with which the keyword was output.
+    date
+        A `.datetime` object with the date-time at which the keyword was
+        output this time.
+    value
+        The value of the keyword when it was output.
+
+    """
 
     name: str
     message_code: Any
