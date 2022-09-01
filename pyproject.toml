@@ -117,7 +117,8 @@ exclude_lines = [
     "class PeriodicTCPServer",
     "class CaseInsensitiveDict",
     "def cli_coro",
-    "class ReconnectingTCPClientProtocol"
+    "class ReconnectingTCPClientProtocol",
+    "if TYPE_CHECKING"
 ]
 
 [build-system]

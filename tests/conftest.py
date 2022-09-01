@@ -55,6 +55,7 @@ async def json_actor(unused_tcp_port_factory, event_loop, tmpdir):
         port=unused_tcp_port_factory(),
         log_dir=tmpdir,
         schema=DATA_DIR / "schema.json",
+        store=True,
     )
 
     await actor.start()
