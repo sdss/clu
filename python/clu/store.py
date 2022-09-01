@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 __all__ = ["KeywordStore", "KeywordOutput"]
 
 
-class KeywordStore(defaultdict[str, list]):
+class KeywordStore(defaultdict):
     """Stores the keywords output by an actor.
 
     Parameters
