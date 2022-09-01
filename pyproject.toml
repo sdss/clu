@@ -77,7 +77,7 @@ furo = ">=2021.6.18-beta.36"
 line-length = 88
 target-version = ['py310']
 fast = true
-exclude = 'docs/sphinx/examples/.+\.py'
+extend-exclude = 'docs/sphinx/examples/.+\.py'
 
 [tool.isort]
 profile = "black"
