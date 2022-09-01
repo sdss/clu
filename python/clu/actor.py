@@ -56,26 +56,14 @@ class AMQPBaseActor(AMQPClient, BaseActor):
     See the documentation for `.AMQPActor` and `.AMQPClient` for additional
     parameter information.
 
-    Parameters
-    ----------
-    schema
-        The path to the datamodel schema for the actor, in JSON Schema format.
-        If the schema is provided all replies will be validated against it.
-        An invalid reply will fail and not be emitted. The schema can also be
-        set when subclassing by setting the class ``schema`` attribute.
     """
 
-    def __init__(self, *args, schema: Optional[SchemaType] = None, **kwargs):
+    def __init__(self, *args, **kwargs):
 
-        AMQPClient.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self.commands_queue = None
-
         self.timed_commands = TimedCommandList(self)
-
-        # Not calling BaseClient.__init__() here because we already called
-        # AMQPClient.__init__.
-        self.load_schema(schema)
 
     async def start(self, **kwargs):
         """Starts the connection to the AMQP broker."""

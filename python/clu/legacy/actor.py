@@ -75,6 +75,11 @@ class BaseLegacyActor(BaseActor):
         If the schema is provided all replies will be validated against it.
         An invalid reply will fail and not be emitted. The schema can also be
         set when subclassing by setting the class ``schema`` attribute.
+    store
+        Whether to store the output keywords in a `.KeywordStore`. `False`
+        (the default), disables the feature. `True` will store a record
+        of all the output keywords. A list of keyword names to store can
+        also be passed.
     config
         A dictionary of configuration parameters that will be accessible to the actor.
     """
@@ -93,6 +98,7 @@ class BaseLegacyActor(BaseActor):
         log: Optional[logging.Logger] = None,
         verbose: bool = False,
         schema: Optional[PathLike] = None,
+        store: bool | list[str] = False,
         additional_properties: bool = False,
         config: Dict[str, Any] = {},
     ):
@@ -107,6 +113,7 @@ class BaseLegacyActor(BaseActor):
             schema=schema,
             additional_properties=additional_properties,
             config=config,
+            store=store,
         )
 
         #: Mapping of user_id to transport
