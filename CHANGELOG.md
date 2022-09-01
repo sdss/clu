@@ -2,6 +2,10 @@
 
 ## Next version
 
+### 💥 Breaking changes
+
+* Removed the `create_setup.py` file. Poetry should now support all its use-cases.
+
 ### 🚀 New
 
 * Added a `KeywordStore` that stores each time a keyword was output. It can be enabled by passing ``store=True`` when instantiating an actor and accessed as ``actor.store``. See the documentation for more details.
