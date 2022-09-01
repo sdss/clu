@@ -165,3 +165,16 @@ async def test_write_exception(json_actor):
         "exception_type": "ValueError",
         "exception_message": "Error message",
     }
+
+
+async def test_json_write_store(json_actor):
+
+    json_actor.write("i", {"text": "hello!"})
+
+    assert json_actor.store is not None
+
+    last_issued = json_actor.store.tail("text")
+    assert len(last_issued) == 1
+
+    assert last_issued[0].value == "hello!"
+    assert last_issued[0].message_code == "i"

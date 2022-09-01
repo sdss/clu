@@ -66,6 +66,12 @@ Model
 .. automodule:: clu.model
 
 
+Store
+-----
+
+.. automodule:: clu.store
+
+
 Parser
 ------
 

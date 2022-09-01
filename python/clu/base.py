@@ -27,6 +27,7 @@ from sdsstools.logger import SDSSLogger
 from clu.command import BaseCommand, Command
 
 from .model import Model
+from .store import KeywordStore
 from .tools import REPLY
 
 
@@ -74,6 +75,7 @@ class BaseClient(metaclass=abc.ABCMeta):
         `~.BaseClient.write`.
     config
         A dictionary of configuration parameters that will be accessible to the client.
+
     """
 
     name: str
@@ -322,6 +324,11 @@ class BaseActor(BaseClient):
     schema
         The schema for the actor replies, as a JSONschema dictionary or path
         to a JSON file. If `None`, defaults to the internal basic schema.
+    store
+        Whether to store the output keywords in a `.KeywordStore`. `False`
+        (the default), disables the feature. `True` will store a record
+        of all the output keywords. A list of keyword names to store can
+        also be passed.
     additional_properties
         Whether to allow additional properties in the schema, other than the
         ones defined by the schema. This parameter only is used if
@@ -337,6 +344,7 @@ class BaseActor(BaseClient):
         self,
         *args,
         schema: SchemaType | None = None,
+        store: bool | list[str] = False,
         additional_properties: bool = False,
         **kwargs,
     ):
@@ -344,6 +352,11 @@ class BaseActor(BaseClient):
         super().__init__(*args, **kwargs)
 
         self.load_schema(schema, additional_properties=additional_properties)
+
+        if store is False:
+            self.store = None
+        else:
+            self.store = KeywordStore(self, filter=None if store is True else store)
 
     def load_schema(
         self,
@@ -536,6 +549,9 @@ class BaseActor(BaseClient):
                 asyncio.create_task(self._write_internal(reply))  # type: ignore
             else:
                 self._write_internal(reply)
+
+        if self.store is not None:
+            self.store.add_reply(reply)
 
         return reply
 

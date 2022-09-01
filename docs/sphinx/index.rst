@@ -17,6 +17,7 @@ Contents
   new-actor
   legacy
   keyword-model
+  store
   parser
   communication
   client
