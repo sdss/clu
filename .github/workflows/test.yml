@@ -67,6 +67,12 @@ jobs:
           poetry run pip install isort
           poetry run isort -c python/
 
+      - name: Lint with black
+        run: |
+          pip install black
+          black --check python/
+          black --check tests/
+
       # - name: Run type checking
       #   if: ${{ matrix.python-version != '3.7' }}
       #   run: |
