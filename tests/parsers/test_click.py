@@ -15,7 +15,13 @@ import pytest
 
 import clu.parsers.click
 from clu import Command
-from clu.parsers.click import ClickParser, command_parser, pass_args, unique
+from clu.parsers.click import (
+    ClickParser,
+    cancel_command,
+    command_parser,
+    pass_args,
+    unique,
+)
 from clu.testing import setup_test_actor
 
 
@@ -67,6 +73,13 @@ async def unique_command(command, object):
 
 @command_parser.command(cancellable=True)
 async def cancellable_command(command, object):
+    await asyncio.sleep(0.5)
+    return command.finish()
+
+
+@command_parser.command()
+async def self_cancellable_command(command, object):
+    cancel_command(keep_last=True, ok_no_exists=True)
     await asyncio.sleep(0.5)
     return command.finish()
 
@@ -310,3 +323,19 @@ async def test_parser_full_help(json_actor, click_parser, cmd_str):
 
     assert cmd.status.is_done
     assert "Usage: json_actor" in cmd.replies[-1].message["help"][0]
+
+
+async def test_cancel_command(json_actor, click_parser):
+
+    cmd = Command("self-cancellable-command", actor=json_actor)
+    click_parser.parse_command(cmd)
+    await asyncio.sleep(0.01)
+
+    cmd2 = Command("self-cancellable-command", actor=json_actor)
+    click_parser.parse_command(cmd2)
+    await cmd2
+
+    await asyncio.sleep(1)
+
+    assert cmd.status.did_fail
+    assert cmd2.status.did_succeed

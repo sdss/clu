@@ -222,5 +222,14 @@ API
     :noindex:
 .. autofunction:: clu.parsers.click.timeout
     :noindex:
+.. autofunction:: clu.parsers.click.timeout
+    :noindex:
+.. autofunction:: clu.parsers.click.cancel_command
+    :noindex:
+.. autofunction:: clu.parsers.click.get_running_tasks
+    :noindex:
+.. autofunction:: clu.parsers.click.get_current_command_name
+    :noindex:
+
 .. autoclass:: clu.parsers.json.JSONParser
     :noindex:

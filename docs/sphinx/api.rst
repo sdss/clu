@@ -78,9 +78,13 @@ Parser
 .. autoclass:: clu.parsers.click.ClickParser
 .. autoclass:: clu.parsers.click.CluCommand
 .. autoclass:: clu.parsers.click.CluGroup
-.. autoclass:: clu.parsers.json.JSONParser
 
 .. autofunction:: clu.parsers.click.timeout
+.. autofunction:: clu.parsers.click.cancel_command
+.. autofunction:: clu.parsers.click.get_running_tasks
+.. autofunction:: clu.parsers.click.get_current_command_name
+
+.. autoclass:: clu.parsers.json.JSONParser
 
 
 Sockets

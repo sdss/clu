@@ -9,6 +9,7 @@
 ### 🚀 New
 
 * Added a `KeywordStore` that stores each time a keyword was output. It can be enabled by passing ``store=True`` when instantiating an actor and accessed as ``actor.store``. See the documentation for more details.
+* Added `cancel_command()`, `get_current_command_name()`, and `get_current_command_name()` to click parser.
 
 
 ## 1.7.0 - August 14, 2022

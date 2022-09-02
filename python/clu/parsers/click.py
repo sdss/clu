@@ -36,6 +36,8 @@ __all__ = [
     "timeout",
     "unique",
     "get_running_tasks",
+    "cancel_command",
+    "get_current_command_name",
 ]
 
 
@@ -50,6 +52,81 @@ def coroutine(fn):
         return fn(*args, **kwargs)
 
     return _wrapper
+
+
+def get_running_tasks(cmd_name) -> list[asyncio.Task] | None:
+    """Returns the list of tasks for a given command name, sorted by start date."""
+
+    all_tasks = [(t, getattr(t, "_command_name", None)) for t in asyncio.all_tasks()]
+
+    # Sort by date but exclude potential tasks without our added _date
+    matching = [t[0] for t in all_tasks if t[1] == cmd_name]
+    matching_dated = [(m, getattr(m, "_date")) for m in matching if hasattr(m, "_date")]
+
+    if len(matching) == 0:
+        return None
+
+    return [m[0] for m in sorted(matching_dated, key=lambda x: x[1])]
+
+
+def cancel_command(
+    name: str | None = None,
+    ctx: click.Context | None = None,
+    ok_no_exists: bool = True,
+    keep_last: bool = False,
+):
+    """Cancels any running instance of a command callback.
+
+    Parameters
+    ----------
+    name
+        The name of the command. If `None`, calls `.get_current_command_name`.
+    ctx
+        The click context. If `None`, uses the current context.
+    ok_no_exists
+        Exits silently if no command with that name is running.
+    keep_last
+        Does not cancel the last instance of the command. Useful when
+        a command wants to cancel other instances of itself, but not
+        itself.
+
+    Returns
+    -------
+    result
+        `True` if a command was cancelled.
+
+    """
+
+    ctx = ctx or click.get_current_context()
+    name = name or get_current_command_name()
+
+    tasks = get_running_tasks(name)
+    if tasks and keep_last:
+        tasks = tasks[:-1]
+
+    if tasks is None or len(tasks) == 0:
+        if ok_no_exists:
+            return False
+        else:
+            raise ValueError(f"Cannot find any running command {name!r}.")
+
+    for task in tasks:
+        task.cancel()
+
+    return True
+
+
+def get_current_command_name():
+    """Returns the name of the current click command.
+
+    Must be called from inside the command callback.
+
+    """
+
+    ctx = click.get_current_context()
+    subcmd = ctx.invoked_subcommand or ""
+
+    return (ctx.command_path + " " + subcmd).replace(" ", "_")
 
 
 class CluCommand(click.Command):
@@ -274,21 +351,6 @@ def timeout(seconds: float):
         return functools.update_wrapper(wrapper, f)
 
     return decorator
-
-
-def get_running_tasks(cmd_name) -> list[asyncio.Task] | None:
-    """Returns the list of tasks for a given command name, sorted by start date."""
-
-    all_tasks = [(t, getattr(t, "_command_name", None)) for t in asyncio.all_tasks()]
-
-    # Sort by date but exclude potential tasks without our added _date
-    matching = [t[0] for t in all_tasks if t[1] == cmd_name]
-    matching_dated = [(m, getattr(m, "_date")) for m in matching if hasattr(m, "_date")]
-
-    if len(matching) == 0:
-        return None
-
-    return [m[0] for m in sorted(matching_dated, key=lambda x: x[1])]
 
 
 def unique():
