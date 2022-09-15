@@ -295,3 +295,10 @@ async def test_write_exception(actor):
     assert len(command.replies) == 2
     assert command.replies[1].message_code == "e"
     assert command.replies[1].message["error"] == "Error message"
+
+
+async def test_write_empty_keyword(actor, actor_client):
+
+    actor.write("i", message={"test1": [], "test2": [1, 2, 3]}, validate=False)
+    data = await actor_client.reader.read(200)
+    assert data == b"0 0 i test1; test2=1,2,3\n"

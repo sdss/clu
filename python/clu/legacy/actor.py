@@ -499,7 +499,11 @@ class BaseLegacyActor(BaseActor):
                 value = clu.format_value(message[keyword])
             except BaseException as err:
                 raise TypeError(f"Cannot format keyword {keyword!r} " + str(err))
-            lines.append(f"{keyword}={value}")
+
+            if value.strip() == "":
+                lines.append(f"{keyword}")
+            else:
+                lines.append(f"{keyword}={value}")
 
         if concatenate:
             lines = ["; ".join(lines)]
