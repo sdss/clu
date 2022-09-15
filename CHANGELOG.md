@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.8.2 - September 15, 2022
+
+### 🔧 Fixed
+
+* [#110](https://github.com/sdss/clu/issues/110) If the content of a keyword in `LegacyActor` is empty, output the keyword without the equal sign (e.g., `test` instead of `test=`).
+
+
 ## 1.8.1 - September 1, 2022
 
 ### 💥 Breaking changes
