@@ -269,8 +269,6 @@ class CallbackMixIn(object):
 
         self._running = []  # Running callbacks
 
-        self.loop = loop or asyncio.get_event_loop()
-
     async def stop_callbacks(self):
         """Cancels any running callback task."""
 
@@ -320,9 +318,7 @@ class CallbackMixIn(object):
                 # Check that the loop is running. There is a problem in which
                 # self.loop may be set before there is a running loop so we
                 # replace it with a properly running loop.
-                if not self.loop or self.loop.is_running() is False:
-                    self.loop = asyncio.get_event_loop()
-                task = self.loop.call_soon(cb, *args[:n_args])
+                task = asyncio.get_event_loop().call_soon(cb, *args[:n_args])
 
 
 def dict_depth(d: dict) -> int:
