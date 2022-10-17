@@ -21,6 +21,7 @@ import clu.base
 from clu.command import Command, CommandStatus
 from clu.exceptions import CluWarning
 from clu.model import BaseModel, Property
+from clu.parsers.click import command_parser
 from clu.protocol import ReconnectingTCPClientProtocol
 
 from .types.keys import Key, KeysDictionary
@@ -29,6 +30,23 @@ from .types.parser import ParseError, ReplyParser
 
 
 __all__ = ["TronConnection", "TronModel", "TronKey"]
+
+
+@command_parser.command(name="tron-reconnect")
+async def tron_reconnect(*args):
+    """Pings the actor."""
+
+    command = args[0]
+
+    if command.actor.tron is None:
+        return command.fail("Tron instance not set.")
+
+    command.actor.tron.stop()
+    await asyncio.sleep(0.5)
+
+    await command.actor.tron.start()
+
+    return command.finish()
 
 
 class TronKey(Property):

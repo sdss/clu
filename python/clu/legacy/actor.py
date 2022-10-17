@@ -23,7 +23,7 @@ from ..command import Command, TimedCommandList, parse_legacy_command
 from ..parsers import ClickParser
 from ..protocol import TCPStreamServer
 from ..tools import log_reply
-from .tron import TronConnection
+from .tron import TronConnection, tron_reconnect
 from .types.messages import Reply as OpsReply
 
 
@@ -531,3 +531,10 @@ class BaseLegacyActor(BaseActor):
 
 class LegacyActor(ClickParser, BaseLegacyActor):
     """A legacy actor that uses the `.ClickParser`."""
+
+    def __init__(self, *args, **kwargs):
+
+        super().__init__(*args, **kwargs)
+
+        if self.tron:
+            self.parser.add_command(tron_reconnect)
