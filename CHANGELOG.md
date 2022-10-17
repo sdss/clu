@@ -6,6 +6,10 @@
 
 * [#111](https://github.com/sdss/clu/issues/111) If a `LegacyActor` uses the Click parser, and a connection to Tron is defined, adds a `tron-reconnect` command that can be used to force recreating the connection from the actor to Tron.
 
+### 🔧 Fixed
+
+* Avoid setting the event loop on init in `CallbackMixIn`. This caused the event loop to not be running in some cases when `notify()` was invoked.
+
 
 ## 1.8.2 - September 15, 2022
 
