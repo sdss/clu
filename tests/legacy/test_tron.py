@@ -181,3 +181,20 @@ async def test_client_send_command_args(tron_server, actor):
     assert b"alerts ping --help" in tron_server.received[-1]
 
     assert len(command.replies) == 1
+
+
+async def test_tron_reconnect_command(actor, tron_server):
+
+    assert actor.tron.connected()
+    assert "tron-reconnect" in actor.parser.commands
+
+    actor.tron.transport.close()
+    assert actor.tron.connected() is False
+
+    reader, writer = await asyncio.open_connection(actor.host, actor.port)
+    writer.write(b"tron-reconnect\n")
+    await writer.drain()
+
+    await asyncio.sleep(1)
+
+    assert actor.tron.connected()
