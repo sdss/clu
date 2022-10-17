@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### 🚀 New
+
+* [#111](https://github.com/sdss/clu/issues/111) If a `LegacyActor` uses the Click parser, and a connection to Tron is defined, adds a `tron-reconnect` command that can be used to force recreating the connection from the actor to Tron.
+
+
 ## 1.8.2 - September 15, 2022
 
 ### 🔧 Fixed
