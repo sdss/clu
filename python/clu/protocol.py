@@ -625,10 +625,7 @@ class ReconnectingTCPClientProtocol(asyncio.Protocol):
     jitter = 0.119626565582
     max_retries = None
 
-    def __init__(self, *args, loop=None, **kwargs):
-        if loop is None:
-            loop = asyncio.get_event_loop()
-        self._loop = loop
+    def __init__(self, *args, **kwargs):
         self._args = args
         self._kwargs = kwargs
         self._retries = 0
@@ -636,12 +633,15 @@ class ReconnectingTCPClientProtocol(asyncio.Protocol):
         self._continue_trying = True
         self._call_handle = None
         self._connector = None
+        self.connected = False
 
     def connection_lost(self, exc):
+        self.connected = False
         if self._continue_trying:
             self.retry()
 
     def connection_failed(self, exc):
+        self.connected = False
         if self._continue_trying:
             self.retry()
 
@@ -656,7 +656,9 @@ class ReconnectingTCPClientProtocol(asyncio.Protocol):
         self._delay = min(self._delay * self.factor, self.max_delay)
         if self.jitter:
             self._delay = random.normalvariate(self._delay, self._delay * self.jitter)
-        self._call_handle = self._loop.call_later(self._delay, self.connect)
+        self._call_handle = asyncio.get_event_loop().call_later(
+            self._delay, self.connect
+        )
 
     def connect(self):
         if self._connector is None:
@@ -664,13 +666,14 @@ class ReconnectingTCPClientProtocol(asyncio.Protocol):
 
     async def _connect(self):
         try:
-            await self._loop.create_connection(
+            await asyncio.get_event_loop().create_connection(
                 lambda: self,
                 *self._args,
                 **self._kwargs,
             )
+            self.connected = True
         except Exception as exc:
-            self._loop.call_soon(self.connection_failed, exc)
+            asyncio.get_event_loop().call_soon(self.connection_failed, exc)
         finally:
             self._connector = None
 
@@ -682,3 +685,4 @@ class ReconnectingTCPClientProtocol(asyncio.Protocol):
         if self._connector is not None:
             self._connector.cancel()
             self._connector = None
+        self.connected = False

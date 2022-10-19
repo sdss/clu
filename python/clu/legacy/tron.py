@@ -177,9 +177,13 @@ class TronClientProtocol(ReconnectingTCPClientProtocol):
     def __init__(self, on_received, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._on_received = on_received
+        self.transport: asyncio.Transport | None = None
 
     def data_received(self, data):
-        self._loop.call_soon(self._on_received, data)
+        asyncio.get_event_loop().call_soon(self._on_received, data)
+
+    def connection_made(self, transport: asyncio.Transport):
+        self.transport = transport
 
 
 class TronConnection(clu.base.BaseClient):
@@ -231,7 +235,6 @@ class TronConnection(clu.base.BaseClient):
 
         self.rparser: Any = ReplyParser()
 
-        self.transport: asyncio.Transport | None = None
         self.protocol: TronClientProtocol | None = None
 
         self.running_commands = {}
@@ -251,12 +254,16 @@ class TronConnection(clu.base.BaseClient):
             If `True`, gets all the keys in the models.
         """
 
-        loop = asyncio.get_running_loop()
-        self.transport, self.protocol = await loop.create_connection(  # type: ignore
-            lambda: TronClientProtocol(self._handle_reply),
+        self.protocol = TronClientProtocol(
+            self._handle_reply,
             self.host,
             self.port,
         )
+        await self.protocol._connect()
+
+        if not self.protocol.connected:
+            self.log.error(f"Failed connecting to Tron on ({self.host}, {self.port})")
+            return
 
         if get_keys:
             asyncio.create_task(self.get_keys())
@@ -266,26 +273,30 @@ class TronConnection(clu.base.BaseClient):
     def stop(self):
         """Closes the connection."""
 
-        assert self.transport
+        if self.protocol:
+            self.protocol.stop_trying()
 
-        self.transport.close()
+        if self.protocol and self.protocol.transport:
+            self.protocol.transport.close()
+
+        self.protocol = None
 
     def connected(self):
         """Checks whether the client is connected."""
 
-        if self.transport is None:
-            return False
+        if self.protocol and self.protocol.connected:
+            return True
 
-        return not self.transport.is_closing()
+        return False
 
     async def run_forever(self):  # pragma: no cover
 
-        assert self.transport
+        assert self.protocol and self.connected()
 
         # Keep alive until the connection is closed.
         while True:
             await asyncio.sleep(1)
-            if self.transport.is_closing():
+            if self.protocol is None:
                 return
 
     def send_command(
@@ -333,7 +344,7 @@ class TronConnection(clu.base.BaseClient):
 
         """
 
-        assert self.transport
+        assert self.protocol and self.protocol.transport and self.connected()
 
         mid = mid or self._mid
 
@@ -356,7 +367,7 @@ class TronConnection(clu.base.BaseClient):
         )
         self.running_commands[mid] = command
 
-        self.transport.write(command_string.encode())
+        self.protocol.transport.write(command_string.encode())
 
         self._mid += 1
 

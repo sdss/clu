@@ -9,6 +9,7 @@
 ### 🔧 Fixed
 
 * Avoid setting the event loop on init in `CallbackMixIn`. This caused the event loop to not be running in some cases when `notify()` was invoked.
+* Reworked how `TronConnection` uses the reconnecting protocol so that it actually reconnects.
 
 
 ## 1.8.2 - September 15, 2022

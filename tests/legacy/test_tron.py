@@ -155,7 +155,7 @@ async def test_tron_connected(actor, tron_server):
 
     assert actor.tron.connected()
 
-    actor.tron.transport.close()
+    actor.tron.stop()
 
     assert actor.tron.connected() is False
 
@@ -188,7 +188,7 @@ async def test_tron_reconnect_command(actor, tron_server):
     assert actor.tron.connected()
     assert "tron-reconnect" in actor.parser.commands
 
-    actor.tron.transport.close()
+    actor.tron.stop()
     assert actor.tron.connected() is False
 
     reader, writer = await asyncio.open_connection(actor.host, actor.port)
