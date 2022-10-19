@@ -108,7 +108,7 @@ class TCPProtocol(asyncio.Protocol):
         ):
             self.transports.append(transport)
         else:
-            transport.write("Maximum number of connections reached.")
+            transport.write(b"Maximum number of connections reached.")
             transport.close()
 
         if self.connection_callback:
