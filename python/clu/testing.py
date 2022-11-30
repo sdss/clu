@@ -124,7 +124,12 @@ class MockReplyList(list):
             for keyword_raw in keywords_raw.split(";"):
                 if keyword_raw.strip() == "":
                     continue
-                name, value = keyword_raw.split("=", maxsplit=1)
+                if "=" in keyword_raw:
+                    name, value = keyword_raw.split("=", maxsplit=1)
+                else:
+                    name = keyword_raw
+                    value = ""
+
                 data[name.strip()] = value.strip()
 
         elif issubclass(self.actor.__class__, clu.JSONActor):

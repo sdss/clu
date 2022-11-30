@@ -1,5 +1,12 @@
 # Changelog
 
+## Next release
+
+### 🔧 Fixed
+
+* Deal with replies without value in `MockReplyList`.
+
+
 ## 1.9.0 - October 19, 2022
 
 ### 🚀 New
