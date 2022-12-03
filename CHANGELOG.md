@@ -1,6 +1,6 @@
 # Changelog
 
-## Next release
+## 1.9.1 - December 2, 2022
 
 ### 🔧 Fixed
 
