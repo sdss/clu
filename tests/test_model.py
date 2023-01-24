@@ -15,13 +15,11 @@ from clu.model import Model
 
 
 def test_model_fails():
-
     with pytest.raises(ValueError):
         Model("test_model", "{1}")
 
 
 def test_schema_validation_fails():
-
     INVALID_SCHEMA = """
 {
     "title": "my json api",
@@ -56,7 +54,6 @@ def test_schema_validation_fails():
 
 
 def test_schema_no_type():
-
     with pytest.raises(ValueError) as err:
         Model("test_model", "{}")
 
@@ -64,7 +61,6 @@ def test_schema_no_type():
 
 
 def test_schema_bad_type():
-
     with pytest.raises(ValueError) as err:
         Model("test_model", '{"type": "array"}')
 
@@ -72,7 +68,6 @@ def test_schema_bad_type():
 
 
 def test_schema_no_properties():
-
     with pytest.raises(ValueError) as err:
         Model("test_model", '{"type": "object"}')
 
@@ -80,7 +75,6 @@ def test_schema_no_properties():
 
 
 def test_schema_array():
-
     schema = """
     {
         "type": "object",
@@ -96,7 +90,6 @@ def test_schema_array():
 
 @pytest.mark.asyncio
 async def test_model_update_dict():
-
     schema = """
     {
         "type": "object",
@@ -119,7 +112,6 @@ async def test_model_update_dict():
 @pytest.mark.skipif(sys.version_info < (3, 8), reason="Fails on PY37")
 @pytest.mark.asyncio
 async def test_update_model_simulataneous(mocker):
-
     schema = {"type": "object", "properties": {"text": {"type": "string"}}}
 
     model = Model("test_model", schema)
@@ -138,7 +130,6 @@ async def test_update_model_simulataneous(mocker):
 
 
 async def test_update_model_key_not_in_schema():
-
     schema = """
     {
         "type": "object",

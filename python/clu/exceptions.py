@@ -21,7 +21,6 @@ class CluError(Exception):
     """A custom core Clu exception"""
 
     def __init__(self, message=None):
-
         message = "There has been an error" if not message else message
 
         super(CluError, self).__init__(message)
@@ -31,7 +30,6 @@ class CluNotImplemented(CluError):
     """A custom exception for not yet implemented features."""
 
     def __init__(self, message=None):
-
         message = "This feature is not implemented yet." if not message else message
 
         super(CluNotImplemented, self).__init__(message)

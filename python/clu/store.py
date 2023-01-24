@@ -35,7 +35,6 @@ class KeywordStore(defaultdict):
     """
 
     def __init__(self, actor: BaseActor, filter: list[str] | None = None):
-
         self.actor = actor
         self.name = self.actor.name
 
@@ -55,7 +54,6 @@ class KeywordStore(defaultdict):
         """
 
         for keyword, value in reply.message.items():
-
             if self.filter is not None and keyword not in self.filter:
                 continue
 

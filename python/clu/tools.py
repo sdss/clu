@@ -75,7 +75,6 @@ COMMAND_STATUS_TO_CODE: Dict[str, str] = {
 
 
 class CommandStatus(Maskbit):
-
     DONE = enum.auto()
     CANCELLED = enum.auto()
     FAILED = enum.auto()
@@ -93,7 +92,6 @@ class CommandStatus(Maskbit):
     ALL_STATES = READY | ACTIVE_STATES | DONE_STATES
 
     def __init__(self, *args):
-
         self.code: str | None
         if self.name and self.name.upper() in COMMAND_STATUS_TO_CODE:
             self.code = COMMAND_STATUS_TO_CODE[self.name.upper()]
@@ -191,7 +189,6 @@ class StatusMixIn(Generic[MaskbitType]):
         callback_func: Optional[Callable[[MaskbitType], Any]] = None,
         call_now: bool = False,
     ):
-
         self.flags = maskbit_flags
         self.callbacks: List[Callable[[MaskbitType], Any]] = []
         self._status: MaskbitType | None = initial_status
@@ -262,7 +259,6 @@ class CallbackMixIn(object):
         callbacks: List[Callable[[Any], Any]] = [],
         loop: Optional[asyncio.AbstractEventLoop] = None,
     ):
-
         self._callbacks = []
         for cb in callbacks:
             self.register_callback(cb)
@@ -376,7 +372,6 @@ class CaseInsensitiveDict(Dict[str, T]):
     """A dictionary that performs case-insensitive operations."""
 
     def __init__(self, values: Any):
-
         self._lc = []
 
         dict.__init__(self, values)
@@ -400,7 +395,6 @@ class CaseInsensitiveDict(Dict[str, T]):
         return dict.__getitem__(self, self.__get_key__(key))
 
     def __setitem__(self, key, value):
-
         if key.lower() not in self._lc:
             self._lc.append(key.lower())
             dict.__setitem__(self, key, value)
@@ -474,7 +468,6 @@ async def as_complete_failer(
             break
 
     if failed:
-
         # Cancel tasks
         [task.cancel() for task in tasks]
 
@@ -554,7 +547,6 @@ class ActorHandler(logging.Handler):
         code_mapping: Optional[Dict[int, str]] = None,
         filter_warnings: Optional[List[Type[Warning]]] = None,
     ):
-
         self.actor = actor
         self.keyword = keyword
 
@@ -602,7 +594,6 @@ class ActorHandler(logging.Handler):
                 asyncio.create_task(result)
 
     def _filter_warning(self, warning_category_groups):
-
         warning_category, warning_text = warning_category_groups.groups()
         message_lines = [f"{warning_text} ({warning_category})"]
 

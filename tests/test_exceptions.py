@@ -12,7 +12,6 @@ from clu.exceptions import CluNotImplemented
 
 
 def test_clu_not_implemented():
-
     with pytest.raises(CluNotImplemented) as err:
         raise CluNotImplemented()
 

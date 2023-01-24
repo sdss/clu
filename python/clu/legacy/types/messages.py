@@ -58,7 +58,7 @@ class Values(list, Canonized):
         is, by definition, invariant under parsing.
         """
         result = ""
-        for (comma, value) in enumerate(self):
+        for comma, value in enumerate(self):
             if comma:
                 result += ","
             if isinstance(value, float):
@@ -83,7 +83,7 @@ class Values(list, Canonized):
         values. A tokenized string is invariant under parsing.
         """
         result = ""
-        for (comma, value) in enumerate(self):
+        for comma, value in enumerate(self):
             if comma:
                 result += ","
             result += "123"

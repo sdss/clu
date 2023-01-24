@@ -26,7 +26,6 @@ async def test_get_keys(tron_client):
 
 
 async def test_update_model(tron_client, tron_server):
-
     # Get the tron_client transport and write to it as if coming from tron
     client_transport = list(tron_server.transports.values())[0]
 
@@ -70,7 +69,6 @@ async def test_model_callback(tron_client, tron_server, mocker):
 
 
 async def test_parser_fails(tron_client, tron_server, caplog, mocker):
-
     caplog.set_level(logging.WARNING, logger="tron-test")
 
     client_transport = list(tron_server.transports.values())[0]
@@ -87,7 +85,6 @@ async def test_parser_fails(tron_client, tron_server, caplog, mocker):
 
 
 async def test_model_parse_reply_fails(tron_client, tron_server, caplog, mocker):
-
     caplog.set_level(logging.WARNING, logger="tron-test")
 
     client_transport = list(tron_server.transports.values())[0]
@@ -106,7 +103,6 @@ async def test_model_parse_reply_fails(tron_client, tron_server, caplog, mocker)
 
 
 async def test_send_command(actor, tron_server):
-
     command = actor.send_command("alerts", "ping")
     await command
 
@@ -117,7 +113,6 @@ async def test_send_command(actor, tron_server):
 
 
 async def test_parse_reply_unknown_actor(tron_client, tron_server, caplog):
-
     client_transport = list(tron_server.transports.values())[0]
     client_transport.write(".sop 0 sop i version=1.0.0\n".encode())
 
@@ -128,7 +123,6 @@ async def test_parse_reply_unknown_actor(tron_client, tron_server, caplog):
 
 
 async def test_tron_no_models():
-
     tron = TronConnection("test.test", host="localhost", port=6093)
 
     assert tron.models == {}
@@ -136,14 +130,12 @@ async def test_tron_no_models():
 
 
 async def test_mid_out_of_range(tron_client, tron_server):
-
     tron_client.send_command("actor", "command", mid=(2**32 + 2))
 
     assert 2 in tron_client.running_commands
 
 
 async def test_reload_model(tron_client):
-
     assert tron_client.models["alerts"]["version"].value[0] == "2.0.1"
 
     tron_client.models["alerts"].reload()
@@ -152,7 +144,6 @@ async def test_reload_model(tron_client):
 
 
 async def test_tron_connected(actor, tron_server):
-
     assert actor.tron.connected()
 
     actor.tron.stop()
@@ -162,7 +153,6 @@ async def test_tron_connected(actor, tron_server):
 
 @pytest.mark.skipif(sys.version_info < (3, 8), reason="Test fails in PY37")
 async def test_reply_callback(actor, tron_server, mocker):
-
     callback_mock = mocker.MagicMock()
 
     command = actor.send_command("alerts", "ping", callback=callback_mock)
@@ -173,7 +163,6 @@ async def test_reply_callback(actor, tron_server, mocker):
 
 
 async def test_client_send_command_args(tron_server, actor):
-
     command = actor.send_command("alerts", "ping", "--help")
     await command
 
@@ -184,7 +173,6 @@ async def test_client_send_command_args(tron_server, actor):
 
 
 async def test_tron_reconnect_command(actor, tron_server):
-
     assert actor.tron.connected()
     assert "tron-reconnect" in actor.parser.commands
 

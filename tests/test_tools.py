@@ -35,7 +35,6 @@ def callback_object():
 
 @pytest.mark.asyncio
 async def test_callback_mixin(callback_object):
-
     results = []
 
     def callback_func(value):
@@ -59,7 +58,6 @@ async def test_callback_mixin(callback_object):
 
 @pytest.mark.asyncio
 async def test_callback_coro(callback_object):
-
     results = []
 
     async def callback_func(value):
@@ -78,7 +76,6 @@ async def test_callback_coro(callback_object):
 
 @pytest.mark.asyncio
 async def test_callback_stop(callback_object):
-
     results = []
 
     async def callback_func(value):
@@ -96,7 +93,6 @@ async def test_callback_stop(callback_object):
 
 
 def test_callback_none(callback_object):
-
     results = []
 
     def callback_func(value):
@@ -113,7 +109,6 @@ def test_callback_none(callback_object):
 )
 @pytest.mark.asyncio
 async def test_actorhandler(json_client, json_actor, level):
-
     json_actor.log.addHandler(ActorHandler(json_actor, level=logging.DEBUG))
 
     json_actor.log.log(level, "This is a log message.")
@@ -134,7 +129,6 @@ async def test_actorhandler(json_client, json_actor, level):
 
 @pytest.mark.asyncio
 async def test_actorhandler_warning(json_client, json_actor):
-
     handler = ActorHandler(
         json_actor, level=logging.WARNING, filter_warnings=[CluWarning]
     )
@@ -169,14 +163,12 @@ async def test_actorhandler_warning(json_client, json_actor):
     ],
 )
 def test_format_value(value, formatted):
-
     assert format_value(value) == formatted
 
 
 @pytest.mark.asyncio
 class TestStatusMixIn:
     async def test_callback_call_now(self, mocker):
-
         callback = mocker.MagicMock()
 
         StatusMixIn(
@@ -191,7 +183,6 @@ class TestStatusMixIn:
         callback.assert_called_once()
 
     async def test_callback(self, mocker):
-
         callback = mocker.MagicMock()
 
         s = StatusMixIn(CommandStatus, CommandStatus.READY, callback_func=callback)
@@ -203,7 +194,6 @@ class TestStatusMixIn:
         callback.assert_called_once()
 
     async def test_callback_list(self, mocker):
-
         callback = [mocker.MagicMock(), mocker.MagicMock()]
 
         s = StatusMixIn(CommandStatus, CommandStatus.READY, callback_func=callback)
@@ -216,7 +206,6 @@ class TestStatusMixIn:
         callback[1].assert_called_once()
 
     async def test_callback_tuple(self, mocker):
-
         callback = (mocker.MagicMock(), mocker.MagicMock())
 
         s = StatusMixIn(CommandStatus, CommandStatus.READY, callback_func=callback)
@@ -230,7 +219,6 @@ class TestStatusMixIn:
         callback[1].assert_called_once()
 
     async def test_no_callback(self, mocker):
-
         s = StatusMixIn(CommandStatus, CommandStatus.READY)
 
         s.status = CommandStatus.READY
@@ -253,7 +241,6 @@ class TestStatusMixIn:
         assert s.watcher is None
 
     async def test_wait_for_status_same(self):
-
         s = StatusMixIn(CommandStatus, CommandStatus.READY)
 
         await s.wait_for_status(CommandStatus.READY)
@@ -263,37 +250,30 @@ class TestStatusMixIn:
 
 
 class TestCommandStatus:
-
     CS = CommandStatus
 
     def test_command_status_done(self):
-
         assert self.CS.DONE.is_done
         assert self.CS.CANCELLED.is_done
         assert self.CS.FAILED.is_done
 
     def test_command_status_did_fail(self):
-
         assert self.CS.CANCELLED.did_fail
         assert self.CS.FAILED.did_fail
 
     def test_command_status_succeeded(self):
-
         assert self.CS.DONE.did_succeed
 
     def test_command_status_active(self):
-
         assert self.CS.CANCELLING.is_active
         assert self.CS.RUNNING.is_active
         assert self.CS.FAILING.is_active
 
     def test_command_status_failing(self):
-
         assert self.CS.FAILING.is_failing
         assert self.CS.CANCELLING.is_failing
 
     def test_is_combination(self):
-
         assert self.CS.DONE.is_combination is False
 
         comb_bit = self.CS.DONE | self.CS.RUNNING
@@ -311,7 +291,6 @@ class TestCommandStatus:
         ],
     )
     def test_code_to_status(self, code, status):
-
         assert self.CS.code_to_status(code) == status
 
 

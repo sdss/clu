@@ -18,7 +18,6 @@ pytestmark = [pytest.mark.asyncio]
 
 
 async def test_json_actor(json_actor, json_client):
-
     assert json_actor.name == "json_actor"
     assert json_actor.log is not None
 
@@ -27,7 +26,6 @@ async def test_json_actor(json_actor, json_client):
 
 
 async def test_json_actor_command_write(json_actor, json_client):
-
     command = Command(
         command_string="ping",
         actor=json_actor,
@@ -41,7 +39,6 @@ async def test_json_actor_command_write(json_actor, json_client):
 
 
 async def test_json_actor_pong(json_client):
-
     json_client.writer.write(b"0 ping\n")
 
     data = await json_client.reader.readline()
@@ -57,7 +54,6 @@ async def test_json_actor_pong(json_client):
 
 
 async def test_json_actor_broadcast(json_actor, json_client):
-
     json_actor.write(message={"text": "hola"}, broadcast=True)
 
     data = await json_client.reader.readline()
@@ -68,7 +64,6 @@ async def test_json_actor_broadcast(json_actor, json_client):
 
 
 async def test_multiline_on(json_actor, json_client):
-
     json_client.writer.write(b"multiline\n")
     await asyncio.sleep(0.01)
 
@@ -77,7 +72,6 @@ async def test_multiline_on(json_actor, json_client):
 
 
 async def test_multiline_off(json_actor, json_client):
-
     json_client.writer.write(b"multiline\n")
     json_client.writer.write(b"multiline --off\n")
     await asyncio.sleep(0.01)
@@ -90,7 +84,6 @@ async def test_multiline_off(json_actor, json_client):
 
 
 async def test_json_actor_send_command(json_actor):
-
     with pytest.raises(NotImplementedError) as error:
         json_actor.send_command("a_command")
 
@@ -98,7 +91,6 @@ async def test_json_actor_send_command(json_actor):
 
 
 async def test_timed_command(json_actor, json_client):
-
     json_actor.timed_commands.add_command("ping", delay=0.5)
 
     await asyncio.sleep(1.6)
@@ -117,7 +109,6 @@ async def test_timed_command(json_actor, json_client):
 
 
 async def test_write_update_model_fails(json_actor, json_client, mocker):
-
     mocker.patch.object(
         json_actor.model,
         "validate",
@@ -133,7 +124,6 @@ async def test_write_update_model_fails(json_actor, json_client, mocker):
 
 
 async def test_write_no_validate(json_actor, json_client, mocker):
-
     mock_func = mocker.patch.object(json_actor.model, "update_model")
 
     json_actor.write("i", {"text": "Some message"}, validate=False)
@@ -142,14 +132,12 @@ async def test_write_no_validate(json_actor, json_client, mocker):
 
 
 async def test_actor_no_schema(json_actor):
-
     assert json_actor.model is not None
     json_actor.load_schema(None)
     assert json_actor.model is not None
 
 
 async def test_write_exception(json_actor):
-
     command = Command(
         command_string="ping",
         actor=json_actor,
@@ -168,7 +156,6 @@ async def test_write_exception(json_actor):
 
 
 async def test_json_write_store(json_actor):
-
     json_actor.write("i", {"text": "hello!"})
 
     assert json_actor.store is not None

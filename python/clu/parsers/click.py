@@ -133,7 +133,6 @@ class CluCommand(click.Command):
     """Override :py:class:`click.Command` to pass the actor and command."""
 
     def __init__(self, *args, context_settings=None, **kwargs):
-
         # Unless told otherwise, set ignore_unknown_options=True to prevent
         # negative numbers to be considered as options. See #40.
         if context_settings is None or "ignore_unknown_options" not in context_settings:
@@ -202,9 +201,7 @@ class CluCommand(click.Command):
         """As :py:class:`click.Command.invoke` but passes the actor and command."""
 
         if self.callback is not None:
-
             with ctx:
-
                 loop = asyncio.get_event_loop()
 
                 ctx.obj["parser_args"][0].context = ctx
@@ -300,7 +297,6 @@ class CluGroup(click.Group):
         return decorator
 
     def parse_args(self, ctx, args):  # pragma: no cover
-
         # Copy this method so that we can turn off the printing of the
         # usage before ctx.exit()
         if not args and self.no_args_is_help and not ctx.resilient_parsing:
@@ -341,7 +337,6 @@ def timeout(seconds: float):
     """A decorator to timeout the command after a number of ``seconds``."""
 
     def decorator(f):
-
         # This is a bit of a hack but we cannot access the context here so
         # we add the timeout directly to the callback function.
         f.timeout = seconds
@@ -361,7 +356,6 @@ def unique():
     def decorator(f):
         @functools.wraps(f)
         async def new_func(command, *args, **kwargs):
-
             ctx = click.get_current_context()
 
             subcmd = ctx.invoked_subcommand or ""
@@ -451,7 +445,6 @@ def help_(ctx, *args, parser_command):
 
     # Gets the help lines for the command group or for a specific command.
     if len(parser_command) > 0:
-
         ctx_commands = ctx.command.commands
 
         for ii in range(len(parser_command)):
@@ -468,7 +461,6 @@ def help_(ctx, *args, parser_command):
                 ctx_commands = ctx_command.commands
 
     else:
-
         help_lines: str = ctx.get_help()
 
     message = []
@@ -591,11 +583,9 @@ class ClickParser:
         """Handles an exception during parsing or execution of a command."""
 
         try:
-
             raise exception
 
-        except (click.ClickException) as ee:
-
+        except click.ClickException as ee:
             ctx = command.ctx
             message = ""
 
@@ -620,12 +610,10 @@ class ClickParser:
                 command.write("e", error=msg)
 
         except (click.exceptions.Exit, click.exceptions.Abort):
-
             if not command.status.is_done:
                 command.fail(error=f"Command {command.body!r} was aborted.")
 
         except Exception as err:
-
             msg = (
                 f"Command {command.body!r} failed because of an uncaught "
                 f"error '{err.__class__.__name__}: {str(err)}'. See "

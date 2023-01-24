@@ -102,7 +102,6 @@ class BaseLegacyActor(BaseActor):
         additional_properties: bool = False,
         config: Dict[str, Any] = {},
     ):
-
         super().__init__(
             name,
             version=version,
@@ -533,7 +532,6 @@ class LegacyActor(ClickParser, BaseLegacyActor):
     """A legacy actor that uses the `.ClickParser`."""
 
     def __init__(self, *args, **kwargs):
-
         super().__init__(*args, **kwargs)
 
         if self.tron:

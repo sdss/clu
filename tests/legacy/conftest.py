@@ -39,11 +39,9 @@ get_keys_reply = (
 
 @pytest.fixture
 async def tron_server(unused_tcp_port_factory):
-
     received = []
 
     async def echo(transport, data):
-
         received.append(data)
 
         if "getFor=alerts" in data.decode():
@@ -70,7 +68,6 @@ async def tron_server(unused_tcp_port_factory):
 
 @pytest.fixture
 async def tron_client(tron_server, request):
-
     # Used to trigger echo messages from the tron server.
 
     models = ["alerts"]
@@ -92,7 +89,6 @@ async def tron_client(tron_server, request):
 
 @pytest.fixture
 async def actor(tron_server, unused_tcp_port_factory, tmp_path):
-
     models = ["alerts"] if "ACTORKEYS_DIR" in os.environ else None
 
     _actor = LegacyActor(
@@ -117,7 +113,6 @@ async def actor(tron_server, unused_tcp_port_factory, tmp_path):
 
 @pytest.fixture
 async def actor_client(actor):
-
     _client = await open_connection(actor.host, actor.port)
     _client.actor = actor
 

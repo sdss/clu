@@ -19,7 +19,6 @@ pytestmark = [pytest.mark.asyncio]
 
 
 async def test_actor(actor, actor_client):
-
     assert actor.version == "0.1.0"
     assert actor.host == "localhost"
     assert actor.tron is not None
@@ -31,12 +30,10 @@ async def test_actor(actor, actor_client):
 
 
 async def test_tron(actor):
-
     assert actor.models["alerts"]["version"].value[0] == "2.0.1"
 
 
 async def test_actor_no_tron(unused_tcp_port_factory):
-
     actor = LegacyActor(
         "test_actor", "localhost", unused_tcp_port_factory(), version="0.1.0"
     )
@@ -50,7 +47,6 @@ async def test_actor_no_tron(unused_tcp_port_factory):
 
 
 async def test_actor_write(actor, actor_client):
-
     actor.write("i", text="Hi!", broadcast=True)
 
     assert (await actor_client.reader.readuntil()).strip().decode() == "0 0 i text=Hi!"
@@ -62,7 +58,6 @@ async def test_actor_write(actor, actor_client):
 
 
 async def test_new_command_client(actor, actor_client):
-
     actor_client.writer.write(b"2 ping\n")
 
     await asyncio.sleep(0.01)
@@ -78,7 +73,6 @@ async def test_new_command_client(actor, actor_client):
 
 
 async def test_get_version(actor, actor_client):
-
     actor_client.writer.write(b"0 version\n")
 
     await asyncio.sleep(0.01)
@@ -94,7 +88,6 @@ async def test_get_version(actor, actor_client):
 
 
 async def test_new_command(actor, actor_client):
-
     assert actor == actor_client.actor
 
     # This is the transport that correspond to actor_client. Note that
@@ -119,7 +112,6 @@ async def test_new_command(actor, actor_client):
 
 
 async def test_bad_command(actor, actor_client):
-
     actor_client.writer.write("0X bad_command argument\n".encode())
 
     await asyncio.sleep(0.01)
@@ -134,7 +126,6 @@ async def test_bad_command(actor, actor_client):
 
 
 async def test_help_command(actor, actor_client):
-
     actor_client.writer.write(b"help\n")
 
     await asyncio.sleep(0.01)
@@ -145,7 +136,6 @@ async def test_help_command(actor, actor_client):
 
 
 async def test_ping_help_command(actor, actor_client):
-
     actor_client.writer.write(b"ping --help\n")
 
     await asyncio.sleep(0.01)
@@ -157,7 +147,6 @@ async def test_ping_help_command(actor, actor_client):
 
 
 async def test_command_failed_to_parse(actor, actor_client):
-
     transport = actor.transports[1]
     command = actor.new_command(transport, b"0 badcommand\n")
 
@@ -172,7 +161,6 @@ async def test_command_failed_to_parse(actor, actor_client):
 
 
 async def test_write_update_model_fails(actor, actor_client, mocker):
-
     mocker.patch.object(
         actor.model,
         "validate",
@@ -189,7 +177,6 @@ async def test_write_update_model_fails(actor, actor_client, mocker):
 
 
 async def test_write_no_validate(actor, mocker):
-
     mock_func = mocker.patch.object(actor.model, "update_model")
 
     actor.write("i", {"text": "Some message"}, validate=False)
@@ -198,7 +185,6 @@ async def test_write_no_validate(actor, mocker):
 
 
 async def test_write_silent(actor, mocker):
-
     mock_func = mocker.patch.object(actor, "_write_internal")
 
     actor.write("i", {"text": "Some message"}, silent=True)
@@ -207,7 +193,6 @@ async def test_write_silent(actor, mocker):
 
 
 async def test_write_str(actor, actor_client, mocker):
-
     actor.transports[1].write = mocker.MagicMock()
 
     actor.write("i", "Some message")
@@ -216,13 +201,11 @@ async def test_write_str(actor, actor_client, mocker):
 
 
 async def test_write_invalid(actor):
-
     with pytest.raises(TypeError):
         actor.write("i", 100)
 
 
 async def test_write_concatenate_false(actor, actor_client, mocker):
-
     actor.transports[1].write = mocker.MagicMock()
 
     actor.write(
@@ -241,7 +224,6 @@ async def test_write_concatenate_false(actor, actor_client, mocker):
 
 
 async def test_send_command_no_tron(actor):
-
     actor.tron = None
 
     with pytest.raises(CluError):
@@ -250,7 +232,6 @@ async def test_send_command_no_tron(actor):
 
 @pytest.mark.parametrize("new_command", [True, False])
 async def test_send_command_from_command(actor, mocker, new_command: bool):
-
     send_command_mock = mocker.patch.object(actor.tron, "send_command")
 
     command = Command(
@@ -283,7 +264,6 @@ async def test_write_dict_max_depth(actor, actor_client):
 
 
 async def test_write_exception(actor):
-
     command = Command(
         command_string="ping",
         actor=actor,
@@ -298,7 +278,6 @@ async def test_write_exception(actor):
 
 
 async def test_write_empty_keyword(actor, actor_client):
-
     actor.write("i", message={"test1": [], "test2": [1, 2, 3]}, validate=False)
     data = await actor_client.reader.read(200)
     assert data == b"0 0 i test1; test2=1,2,3\n"

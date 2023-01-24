@@ -64,7 +64,6 @@ class TronKey(Property):
         model: Optional[TronModel] = None,
         callback: Optional[Callable[[TronKey], Any]] = None,
     ):
-
         initial_value = [None] * len(key.typedValues.vtypes)
         super().__init__(name, value=initial_value, model=model, callback=callback)
 
@@ -108,7 +107,6 @@ class TronModel(BaseModel[TronKey]):
         keydict: KeysDictionary,
         callback: Optional[Callable[[TronModel], Any]] = None,
     ):
-
         super().__init__(keydict.name, callback=callback)
 
         self.keydict = keydict
@@ -134,7 +132,6 @@ class TronModel(BaseModel[TronKey]):
 
         with self._lock:
             for reply_key in reply.keywords:
-
                 self.last_seen = time.time()
 
                 key_name = reply_key.name.lower()
@@ -213,7 +210,6 @@ class TronConnection(clu.base.BaseClient):
         models: List[str] = [],
         **kwargs,
     ):
-
         super().__init__(name, **kwargs)
 
         self.commander = commander
@@ -290,7 +286,6 @@ class TronConnection(clu.base.BaseClient):
         return False
 
     async def run_forever(self):  # pragma: no cover
-
         assert self.protocol and self.connected()
 
         # Keep alive until the connection is closed.
@@ -380,12 +375,10 @@ class TronConnection(clu.base.BaseClient):
         n_keys = 10
 
         for model in self.models.values():
-
             actor = model.name
             keys = [key.lower() for key in model]
 
             for ii in range(0, len(keys), n_keys):
-
                 keys_to_request = keys[ii : ii + n_keys]
 
                 if len(keys_to_request) == 0:

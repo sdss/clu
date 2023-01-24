@@ -47,7 +47,6 @@ async def slow_command(command):
 
 @pytest.fixture
 async def actor(unused_tcp_port_factory):
-
     _actor = LegacyActor("test_actor", host="localhost", port=unused_tcp_port_factory())
     _actor = await setup_test_actor(_actor)
 
@@ -62,7 +61,6 @@ async def test_actor(actor):
 
 
 async def test_send_command(actor):
-
     cmd = actor.invoke_mock_command("ping")
     await cmd
 
@@ -75,7 +73,6 @@ async def test_send_command(actor):
 
 
 async def test_send_command1(actor):
-
     cmd = actor.invoke_mock_command("group1 command1")
     await cmd
 
@@ -92,7 +89,6 @@ async def test_send_command1(actor):
 
 
 async def test_send_command2(actor):
-
     cmd = actor.invoke_mock_command("group1 command2")
     await cmd
 
@@ -104,7 +100,6 @@ async def test_send_command2(actor):
 
 
 async def test_command_timeout(actor):
-
     cmd = actor.invoke_mock_command("slow-command")
     await cmd
 
@@ -112,7 +107,6 @@ async def test_command_timeout(actor):
 
 
 async def test_json_actor(json_actor):
-
     json_actor = await setup_test_actor(json_actor)
 
     cmd = json_actor.invoke_mock_command("ping")
@@ -127,7 +121,6 @@ async def test_json_actor(json_actor):
 
 
 async def test_amqp_actor(amqp_actor):
-
     amqp_actor = await setup_test_actor(amqp_actor)
 
     cmd = await amqp_actor.invoke_mock_command("ping")

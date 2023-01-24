@@ -71,6 +71,7 @@ tokens = (
 
 literals = "+-*/%|&~^<>=!?()[]{}.,;:\\'\""
 
+
 # Whitespace
 def t_CPP_WS(t):
     r"\s+"
@@ -84,6 +85,7 @@ t_CPP_DPOUND = r"\#\#"
 # Identifier
 t_CPP_ID = r"[A-Za-z_][\w_]*"
 
+
 # Integer literal
 def CPP_INTEGER(t):
     r"(((((0x)|(0X))[0-9a-fA-F]+)|(\d+))([uU][lL]|[lL][uU]|[uU]|[lL])?)"
@@ -94,6 +96,7 @@ t_CPP_INTEGER = CPP_INTEGER
 
 # Floating literal
 t_CPP_FLOAT = r"((\d+)(\.\d+)(e(\+|-)?(\d+))? | (\d+)e(\+|-)?(\d+))([lL]|[fF])?"
+
 
 # String literal
 def t_CPP_STRING(t):
@@ -264,7 +267,6 @@ class Preprocessor(object):
     # ----------------------------------------------------------------------
 
     def lexprobe(self):
-
         # Determine the token type for identifiers
         self.lexer.input("identifier")
         tok = self.lexer.token()
@@ -727,7 +729,6 @@ class Preprocessor(object):
     # Parse an input string/
     # ----------------------------------------------------------------------
     def parsegen(self, input, source=None):
-
         # Replace trigraph sequences
         t = trigraph(input)
         lines = self.group_lines(t)

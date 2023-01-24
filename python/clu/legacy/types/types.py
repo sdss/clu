@@ -418,7 +418,6 @@ class Hex(UInt):
 
 # Enumerated value type
 class Enum(ValueType):
-
     baseType = str
     storage = "int2"
     customKeys = "labelHelp"
@@ -483,7 +482,6 @@ class Enum(ValueType):
 
 # Boolean value type
 class Bool(ValueType):
-
     baseType = int  # bool cannot be subclassed
     storage = "int2"
 
@@ -529,7 +527,6 @@ class Bool(ValueType):
 
 # Bitfield value type
 class Bits(UInt):
-
     fieldSpec = re.compile("([a-zA-Z0-9_]+)?(?::([0-9]+))?$")
 
     @staticmethod

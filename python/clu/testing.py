@@ -72,7 +72,6 @@ class MockReply(dict):
         flag: str,
         data: Dict[str, Any] = {},
     ):
-
         self.command_id = command_id
         self.user_id = user_id
         self.flag = flag
@@ -94,7 +93,6 @@ class MockReplyList(list):
     )
 
     def __init__(self, actor):
-
         self.actor = actor
 
         list.__init__(self)
@@ -163,7 +161,6 @@ class MockReplyList(list):
         list.__init__(self)
 
     def __contains__(self, m):
-
         return any([m in reply[kw] for reply in self for kw in reply.keys()])
 
 

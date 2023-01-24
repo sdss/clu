@@ -59,7 +59,6 @@ class AMQPBaseActor(AMQPClient, BaseActor):
     """
 
     def __init__(self, *args, **kwargs):
-
         super().__init__(*args, **kwargs)
 
         self.commands_queue = None
@@ -213,7 +212,6 @@ class TCPBaseActor(BaseActor):
         *args,
         **kwargs,
     ):
-
         super().__init__(name, *args, **kwargs)
 
         self.host = host or "localhost"
@@ -363,7 +361,6 @@ class TCPBaseActor(BaseActor):
         """Write a reply to the users."""
 
         def send_to_transport(transport, message):
-
             if getattr(transport, "multiline", False):
                 message_json = json.dumps(message, sort_keys=False, indent=4) + "\n"
             else:
@@ -406,7 +403,6 @@ class JSONActor(ClickParser, TCPBaseActor):
     """An implementation of `.TCPBaseActor` that uses a Click command parser."""
 
     def __init__(self, *args, **kwargs):
-
         super().__init__(*args, **kwargs)
 
         # Add the multiline command

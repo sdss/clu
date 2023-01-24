@@ -264,7 +264,6 @@ class Key(Consumer):
 
 
 class KeysManager(object):
-
     keys = {}
 
     # These need to be classmethods, not static methods, so that
@@ -467,7 +466,7 @@ class KeysDictionary(object):
                 "KeysDictionary": KeysDictionary,
                 "ByName": protoTypes.ByName,
             }
-            for (name, value) in protoTypes.__dict__.items():
+            for name, value in protoTypes.__dict__.items():
                 if isinstance(value, type) and issubclass(
                     value, (protoTypes.ValueType, protoTypes.CompoundValueType)
                 ):

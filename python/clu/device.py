@@ -68,7 +68,6 @@ class Device(CallbackMixIn):
         port: int,
         callback: Optional[Callable[[str], Any]] = None,
     ):
-
         self.host = host
         self.port = port
 

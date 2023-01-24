@@ -63,7 +63,6 @@ class TCPProtocol(asyncio.Protocol):
         data_received_callback: Optional[Callable[[str], Any]] = None,
         max_connections: Optional[int] = None,
     ):
-
         self.connection_callback = connection_callback
         self.data_received_callback = data_received_callback
 
@@ -146,7 +145,6 @@ class PeriodicTCPServer(TCPProtocol):
         sleep_time: float = 1,
         **kwargs,
     ):
-
         self._periodic_callback = periodic_callback
         self.sleep_time = sleep_time
 
@@ -156,7 +154,6 @@ class PeriodicTCPServer(TCPProtocol):
 
     @classmethod
     async def create_client(cls, *args, **kwargs):
-
         raise NotImplementedError(
             "create_client is not implemented for PeriodicTCPServer."
         )
@@ -190,9 +187,7 @@ class PeriodicTCPServer(TCPProtocol):
         self._periodic_callback = func
 
     async def _emit_periodic(self):
-
         while True:
-
             if self.periodic_callback is not None:
                 for transport in self.transports:
                     if asyncio.iscoroutinefunction(self.periodic_callback):
@@ -236,7 +231,6 @@ class TCPStreamServer(object):
         loop: Optional[asyncio.AbstractEventLoop] = None,
         max_connections: Optional[int] = None,
     ):
-
         self.host = host
         self.port = port
 
@@ -275,7 +269,6 @@ class TCPStreamServer(object):
         return self._server.serve_forever()
 
     def is_serving(self) -> bool:
-
         assert self._server
         return self._server.is_serving()
 
@@ -309,7 +302,6 @@ class TCPStreamServer(object):
             await self._do_callback(self.connection_callback, writer.transport)
 
         while True:
-
             try:
                 data = await reader.readuntil()
             except (asyncio.IncompleteReadError, ConnectionResetError):
@@ -339,7 +331,6 @@ class TCPStreamClient:
     """An object containing a writer and reader stream to a TCP server."""
 
     def __init__(self, host: str, port: int):
-
         self.host = host
         self.port = port
 
@@ -419,7 +410,6 @@ class TCPStreamPeriodicServer(TCPStreamServer):
         sleep_time: float = 1,
         **kwargs,
     ):
-
         self._periodic_callback = periodic_callback
         self.sleep_time = sleep_time
 
@@ -455,9 +445,7 @@ class TCPStreamPeriodicServer(TCPStreamServer):
         self._periodic_callback = func
 
     async def _emit_periodic(self):
-
         while True:
-
             if self._server and self.periodic_callback:
                 for transport in self.transports:
                     await self._do_callback(self.periodic_callback, transport)
@@ -497,7 +485,6 @@ class TopicListener(object):
         port: int = 5672,
         ssl: bool = False,
     ):
-
         self.url = url
         self.user = user
         self.password = password

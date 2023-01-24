@@ -17,17 +17,14 @@ from clu.exceptions import CluWarning
 
 @pytest.fixture
 def command(mocker):
-
     yield Command(command_string="say-hello", command_id=100, actor=mocker.MagicMock())
 
 
 def test_command(command):
-
     assert command.body == "say-hello"
 
 
 def test_set_status(command):
-
     command.set_status(CommandStatus.DONE)
     assert command.status.is_done
     assert command.status == CommandStatus.DONE
@@ -35,7 +32,6 @@ def test_set_status(command):
 
 
 def test_set_done_command(command):
-
     command.set_status(CommandStatus.DONE)
 
     with pytest.warns(CluWarning):
@@ -43,13 +39,11 @@ def test_set_done_command(command):
 
 
 def test_set_status_fails(command):
-
     with pytest.raises(TypeError):
         command.set_status({})
 
 
 def test_set_status_int(command):
-
     command.set_status(CommandStatus.FAILED.value)
     assert command.status.is_done
     assert command.status.did_fail
@@ -57,7 +51,6 @@ def test_set_status_int(command):
 
 
 def test_set_status_str(command):
-
     command.status = "TIMEDOUT"
     assert command.status.is_done
     assert command.status.did_fail
@@ -66,19 +59,16 @@ def test_set_status_str(command):
 
 
 def test_set_status_str_fails(command):
-
     with pytest.raises(TypeError):
         command.set_status("AAAAA")
 
 
 def test_child_command(command):
-
     child = Command(command_string="new-command", parent=command)
     assert child.parent == command
 
 
 def test_child_command_write(command):
-
     command.command_id = 666
     child = Command(command_string="new-command", parent=command)
 
@@ -94,7 +84,6 @@ def test_child_command_write(command):
 
 
 def test_child_command_finished(command):
-
     child = Command(command_string="new-command", parent=command)
 
     child.finish(text="Finished")
@@ -112,7 +101,6 @@ def test_child_command_finished(command):
 
 
 def test_child_command_running(command):
-
     child = Command(command_string="new-command", parent=command)
 
     child.set_status("RUNNING")
@@ -120,7 +108,6 @@ def test_child_command_running(command):
 
 
 def test_child_command_failed(command):
-
     child = Command(command_string="new-command", parent=command)
 
     child.fail(error="Failed")
@@ -138,7 +125,6 @@ def test_child_command_failed(command):
 
 
 def test_write_str(command):
-
     command.write("i", "hello")
     command.actor.write.assert_called_with(
         "i",
@@ -151,7 +137,6 @@ def test_write_str(command):
 
 
 def test_write_dict(command):
-
     command.write("i", {"key": "hello"})
     command.actor.write.assert_called_with(
         "i",
@@ -164,13 +149,11 @@ def test_write_dict(command):
 
 
 def test_write_bad_message(command):
-
     with pytest.raises(ValueError):
         command.write("i", 100)
 
 
 def test_write_no_actor(command):
-
     command.actor = None
 
     with pytest.raises(CommandError):
@@ -192,7 +175,6 @@ async def test_wait_for_status(command, event_loop):
 
 @pytest.mark.asyncio
 async def test_status_callback(command):
-
     global result
     result = 0
 
@@ -210,7 +192,6 @@ async def test_status_callback(command):
 
 @pytest.mark.asyncio
 async def test_time_limit(event_loop):
-
     command = Command(command_string="new-command", time_limit=0.5)
     await asyncio.sleep(0.6)
 
@@ -228,7 +209,6 @@ async def test_time_limit(event_loop):
     ],
 )
 def test_write_logging_code(command, logcode, sdss_code):
-
     command.write(logcode, "hello")
     command.actor.write.assert_called_with(
         sdss_code,
@@ -241,6 +221,5 @@ def test_write_logging_code(command, logcode, sdss_code):
 
 
 def test_write_bad_logging_code(command):
-
     with pytest.raises(ValueError):
         command.write(2, "hello")

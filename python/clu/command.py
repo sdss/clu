@@ -137,7 +137,6 @@ class BaseCommand(
         time_limit: float | None = None,
         loop: Optional[asyncio.AbstractEventLoop] = None,
     ):
-
         self.commander_id = commander_id
         self.consumer_id = consumer_id
         self.command_id = command_id
@@ -245,7 +244,6 @@ class BaseCommand(
             raise TypeError(f"Status {status!r} is not a valid command status.")
 
         if status != self._status:
-
             status_code = status.code
             if status_code is None:
                 raise ValueError(f"Invalid status code {status_code!r}.")
@@ -417,7 +415,6 @@ class Command(BaseCommand[Actor_co, "Command"]):
         transport: Optional[Any] = None,
         **kwargs,
     ):
-
         BaseCommand.__init__(self, **kwargs)
 
         #: The raw command string.
@@ -525,7 +522,6 @@ class TimedCommandList(list):
         resolution=0.5,
         loop: Optional[asyncio.AbstractEventLoop] = None,
     ):
-
         self.resolution = resolution
         self.actor = actor
         self.loop = loop or asyncio.get_event_loop()
@@ -546,7 +542,6 @@ class TimedCommandList(list):
         first_time = True
 
         while True:
-
             for timed_command in self:
                 elapsed = current_time - timed_command.last_run
                 if first_time or elapsed > timed_command.delay:
@@ -609,7 +604,6 @@ class TimedCommand(object):
     """
 
     def __init__(self, command_string: str, delay: float = 1, first_silent=False):
-
         self.command_string = command_string
         self.delay = delay
 
@@ -646,7 +640,6 @@ class FakeCommand(BaseCommand):
     """A fake command that output to a logger."""
 
     def __init__(self, log: logging.Logger, actor=None):
-
         self.log = log
 
         super().__init__(actor=actor)
@@ -657,7 +650,6 @@ class FakeCommand(BaseCommand):
         message: Optional[Union[Dict[str, Any], str]] = None,
         **kwargs,
     ):
-
         if message_code == "d":
             level = logging.DEBUG
         elif message_code == "i":

@@ -26,7 +26,6 @@ pytestmark = [pytest.mark.asyncio]
 @pytest.fixture
 def message_maker(mocker):
     def _make_message(headers=None, body=None):
-
         headers = headers or {"command_id": 1, "message_code": "i", "sender": "me"}
 
         message = mocker.MagicMock()
@@ -40,12 +39,10 @@ def message_maker(mocker):
 
 
 def test_actor(amqp_actor):
-
     assert amqp_actor.name == "amqp_actor"
 
 
 async def test_client_send_command(amqp_client, amqp_actor):
-
     cmd = await amqp_client.send_command("amqp_actor", "ping")
     await cmd
 
@@ -55,7 +52,6 @@ async def test_client_send_command(amqp_client, amqp_actor):
 
 
 async def test_client_send_command_args(amqp_client, amqp_actor):
-
     cmd = await amqp_client.send_command("amqp_actor", "ping", "--help")
     await cmd
 
@@ -65,7 +61,6 @@ async def test_client_send_command_args(amqp_client, amqp_actor):
 
 
 async def test_get_version(amqp_client, amqp_actor):
-
     cmd = await amqp_client.send_command("amqp_actor", "version")
     await cmd
 
@@ -75,7 +70,6 @@ async def test_get_version(amqp_client, amqp_actor):
 
 
 async def test_bad_command(amqp_client, amqp_actor):
-
     cmd = await amqp_client.send_command("amqp_actor", "bad_command")
     await cmd
 
@@ -83,7 +77,6 @@ async def test_bad_command(amqp_client, amqp_actor):
 
 
 async def test_send_command_actor_not_connected(amqp_client, amqp_actor):
-
     cmd = await amqp_client.send_command("amqp_actor_2", "ping")
     await cmd
 
@@ -92,7 +85,6 @@ async def test_send_command_actor_not_connected(amqp_client, amqp_actor):
 
 
 async def test_queue_locked(amqp_actor):
-
     with pytest.raises(CluError) as error:
         actor2 = AMQPActor(name="amqp_actor", port=amqp_actor.connection.port)
         await actor2.start()
@@ -147,7 +139,6 @@ async def test_model_callback(amqp_client, amqp_actor, mocker):
 
 
 async def test_client_get_schema_fails(amqp_actor, amqp_client, caplog):
-
     # Remove actor knowledge of its own model
     amqp_actor.model = None
 
@@ -162,7 +153,6 @@ async def test_client_get_schema_fails(amqp_actor, amqp_client, caplog):
 
 
 async def test_bad_keyword(amqp_actor, caplog):
-
     schema = """{
     "type": "object",
     "properties": {
@@ -183,7 +173,6 @@ async def test_bad_keyword(amqp_actor, caplog):
 
 
 async def test_write_update_model_fails(amqp_actor, mocker):
-
     mocker.patch.object(
         amqp_actor.model,
         "validate",
@@ -203,7 +192,6 @@ async def test_write_update_model_fails(amqp_actor, mocker):
 
 
 async def test_write_no_validate(amqp_actor, mocker):
-
     mock_func = mocker.patch.object(amqp_actor.model, "update_model")
 
     amqp_actor.write("i", {"text": "Some message"}, validate=False)
@@ -212,7 +200,6 @@ async def test_write_no_validate(amqp_actor, mocker):
 
 
 async def test_write_silent(amqp_actor, mocker):
-
     mock_func = mocker.patch.object(amqp_actor, "_write_internal")
 
     amqp_actor.write("i", {"text": "Some message"}, silent=True)
@@ -221,7 +208,6 @@ async def test_write_silent(amqp_actor, mocker):
 
 
 async def test_new_command_fails(amqp_actor, mocker):
-
     # Use CoroutineMock for Python 3.7-3.8 compatibility.
     message = CoroutineMock()
 
@@ -246,7 +232,6 @@ class TestHandleReply:
     async def test_client_handle_reply_bad_message(
         self, amqp_client, message_maker, caplog
     ):
-
         message = message_maker()
         message.correlation_id = 100
 
@@ -257,7 +242,6 @@ class TestHandleReply:
 
     @pytest.mark.parametrize("log", [False, logging.getLogger()])
     async def test_reply_no_message_code(self, message_maker, log, caplog):
-
         message = message_maker(headers={"command_id": 1, "sender": "me"})
         reply = AMQPReply(message, log=log)
 
@@ -267,7 +251,6 @@ class TestHandleReply:
 
     @pytest.mark.parametrize("log", [False, logging.getLogger()])
     async def test_reply_no_sender(self, message_maker, log, caplog):
-
         message = message_maker(headers={"command_id": 1, "message_code": "i"})
         reply = AMQPReply(message, log=log)
 
@@ -278,7 +261,6 @@ class TestHandleReply:
 
 @pytest.mark.skipif(sys.version_info < (3, 8), reason="Test fails in PY37")
 async def test_client_send_command_callback(amqp_client, amqp_actor, mocker):
-
     callback_mock = mocker.MagicMock()
 
     cmd = await amqp_client.send_command("amqp_actor", "ping", callback=callback_mock)
@@ -289,7 +271,6 @@ async def test_client_send_command_callback(amqp_client, amqp_actor, mocker):
 
 
 async def test_write_exception(amqp_actor):
-
     command = Command(
         command_string="ping",
         actor=amqp_actor,
@@ -309,7 +290,6 @@ async def test_write_exception(amqp_actor):
 
 @pytest.mark.skipif(sys.version_info < (3, 8), reason="Test fails in PY37")
 async def test_send_command_from_command(amqp_actor, mocker):
-
     send_command_mock = mocker.patch.object(amqp_actor.connection.exchange, "publish")
 
     command = Command(
@@ -324,7 +304,6 @@ async def test_send_command_from_command(amqp_actor, mocker):
 
 
 async def test_child_command(amqp_actor, mocker):
-
     send_command_mock = mocker.patch.object(amqp_actor.connection.exchange, "publish")
 
     command = Command(
@@ -351,7 +330,6 @@ async def test_send_command_time_limit(amqp_actor):
 
 
 async def test_model_patternProperties(amqp_client, amqp_actor):
-
     amqp_actor.model = Model(
         "amqp_actor",
         {

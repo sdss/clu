@@ -125,7 +125,6 @@ async def shell_client_prompt(
     show_time=True,
     ignore_broadcasts=False,
 ):
-
     # Give each client a unique name to ensure the queues are unique.
     uid = str(uuid.uuid4()).split("-")[0]
 

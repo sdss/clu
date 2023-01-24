@@ -22,7 +22,6 @@ DATA_DIR = pathlib.Path(os.path.dirname(__file__)) / "data"
 
 @pytest.fixture
 async def amqp_actor(rabbitmq, event_loop):
-
     port = rabbitmq.args["port"]
 
     actor = AMQPActor(name="amqp_actor", schema=DATA_DIR / "schema.json", port=port)
@@ -35,7 +34,6 @@ async def amqp_actor(rabbitmq, event_loop):
 
 @pytest.fixture
 async def amqp_client(rabbitmq, amqp_actor, event_loop):
-
     port = rabbitmq.args["port"]
 
     client = AMQPClient(name="amqp_client", models=["amqp_actor"], port=port)
@@ -48,7 +46,6 @@ async def amqp_client(rabbitmq, amqp_actor, event_loop):
 
 @pytest.fixture
 async def json_actor(unused_tcp_port_factory, event_loop, tmpdir):
-
     actor = JSONActor(
         "json_actor",
         host="localhost",
@@ -68,7 +65,6 @@ async def json_actor(unused_tcp_port_factory, event_loop, tmpdir):
 
 @pytest.fixture
 async def json_client(json_actor):
-
     client = await open_connection(json_actor.host, json_actor.port)
     client.actor = json_actor
 

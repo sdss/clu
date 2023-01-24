@@ -91,7 +91,6 @@ class Property(CallbackMixIn):
         model: Optional[Any] = None,
         callback: Optional[Callable[[Any], Any]] = None,
     ):
-
         self.name = name
         self._value = value
         self.last_seen: float | None = None
@@ -150,7 +149,6 @@ class BaseModel(CaseInsensitiveDict[T], CallbackMixIn):
     """
 
     def __init__(self, name: str, callback: Optional[Callable[[Any], Any]] = None):
-
         self.name = name
         self.last_seen = None
 
@@ -210,7 +208,6 @@ class Model(BaseModel[Property]):
         additional_properties: bool = False,
         **kwargs,
     ):
-
         if is_file:
             schema = cast(PathLike, schema)
             schema = open(pathlib.Path(schema).expanduser(), "r").read()
@@ -361,7 +358,6 @@ class ModelSet(dict):
         raise_exception: bool = True,
         **kwargs,
     ):
-
         dict.__init__(self, {})
 
         self.client = client
@@ -378,9 +374,7 @@ class ModelSet(dict):
         schema = None
 
         for actor in actors:
-
             try:
-
                 cmd = await self.client.send_command(actor, self.__get_schema_command)
                 await cmd
 
@@ -397,7 +391,6 @@ class ModelSet(dict):
                 self[actor] = Model(actor, schema, **self.__kwargs)
 
             except Exception as err:
-
                 if not self.__raise_exception:
                     warnings.warn(f"Cannot load model {actor!r}. {err}", CluWarning)
                     continue

@@ -38,7 +38,6 @@ async def device(unused_tcp_port_factory, event_loop):
 
 @pytest.fixture
 async def device_client(device):
-
     received = []
 
     async def handle_received(line):
@@ -56,18 +55,15 @@ async def device_client(device):
 
 
 async def test_device(device_client):
-
     await asyncio.sleep(0.55)
     assert len(device_client.received) == 5
 
 
 async def test_write_to_device(device_client):
-
     assert device_client.write("writing to device") is None
 
 
 async def test_connection_not_open(device):
-
     device_client = Device("localhost", device.port)
 
     with pytest.raises(RuntimeError):
@@ -75,6 +71,5 @@ async def test_connection_not_open(device):
 
 
 async def test_connection_already_open(device, device_client):
-
     with pytest.raises(RuntimeError):
         await device_client.start()

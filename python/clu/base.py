@@ -91,7 +91,6 @@ class BaseClient(metaclass=abc.ABCMeta):
         validate: bool = True,
         config: dict = {},
     ):
-
         self.loop = loop or asyncio.get_event_loop()
 
         self.name = name
@@ -141,7 +140,6 @@ class BaseClient(metaclass=abc.ABCMeta):
         input: Union[Dict[str, Any], pathlib.Path, str],
         loader=yaml.FullLoader,
     ) -> Dict[str, Any]:
-
         if not isinstance(input, dict):
             input = pathlib.Path(input)
             assert input.exists(), "configuration path does not exist."
@@ -223,7 +221,6 @@ class BaseClient(metaclass=abc.ABCMeta):
         log.setLevel(REPLY)
 
         if log is not False and log_dir:
-
             log_dir = pathlib.Path(log_dir).expanduser()
 
             log.start_file_logger(
@@ -288,7 +285,6 @@ class ProxyClient:
     """
 
     def __init__(self, client: BaseClient, actor: str):
-
         self.client = client
         self.actor = actor
 
@@ -348,7 +344,6 @@ class BaseActor(BaseClient):
         additional_properties: bool = False,
         **kwargs,
     ):
-
         super().__init__(*args, **kwargs)
 
         self.load_schema(schema, additional_properties=additional_properties)

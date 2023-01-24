@@ -66,7 +66,6 @@ class AMQPReply(object):
         message: apika.IncomingMessage,
         log: Optional[logging.Logger] = None,
     ):
-
         self.command_id: str | None = None
         self.sender: str | None = None
         self.body = {}
@@ -183,7 +182,6 @@ class AMQPClient(BaseClient):
         models: List[str] = [],
         **kwargs,
     ):
-
         super().__init__(
             name,
             version=version,
@@ -212,7 +210,6 @@ class AMQPClient(BaseClient):
         self.models = ModelSet(self, actors=models, raise_exception=False)
 
     def __repr__(self):
-
         if not self.connection or self.connection.connection is None:
             url = "disconnected"
         else:

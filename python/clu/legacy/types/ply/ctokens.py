@@ -148,6 +148,7 @@ t_STRING = r"\"([^\\\n]|(\\.))*?\""
 # Character constant 'c' or L'c'
 t_CHARACTER = r"(L)?\'([^\\\n]|(\\.))*?\'"
 
+
 # Comment (C-Style)
 def t_COMMENT(t):
     r"/\*(.|\n)*?\*/"

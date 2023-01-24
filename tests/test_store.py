@@ -17,7 +17,6 @@ from clu.store import KeywordOutput, KeywordStore
 
 @pytest.fixture
 def store():
-
     dummy_actor = AMQPActor(name="test_actor")
 
     _store = KeywordStore(dummy_actor)
@@ -32,7 +31,6 @@ def store():
 
 
 def test_store(store):
-
     assert isinstance(store, KeywordStore)
 
     assert len(store) == 1
@@ -40,7 +38,6 @@ def test_store(store):
 
 
 def test_store_filter(store):
-
     store.filter = ["key"]
 
     assert len(store["key"]) == 2
@@ -55,7 +52,6 @@ def test_store_filter(store):
 
 
 def test_store_add_reply(store):
-
     assert len(store["key"]) == 2
     assert isinstance(store["key"], list)
     assert isinstance(store["key"][0], KeywordOutput)
@@ -65,14 +61,12 @@ def test_store_add_reply(store):
 
 
 def test_store_head(store):
-
     assert isinstance(store.head("key"), list)
     assert len(store.head("key")) == 1
     assert store.head("key")[0].value == 1
 
 
 def test_store_tail(store):
-
     assert isinstance(store.tail("key"), list)
 
     assert len(store.tail("key")) == 1

@@ -26,7 +26,6 @@ class SimpleClientTester(BaseClient):
         custom_kw=None,
         config={},
     ):
-
         super().__init__(
             name,
             version=version,
@@ -44,7 +43,6 @@ class SimpleClientTester(BaseClient):
 
 
 def test_client(caplog):
-
     client = SimpleClientTester("test_client", version="0.1.0", verbose=True)
 
     assert client.name == "test_client"
@@ -64,7 +62,6 @@ def test_client(caplog):
 
 
 def test_client_file_log(tmpdir):
-
     log_dir = tmpdir / "logs"
     client = SimpleClientTester("test_client", version="0.1.0", log_dir=log_dir)
 
@@ -79,7 +76,6 @@ def test_client_file_log(tmpdir):
 
 
 def test_client_file_log_bad_path(mocker):
-
     log_dir = "InvalidPath"
 
     logger = mocker.Mock(fh=None)
@@ -108,7 +104,6 @@ async def test_client_stop(caplog):
 
 
 def test_client_config(tmpdir):
-
     config_file = tmpdir / "config.yaml"
 
     config_file.write(
@@ -127,7 +122,6 @@ version: '0.1.0'
 
 @pytest.mark.parametrize("header", ("actor", "client"))
 def test_client_config_extra_kwarg(tmpdir, header):
-
     config_file = tmpdir / "config.yaml"
 
     config_file.write(
@@ -148,7 +142,6 @@ def test_client_config_extra_kwarg(tmpdir, header):
 
 
 def test_client_config_extra_kwarg_varkw():
-
     # Repeat previous test but now the client has a **kwargs catch-all
 
     class SimpleClientKwTester(BaseClient):
@@ -176,7 +169,6 @@ def test_client_config_extra_kwarg_varkw():
 
 
 def test_client_proxy(mocker):
-
     client = SimpleClientTester("test_client")
     send_command_mocker = mocker.patch.object(client, "send_command")
 

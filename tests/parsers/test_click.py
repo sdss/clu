@@ -86,7 +86,6 @@ async def self_cancellable_command(command, object):
 
 @pytest.fixture
 async def click_parser(json_actor):
-
     parser = ClickParser()
     parser.parser_args = ["my_object"]
 
@@ -103,7 +102,6 @@ async def click_parser(json_actor):
 
 
 async def test_help(json_actor, click_parser):
-
     cmd = Command(command_string="ping --help", actor=json_actor)
     click_parser.parse_command(cmd)
     await cmd
@@ -112,7 +110,6 @@ async def test_help(json_actor, click_parser):
 
 
 async def test_help_not_found(json_actor, click_parser):
-
     cmd = Command(command_string="png --help", actor=json_actor)
     click_parser.parse_command(cmd)
     await cmd
@@ -121,7 +118,6 @@ async def test_help_not_found(json_actor, click_parser):
 
 
 async def test_exit(json_actor, click_parser):
-
     cmd = Command(command_string="command-exit", actor=json_actor)
     click_parser.parse_command(cmd)
     await cmd
@@ -131,7 +127,6 @@ async def test_exit(json_actor, click_parser):
 
 
 async def test_exit_finish(json_actor, click_parser):
-
     cmd = Command(command_string="command-exit --finish", actor=json_actor)
     click_parser.parse_command(cmd)
     await cmd
@@ -143,7 +138,6 @@ async def test_exit_finish(json_actor, click_parser):
 
 
 async def test_abort(json_actor, click_parser):
-
     cmd = Command(command_string="command-abort", actor=json_actor)
     click_parser.parse_command(cmd)
     await cmd
@@ -153,7 +147,6 @@ async def test_abort(json_actor, click_parser):
 
 
 async def test_uncaught_exception(json_actor, click_parser, caplog):
-
     cmd = Command(command_string="bad-command", actor=json_actor)
     click_parser.parse_command(cmd)
     await cmd
@@ -185,7 +178,6 @@ async def test_uncaught_exception(json_actor, click_parser, caplog):
     ],
 )
 async def test_command_neg_number(json_actor, click_parser, command_string):
-
     cmd = Command(command_string="mygroup " + command_string, actor=json_actor)
     click_parser.parse_command(cmd)
     await cmd
@@ -207,7 +199,6 @@ async def test_command_neg_number(json_actor, click_parser, command_string):
 
 
 async def test_keyword(json_actor, click_parser):
-
     cmd = Command(command_string="keyword version", actor=json_actor)
     click_parser.parse_command(cmd)
     await cmd
@@ -218,7 +209,6 @@ async def test_keyword(json_actor, click_parser):
 
 
 async def test_keyword_bad_parameter(json_actor, click_parser):
-
     cmd = Command(command_string="keyword bad_param", actor=json_actor)
     click_parser.parse_command(cmd)
     await cmd
@@ -229,7 +219,6 @@ async def test_keyword_bad_parameter(json_actor, click_parser):
 
 
 async def test_keyword_no_model(json_actor, click_parser):
-
     json_actor.model = None
 
     cmd = Command(command_string="keyword version", actor=json_actor)
@@ -242,7 +231,6 @@ async def test_keyword_no_model(json_actor, click_parser):
 
 
 async def test_string_with_spaces(json_actor, click_parser):
-
     cmd = Command(command_string='mygroup neg-number-command --text "A test" -1')
     click_parser.parse_command(cmd)
     await cmd
@@ -252,7 +240,6 @@ async def test_string_with_spaces(json_actor, click_parser):
 
 
 async def test_unique(json_actor, click_parser):
-
     cmd = Command("unique-command", actor=json_actor)
     click_parser.parse_command(cmd)
     await asyncio.sleep(0.01)
@@ -269,7 +256,6 @@ async def test_unique(json_actor, click_parser):
 
 
 async def test_cancellable(json_actor, click_parser):
-
     cmd = Command("cancellable-command", actor=json_actor)
     click_parser.parse_command(cmd)
     await asyncio.sleep(0.01)
@@ -286,7 +272,6 @@ async def test_cancellable(json_actor, click_parser):
 
 
 async def test_cancellable_cannot_find(json_actor, click_parser, mocker):
-
     mocker.patch.object(clu.parsers.click, "get_running_tasks", return_value=None)
 
     cmd = Command("cancellable-command --stop", actor=json_actor)
@@ -298,7 +283,6 @@ async def test_cancellable_cannot_find(json_actor, click_parser, mocker):
 
 
 async def test_cancellable_duplicate(json_actor, click_parser):
-
     cmd = Command("cancellable-command", actor=json_actor)
     click_parser.parse_command(cmd)
     await asyncio.sleep(0.01)
@@ -316,7 +300,6 @@ async def test_cancellable_duplicate(json_actor, click_parser):
 
 @pytest.mark.parametrize("cmd_str", ["help", "--help"])
 async def test_parser_full_help(json_actor, click_parser, cmd_str):
-
     cmd = Command(command_string=cmd_str, actor=json_actor)
     click_parser.parse_command(cmd)
     await cmd
@@ -326,7 +309,6 @@ async def test_parser_full_help(json_actor, click_parser, cmd_str):
 
 
 async def test_cancel_command(json_actor, click_parser):
-
     cmd = Command("self-cancellable-command", actor=json_actor)
     click_parser.parse_command(cmd)
     await asyncio.sleep(0.01)

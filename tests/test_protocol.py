@@ -24,7 +24,6 @@ pytestmark = [pytest.mark.asyncio]
 
 @pytest.fixture
 async def tcp_server(event_loop, unused_tcp_port_factory):
-
     tcp = TCPStreamServer("localhost", unused_tcp_port_factory(), max_connections=1)
     await tcp.start()
     event_loop.call_soon(tcp.serve_forever)
@@ -35,7 +34,6 @@ async def tcp_server(event_loop, unused_tcp_port_factory):
 
 
 async def test_max_connections(tcp_server):
-
     client1 = await open_connection("localhost", tcp_server.port)  # noqa
     client2 = await open_connection("localhost", tcp_server.port)
 
@@ -45,7 +43,6 @@ async def test_max_connections(tcp_server):
 
 
 async def test_close_client_fails(tcp_server):
-
     # Uninitialised client
     client = TCPStreamClient("localhost", tcp_server.port)
 
@@ -54,7 +51,6 @@ async def test_close_client_fails(tcp_server):
 
 
 async def test_periodic_server(unused_tcp_port_factory, mocker):
-
     callback = mocker.MagicMock()
 
     periodic_server = TCPStreamPeriodicServer(
@@ -74,7 +70,6 @@ async def test_periodic_server(unused_tcp_port_factory, mocker):
 
 
 async def test_topic_listener_url(amqp_actor):
-
     port = amqp_actor.connection.port
 
     url = f"amqp://guest:guest@localhost:{port}"
