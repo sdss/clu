@@ -30,6 +30,8 @@ from typing import (
     cast,
 )
 
+import click
+
 import clu
 import clu.base
 from clu.exceptions import CluWarning, CommandError
@@ -151,6 +153,9 @@ class BaseCommand(
 
         self.default_keyword = default_keyword
         self.loop = loop or asyncio.get_event_loop()
+
+        #: The click context, if the click parser is used.
+        self.context: click.Context | None = None
 
         #: A list of replies this command has received. The type of
         #: reply object depends on the actor or client issuing the command.

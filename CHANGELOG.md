@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### ✨ Improved
+
+* The `click` context object can now be access as `Command.context` if the `click` parser is being used.
+
+
 ## 1.9.1 - December 2, 2022
 
 ### 🔧 Fixed

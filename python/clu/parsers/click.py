@@ -207,6 +207,8 @@ class CluCommand(click.Command):
 
                 loop = asyncio.get_event_loop()
 
+                ctx.obj["parser_args"][0].context = ctx
+
                 self.full_path = ctx.command_path.replace(" ", "_")
 
                 if self.cancellable and self._cancel_command(ctx):
