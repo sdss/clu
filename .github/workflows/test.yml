@@ -22,13 +22,13 @@ jobs:
         python-version: ['3.7', '3.8', '3.9', '3.10']
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Cache Setup
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
 
       - name: Setup RabbitMQ
         continue-on-error: true
@@ -44,44 +44,31 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      # - name: Setup node.js (for pyright)
-      #   uses: actions/setup-node@v2
-      #   with:
-      #     node-version: '15'
-
-      - name: Install poetry
-        run: |
-          curl -sSL https://install.python-poetry.org | python3 - --git https://github.com/python-poetry/poetry.git@master
-
       - name: Install dependencies
         run: |
-          poetry install --with test --without dev
+          pip install --upgrade wheel pip setuptools
+          pip install .
 
       - name: Lint with flake8
         run: |
-          poetry run pip install flake8
-          poetry run flake8 . --count --show-source --statistics
-
-      - name: Lint with isort
-        run: |
-          poetry run pip install isort
-          poetry run isort -c python/
+          pip install flake8
+          flake8 python/clu --count --show-source --statistics
 
       - name: Lint with black
         run: |
           pip install black
-          black --check python/
+          black --check python/clu
           black --check tests/
 
-      # - name: Run type checking
-      #   if: ${{ matrix.python-version != '3.7' }}
-      #   run: |
-      #     npm install -g pyright
-      #     poetry run pyright
+      - name: Lint with isort
+        run: |
+          pip install isort
+          isort -c python/clu
 
       - name: Test with pytest
         run: |
-          poetry run pytest
+          pip install pytest pytest-mock pytest-asyncio pytest-cov pytest-rabbitmq asynctest
+          pytest
         env:
           PYTEST_ADDOPTS: '--rabbitmq-ctl=/usr/lib/rabbitmq/bin/rabbitmqctl --rabbitmq-server=/usr/lib/rabbitmq/bin/rabbitmq-server'
 
