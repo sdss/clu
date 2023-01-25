@@ -17,14 +17,11 @@ from clu.protocol import open_connection
 
 
 DATA_DIR = pathlib.Path(os.path.dirname(__file__)) / "data"
-# RMQ_PORT = 18888
 
 
 @pytest.fixture
-async def amqp_actor(rabbitmq, event_loop):
-    port = rabbitmq.args["port"]
-
-    actor = AMQPActor(name="amqp_actor", schema=DATA_DIR / "schema.json", port=port)
+async def amqp_actor(event_loop):
+    actor = AMQPActor(name="amqp_actor", schema=DATA_DIR / "schema.json")
     await actor.start()
 
     yield actor
@@ -33,10 +30,8 @@ async def amqp_actor(rabbitmq, event_loop):
 
 
 @pytest.fixture
-async def amqp_client(rabbitmq, amqp_actor, event_loop):
-    port = rabbitmq.args["port"]
-
-    client = AMQPClient(name="amqp_client", models=["amqp_actor"], port=port)
+async def amqp_client(amqp_actor, event_loop):
+    client = AMQPClient(name="amqp_client", models=["amqp_actor"])
     await client.start()
 
     yield client

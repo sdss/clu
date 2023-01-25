@@ -11,15 +11,14 @@ from __future__ import annotations
 import asyncio
 import json
 import re
-import sys
 import types
 import unittest.mock
 
-from typing import Any, Dict, List, Optional, TypeVar
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, TypeVar
 
 import aio_pika
-import pamqp.specification
-from aiormq.types import DeliveredMessage
+from aiormq.abc import DeliveredMessage
+from pamqp.commands import Basic
 from pamqp.header import ContentHeader
 
 import clu
@@ -28,13 +27,8 @@ from clu.command import Command
 from clu.legacy.actor import LegacyActor
 
 
-if sys.version_info.major == 3 and sys.version_info.minor >= 8:
-    CoroutineMock = unittest.mock.AsyncMock
-else:
-    try:
-        from asynctest import CoroutineMock
-    except ImportError:
-        raise ImportError("clu.testing requires asynctest if Python < 3.8.")
+if TYPE_CHECKING:
+    from pamqp.common import FieldTable
 
 
 __all__ = ["MockReply", "MockReplyList", "setup_test_actor"]
@@ -67,8 +61,8 @@ class MockReply(dict):
 
     def __init__(
         self,
-        command_id: int,
-        user_id: int,
+        command_id: int | str | None,
+        user_id: int | str,
         flag: str,
         data: Dict[str, Any] = {},
     ):
@@ -155,6 +149,10 @@ class MockReplyList(list):
         else:
             raise RuntimeError("This type of actor is not supported")
 
+        assert isinstance(user_id, (int, str)) or user_id is None
+        assert isinstance(command_id, (int, str))
+        assert isinstance(flag, str)
+
         list.append(self, MockReply(user_id, command_id, flag, data))
 
     def clear(self):
@@ -191,9 +189,12 @@ async def setup_test_actor(actor: T, user_id: int = 666) -> T:
             return self.new_command(actor.transports[user_id], full_command)
         elif issubclass(actor.__class__, clu.AMQPActor):
             command_id = str(command_id)
-            headers = {"command_id": command_id, "commander_id": "mock_test_client"}
+            headers: FieldTable = {
+                "command_id": command_id,
+                "commander_id": "mock_test_client",
+            }
             header = ContentHeader(
-                properties=pamqp.specification.Basic.Properties(
+                properties=Basic.Properties(
                     content_type="text/json",
                     headers=headers,
                 )
@@ -201,15 +202,15 @@ async def setup_test_actor(actor: T, user_id: int = 666) -> T:
             message_body = {"command_string": command_str}
             message = aio_pika.IncomingMessage(
                 DeliveredMessage(
-                    pamqp.specification.Basic.Deliver(),
+                    Basic.Deliver(),
                     header,
                     json.dumps(message_body).encode(),
-                    None,
+                    None,  # type: ignore
                 ),
             )
             return self.new_command(message, ack=False)
 
-    actor.start = CoroutineMock(return_value=actor)  # type: ignore
+    actor.start = unittest.mock.AsyncMock(return_value=actor)
 
     # Adds an invoke_mock_command method.
     # We use types.MethodType to bind a method to an existing instance
@@ -227,7 +228,7 @@ async def setup_test_actor(actor: T, user_id: int = 666) -> T:
     elif issubclass(actor.__class__, clu.AMQPActor):
         assert actor.connection
         actor.connection.exchange = unittest.mock.MagicMock()
-        actor.connection.exchange.publish = CoroutineMock(
+        actor.connection.exchange.publish = unittest.mock.AsyncMock(
             side_effect=actor.mock_replies.parse_reply
         )
 

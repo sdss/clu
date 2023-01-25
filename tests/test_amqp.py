@@ -9,9 +9,10 @@
 import asyncio
 import logging
 import sys
+from unittest.mock import AsyncMock
 
+import aio_pika
 import pytest
-from asynctest import CoroutineMock
 
 from clu import REPLY, AMQPActor, CluError, CommandError
 from clu.client import AMQPReply
@@ -28,7 +29,7 @@ def message_maker(mocker):
     def _make_message(headers=None, body=None):
         headers = headers or {"command_id": 1, "message_code": "i", "sender": "me"}
 
-        message = mocker.MagicMock()
+        message = mocker.MagicMock(spec=aio_pika.IncomingMessage)
         message.correlation_id = headers["command_id"]
         message.info.return_value = {"headers": headers}
         message.body = b"{}"
@@ -38,7 +39,7 @@ def message_maker(mocker):
     yield _make_message
 
 
-def test_actor(amqp_actor):
+async def test_actor(amqp_actor):
     assert amqp_actor.name == "amqp_actor"
 
 
@@ -181,7 +182,7 @@ async def test_write_update_model_fails(amqp_actor, mocker):
     mocker.patch.object(
         amqp_actor.connection.exchange,
         "publish",
-        new_callable=CoroutineMock,
+        new_callable=AsyncMock,
     )
     apika_message = mocker.patch("aio_pika.Message")
 
@@ -208,8 +209,7 @@ async def test_write_silent(amqp_actor, mocker):
 
 
 async def test_new_command_fails(amqp_actor, mocker):
-    # Use CoroutineMock for Python 3.7-3.8 compatibility.
-    message = CoroutineMock()
+    message = AsyncMock(spec=aio_pika.IncomingMessage)
 
     mocker.patch("clu.actor.Command", side_effect=CommandError)
     mocker.patch("json.loads")
@@ -217,7 +217,7 @@ async def test_new_command_fails(amqp_actor, mocker):
     actor_write = mocker.patch.object(
         amqp_actor,
         "_write_internal",
-        new_callable=CoroutineMock,
+        new_callable=AsyncMock,
     )
 
     await amqp_actor.new_command(message)
@@ -244,6 +244,7 @@ class TestHandleReply:
     async def test_reply_no_message_code(self, message_maker, log, caplog):
         message = message_maker(headers={"command_id": 1, "sender": "me"})
         reply = AMQPReply(message, log=log)
+        await reply.message.ack()
 
         assert reply.is_valid is False
         if log:
@@ -253,6 +254,7 @@ class TestHandleReply:
     async def test_reply_no_sender(self, message_maker, log, caplog):
         message = message_maker(headers={"command_id": 1, "message_code": "i"})
         reply = AMQPReply(message, log=log)
+        await reply.message.ack()
 
         assert reply.is_valid is True
         if log:

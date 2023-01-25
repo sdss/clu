@@ -70,7 +70,8 @@ class AMQPBaseActor(AMQPClient, BaseActor):
         # This sets the replies queue but not a commands one.
         await AMQPClient.start(self, **kwargs)
 
-        assert self.connection and self.connection.connection
+        assert self.connection.connection
+        assert isinstance(self.connection.connection, apika.Connection)
 
         # Binds the commands queue.
         self.commands_queue = await self.connection.add_queue(
@@ -88,7 +89,7 @@ class AMQPBaseActor(AMQPClient, BaseActor):
 
         return self
 
-    async def new_command(self, message: apika.IncomingMessage, ack=True):
+    async def new_command(self, message: apika.abc.AbstractIncomingMessage, ack=True):
         """Handles a new command received by the actor."""
 
         if ack:
@@ -99,8 +100,8 @@ class AMQPBaseActor(AMQPClient, BaseActor):
             headers = message.info()["headers"]
             command_body = json.loads(message.body.decode())
 
-        commander_id = headers["commander_id"].decode()
-        command_id = headers["command_id"].decode()
+        commander_id = headers["commander_id"]
+        command_id = headers["command_id"]
         command_string = command_body["command_string"]
 
         try:
@@ -156,7 +157,7 @@ class AMQPBaseActor(AMQPClient, BaseActor):
                 message_json.encode(),
                 content_type="text/json",
                 headers=headers,
-                correlation_id=command_id,
+                correlation_id=str(command_id) if command_id is not None else None,
                 timestamp=datetime.utcnow(),
             ),
             routing_key=routing_key,

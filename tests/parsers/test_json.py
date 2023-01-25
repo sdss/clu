@@ -32,10 +32,9 @@ class AMQPJSONActor(JSONParser, AMQPBaseActor):
 
 
 @pytest.fixture
-async def json_parser_actor(rabbitmq, event_loop):
+async def json_parser_actor(event_loop):
     actor = AMQPJSONActor(
         name="amqp_json_actor",
-        port=rabbitmq.args["port"],
         schema=DATA_DIR / "schema.json",
     )
 
