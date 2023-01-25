@@ -66,7 +66,7 @@ jobs:
 
       - name: Test with pytest
         run: |
-          pip install pytest pytest-mock pytest-asyncio pytest-cov pytest-rabbitmq
+          pip install pytest pytest-mock pytest-asyncio pytest-cov
           pytest
         env:
           PYTEST_ADDOPTS: '--rabbitmq-ctl=/usr/lib/rabbitmq/bin/rabbitmqctl --rabbitmq-server=/usr/lib/rabbitmq/bin/rabbitmq-server'
