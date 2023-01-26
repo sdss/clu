@@ -128,12 +128,14 @@ async def test_model_callback(amqp_client, amqp_actor, mocker):
         "UserInfo": None,
         "yourUserID": None,
         "num_users": None,
+        "command_model": None,
     }
 
     json = (
         '{"fwhm": null, "text": "Pong.", "info": null, "test1": null, "schema": null, '
         '"version": null, "help": null, "error": null, '
-        '"yourUserID": null, "UserInfo": null, "num_users": null}'
+        '"yourUserID": null, "UserInfo": null, "num_users": null, '
+        '"command_model": null}'
     )
     assert amqp_client.models["amqp_actor"].jsonify() == json
 
@@ -355,3 +357,10 @@ async def test_internal_command(amqp_client, amqp_actor):
 
     for reply in cmd.replies:
         assert reply.internal
+
+
+async def test_get_command_model(amqp_client, amqp_actor):
+    cmd = await amqp_client.send_command("amqp_actor", "get-command-model help")
+    await cmd
+
+    assert len(cmd.replies) == 2

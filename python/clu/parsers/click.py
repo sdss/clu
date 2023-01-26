@@ -20,6 +20,7 @@ from typing import Any, List, TypeVar
 
 import click
 from click.decorators import group, pass_obj
+from unclick.core import command_to_json
 
 from sdsstools.logger import SDSSLogger
 
@@ -478,6 +479,36 @@ def help_(ctx, *args, parser_command):
         for line in message:
             command.warning(help=line)
         return command.finish()
+
+
+@command_parser.command()
+@click.argument("COMMAND-NAME", type=str)
+@click.pass_context
+def get_command_model(
+    ctx: click.Context,
+    command: Command,
+    command_name: str,
+    *args,
+    **kwargs,
+):
+    """Returns a dictionary representation of the command using unclick."""
+
+    from ..legacy import LegacyActor
+
+    group = ctx.command
+    assert isinstance(group, CluGroup)
+
+    command_to_parse = group.get_command(ctx, command_name)
+    if not command_to_parse:
+        return command.fail(f"Cannot find command {command_name}.")
+
+    model_str = command_to_json(command_to_parse)
+    model_dict = json.loads(model_str)
+
+    if isinstance(command.actor, LegacyActor):
+        return command.finish(command_model=model_str)
+
+    return command.finish(command_model=model_dict)
 
 
 @command_parser.command(name="keyword")

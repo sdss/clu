@@ -63,6 +63,7 @@ DEFAULT_SCHEMA = {
         "items": [{"type": "integer"}, {"type": "string"}],
     },
     "num_users": {"type": "integer"},
+    "command_model": {"oneOf": [{"type": "array"}, {"type": "object"}]},
 }
 
 

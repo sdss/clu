@@ -2144,6 +2144,21 @@ files = [
 ]
 
 [[package]]
+name = "unclick"
+version = "0.1.0b1"
+description = "A reverse parser for the click CLI library"
+category = "main"
+optional = false
+python-versions = ">=3.8,<4.0"
+files = [
+    {file = "unclick-0.1.0b1-py3-none-any.whl", hash = "sha256:4ae81d67a1f6a8012869e36e5571199d8a4771cf19b0fb650f6a48432f370f64"},
+    {file = "unclick-0.1.0b1.tar.gz", hash = "sha256:50dd73db4da71c5c38a1823776d901aba686a0834a9dc4eb067be41acabf33e3"},
+]
+
+[package.dependencies]
+click = ">=8.0.0,<9.0.0"
+
+[[package]]
 name = "urllib3"
 version = "1.26.14"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
@@ -2299,4 +2314,4 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8,<4.0"
-content-hash = "df10b2f459e9d1989e495ccb7c970a527c6001f5615ba078f2c2ea4955e66a67"
+content-hash = "b57397e57d4e6379c76971ea19e6a96785b6d498ddae3fc9f631e6e4525b1637"
