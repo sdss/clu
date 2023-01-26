@@ -375,7 +375,11 @@ class ModelSet(dict):
 
         for actor in actors:
             try:
-                cmd = await self.client.send_command(actor, self.__get_schema_command)
+                cmd = await self.client.send_command(
+                    actor,
+                    self.__get_schema_command,
+                    internal=True,
+                )
                 await cmd
 
                 if cmd.status.did_fail:
