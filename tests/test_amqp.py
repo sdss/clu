@@ -243,7 +243,6 @@ class TestHandleReply:
     async def test_reply_no_message_code(self, message_maker, log, caplog):
         message = message_maker(headers={"command_id": 1, "sender": "me"})
         reply = AMQPReply(message, log=log)
-        await reply.message.ack()
 
         assert reply.is_valid is False
         if log:
@@ -253,7 +252,6 @@ class TestHandleReply:
     async def test_reply_no_sender(self, message_maker, log, caplog):
         message = message_maker(headers={"command_id": 1, "message_code": "i"})
         reply = AMQPReply(message, log=log)
-        await reply.message.ack()
 
         assert reply.is_valid is True
         if log:
