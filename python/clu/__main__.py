@@ -54,7 +54,7 @@ class ShellClient(clu.AMQPClient):
 
         reply = await super().handle_reply(message)
 
-        if reply is None:
+        if reply is None or reply.internal is True:
             return
 
         commander_id = reply.info["headers"].get("commander_id", None)
