@@ -460,7 +460,7 @@ class BaseLegacyActor(BaseActor):
             command=command,
             broadcast=broadcast,
             validate=validate,
-            call_internal=False,
+            emit=False,
             expand_exceptions=False,
             **kwargs,
         )

@@ -447,7 +447,7 @@ class BaseActor(BaseClient):
         validate: bool | None = None,
         expand_exceptions: bool = True,
         silent: bool = False,
-        call_internal: bool = True,
+        emit: bool = True,
         **kwargs,
     ) -> Reply:
         """Writes a message to user(s).
@@ -502,11 +502,12 @@ class BaseActor(BaseClient):
             When `True` does not output the message to the users. This can be used to
             issue internal commands that update the internal model but that don't
             clutter the output.
-        call_internal
+        emit
             Whether to call the actor internal write method. Should be `True` but
-            it's sometimes useful to call `.write` with ``call_internal=False`` when
-            one is overriding the method and wants to control when to call the internal
-            method.
+            it's sometimes useful to call `.write` with ``emit=False`` when
+            one is overriding the method and wants to control when to call the
+            internal method. In that case, a `.Reply` object is returned but nothing
+            is output to the users.
         kwargs
             Keyword arguments that will used to update the message.
         """
@@ -560,7 +561,7 @@ class BaseActor(BaseClient):
         if command:
             command.replies.append(reply)
 
-        if call_internal and silent is False:
+        if emit and silent is False:
             if asyncio.iscoroutinefunction(self._write_internal):
                 asyncio.create_task(self._write_internal(reply))  # type: ignore
             else:
