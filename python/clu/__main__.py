@@ -116,11 +116,11 @@ class ShellClient(clu.AMQPClient):
 
 
 async def shell_client_prompt(
-    url=None,
-    user=None,
-    password=None,
-    host=None,
-    port=None,
+    url: str | None = None,
+    user: str = "guest",
+    password: str = "guest",
+    host: str = "127.0.0.1",
+    port: int = 5672,
     indent=True,
     show_time=True,
     ignore_broadcasts=False,

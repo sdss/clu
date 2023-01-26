@@ -228,14 +228,14 @@ class CluCommand(click.Command):
                 )
 
                 # Launches callback scheduler and adds the done callback
-                ctx.task = loop.create_task(
+                ctx.task = loop.create_task(  # type: ignore
                     self._schedule_callback(ctx, timeout=timeout)
                 )
 
                 ctx.task._command_name = self.full_path  # type: ignore For PY<38
                 ctx.task._date = time.time()  # type: ignore
 
-                ctx.task.add_done_callback(done_callback)
+                ctx.task.add_done_callback(done_callback)  # type: ignore
 
                 # Add some attributes to the task because it's
                 # what will be passed to done_callback

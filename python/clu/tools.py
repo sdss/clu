@@ -411,10 +411,8 @@ class CaseInsensitiveDict(Dict[str, T]):
 def cli_coro(f):
     """Decorator function that allows defining coroutines with click."""
 
-    f = asyncio.coroutine(f)
-
     def wrapper(*args, **kwargs):
-        loop = asyncio.get_event_loop()
+        loop = asyncio.new_event_loop()
         return loop.run_until_complete(f(*args, **kwargs))
 
     return functools.update_wrapper(wrapper, f)
