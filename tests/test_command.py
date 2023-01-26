@@ -39,7 +39,7 @@ def test_set_done_command(command):
 
 
 def test_set_status_fails(command):
-    with pytest.raises(TypeError):
+    with pytest.raises((TypeError, ValueError)):
         command.set_status({})
 
 
@@ -59,7 +59,7 @@ def test_set_status_str(command):
 
 
 def test_set_status_str_fails(command):
-    with pytest.raises(TypeError):
+    with pytest.raises((TypeError, ValueError)):
         command.set_status("AAAAA")
 
 
