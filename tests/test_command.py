@@ -79,6 +79,7 @@ def test_child_command_write(command):
         command=command,
         broadcast=False,
         silent=False,
+        internal=False,
         **{},
     )
 
@@ -94,6 +95,7 @@ def test_child_command_finished(command):
         command=command,
         broadcast=False,
         silent=False,
+        internal=False,
         **{},
     )
 
@@ -118,6 +120,7 @@ def test_child_command_failed(command):
         command=command,
         broadcast=False,
         silent=False,
+        internal=False,
         **{},
     )
 
@@ -132,6 +135,7 @@ def test_write_str(command):
         command=command,
         broadcast=False,
         silent=False,
+        internal=False,
         **{},
     )
 
@@ -144,6 +148,7 @@ def test_write_dict(command):
         command=command,
         broadcast=False,
         silent=False,
+        internal=False,
         **{},
     )
 
@@ -216,6 +221,7 @@ def test_write_logging_code(command, logcode, sdss_code):
         command=command,
         broadcast=False,
         silent=False,
+        internal=False,
         **{},
     )
 

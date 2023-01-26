@@ -102,6 +102,7 @@ class AMQPBaseActor(AMQPClient, BaseActor):
 
         commander_id = headers["commander_id"]
         command_id = headers["command_id"]
+        internal = headers.get("internal", False)
         command_string = command_body["command_string"]
 
         try:
@@ -112,6 +113,7 @@ class AMQPBaseActor(AMQPClient, BaseActor):
                 consumer_id=self.name,
                 actor=self,
                 loop=self.loop,
+                internal=internal,
             )
             command.actor = self  # Assign the actor
         except CommandError as ee:
@@ -150,6 +152,7 @@ class AMQPBaseActor(AMQPClient, BaseActor):
             "commander_id": commander_id,
             "command_id": command_id,
             "sender": self.name,
+            "internal": reply.internal,
         }
 
         await self.connection.exchange.publish(
@@ -381,6 +384,7 @@ class TCPBaseActor(BaseActor):
                 "command_id": command_id,
                 "commander_id": commander_id,
                 "message_code": reply.message_code.value,
+                "internal": reply.internal,
                 "sender": self.name,
             }
         }

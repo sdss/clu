@@ -59,6 +59,8 @@ class AMQPReply(object):
         The headers of the message, decoded if they are bytes.
     message_code
         The message code.
+    internal
+        Whether this reply was marked internal.
     sender
         The name of the actor that sends the reply.
     command_id
@@ -83,6 +85,7 @@ class AMQPReply(object):
         self.headers = self.info["headers"]
 
         self.message_code = self.headers.get("message_code", None)
+        self.internal = self.headers.get("internal", False)
 
         if self.message_code is None:
             self.is_valid = False
@@ -294,6 +297,7 @@ class AMQPClient(BaseClient):
                     message=reply.body,
                     message_code=reply.message_code,
                     command=command,
+                    internal=reply.internal,
                     validated=True,
                 )
             )
@@ -316,6 +320,7 @@ class AMQPClient(BaseClient):
         *args,
         command_id: str | None = None,
         callback: Optional[Callable[[AMQPReply], None]] = None,
+        internal: bool = False,
         command: Optional[Command] = None,
         time_limit: Optional[float] = None,
     ):
@@ -334,6 +339,9 @@ class AMQPClient(BaseClient):
             identifier will be attached.
         callback
             A callback to invoke with each reply received from the actor.
+        internal
+            Whether to mark the command as internal, in which case replies will
+            also be considered internal.
         command
             The `.Command` that initiated the new command. Only relevant for
             actors.
@@ -364,12 +372,15 @@ class AMQPClient(BaseClient):
         else:
             commander_id = f"{self.name}.{consumer}"
 
+        internal = command.internal if command else internal
+
         # Creates and registers a command.
         command = Command(
             command_string=command_string,
             command_id=command_id,
             commander_id=commander_id,
             consumer_id=consumer,
+            internal=internal,
             actor=None,
             loop=self.loop,
             reply_callback=callback,
@@ -378,7 +389,11 @@ class AMQPClient(BaseClient):
 
         self.running_commands[command_id] = command
 
-        headers: HeadersType = {"command_id": command_id, "commander_id": commander_id}
+        headers: HeadersType = {
+            "command_id": command_id,
+            "commander_id": commander_id,
+            "internal": internal,
+        }
 
         # The routing key has the topic command and the name of
         # the commanded actor.

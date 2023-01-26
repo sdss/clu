@@ -447,6 +447,7 @@ class BaseActor(BaseClient):
         validate: bool | None = None,
         expand_exceptions: bool = True,
         silent: bool = False,
+        internal: bool = False,
         emit: bool = True,
         **kwargs,
     ) -> Reply:
@@ -502,6 +503,11 @@ class BaseActor(BaseClient):
             When `True` does not output the message to the users. This can be used to
             issue internal commands that update the internal model but that don't
             clutter the output.
+        internal
+            Marks the `.Reply` instance as internal. Internal replies are expected to
+            be emitted to the users, but with a header indicating that the message
+            is not for broader consumption. This can be useful when one wants to
+            reply with verbose information that can be skipped from CLI or logs.
         emit
             Whether to call the actor internal write method. Should be `True` but
             it's sometimes useful to call `.write` with ``emit=False`` when
@@ -537,7 +543,13 @@ class BaseActor(BaseClient):
                 else:
                     message[key] = str(value)
 
-        reply = Reply(message_code, message, command=command, broadcast=broadcast)
+        reply = Reply(
+            message_code,
+            message,
+            command=command,
+            broadcast=broadcast,
+            internal=internal,
+        )
 
         do_validate = validate if validate is not None else self.validate
         if do_validate and self.model is not None:
@@ -591,6 +603,7 @@ class Reply:
         broadcast: bool = False,
         use_validation: bool = False,
         validated: bool = False,
+        internal: bool = False,
         keywords: Optional[Keywords] = None,
     ):
         self.date = datetime.utcnow()
@@ -601,6 +614,7 @@ class Reply:
         self.use_validation = use_validation
         self.validated = validated
         self.keywords = keywords
+        self.internal = internal
 
     @property
     def body(self):

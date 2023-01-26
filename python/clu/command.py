@@ -115,6 +115,10 @@ class BaseCommand(
         A silent command will call the actor ``write`` method with ``silent=True``,
         which will update the internal model and record all the output replies but
         will not write them to the users.
+    internal
+        A silent command will call the actor ``write`` method with ``internal=True``,
+        which will instruct the actor to add the internal flag to the header of the
+        reply.
     time_limit
         Time out the command if it has been running for this long.
     loop
@@ -134,6 +138,7 @@ class BaseCommand(
         call_now: bool = False,
         default_keyword: str = "text",
         silent: bool = False,
+        internal: bool = False,
         time_limit: float | None = None,
         loop: Optional[asyncio.AbstractEventLoop] = None,
     ):
@@ -147,6 +152,7 @@ class BaseCommand(
         self.parent = parent
 
         self.silent = silent
+        self.internal = internal
 
         self._reply_callback = reply_callback
 
@@ -374,6 +380,7 @@ class BaseCommand(
             command=command,
             broadcast=broadcast,
             silent=self.silent,
+            internal=self.internal,
             **kwargs,
         )
 

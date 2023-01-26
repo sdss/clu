@@ -345,3 +345,13 @@ async def test_model_patternProperties(amqp_client, amqp_actor):
     assert "prop1" in amqp_client.models["amqp_actor"]
     assert amqp_client.models["amqp_actor"]["prop1"].value == 5
     assert amqp_client.models["amqp_actor"]["prop1"].in_schema is False
+
+
+async def test_internal_command(amqp_client, amqp_actor):
+    cmd = await amqp_client.send_command("amqp_actor", "ping", internal=True)
+    await cmd
+
+    assert len(cmd.replies) == 2
+
+    for reply in cmd.replies:
+        assert reply.internal
