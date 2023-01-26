@@ -20,7 +20,7 @@ from typing import Any, Dict, Optional, TypeVar, Union, cast
 import aio_pika as apika
 import click
 
-from .base import BaseActor, Reply
+from .base import BaseActor, MessageCode, Reply
 from .client import AMQPClient
 from .command import Command, TimedCommandList
 from .exceptions import CommandError
@@ -116,7 +116,7 @@ class AMQPBaseActor(AMQPClient, BaseActor):
             command.actor = self  # Assign the actor
         except CommandError as ee:
             self.write(
-                "f",
+                MessageCode.ERROR,
                 {
                     "error": "Could not parse the "
                     "following as a command: "
@@ -146,7 +146,7 @@ class AMQPBaseActor(AMQPClient, BaseActor):
         command_id = command.command_id if command else None
 
         headers = {
-            "message_code": reply.message_code,
+            "message_code": reply.message_code.value,
             "commander_id": commander_id,
             "command_id": command_id,
             "sender": self.name,
@@ -380,7 +380,7 @@ class TCPBaseActor(BaseActor):
             "header": {
                 "command_id": command_id,
                 "commander_id": commander_id,
-                "message_code": reply.message_code,
+                "message_code": reply.message_code.value,
                 "sender": self.name,
             }
         }

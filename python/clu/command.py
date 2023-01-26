@@ -304,7 +304,7 @@ class BaseCommand(
 
     def write(
         self,
-        message_code: str | int = "i",
+        message_code: clu.base.MessageCode | str | int = clu.base.MessageCode.INFO,
         message: Optional[Union[Dict[str, Any], str]] = None,
         broadcast: bool = False,
         **kwargs,
@@ -353,18 +353,20 @@ class BaseCommand(
             else:
                 raise ValueError(f"Invalid message code {message_code}.")
 
+        message_code = clu.base.MessageCode(message_code)
+
         # If the parent has a command, do not output : or f since it would
         # confuse the stream and potentially Tron.
         if self.parent:
-            if message_code == ">":
+            if message_code == clu.base.MessageCode.STARTED:
                 # The parent is already running and > never includes a message.
                 return
-            if message_code == ":":
-                message_code = "i"
+            if message_code == clu.base.MessageCode.DONE:
+                message_code = clu.base.MessageCode.INFO
                 if kwargs == {} and (message == {} or not message):
                     return
-            elif message_code == "f":
-                message_code = "e"
+            elif message_code == clu.base.MessageCode.FAILED:
+                message_code = clu.base.MessageCode.ERROR
 
         self.actor.write(
             message_code,

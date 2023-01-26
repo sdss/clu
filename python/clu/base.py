@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import abc
 import asyncio
+import enum
 import inspect
 import logging
 import pathlib
@@ -24,22 +25,41 @@ import yaml
 from sdsstools import get_logger, read_yaml_file
 from sdsstools.logger import SDSSLogger
 
-from clu.command import BaseCommand, Command
-
 from .model import Model
 from .store import KeywordStore
 from .tools import REPLY
 
 
 if TYPE_CHECKING:
+    from clu.command import BaseCommand, Command
     from clu.legacy.types.messages import Keywords
 
 
-__all__ = ["BaseClient", "BaseActor", "Reply"]
+__all__ = ["BaseClient", "BaseActor", "Reply", "MessageCode"]
 
 
 SchemaType = Union[Dict[str, Any], pathlib.Path, str]
 T = TypeVar("T", bound="BaseClient")
+
+
+class MessageCode(enum.Enum):
+    """Flags for message codes."""
+
+    STARTED = ">"
+    DONE = ":"
+    FAILED = "f"
+    ERROR = "e"
+    CRITICAL = "!"
+    INFO = "i"
+    WARNING = "w"
+    DEBUG = "d"
+    INTERNAL = "?"
+
+    def __eq__(self, __o: object) -> bool:
+        if isinstance(__o, MessageCode):
+            return super().__eq__(__o)
+
+        return self.value == __o
 
 
 class BaseClient(metaclass=abc.ABCMeta):
@@ -421,7 +441,7 @@ class BaseActor(BaseClient):
 
     def write(
         self,
-        message_code: str = "i",
+        message_code: MessageCode | str = MessageCode.INFO,
         message: Optional[Dict[str, Any] | str] = None,
         command: Optional[BaseCommand] = None,
         broadcast: bool = False,
@@ -492,6 +512,8 @@ class BaseActor(BaseClient):
             Keyword arguments that will used to update the message.
         """
 
+        message_code = MessageCode(message_code)
+
         if isinstance(message, str):
             message = {"text": message}
         else:
@@ -530,7 +552,7 @@ class BaseActor(BaseClient):
                 else:
                     message = {"error": f"Failed validating the reply: {err}"}
 
-                reply.message_code = "e"
+                reply.message_code = MessageCode.ERROR
                 reply.message = message
                 reply.validated = False
             else:
@@ -563,7 +585,7 @@ class Reply:
 
     def __init__(
         self,
-        message_code: str,
+        message_code: MessageCode | str,
         message: Dict[str, Any],
         command: Optional[BaseCommand] = None,
         broadcast: bool = False,
@@ -572,7 +594,7 @@ class Reply:
         keywords: Optional[Keywords] = None,
     ):
         self.date = datetime.utcnow()
-        self.message_code = message_code
+        self.message_code = MessageCode(message_code)
         self.message = message
         self.command = command
         self.broadcast = broadcast

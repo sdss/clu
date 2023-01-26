@@ -18,6 +18,7 @@ import logging
 import re
 
 from typing import (
+    TYPE_CHECKING,
     Any,
     Callable,
     Coroutine,
@@ -29,6 +30,10 @@ from typing import (
     Type,
     TypeVar,
 )
+
+
+if TYPE_CHECKING:
+    from clu.base import MessageCode
 
 
 __all__ = [
@@ -485,7 +490,7 @@ async def as_complete_failer(
 
 def log_reply(
     log: logging.Logger,
-    message_code: str,
+    message_code: MessageCode,
     message: str,
     use_message_code: bool = False,
 ):
@@ -501,7 +506,7 @@ def log_reply(
     }
 
     if use_message_code:
-        log.log(code_dict[message_code], message)
+        log.log(code_dict[message_code.value], message)
     else:
         # Sets the REPLY log level
         log_level_no = REPLY
