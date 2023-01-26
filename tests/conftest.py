@@ -15,13 +15,21 @@ import pytest
 from clu import AMQPActor, AMQPClient, JSONActor
 from clu.protocol import open_connection
 
+from .rabbitmq import get_rabbitmq_client_fixture, get_rabbitmq_proc_fixture
+
 
 DATA_DIR = pathlib.Path(os.path.dirname(__file__)) / "data"
 
 
+rabbitmq_proc = get_rabbitmq_proc_fixture()
+rabbitmq = get_rabbitmq_client_fixture("rabbitmq_proc")
+
+
 @pytest.fixture
-async def amqp_actor(event_loop):
-    actor = AMQPActor(name="amqp_actor", schema=DATA_DIR / "schema.json")
+async def amqp_actor(rabbitmq, event_loop):
+    port = rabbitmq.url.port
+
+    actor = AMQPActor(name="amqp_actor", schema=DATA_DIR / "schema.json", port=port)
     await actor.start()
 
     yield actor
@@ -30,8 +38,10 @@ async def amqp_actor(event_loop):
 
 
 @pytest.fixture
-async def amqp_client(amqp_actor, event_loop):
-    client = AMQPClient(name="amqp_client", models=["amqp_actor"])
+async def amqp_client(rabbitmq, amqp_actor, event_loop):
+    port = rabbitmq.url.port
+
+    client = AMQPClient(name="amqp_client", models=["amqp_actor"], port=port)
     await client.start()
 
     yield client

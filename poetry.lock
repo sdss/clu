@@ -982,6 +982,24 @@ files = [
 ]
 
 [[package]]
+name = "mirakuru"
+version = "2.4.2"
+description = "Process executor (not only) for tests."
+category = "dev"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "mirakuru-2.4.2-py3-none-any.whl", hash = "sha256:fdb67d141cc9f7abd485a515d618daf3272c3e6ff48380749997ff8e8c5f2cb2"},
+    {file = "mirakuru-2.4.2.tar.gz", hash = "sha256:ec84d4d81b4bca96cb0e598c6b3d198a92f036a0c1223c881482c02a98508226"},
+]
+
+[package.dependencies]
+psutil = {version = ">=4.0.0", markers = "sys_platform != \"cygwin\""}
+
+[package.extras]
+tests = ["pytest", "pytest-cov", "python-daemon"]
+
+[[package]]
 name = "multidict"
 version = "6.0.4"
 description = "multidict implementation"
@@ -2281,4 +2299,4 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8,<4.0"
-content-hash = "b3f2e3ed19b5ae97744019600675160ccd08f10c5f6ccf5ffc45d7a69b012754"
+content-hash = "df10b2f459e9d1989e495ccb7c970a527c6001f5615ba078f2c2ea4955e66a67"
