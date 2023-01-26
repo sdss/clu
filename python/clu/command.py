@@ -374,13 +374,15 @@ class BaseCommand(
             elif message_code == clu.base.MessageCode.FAILED:
                 message_code = clu.base.MessageCode.ERROR
 
+        internal = kwargs.pop("internal", None) or self.internal
+
         self.actor.write(
             message_code,
             message=message,
             command=command,
             broadcast=broadcast,
             silent=self.silent,
-            internal=self.internal,
+            internal=internal,
             **kwargs,
         )
 
