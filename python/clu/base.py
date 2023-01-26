@@ -53,7 +53,6 @@ class MessageCode(enum.Enum):
     INFO = "i"
     WARNING = "w"
     DEBUG = "d"
-    INTERNAL = "?"
 
     def __eq__(self, __o: object) -> bool:
         if isinstance(__o, MessageCode):
