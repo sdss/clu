@@ -8,7 +8,6 @@
 
 import asyncio
 import logging
-import sys
 from unittest.mock import AsyncMock
 
 import aio_pika
@@ -261,7 +260,6 @@ class TestHandleReply:
             assert "message without sender" in caplog.record_tuples[-1][2]
 
 
-@pytest.mark.skipif(sys.version_info < (3, 8), reason="Test fails in PY37")
 async def test_client_send_command_callback(amqp_client, amqp_actor, mocker):
     callback_mock = mocker.MagicMock()
 
@@ -290,7 +288,6 @@ async def test_write_exception(amqp_actor):
     }
 
 
-@pytest.mark.skipif(sys.version_info < (3, 8), reason="Test fails in PY37")
 async def test_send_command_from_command(amqp_actor, mocker):
     send_command_mock = mocker.patch.object(amqp_actor.connection.exchange, "publish")
 
