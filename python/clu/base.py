@@ -99,6 +99,8 @@ class BaseClient(metaclass=abc.ABCMeta):
 
     name: str
 
+    command_models: dict[str, dict] = {}
+
     def __init__(
         self,
         name: str,
@@ -266,65 +268,59 @@ class BaseClient(metaclass=abc.ABCMeta):
 
         return log
 
-    def send_command(self, actor: str, *args, **kwargs):  # pragma: no cover
+    async def send_command(self, actor: str, *args, **kwargs) -> Command:
         """Sends a command to an actor and returns a `.Command` instance."""
 
         raise NotImplementedError(
             "Sending commands is not implemented for this client."
         )
 
-    def proxy(self, actor: str) -> ProxyClient:
-        """Creates a proxy for an actor.
+    async def rpc(
+        self,
+        actor: str,
+        command: str,
+        *,
+        update_model: bool = False,
+        **kwargs,
+    ) -> Command:
+        """Executes a ``command`` in ``actor`` as an RPC call.
 
-        Returns a `.ProxyClient` that simplifies running a command multiple times.
-        For example ::
-
-            await client.send_command("focus_state", "moverelative -1000 UM")
-
-        can be replaced with ::
-
-            focus_stage = client.proxy("focus_stage")
-            await focus_stage.send_command("moverelative", "-1000", "UM")
-
-        """
-
-        return ProxyClient(self, actor)
-
-
-class ProxyClient:
-    """A proxy representing an actor.
-
-    Parameters
-    ----------
-    client
-        The client used to command the actor.
-    actor
-        The actor to command.
-
-    """
-
-    def __init__(self, client: BaseClient, actor: str):
-        self.client = client
-        self.actor = actor
-
-    def send_command(self, *args):
-        """Sends a command to the actor.
-
-        Returns the result of calling the client ``send_command()`` method
-        with the actor and concatenated arguments as parameters. Note that
-        in some cases the client ``send_command()`` method may be a coroutine
-        function, in which case the returned coroutine needs to be awaited.
+        This method retrieves the model for an actor command and formats
+        the command string to  match the specification, allowing RPC-like
+        calls to remote actor commands.
 
         Parameters
         ----------
-        args
-            Arguments to pass to the actor. They will be concatenated using spaces.
+        actor
+            The name of the actor to command
+        command
+            The command to execute. If the command is a subcommand, this must
+            be the full command string (e.g., ``turn on``).
+        update_model
+            The model for the comand will be cached after the first request.
+            If ``update_model=True``, a new request will be made.
+        kwargs
+            Keyword arguments for the actor command that will be formatted into
+            a command string.
+
+        Returns
+        -------
+        command
+            A `.Command` instance with the call to the remote actor command.
 
         """
 
-        command = " ".join(map(str, args))
+        if actor not in self.command_models:
+            self.command_models[actor] = {}
 
-        return self.client.send_command(self.actor, command)
+        if (
+            actor in self.command_models
+            and command in self.command_models[actor]
+            and not update_model
+        ):
+            model = await self.send_command(actor, f"get-command-model {command}")
+
+        return
 
 
 class BaseActor(BaseClient):
