@@ -275,6 +275,59 @@ class BaseClient(metaclass=abc.ABCMeta):
             "Sending commands is not implemented for this client."
         )
 
+    def proxy(self, actor: str) -> ProxyClient:
+        """Creates a proxy for an actor.
+
+        Returns a `.ProxyClient` that simplifies running a command multiple times.
+        For example ::
+
+            await client.send_command("focus_state", "moverelative -1000 UM")
+
+        can be replaced with ::
+
+            focus_stage = client.proxy("focus_stage")
+            await focus_stage.send_command("moverelative", "-1000", "UM")
+
+        """
+
+        return ProxyClient(self, actor)
+
+
+class ProxyClient:
+    """A proxy representing an actor.
+
+    Parameters
+    ----------
+    client
+        The client used to command the actor.
+    actor
+        The actor to command.
+
+    """
+
+    def __init__(self, client: BaseClient, actor: str):
+        self.client = client
+        self.actor = actor
+
+    def send_command(self, *args):
+        """Sends a command to the actor.
+
+        Returns the result of calling the client ``send_command()`` method
+        with the actor and concatenated arguments as parameters. Note that
+        in some cases the client ``send_command()`` method may be a coroutine
+        function, in which case the returned coroutine needs to be awaited.
+
+        Parameters
+        ----------
+        args
+            Arguments to pass to the actor. They will be concatenated using spaces.
+
+        """
+
+        command = " ".join(map(str, args))
+
+        return self.client.send_command(self.actor, command)
+
 
 class BaseActor(BaseClient):
     """An actor based on `asyncio`.
