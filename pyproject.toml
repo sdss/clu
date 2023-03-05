@@ -29,12 +29,12 @@ clu = "clu.__main__:main"
 [tool.poetry.dependencies]
 python = "^3.8,<4.0"
 click = "^8.0"
-aio_pika = "^8.3.0"
+aio_pika = "^9.0.0"
 jsonschema = "^4.0.1"
 sdsstools = "^1.0.0"
 prompt_toolkit = "^3.0.6"
 aiormq = "^6.6.4"
-unclick = "^0.1.0b1"
+unclick = "^0.1.0b2"
 
 [tool.poetry.dev-dependencies]
 ipython = ">=8.0.0"

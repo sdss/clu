@@ -275,53 +275,6 @@ class BaseClient(metaclass=abc.ABCMeta):
             "Sending commands is not implemented for this client."
         )
 
-    async def rpc(
-        self,
-        actor: str,
-        command: str,
-        *,
-        update_model: bool = False,
-        **kwargs,
-    ) -> Command:
-        """Executes a ``command`` in ``actor`` as an RPC call.
-
-        This method retrieves the model for an actor command and formats
-        the command string to  match the specification, allowing RPC-like
-        calls to remote actor commands.
-
-        Parameters
-        ----------
-        actor
-            The name of the actor to command
-        command
-            The command to execute. If the command is a subcommand, this must
-            be the full command string (e.g., ``turn on``).
-        update_model
-            The model for the comand will be cached after the first request.
-            If ``update_model=True``, a new request will be made.
-        kwargs
-            Keyword arguments for the actor command that will be formatted into
-            a command string.
-
-        Returns
-        -------
-        command
-            A `.Command` instance with the call to the remote actor command.
-
-        """
-
-        if actor not in self.command_models:
-            self.command_models[actor] = {}
-
-        if (
-            actor in self.command_models
-            and command in self.command_models[actor]
-            and not update_model
-        ):
-            model = await self.send_command(actor, f"get-command-model {command}")
-
-        return
-
 
 class BaseActor(BaseClient):
     """An actor based on `asyncio`.
