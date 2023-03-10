@@ -48,13 +48,14 @@ class ShellClient(clu.AMQPClient):
     indent = False
     show_time = True
     ignore_broadcasts = False
+    internal = False
 
     async def handle_reply(self, message: aio_pika.IncomingMessage):
         """Prints the formatted reply."""
 
         reply = await super().handle_reply(message)
 
-        if reply is None or reply.internal is True:
+        if reply is None or (self.internal is False and reply.internal is True):
             return
 
         headers = reply.info.get("headers", {})
@@ -122,6 +123,7 @@ async def shell_client_prompt(
     indent=True,
     show_time=True,
     ignore_broadcasts=False,
+    internal=False,
 ):
     # Give each client a unique name to ensure the queues are unique.
     uid = str(uuid.uuid4()).split("-")[0]
@@ -139,6 +141,7 @@ async def shell_client_prompt(
     client.indent = indent
     client.show_time = show_time
     client.ignore_broadcasts = ignore_broadcasts
+    client.internal = internal
 
     history = FileHistory(os.path.expanduser("~/.clu_history"))
 
@@ -225,7 +228,22 @@ async def shell_client_prompt(
     default=False,
     help="Do not show the message time.",
 )
-def clu_cli(url, user, password, host, port, no_indent, no_time, ignore_broadcasts):
+@click.option(
+    "--internal",
+    is_flag=True,
+    help="Show internal messages.",
+)
+def clu_cli(
+    url: str | None = None,
+    user: str = "guest",
+    password: str = "guest",
+    host: str = "localhost",
+    port: int = 5672,
+    no_indent=False,
+    no_time=False,
+    ignore_broadcasts=False,
+    internal=False,
+):
     """Runs the AMQP command line interpreter."""
 
     shell_task = asyncio.get_event_loop().create_task(
@@ -238,6 +256,7 @@ def clu_cli(url, user, password, host, port, no_indent, no_time, ignore_broadcas
             indent=not no_indent,
             show_time=not no_time,
             ignore_broadcasts=ignore_broadcasts,
+            internal=internal,
         )
     )
     asyncio.get_event_loop().run_until_complete(shell_task)
