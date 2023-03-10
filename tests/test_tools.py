@@ -320,7 +320,6 @@ class TestAsCompleteFailer:
 
         cb.assert_called_once()
 
-    @pytest.mark.skipif(sys.version_info < (3, 8), reason="requires PY38 or higher")
     async def test_on_error_callback_coro(self):
         cb = mock.AsyncMock()
         await as_complete_failer(self.raise_error(), on_fail_callback=cb)

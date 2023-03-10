@@ -45,21 +45,24 @@ color_codes = {
 class ShellClient(clu.AMQPClient):
     """A shell client."""
 
+    actors: tuple[str, ...] = ()
     indent = False
     show_time = True
     ignore_broadcasts = False
+    internal = False
 
     async def handle_reply(self, message: aio_pika.IncomingMessage):
         """Prints the formatted reply."""
 
         reply = await super().handle_reply(message)
 
-        if reply is None:
+        if reply is None or (self.internal is False and reply.internal is True):
             return
 
-        commander_id = reply.info["headers"].get("commander_id", None)
+        headers = reply.info.get("headers", {})
+        commander_id = headers.get("commander_id", None)
         if commander_id:
-            commander_id = commander_id.split(".")[0]
+            commander_id = str(commander_id).split(".")[0]
 
         routing_key = message.routing_key
         is_broadcast = routing_key == "reply.broadcast" or reply.command_id is None
@@ -70,11 +73,11 @@ class ShellClient(clu.AMQPClient):
         if self.ignore_broadcasts and is_broadcast:
             return
 
-        message_info = reply.info
-        headers = message_info["headers"]
-
-        message_code = headers.get("message_code", "")
+        message_code = reply.message_code
         sender = headers.get("sender", "")
+
+        if is_broadcast and (len(self.actors) > 0 and sender not in self.actors):
+            return
 
         message_code_esc = message_code if message_code != ">" else "&gt;"
 
@@ -103,7 +106,11 @@ class ShellClient(clu.AMQPClient):
             )
 
         if sender:
-            print_chunks.append(f"{sender}")
+            print_chunks.append(
+                prompt_toolkit.formatted_text.HTML(
+                    f'<style fg="magenta">{sender}</style>'
+                ),
+            )
 
         if message_code:
             print_chunks.append(message_code_formatted)
@@ -116,14 +123,16 @@ class ShellClient(clu.AMQPClient):
 
 
 async def shell_client_prompt(
-    url=None,
-    user=None,
-    password=None,
-    host=None,
-    port=None,
+    actors: tuple[str, ...] = (),
+    url: str | None = None,
+    user: str = "guest",
+    password: str = "guest",
+    host: str = "127.0.0.1",
+    port: int = 5672,
     indent=True,
     show_time=True,
     ignore_broadcasts=False,
+    internal=False,
 ):
     # Give each client a unique name to ensure the queues are unique.
     uid = str(uuid.uuid4()).split("-")[0]
@@ -138,9 +147,11 @@ async def shell_client_prompt(
         log=None,
     ).start()
 
+    client.actors = actors
     client.indent = indent
     client.show_time = show_time
     client.ignore_broadcasts = ignore_broadcasts
+    client.internal = internal
 
     history = FileHistory(os.path.expanduser("~/.clu_history"))
 
@@ -173,7 +184,17 @@ async def shell_client_prompt(
 
 
 @click.command(name="clu")
-@click.option("--url", type=str, help="AMQP RFC3986 formatted broker address.")
+@click.argument(
+    "ACTORS",
+    type=str,
+    required=False,
+    nargs=-1,
+)
+@click.option(
+    "--url",
+    type=str,
+    help="AMQP RFC3986 formatted broker address.",
+)
 @click.option(
     "--user",
     "-U",
@@ -227,11 +248,28 @@ async def shell_client_prompt(
     default=False,
     help="Do not show the message time.",
 )
-def clu_cli(url, user, password, host, port, no_indent, no_time, ignore_broadcasts):
+@click.option(
+    "--internal",
+    is_flag=True,
+    help="Show internal messages.",
+)
+def clu_cli(
+    actors: tuple[str, ...] = (),
+    url: str | None = None,
+    user: str = "guest",
+    password: str = "guest",
+    host: str = "localhost",
+    port: int = 5672,
+    no_indent=False,
+    no_time=False,
+    ignore_broadcasts=False,
+    internal=False,
+):
     """Runs the AMQP command line interpreter."""
 
     shell_task = asyncio.get_event_loop().create_task(
         shell_client_prompt(
+            actors=actors,
             url=url,
             user=user,
             password=password,
@@ -240,6 +278,7 @@ def clu_cli(url, user, password, host, port, no_indent, no_time, ignore_broadcas
             indent=not no_indent,
             show_time=not no_time,
             ignore_broadcasts=ignore_broadcasts,
+            internal=internal,
         )
     )
     asyncio.get_event_loop().run_until_complete(shell_task)

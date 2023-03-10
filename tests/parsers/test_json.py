@@ -35,8 +35,8 @@ class AMQPJSONActor(JSONParser, AMQPBaseActor):
 async def json_parser_actor(rabbitmq, event_loop):
     actor = AMQPJSONActor(
         name="amqp_json_actor",
-        port=rabbitmq.args["port"],
         schema=DATA_DIR / "schema.json",
+        port=rabbitmq.url.port,
     )
 
     await actor.start()

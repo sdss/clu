@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import abc
 import asyncio
+import enum
 import inspect
 import logging
 import pathlib
@@ -24,22 +25,40 @@ import yaml
 from sdsstools import get_logger, read_yaml_file
 from sdsstools.logger import SDSSLogger
 
-from clu.command import BaseCommand, Command
-
 from .model import Model
 from .store import KeywordStore
 from .tools import REPLY
 
 
 if TYPE_CHECKING:
+    from clu.command import BaseCommand, Command
     from clu.legacy.types.messages import Keywords
 
 
-__all__ = ["BaseClient", "BaseActor", "Reply"]
+__all__ = ["BaseClient", "BaseActor", "Reply", "MessageCode"]
 
 
 SchemaType = Union[Dict[str, Any], pathlib.Path, str]
 T = TypeVar("T", bound="BaseClient")
+
+
+class MessageCode(enum.Enum):
+    """Flags for message codes."""
+
+    STARTED = ">"
+    DONE = ":"
+    FAILED = "f"
+    ERROR = "e"
+    CRITICAL = "!"
+    INFO = "i"
+    WARNING = "w"
+    DEBUG = "d"
+
+    def __eq__(self, __o: object) -> bool:
+        if isinstance(__o, MessageCode):
+            return super().__eq__(__o)
+
+        return self.value == __o
 
 
 class BaseClient(metaclass=abc.ABCMeta):
@@ -79,6 +98,8 @@ class BaseClient(metaclass=abc.ABCMeta):
     """
 
     name: str
+
+    command_models: dict[str, dict] = {}
 
     def __init__(
         self,
@@ -247,7 +268,7 @@ class BaseClient(metaclass=abc.ABCMeta):
 
         return log
 
-    def send_command(self, actor: str, *args, **kwargs):  # pragma: no cover
+    async def send_command(self, actor: str, *args, **kwargs) -> Command:
         """Sends a command to an actor and returns a `.Command` instance."""
 
         raise NotImplementedError(
@@ -421,14 +442,15 @@ class BaseActor(BaseClient):
 
     def write(
         self,
-        message_code: str = "i",
+        message_code: MessageCode | str = MessageCode.INFO,
         message: Optional[Dict[str, Any] | str] = None,
         command: Optional[BaseCommand] = None,
         broadcast: bool = False,
         validate: bool | None = None,
         expand_exceptions: bool = True,
         silent: bool = False,
-        call_internal: bool = True,
+        internal: bool = False,
+        emit: bool = True,
         **kwargs,
     ) -> Reply:
         """Writes a message to user(s).
@@ -483,14 +505,22 @@ class BaseActor(BaseClient):
             When `True` does not output the message to the users. This can be used to
             issue internal commands that update the internal model but that don't
             clutter the output.
-        call_internal
+        internal
+            Marks the `.Reply` instance as internal. Internal replies are expected to
+            be emitted to the users, but with a header indicating that the message
+            is not for broader consumption. This can be useful when one wants to
+            reply with verbose information that can be skipped from CLI or logs.
+        emit
             Whether to call the actor internal write method. Should be `True` but
-            it's sometimes useful to call `.write` with ``call_internal=False`` when
-            one is overriding the method and wants to control when to call the internal
-            method.
+            it's sometimes useful to call `.write` with ``emit=False`` when
+            one is overriding the method and wants to control when to call the
+            internal method. In that case, a `.Reply` object is returned but nothing
+            is output to the users.
         kwargs
             Keyword arguments that will used to update the message.
         """
+
+        message_code = MessageCode(message_code)
 
         if isinstance(message, str):
             message = {"text": message}
@@ -515,7 +545,13 @@ class BaseActor(BaseClient):
                 else:
                     message[key] = str(value)
 
-        reply = Reply(message_code, message, command=command, broadcast=broadcast)
+        reply = Reply(
+            message_code,
+            message,
+            command=command,
+            broadcast=broadcast,
+            internal=internal,
+        )
 
         do_validate = validate if validate is not None else self.validate
         if do_validate and self.model is not None:
@@ -530,7 +566,7 @@ class BaseActor(BaseClient):
                 else:
                     message = {"error": f"Failed validating the reply: {err}"}
 
-                reply.message_code = "e"
+                reply.message_code = MessageCode.ERROR
                 reply.message = message
                 reply.validated = False
             else:
@@ -539,7 +575,7 @@ class BaseActor(BaseClient):
         if command:
             command.replies.append(reply)
 
-        if call_internal and silent is False:
+        if emit and silent is False:
             if asyncio.iscoroutinefunction(self._write_internal):
                 asyncio.create_task(self._write_internal(reply))  # type: ignore
             else:
@@ -563,22 +599,24 @@ class Reply:
 
     def __init__(
         self,
-        message_code: str,
+        message_code: MessageCode | str,
         message: Dict[str, Any],
         command: Optional[BaseCommand] = None,
         broadcast: bool = False,
         use_validation: bool = False,
         validated: bool = False,
+        internal: bool = False,
         keywords: Optional[Keywords] = None,
     ):
         self.date = datetime.utcnow()
-        self.message_code = message_code
+        self.message_code = MessageCode(message_code)
         self.message = message
         self.command = command
         self.broadcast = broadcast
         self.use_validation = use_validation
         self.validated = validated
         self.keywords = keywords
+        self.internal = internal
 
     @property
     def body(self):

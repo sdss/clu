@@ -20,7 +20,7 @@ from typing import Any, Dict, Optional, TypeVar, Union, cast
 import aio_pika as apika
 import click
 
-from .base import BaseActor, Reply
+from .base import BaseActor, MessageCode, Reply
 from .client import AMQPClient
 from .command import Command, TimedCommandList
 from .exceptions import CommandError
@@ -70,7 +70,8 @@ class AMQPBaseActor(AMQPClient, BaseActor):
         # This sets the replies queue but not a commands one.
         await AMQPClient.start(self, **kwargs)
 
-        assert self.connection and self.connection.connection
+        assert self.connection.connection
+        assert isinstance(self.connection.connection, apika.Connection)
 
         # Binds the commands queue.
         self.commands_queue = await self.connection.add_queue(
@@ -88,7 +89,7 @@ class AMQPBaseActor(AMQPClient, BaseActor):
 
         return self
 
-    async def new_command(self, message: apika.IncomingMessage, ack=True):
+    async def new_command(self, message: apika.abc.AbstractIncomingMessage, ack=True):
         """Handles a new command received by the actor."""
 
         if ack:
@@ -96,11 +97,12 @@ class AMQPBaseActor(AMQPClient, BaseActor):
                 headers = message.info()["headers"]
                 command_body = json.loads(message.body.decode())
         else:
-            headers = message.info()["headers"]
+            headers = message.info().get("headers", {})
             command_body = json.loads(message.body.decode())
 
-        commander_id = headers["commander_id"].decode()
-        command_id = headers["command_id"].decode()
+        commander_id = headers["commander_id"]
+        command_id = headers["command_id"]
+        internal = headers.get("internal", False)
         command_string = command_body["command_string"]
 
         try:
@@ -111,11 +113,12 @@ class AMQPBaseActor(AMQPClient, BaseActor):
                 consumer_id=self.name,
                 actor=self,
                 loop=self.loop,
+                internal=internal,
             )
             command.actor = self  # Assign the actor
         except CommandError as ee:
             self.write(
-                "f",
+                MessageCode.ERROR,
                 {
                     "error": "Could not parse the "
                     "following as a command: "
@@ -145,10 +148,11 @@ class AMQPBaseActor(AMQPClient, BaseActor):
         command_id = command.command_id if command else None
 
         headers = {
-            "message_code": reply.message_code,
+            "message_code": reply.message_code.value,
             "commander_id": commander_id,
             "command_id": command_id,
             "sender": self.name,
+            "internal": reply.internal,
         }
 
         await self.connection.exchange.publish(
@@ -156,7 +160,7 @@ class AMQPBaseActor(AMQPClient, BaseActor):
                 message_json.encode(),
                 content_type="text/json",
                 headers=headers,
-                correlation_id=command_id,
+                correlation_id=str(command_id) if command_id is not None else None,
                 timestamp=datetime.utcnow(),
             ),
             routing_key=routing_key,
@@ -379,7 +383,8 @@ class TCPBaseActor(BaseActor):
             "header": {
                 "command_id": command_id,
                 "commander_id": commander_id,
-                "message_code": reply.message_code,
+                "message_code": reply.message_code.value,
+                "internal": reply.internal,
                 "sender": self.name,
             }
         }

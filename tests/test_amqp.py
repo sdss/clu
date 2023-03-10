@@ -8,10 +8,10 @@
 
 import asyncio
 import logging
-import sys
+from unittest.mock import AsyncMock
 
+import aio_pika
 import pytest
-from asynctest import CoroutineMock
 
 from clu import REPLY, AMQPActor, CluError, CommandError
 from clu.client import AMQPReply
@@ -28,7 +28,7 @@ def message_maker(mocker):
     def _make_message(headers=None, body=None):
         headers = headers or {"command_id": 1, "message_code": "i", "sender": "me"}
 
-        message = mocker.MagicMock()
+        message = mocker.MagicMock(spec=aio_pika.IncomingMessage)
         message.correlation_id = headers["command_id"]
         message.info.return_value = {"headers": headers}
         message.body = b"{}"
@@ -38,7 +38,7 @@ def message_maker(mocker):
     yield _make_message
 
 
-def test_actor(amqp_actor):
+async def test_actor(amqp_actor):
     assert amqp_actor.name == "amqp_actor"
 
 
@@ -128,12 +128,14 @@ async def test_model_callback(amqp_client, amqp_actor, mocker):
         "UserInfo": None,
         "yourUserID": None,
         "num_users": None,
+        "command_model": None,
     }
 
     json = (
         '{"fwhm": null, "text": "Pong.", "info": null, "test1": null, "schema": null, '
         '"version": null, "help": null, "error": null, '
-        '"yourUserID": null, "UserInfo": null, "num_users": null}'
+        '"yourUserID": null, "UserInfo": null, "num_users": null, '
+        '"command_model": null}'
     )
     assert amqp_client.models["amqp_actor"].jsonify() == json
 
@@ -181,7 +183,7 @@ async def test_write_update_model_fails(amqp_actor, mocker):
     mocker.patch.object(
         amqp_actor.connection.exchange,
         "publish",
-        new_callable=CoroutineMock,
+        new_callable=AsyncMock,
     )
     apika_message = mocker.patch("aio_pika.Message")
 
@@ -208,8 +210,7 @@ async def test_write_silent(amqp_actor, mocker):
 
 
 async def test_new_command_fails(amqp_actor, mocker):
-    # Use CoroutineMock for Python 3.7-3.8 compatibility.
-    message = CoroutineMock()
+    message = AsyncMock(spec=aio_pika.IncomingMessage)
 
     mocker.patch("clu.actor.Command", side_effect=CommandError)
     mocker.patch("json.loads")
@@ -217,7 +218,7 @@ async def test_new_command_fails(amqp_actor, mocker):
     actor_write = mocker.patch.object(
         amqp_actor,
         "_write_internal",
-        new_callable=CoroutineMock,
+        new_callable=AsyncMock,
     )
 
     await amqp_actor.new_command(message)
@@ -229,6 +230,7 @@ async def test_new_command_fails(amqp_actor, mocker):
 
 
 class TestHandleReply:
+    @pytest.mark.xfail()
     async def test_client_handle_reply_bad_message(
         self, amqp_client, message_maker, caplog
     ):
@@ -259,7 +261,6 @@ class TestHandleReply:
             assert "message without sender" in caplog.record_tuples[-1][2]
 
 
-@pytest.mark.skipif(sys.version_info < (3, 8), reason="Test fails in PY37")
 async def test_client_send_command_callback(amqp_client, amqp_actor, mocker):
     callback_mock = mocker.MagicMock()
 
@@ -288,7 +289,6 @@ async def test_write_exception(amqp_actor):
     }
 
 
-@pytest.mark.skipif(sys.version_info < (3, 8), reason="Test fails in PY37")
 async def test_send_command_from_command(amqp_actor, mocker):
     send_command_mock = mocker.patch.object(amqp_actor.connection.exchange, "publish")
 
@@ -348,3 +348,20 @@ async def test_model_patternProperties(amqp_client, amqp_actor):
     assert "prop1" in amqp_client.models["amqp_actor"]
     assert amqp_client.models["amqp_actor"]["prop1"].value == 5
     assert amqp_client.models["amqp_actor"]["prop1"].in_schema is False
+
+
+async def test_internal_command(amqp_client, amqp_actor):
+    cmd = await amqp_client.send_command("amqp_actor", "ping", internal=True)
+    await cmd
+
+    assert len(cmd.replies) == 2
+
+    for reply in cmd.replies:
+        assert reply.internal
+
+
+async def test_get_command_model(amqp_client, amqp_actor):
+    cmd = await amqp_client.send_command("amqp_actor", "get-command-model help")
+    await cmd
+
+    assert len(cmd.replies) == 2

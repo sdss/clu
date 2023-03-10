@@ -18,7 +18,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar, Union, c
 import clu
 
 from ..actor import CustomTransportType
-from ..base import BaseActor, Reply
+from ..base import BaseActor, MessageCode, Reply
 from ..command import Command, TimedCommandList, parse_legacy_command
 from ..parsers import ClickParser
 from ..protocol import TCPStreamServer
@@ -266,14 +266,14 @@ class BaseLegacyActor(BaseActor):
     def format_user_output(
         user_id: int,
         command_id: int,
-        message_code: str,
+        message_code: MessageCode,
         msg_str: Optional[str] = None,
     ) -> str:
         """Formats a string to send to users."""
 
         msg_str = "" if msg_str is None else " " + msg_str
 
-        return f"{user_id} {command_id:d} {message_code:s}{msg_str:s}"
+        return f"{user_id} {command_id:d} {message_code.value:s}{msg_str:s}"
 
     def show_new_user_info(self, user_id: int):
         """Shows information for new users. Called when a new user connects."""
@@ -408,7 +408,7 @@ class BaseLegacyActor(BaseActor):
 
     def write(
         self,
-        message_code: str = "i",
+        message_code: MessageCode | str = "i",
         message: Optional[Dict[str, Any]] = None,
         command: Optional[Command] = None,
         user_id: int = 0,
@@ -451,6 +451,8 @@ class BaseLegacyActor(BaseActor):
             supersedes ``message``.
         """
 
+        message_code = MessageCode(message_code)
+
         reply = BaseActor.write(
             self,
             message_code=message_code,
@@ -458,7 +460,7 @@ class BaseLegacyActor(BaseActor):
             command=command,
             broadcast=broadcast,
             validate=validate,
-            call_internal=False,
+            emit=False,
             expand_exceptions=False,
             **kwargs,
         )

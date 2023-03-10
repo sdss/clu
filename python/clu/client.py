@@ -14,7 +14,7 @@ import logging
 import pathlib
 import uuid
 
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Union
 
 import aio_pika as apika
 
@@ -25,6 +25,10 @@ from .command import Command
 from .model import ModelSet
 from .protocol import TopicListener
 from .tools import CommandStatus
+
+
+if TYPE_CHECKING:
+    from aio_pika.abc import HeadersType
 
 
 __all__ = ["AMQPClient", "AMQPReply"]
@@ -55,6 +59,8 @@ class AMQPReply(object):
         The headers of the message, decoded if they are bytes.
     message_code
         The message code.
+    internal
+        Whether this reply was marked internal.
     sender
         The name of the actor that sends the reply.
     command_id
@@ -63,35 +69,29 @@ class AMQPReply(object):
 
     def __init__(
         self,
-        message: apika.IncomingMessage,
+        message: apika.abc.AbstractIncomingMessage,
         log: Optional[logging.Logger] = None,
     ):
         self.command_id: str | None = None
-        self.sender: str | None = None
+        self.message_code: str = ""
         self.body = {}
 
         self.message = message
         self._log = log
 
         self.is_valid = True
+        self.info = message.info()
 
-        # Acknowledges receipt of message
-        message.ack()
+        self.headers = dict(self.info.get("headers", {}))
 
-        self.info: Dict[Any, Any] = message.info()
-
-        self.headers = self.info["headers"]
-        for key in self.headers:
-            if isinstance(self.headers[key], bytes):
-                self.headers[key] = self.headers[key].decode()
-
-        self.message_code = self.headers.get("message_code", None)
-
-        if self.message_code is None:
+        self.message_code = str(self.headers.get("message_code", ""))
+        if self.message_code == "":
             self.is_valid = False
             if self._log:
                 self._log.warning(f"received message without message_code: {message}")
             return
+
+        self.internal = bool(self.headers.get("internal", False))
 
         self.sender = self.headers.get("sender", None)
         if self.sender is None and self._log:
@@ -111,7 +111,7 @@ class AMQPReply(object):
             self.is_valid = False
             return
 
-        self.body = json.loads(self.message.body.decode())
+        self.body = json.loads(self.message.body)
 
 
 class AMQPClient(BaseClient):
@@ -163,8 +163,6 @@ class AMQPClient(BaseClient):
 
     __EXCHANGE_NAME__ = "sdss_exchange"
 
-    connection = None
-
     def __init__(
         self,
         name: str,
@@ -210,17 +208,16 @@ class AMQPClient(BaseClient):
         self.models = ModelSet(self, actors=models, raise_exception=False)
 
     def __repr__(self):
-        if not self.connection or self.connection.connection is None:
+        if self.connection.connection is None:
             url = "disconnected"
         else:
+            assert isinstance(self.connection.connection, apika.Connection)
             url = str(self.connection.connection.url)
 
         return f"<{str(self)} (name={self.name!r}, {url}>"
 
     async def start(self, exchange_name: str = __EXCHANGE_NAME__):
         """Starts the connection to the AMQP broker."""
-
-        assert self.connection
 
         # Starts the connection and creates the exchange
         await self.connection.connect(exchange_name)
@@ -232,7 +229,11 @@ class AMQPClient(BaseClient):
             bindings=["reply.#"],
         )
 
-        url = self.connection.connection.url if self.connection.connection else "???"
+        if self.connection.connection:
+            assert isinstance(self.connection.connection, apika.Connection)
+            url = self.connection.connection.url
+        else:
+            url = "???"
 
         self.log.info(f"replies queue {self.replies_queue.name!r} bound to {url!s}")
 
@@ -244,19 +245,21 @@ class AMQPClient(BaseClient):
     async def stop(self):
         """Cancels queues and closes the connection."""
 
-        assert self.connection
-
-        await self.connection.stop()
+        if self.connection.connection and not self.connection.connection.is_closed:
+            await self.connection.stop()
 
     async def run_forever(self):
         """Runs the event loop forever."""
 
-        assert self.connection and self.connection.connection
+        assert self.connection.connection
 
         while not self.connection.connection.is_closed:
             await asyncio.sleep(1)
 
-    async def handle_reply(self, message: apika.IncomingMessage) -> AMQPReply:
+    async def handle_reply(
+        self,
+        message: apika.abc.AbstractIncomingMessage,
+    ) -> AMQPReply:
         """Handles a reply received from the exchange.
 
         Creates a new instance of `.AMQPReply` from the ``message``. If the
@@ -274,6 +277,7 @@ class AMQPClient(BaseClient):
         """
 
         reply = AMQPReply(message, log=self.log)
+        await reply.message.ack()
 
         if not reply.is_valid:
             self.log.error("Invalid message received.")
@@ -293,6 +297,7 @@ class AMQPClient(BaseClient):
                     message=reply.body,
                     message_code=reply.message_code,
                     command=command,
+                    internal=reply.internal,
                     validated=True,
                 )
             )
@@ -315,6 +320,7 @@ class AMQPClient(BaseClient):
         *args,
         command_id: str | None = None,
         callback: Optional[Callable[[AMQPReply], None]] = None,
+        internal: bool = False,
         command: Optional[Command] = None,
         time_limit: Optional[float] = None,
     ):
@@ -333,6 +339,9 @@ class AMQPClient(BaseClient):
             identifier will be attached.
         callback
             A callback to invoke with each reply received from the actor.
+        internal
+            Whether to mark the command as internal, in which case replies will
+            also be considered internal.
         command
             The `.Command` that initiated the new command. Only relevant for
             actors.
@@ -348,7 +357,7 @@ class AMQPClient(BaseClient):
 
         """
 
-        assert self.connection and self.replies_queue
+        assert self.replies_queue
 
         if command and command.command_id:
             command_id = str(command.command_id)
@@ -363,12 +372,15 @@ class AMQPClient(BaseClient):
         else:
             commander_id = f"{self.name}.{consumer}"
 
+        internal = command.internal if command else internal
+
         # Creates and registers a command.
         command = Command(
             command_string=command_string,
             command_id=command_id,
             commander_id=commander_id,
             consumer_id=consumer,
+            internal=internal,
             actor=None,
             loop=self.loop,
             reply_callback=callback,
@@ -377,7 +389,11 @@ class AMQPClient(BaseClient):
 
         self.running_commands[command_id] = command
 
-        headers = {"command_id": command_id, "commander_id": commander_id}
+        headers: HeadersType = {
+            "command_id": command_id,
+            "commander_id": commander_id,
+            "internal": internal,
+        }
 
         # The routing key has the topic command and the name of
         # the commanded actor.

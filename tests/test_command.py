@@ -39,7 +39,7 @@ def test_set_done_command(command):
 
 
 def test_set_status_fails(command):
-    with pytest.raises(TypeError):
+    with pytest.raises((TypeError, ValueError)):
         command.set_status({})
 
 
@@ -59,7 +59,7 @@ def test_set_status_str(command):
 
 
 def test_set_status_str_fails(command):
-    with pytest.raises(TypeError):
+    with pytest.raises((TypeError, ValueError)):
         command.set_status("AAAAA")
 
 
@@ -79,6 +79,7 @@ def test_child_command_write(command):
         command=command,
         broadcast=False,
         silent=False,
+        internal=False,
         **{},
     )
 
@@ -94,6 +95,7 @@ def test_child_command_finished(command):
         command=command,
         broadcast=False,
         silent=False,
+        internal=False,
         **{},
     )
 
@@ -118,6 +120,7 @@ def test_child_command_failed(command):
         command=command,
         broadcast=False,
         silent=False,
+        internal=False,
         **{},
     )
 
@@ -132,6 +135,7 @@ def test_write_str(command):
         command=command,
         broadcast=False,
         silent=False,
+        internal=False,
         **{},
     )
 
@@ -144,6 +148,7 @@ def test_write_dict(command):
         command=command,
         broadcast=False,
         silent=False,
+        internal=False,
         **{},
     )
 
@@ -216,6 +221,7 @@ def test_write_logging_code(command, logcode, sdss_code):
         command=command,
         broadcast=False,
         silent=False,
+        internal=False,
         **{},
     )
 

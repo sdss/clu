@@ -63,6 +63,7 @@ DEFAULT_SCHEMA = {
         "items": [{"type": "integer"}, {"type": "string"}],
     },
     "num_users": {"type": "integer"},
+    "command_model": {"oneOf": [{"type": "array"}, {"type": "object"}]},
 }
 
 
@@ -375,7 +376,11 @@ class ModelSet(dict):
 
         for actor in actors:
             try:
-                cmd = await self.client.send_command(actor, self.__get_schema_command)
+                cmd = await self.client.send_command(
+                    actor,
+                    self.__get_schema_command,
+                    internal=True,
+                )
                 await cmd
 
                 if cmd.status.did_fail:

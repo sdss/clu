@@ -2,7 +2,6 @@ name: Test
 
 on:
   push:
-    branches: [main]
     paths-ignore:
       - '*.md'
       - '*.rst'
@@ -19,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.7', '3.8', '3.9', '3.10']
+        python-version: ['3.8', '3.9', '3.10', '3.11']
 
     steps:
       - uses: actions/checkout@v3
@@ -67,10 +66,11 @@ jobs:
 
       - name: Test with pytest
         run: |
-          pip install pytest pytest-mock pytest-asyncio pytest-cov pytest-rabbitmq asynctest
+          pip install pytest pytest-mock pytest-asyncio pytest-cov mirakuru
           pytest
         env:
-          PYTEST_ADDOPTS: '--rabbitmq-ctl=/usr/lib/rabbitmq/bin/rabbitmqctl --rabbitmq-server=/usr/lib/rabbitmq/bin/rabbitmq-server'
+          PYTEST_RABBITMQ_CTL: '/usr/lib/rabbitmq/bin/rabbitmqctl'
+          PYTEST_RABBITMQ_SERVER: '/usr/lib/rabbitmq/bin/rabbitmq-server'
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3

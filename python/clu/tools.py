@@ -18,6 +18,7 @@ import logging
 import re
 
 from typing import (
+    TYPE_CHECKING,
     Any,
     Callable,
     Coroutine,
@@ -29,6 +30,10 @@ from typing import (
     Type,
     TypeVar,
 )
+
+
+if TYPE_CHECKING:
+    from clu.base import MessageCode
 
 
 __all__ = [
@@ -411,10 +416,8 @@ class CaseInsensitiveDict(Dict[str, T]):
 def cli_coro(f):
     """Decorator function that allows defining coroutines with click."""
 
-    f = asyncio.coroutine(f)
-
     def wrapper(*args, **kwargs):
-        loop = asyncio.get_event_loop()
+        loop = asyncio.new_event_loop()
         return loop.run_until_complete(f(*args, **kwargs))
 
     return functools.update_wrapper(wrapper, f)
@@ -487,7 +490,7 @@ async def as_complete_failer(
 
 def log_reply(
     log: logging.Logger,
-    message_code: str,
+    message_code: MessageCode,
     message: str,
     use_message_code: bool = False,
 ):
@@ -503,7 +506,7 @@ def log_reply(
     }
 
     if use_message_code:
-        log.log(code_dict[message_code], message)
+        log.log(code_dict[message_code.value], message)
     else:
         # Sets the REPLY log level
         log_level_no = REPLY

@@ -493,12 +493,12 @@ class TopicListener(object):
         self.virtualhost = virtualhost
         self.ssl = ssl
 
-        self.connection: apika.RobustConnection | None = None
-        self.channel: apika.Channel
-        self.exchange: apika.Exchange
-        self.queues: List[apika.Queue] = []
+        self.connection: apika.abc.AbstractConnection | None = None
+        self.channel: apika.abc.AbstractChannel
+        self.exchange: apika.abc.AbstractExchange
+        self.queues: List[apika.abc.AbstractQueue] = []
 
-        self._consumer_tag: Dict[apika.Queue, apika.queue.ConsumerTag] = {}
+        self._consumer_tag: Dict[apika.abc.AbstractQueue, apika.queue.ConsumerTag] = {}
 
     async def connect(
         self,
@@ -518,9 +518,9 @@ class TopicListener(object):
 
         try:
             if self.url:
-                self.connection = await apika.connect_robust(self.url)
+                self.connection = await apika.connect(self.url)
             else:
-                self.connection = await apika.connect_robust(
+                self.connection = await apika.connect(
                     login=self.user,
                     host=self.host,
                     port=self.port,
@@ -545,9 +545,9 @@ class TopicListener(object):
     async def add_queue(
         self,
         queue_name: str,
-        callback: Optional[Callable[[apika.IncomingMessage], Any]] = None,
+        callback: Optional[Callable[[apika.abc.AbstractIncomingMessage], Any]] = None,
         bindings: Union[str, List[str]] = "*",
-    ) -> apika.Queue:
+    ) -> apika.abc.AbstractQueue:
         """Adds a queue with bindings.
 
         Parameters

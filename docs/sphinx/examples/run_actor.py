@@ -13,7 +13,7 @@ def cli_coro(f):
 
     @wraps(f)
     def wrapper(*args, **kwargs):
-        loop = asyncio.get_event_loop()
+        loop = asyncio.new_event_loop()
         return loop.run_until_complete(f(*args, **kwargs))
 
     return wrapper
@@ -27,7 +27,6 @@ async def hello(command):
 @click.command(cls=DaemonCLI, daemon_params={"pid_file": "/var/tmp/myactor.pid"})
 @cli_coro
 async def main():
-
     actor = AMQPActor("myactor")  # Assuming RabbitMQ runs on localhost
     await actor.start()
     await actor.run_forever()

@@ -35,7 +35,7 @@ async def test_json_actor_command_write(json_actor, json_client):
     command.write("i", text="Pong")
 
     assert len(command.replies) == 2
-    assert command.replies[0].message_code == ">"
+    assert command.replies[0].message_code.value == ">"
 
 
 async def test_json_actor_pong(json_client):
@@ -147,7 +147,7 @@ async def test_write_exception(json_actor):
     command.write("e", error=ValueError("Error message"))
 
     assert len(command.replies) == 2
-    assert command.replies[1].message_code == "e"
+    assert command.replies[1].message_code.value == "e"
     assert command.replies[1].message["error"] == {
         "exception_module": "builtins",
         "exception_type": "ValueError",
@@ -164,4 +164,4 @@ async def test_json_write_store(json_actor):
     assert len(last_issued) == 1
 
     assert last_issued[0].value == "hello!"
-    assert last_issued[0].message_code == "i"
+    assert last_issued[0].message_code.value == "i"

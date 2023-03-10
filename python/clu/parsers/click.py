@@ -20,6 +20,7 @@ from typing import Any, List, TypeVar
 
 import click
 from click.decorators import group, pass_obj
+from unclick.core import command_to_json
 
 from sdsstools.logger import SDSSLogger
 
@@ -228,14 +229,14 @@ class CluCommand(click.Command):
                 )
 
                 # Launches callback scheduler and adds the done callback
-                ctx.task = loop.create_task(
+                ctx.task = loop.create_task(  # type: ignore
                     self._schedule_callback(ctx, timeout=timeout)
                 )
 
                 ctx.task._command_name = self.full_path  # type: ignore For PY<38
                 ctx.task._date = time.time()  # type: ignore
 
-                ctx.task.add_done_callback(done_callback)
+                ctx.task.add_done_callback(done_callback)  # type: ignore
 
                 # Add some attributes to the task because it's
                 # what will be passed to done_callback
@@ -478,6 +479,36 @@ def help_(ctx, *args, parser_command):
         for line in message:
             command.warning(help=line)
         return command.finish()
+
+
+@command_parser.command()
+@click.argument("COMMAND-NAME", type=str, required=False)
+@click.pass_context
+def get_command_model(
+    ctx: click.Context,
+    command: Command,
+    *args,
+    command_name: str | None = None,
+):
+    """Returns a dictionary representation of the command using ``unclick``."""
+
+    from ..legacy import LegacyActor
+
+    click_command = ctx.command
+    assert isinstance(click_command, CluGroup)
+
+    if command_name is not None:
+        click_command = click_command.commands.get(command_name, None)
+        if not click_command:
+            return command.fail(f"Cannot find command {command_name}.")
+
+    model_str = command_to_json(click_command)
+    model_dict = json.loads(model_str)
+
+    if isinstance(command.actor, LegacyActor):
+        return command.finish(command_model=model_str)
+
+    return command.finish(command_model=model_dict, internal=True)
 
 
 @command_parser.command(name="keyword")
