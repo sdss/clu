@@ -34,7 +34,7 @@ __all__ = ["TronConnection", "TronModel", "TronKey"]
 
 @command_parser.command(name="tron-reconnect")
 async def tron_reconnect(*args):
-    """Pings the actor."""
+    """Reconnects to tron/hub."""
 
     command = args[0]
 
