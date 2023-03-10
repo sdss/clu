@@ -45,6 +45,7 @@ color_codes = {
 class ShellClient(clu.AMQPClient):
     """A shell client."""
 
+    actor: str | None = None
     indent = False
     show_time = True
     ignore_broadcasts = False
@@ -75,6 +76,9 @@ class ShellClient(clu.AMQPClient):
         message_code = reply.message_code
         sender = headers.get("sender", "")
 
+        if is_broadcast and (self.actor is not None and sender != self.actor):
+            return
+
         message_code_esc = message_code if message_code != ">" else "&gt;"
 
         message_code_formatted = prompt_toolkit.formatted_text.HTML(
@@ -102,7 +106,11 @@ class ShellClient(clu.AMQPClient):
             )
 
         if sender:
-            print_chunks.append(f"{sender}")
+            print_chunks.append(
+                prompt_toolkit.formatted_text.HTML(
+                    f'<style fg="magenta">{sender}</style>'
+                ),
+            )
 
         if message_code:
             print_chunks.append(message_code_formatted)
@@ -115,6 +123,7 @@ class ShellClient(clu.AMQPClient):
 
 
 async def shell_client_prompt(
+    actor: str | None = None,
     url: str | None = None,
     user: str = "guest",
     password: str = "guest",
@@ -138,6 +147,7 @@ async def shell_client_prompt(
         log=None,
     ).start()
 
+    client.actor = actor
     client.indent = indent
     client.show_time = show_time
     client.ignore_broadcasts = ignore_broadcasts
@@ -174,7 +184,16 @@ async def shell_client_prompt(
 
 
 @click.command(name="clu")
-@click.option("--url", type=str, help="AMQP RFC3986 formatted broker address.")
+@click.argument(
+    "ACTOR",
+    type=str,
+    required=False,
+)
+@click.option(
+    "--url",
+    type=str,
+    help="AMQP RFC3986 formatted broker address.",
+)
 @click.option(
     "--user",
     "-U",
@@ -234,6 +253,7 @@ async def shell_client_prompt(
     help="Show internal messages.",
 )
 def clu_cli(
+    actor: str | None = None,
     url: str | None = None,
     user: str = "guest",
     password: str = "guest",
@@ -248,6 +268,7 @@ def clu_cli(
 
     shell_task = asyncio.get_event_loop().create_task(
         shell_client_prompt(
+            actor=actor,
             url=url,
             user=user,
             password=password,
