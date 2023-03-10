@@ -61,8 +61,8 @@ class MockReply(dict):
 
     def __init__(
         self,
+        user_id: int | str | None,
         command_id: int | str | None,
-        user_id: int | str,
         flag: str,
         data: Dict[str, Any] = {},
     ):
@@ -150,7 +150,7 @@ class MockReplyList(list):
             raise RuntimeError("This type of actor is not supported")
 
         assert isinstance(user_id, (int, str)) or user_id is None
-        assert isinstance(command_id, (int, str))
+        assert isinstance(command_id, (int, str)) or command_id is None
         assert isinstance(flag, str)
 
         list.append(self, MockReply(user_id, command_id, flag, data))
