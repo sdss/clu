@@ -298,7 +298,7 @@ async def test_send_command_from_command(amqp_actor, mocker):
         command_id=5,
         actor=amqp_actor,
     )
-    await command.send_command("otheractor", "command1 --option")
+    await command.send_command("otheractor", "command1 --option", await_command=False)
 
     send_command_mock.assert_called()
 

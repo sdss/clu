@@ -2,6 +2,10 @@
 
 ## Next version
 
+### 💥 Breaking changes
+
+* By default `AMQPClient.send_command()` will await the command itself when the method is awaited. This means that `cmd = await client.send_command('my_actor', 'ping')` will await until the `ping` finishes and the replies are received. The previous behaviour can be forced with `await_command=False`, e.g., `cmd = await (await client.send_command('my_actor', 'ping', await_command=False))`. In general this should not be a breaking change since awaiting a done command will return immediately, but it's marked as breaking since in some corner cases there could be some unexpected behaviour.
+
 ### ✨ Improved
 
 * Added an `internal` argument in `CluCommand` that marks the received command as internal.

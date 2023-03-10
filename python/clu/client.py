@@ -323,6 +323,7 @@ class AMQPClient(BaseClient):
         internal: bool = False,
         command: Optional[Command] = None,
         time_limit: Optional[float] = None,
+        await_command: bool = True,
     ):
         """Commands another actor over its RCP queue.
 
@@ -347,6 +348,8 @@ class AMQPClient(BaseClient):
             actors.
         time_limit
             A delay after which the command is marked as timed out and done.
+        await_command
+            If `True`, awaits the command until it finishes.
 
         Examples
         --------
@@ -427,5 +430,8 @@ class AMQPClient(BaseClient):
                 ),
                 routing_key=f"reply.{self.name}",
             )
+
+        if await_command:
+            await command
 
         return command
