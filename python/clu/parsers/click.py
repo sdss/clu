@@ -571,7 +571,7 @@ class ClickParser:
             return command
 
         assert command.status
-        command.set_status(command.status.RUNNING)
+        command.set_status(command.status.RUNNING, internal=True)
 
         # If the command contains the --help flag,
         # redirects it to the help command.
