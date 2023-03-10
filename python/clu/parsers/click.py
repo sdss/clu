@@ -482,33 +482,33 @@ def help_(ctx, *args, parser_command):
 
 
 @command_parser.command()
-@click.argument("COMMAND-NAME", type=str)
+@click.argument("COMMAND-NAME", type=str, required=False)
 @click.pass_context
 def get_command_model(
     ctx: click.Context,
     command: Command,
-    command_name: str,
     *args,
-    **kwargs,
+    command_name: str | None = None,
 ):
-    """Returns a dictionary representation of the command using unclick."""
+    """Returns a dictionary representation of the command using ``unclick``."""
 
     from ..legacy import LegacyActor
 
-    group = ctx.command
-    assert isinstance(group, CluGroup)
+    click_command = ctx.command
+    assert isinstance(click_command, CluGroup)
 
-    command_to_parse = group.get_command(ctx, command_name)
-    if not command_to_parse:
-        return command.fail(f"Cannot find command {command_name}.")
+    if command_name is not None:
+        click_command = click_command.commands.get(command_name, None)
+        if not click_command:
+            return command.fail(f"Cannot find command {command_name}.")
 
-    model_str = command_to_json(command_to_parse)
+    model_str = command_to_json(click_command)
     model_dict = json.loads(model_str)
 
     if isinstance(command.actor, LegacyActor):
         return command.finish(command_model=model_str)
 
-    return command.finish(command_model=model_dict)
+    return command.finish(command_model=model_dict, internal=True)
 
 
 @command_parser.command(name="keyword")

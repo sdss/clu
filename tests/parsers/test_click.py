@@ -321,3 +321,22 @@ async def test_cancel_command(json_actor, click_parser):
 
     assert cmd.status.did_fail
     assert cmd2.status.did_succeed
+
+
+@pytest.mark.parametrize("command_name", ["", "keyword"])
+async def test_get_command_model(json_actor, click_parser, command_name):
+    cmd = Command(f"get-command-model {command_name}", actor=json_actor)
+    click_parser.parse_command(cmd)
+    await asyncio.sleep(0.01)
+
+    assert cmd.status.did_succeed
+
+    assert cmd.replies[-1].internal is True
+
+    command_model = cmd.replies.get("command_model")
+    assert command_model
+
+    if command_name == "":
+        assert command_model["name"] == "command-parser"
+    else:
+        assert command_model["name"] == command_name
