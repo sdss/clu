@@ -21,7 +21,6 @@ import clu.base
 from clu.command import Command, CommandStatus
 from clu.exceptions import CluWarning
 from clu.model import BaseModel, Property
-from clu.parsers.click import command_parser
 from clu.protocol import ReconnectingTCPClientProtocol
 
 from .types.keys import Key, KeysDictionary
