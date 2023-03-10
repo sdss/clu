@@ -57,9 +57,10 @@ class ShellClient(clu.AMQPClient):
         if reply is None or reply.internal is True:
             return
 
-        commander_id = reply.info["headers"].get("commander_id", None)
+        headers = reply.info.get("headers", {})
+        commander_id = headers.get("commander_id", None)
         if commander_id:
-            commander_id = commander_id.split(".")[0]
+            commander_id = str(commander_id).split(".")[0]
 
         routing_key = message.routing_key
         is_broadcast = routing_key == "reply.broadcast" or reply.command_id is None
@@ -70,10 +71,7 @@ class ShellClient(clu.AMQPClient):
         if self.ignore_broadcasts and is_broadcast:
             return
 
-        message_info = reply.info
-        headers = message_info["headers"]
-
-        message_code = headers.get("message_code", "")
+        message_code = reply.message_code
         sender = headers.get("sender", "")
 
         message_code_esc = message_code if message_code != ">" else "&gt;"
