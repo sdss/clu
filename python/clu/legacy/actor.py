@@ -15,7 +15,10 @@ import warnings
 
 from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar, Union, cast
 
+import click
+
 import clu
+from clu.parsers.click import CluCommand
 
 from ..actor import CustomTransportType
 from ..base import BaseActor, MessageCode, Reply
@@ -23,7 +26,7 @@ from ..command import Command, TimedCommandList, parse_legacy_command
 from ..parsers import ClickParser
 from ..protocol import TCPStreamServer
 from ..tools import log_reply
-from .tron import TronConnection, tron_reconnect
+from .tron import TronConnection
 from .types.messages import Reply as OpsReply
 
 
@@ -32,6 +35,23 @@ __all__ = ["LegacyActor", "BaseLegacyActor"]
 
 T = TypeVar("T", bound="BaseLegacyActor")
 PathLike = Union[str, pathlib.Path]
+
+
+@click.command(cls=CluCommand)
+async def tron_reconnect(*args):
+    """Reconnects to tron/hub."""
+
+    command = args[0]
+
+    if command.actor.tron is None:
+        return command.fail("Tron instance not set.")
+
+    command.actor.tron.stop()
+    await asyncio.sleep(0.5)
+
+    await command.actor.tron.start()
+
+    return command.finish()
 
 
 class BaseLegacyActor(BaseActor):

@@ -32,23 +32,6 @@ from .types.parser import ParseError, ReplyParser
 __all__ = ["TronConnection", "TronModel", "TronKey"]
 
 
-@command_parser.command(name="tron-reconnect")
-async def tron_reconnect(*args):
-    """Reconnects to tron/hub."""
-
-    command = args[0]
-
-    if command.actor.tron is None:
-        return command.fail("Tron instance not set.")
-
-    command.actor.tron.stop()
-    await asyncio.sleep(0.5)
-
-    await command.actor.tron.start()
-
-    return command.finish()
-
-
 class TronKey(Property):
     """A Tron model key with callbacks.
 

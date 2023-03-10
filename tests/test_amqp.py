@@ -366,3 +366,7 @@ async def test_get_command_model(amqp_client, amqp_actor):
     await cmd
 
     assert len(cmd.replies) == 2
+
+
+async def test_no_tron_reconnect(amqp_actor):
+    assert "tron-reconnect" not in amqp_actor.parser.commands
