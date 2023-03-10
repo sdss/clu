@@ -231,7 +231,7 @@ async def test_new_command_fails(amqp_actor, mocker):
 
 
 class TestHandleReply:
-    @pytest.mark.skipif(sys.version_info < (3, 9))
+    @pytest.mark.skipif(sys.version_info < (3, 9), reason="Fails for PY<3.9")
     async def test_client_handle_reply_bad_message(
         self, amqp_client, message_maker, caplog
     ):
