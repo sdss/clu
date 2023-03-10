@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### ✨ Improved
+
+* Added an `internal` argument in `CluCommand` that marks the received command as internal.
+
+
 ## 2.0.0b2 - March 10, 2023
 
 ### 🔧 Fixed

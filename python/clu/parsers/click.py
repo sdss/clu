@@ -141,6 +141,7 @@ class CluCommand(click.Command):
             context_settings["ignore_unknown_options"] = True
 
         self.cancellable = kwargs.pop("cancellable", False)
+        self.internal = kwargs.pop("internal", False)
 
         if self.cancellable is True:
             kwargs["params"].append(
@@ -173,7 +174,10 @@ class CluCommand(click.Command):
         """Schedules the callback as a task with a timeout."""
 
         parser_args = ctx.obj.get("parser_args", [])
+
         command = parser_args[0] if len(parser_args) > 0 else None
+        if command is not None:
+            command.internal = self.internal
 
         callback_task = asyncio.create_task(
             ctx.invoke(self.callback, *parser_args, **ctx.params)
@@ -481,7 +485,7 @@ def help_(ctx, *args, parser_command):
         return command.finish()
 
 
-@command_parser.command()
+@command_parser.command(internal=True)
 @click.argument("COMMAND-NAME", type=str, required=False)
 @click.pass_context
 def get_command_model(
@@ -508,7 +512,7 @@ def get_command_model(
     if isinstance(command.actor, LegacyActor):
         return command.finish(command_model=model_str)
 
-    return command.finish(command_model=model_dict, internal=True)
+    return command.finish(command_model=model_dict)
 
 
 @command_parser.command(name="keyword")
