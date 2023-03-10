@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.0.0b2 - March 10, 2023
+
+### 🔧 Fixed
+
+* Fixed asserting of `command_id` and `user_id` in testing module.
+
+
 ## 2.0.0b1 - March 10, 2023
 
 ### 💥 Breaking changes
