@@ -8,7 +8,6 @@
 
 import asyncio
 import logging
-import sys
 from unittest.mock import AsyncMock
 
 import aio_pika

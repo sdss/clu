@@ -141,7 +141,7 @@ class CluCommand(click.Command):
             context_settings["ignore_unknown_options"] = True
 
         self.cancellable = kwargs.pop("cancellable", False)
-        self.internal = kwargs.pop("internal", False)
+        self.internal = kwargs.pop("internal", None)
 
         if self.cancellable is True:
             kwargs["params"].append(
@@ -176,7 +176,7 @@ class CluCommand(click.Command):
         parser_args = ctx.obj.get("parser_args", [])
 
         command = parser_args[0] if len(parser_args) > 0 else None
-        if command is not None:
+        if command is not None and self.internal is not None:
             command.internal = self.internal
 
         callback_task = asyncio.create_task(
