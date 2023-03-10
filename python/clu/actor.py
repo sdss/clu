@@ -97,7 +97,7 @@ class AMQPBaseActor(AMQPClient, BaseActor):
                 headers = message.info()["headers"]
                 command_body = json.loads(message.body.decode())
         else:
-            headers = message.info()["headers"]
+            headers = message.info().get("headers", {})
             command_body = json.loads(message.body.decode())
 
         commander_id = headers["commander_id"]

@@ -14,7 +14,7 @@ import logging
 import pathlib
 import uuid
 
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Union
 
 import aio_pika as apika
 
@@ -73,25 +73,25 @@ class AMQPReply(object):
         log: Optional[logging.Logger] = None,
     ):
         self.command_id: str | None = None
-        self.sender: str | None = None
+        self.message_code: str = ""
         self.body = {}
 
         self.message = message
         self._log = log
 
         self.is_valid = True
-        self.info: Dict[Any, Any] = message.info()
+        self.info = message.info()
 
-        self.headers = self.info["headers"]
+        self.headers = dict(self.info.get("headers", {}))
 
-        self.message_code = self.headers.get("message_code", None)
-        self.internal = self.headers.get("internal", False)
-
-        if self.message_code is None:
+        self.message_code = str(self.headers.get("message_code", ""))
+        if self.message_code == "":
             self.is_valid = False
             if self._log:
                 self._log.warning(f"received message without message_code: {message}")
             return
+
+        self.internal = bool(self.headers.get("internal", False))
 
         self.sender = self.headers.get("sender", None)
         if self.sender is None and self._log:
