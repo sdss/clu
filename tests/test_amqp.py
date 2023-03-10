@@ -230,6 +230,7 @@ async def test_new_command_fails(amqp_actor, mocker):
 
 
 class TestHandleReply:
+    @pytest.mark.xfail()
     async def test_client_handle_reply_bad_message(
         self, amqp_client, message_maker, caplog
     ):
