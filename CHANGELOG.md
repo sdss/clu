@@ -1,5 +1,24 @@
 # Changelog
 
+## 2.0.0b1 - March 10, 2023
+
+### 💥 Breaking changes
+
+* Removed support for Python 3.7.
+
+### 🚀 New
+
+* Support Python 3.11.
+* Use `aio_pika>=9.0.0` and `aiormq>=6.6.4`.
+* Support internal replies that are not shown in the CLI. Modified some command to use internal replies.
+* Added `get-command-model` command that uses [unclick](https://github.com/albireox/unclick) to return a JSON representation of a command or the entire command parser. This can be used to create a programmatic API that interfaces with an actor using command strings.
+* Allow to filter by actor(s) in the CLI.
+
+### ⚙️ Engineering
+
+* Added `MessageCode` enumeration.
+
+
 ## 1.9.2 - January 24, 2022
 
 ### ✨ Improved
