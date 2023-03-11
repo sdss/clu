@@ -1,6 +1,6 @@
 # Changelog
 
-## Next version
+## 2.0.0 - March 10, 2023
 
 ### 💥 Breaking changes
 
@@ -9,6 +9,7 @@
 ### ✨ Improved
 
 * Added an `internal` argument in `CluCommand` that marks the received command as internal.
+* Bump `unclick` to `0.1.0b4`.
 
 ### 🏷️ Changed
 
