@@ -34,7 +34,8 @@ jsonschema = "^4.0.1"
 sdsstools = "^1.0.0"
 prompt_toolkit = "^3.0.6"
 aiormq = "^6.6.4"
-unclick = "^0.1.0b3"
+unclick = "^0.1.0b4"
+setuptools = "^67.6.0"
 
 [tool.poetry.dev-dependencies]
 ipython = ">=8.0.0"
