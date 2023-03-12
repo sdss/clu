@@ -207,6 +207,8 @@ class AMQPClient(BaseClient):
 
         self.models = ModelSet(self, actors=models, raise_exception=False)
 
+        self._callbacks: list[Callable[[AMQPReply], None]] = []
+
     def __repr__(self):
         if self.connection.connection is None:
             url = "disconnected"
@@ -310,6 +312,13 @@ class AMQPClient(BaseClient):
                 if not command.done():
                     command.set_result(command)
                     del self.running_commands[reply.command_id]
+
+        # Handle reply callbacks.
+        for cb in self._callbacks:
+            if asyncio.iscoroutinefunction(cb):
+                asyncio.create_task(cb(reply))
+            else:
+                asyncio.get_running_loop().call_soon(cb, reply)
 
         return reply
 
@@ -435,3 +444,17 @@ class AMQPClient(BaseClient):
             await command
 
         return command
+
+    def add_reply_callback(self, callback_func: Callable[[AMQPReply], None]):
+        """Adds a callback that is called when a new reply is received."""
+
+        if callback_func not in self._callbacks:
+            self._callbacks.append(callback_func)
+
+    def remove_reply_callback(self, callback_func: Callable[[AMQPReply], None]):
+        """Removes a reply callback."""
+
+        if callback_func not in self._callbacks:
+            raise ValueError("Callback not registered.")
+
+        self._callbacks.remove(callback_func)

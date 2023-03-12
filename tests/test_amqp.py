@@ -369,3 +369,23 @@ async def test_get_command_model(amqp_client, amqp_actor):
 
 async def test_no_tron_reconnect(amqp_actor):
     assert "tron-reconnect" not in amqp_actor.parser.commands
+
+
+async def test_reply_callback(amqp_client, amqp_actor, mocker):
+    async def callback(reply):
+        pass
+
+    callback_mock = mocker.create_autospec(callback)
+    amqp_client.add_reply_callback(callback_mock)
+
+    assert len(amqp_client._callbacks) == 1
+
+    # Just send a command that emits some replies.
+    cmd = await amqp_client.send_command("amqp_actor", "help")
+    await cmd
+    await asyncio.sleep(0.01)
+
+    callback_mock.assert_called()
+
+    amqp_client.remove_reply_callback(callback_mock)
+    assert len(amqp_client._callbacks) == 0

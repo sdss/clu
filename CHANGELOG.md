@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### 🚀 New
+
+* Added `AMQPClient.add_reply_callback()` which allows to register callback functions that are called with an `AMQPReply` object every time a reply is received. These replies are not filtered and the callback is called for each valid reply.
+
+
 ## 2.0.0 - March 10, 2023
 
 ### 💥 Breaking changes
