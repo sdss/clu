@@ -14,7 +14,7 @@ import logging
 import pathlib
 import uuid
 
-from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Awaitable, Callable, Dict, List, Optional, Union
 
 import aio_pika as apika
 
@@ -35,6 +35,7 @@ __all__ = ["AMQPClient", "AMQPReply"]
 
 
 PathLike = Union[str, pathlib.Path]
+ReplyCallbackType = Callable[["AMQPReply"], None | Awaitable[None]]
 
 
 class AMQPReply(object):
@@ -207,7 +208,7 @@ class AMQPClient(BaseClient):
 
         self.models = ModelSet(self, actors=models, raise_exception=False)
 
-        self._callbacks: list[Callable[[AMQPReply], None]] = []
+        self._callbacks: list[ReplyCallbackType] = []
 
     def __repr__(self):
         if self.connection.connection is None:
@@ -445,13 +446,13 @@ class AMQPClient(BaseClient):
 
         return command
 
-    def add_reply_callback(self, callback_func: Callable[[AMQPReply], None]):
+    def add_reply_callback(self, callback_func: ReplyCallbackType):
         """Adds a callback that is called when a new reply is received."""
 
         if callback_func not in self._callbacks:
             self._callbacks.append(callback_func)
 
-    def remove_reply_callback(self, callback_func: Callable[[AMQPReply], None]):
+    def remove_reply_callback(self, callback_func: ReplyCallbackType):
         """Removes a reply callback."""
 
         if callback_func not in self._callbacks:
