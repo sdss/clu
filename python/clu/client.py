@@ -35,7 +35,7 @@ __all__ = ["AMQPClient", "AMQPReply"]
 
 
 PathLike = Union[str, pathlib.Path]
-ReplyCallbackType = Callable[["AMQPReply"], None | Awaitable[None]]
+ReplyCallbackType = Callable[["AMQPReply"], Union[None, Awaitable[None]]]
 
 
 class AMQPReply(object):
