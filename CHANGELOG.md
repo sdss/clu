@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### ⚙️ Engineering
+
+* Remove pin on `setuptools` version.
+
+
 ## 2.0.1 - March 12, 2023
 
 ### 🚀 New
