@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### 🔧 Fixed
+
+* Prevent commands sends to the CLU CLI to block until finished.
+
+
 ## 2.0.2b1 - May 23, 2023
 
 ### ⚙️ Engineering

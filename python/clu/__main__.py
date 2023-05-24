@@ -180,7 +180,11 @@ async def shell_client_prompt(
                     actor = chunks[0]
                     command_string = " ".join(chunks[1:])
 
-                    await client.send_command(actor, command_string)
+                    await client.send_command(
+                        actor,
+                        command_string,
+                        await_command=False,
+                    )
 
 
 @click.command(name="clu")
