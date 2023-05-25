@@ -111,3 +111,12 @@ Testing
 
 .. automodule:: clu.testing
     :members: setup_test_actor, MockReplyList, MockReply
+
+
+.. _api-websocket:
+
+Websocket
+---------
+
+.. automodule:: clu.websocket
+    :members: WebsocketServer

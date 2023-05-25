@@ -7,28 +7,12 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
 import asyncio
-import datetime
-import json
-import os
-import uuid
 
 import aio_pika
 import click
-import prompt_toolkit
-import pygments
-import pygments.lexers
-from prompt_toolkit import print_formatted_text as print
-from prompt_toolkit.formatted_text import PygmentsTokens
-from prompt_toolkit.history import FileHistory
-from prompt_toolkit.patch_stdout import patch_stdout
-from prompt_toolkit.styles import style_from_pygments_cls
-from pygments.styles import STYLE_MAP, get_style_by_name
+from click_default_group import DefaultGroup
 
 import clu
-
-
-style_name = "solarized-dark" if "solarized-dark" in STYLE_MAP else "default"
-style = style_from_pygments_cls(get_style_by_name(style_name))  # type: ignore
 
 
 color_codes = {
@@ -53,6 +37,16 @@ class ShellClient(clu.AMQPClient):
 
     async def handle_reply(self, message: aio_pika.IncomingMessage):
         """Prints the formatted reply."""
+
+        import datetime
+        import json
+
+        import prompt_toolkit
+        import pygments.lexers
+        from prompt_toolkit import print_formatted_text as print
+        from prompt_toolkit.formatted_text import PygmentsTokens
+        from prompt_toolkit.styles import style_from_pygments_cls
+        from pygments.styles import STYLE_MAP, get_style_by_name
 
         reply = await super().handle_reply(message)
 
@@ -115,6 +109,9 @@ class ShellClient(clu.AMQPClient):
         if message_code:
             print_chunks.append(message_code_formatted)
 
+        style_name = "solarized-dark" if "solarized-dark" in STYLE_MAP else "default"
+        style = style_from_pygments_cls(get_style_by_name(style_name))  # type: ignore
+
         if body:
             print_chunks.append(PygmentsTokens(body_tokens))
             print(*print_chunks, style=style, end="")
@@ -134,6 +131,13 @@ async def shell_client_prompt(
     ignore_broadcasts=False,
     internal=False,
 ):
+    import os
+    import uuid
+
+    import prompt_toolkit
+    from prompt_toolkit.history import FileHistory
+    from prompt_toolkit.patch_stdout import patch_stdout
+
     # Give each client a unique name to ensure the queues are unique.
     uid = str(uuid.uuid4()).split("-")[0]
 
@@ -187,7 +191,14 @@ async def shell_client_prompt(
                     )
 
 
-@click.command(name="clu")
+@click.group(cls=DefaultGroup, default="cli", default_if_no_args=True, name="clu")
+def clu_cli():
+    """CLU command line interface."""
+
+    pass
+
+
+@clu_cli.command(name="cli")
 @click.argument(
     "ACTORS",
     type=str,
@@ -257,7 +268,7 @@ async def shell_client_prompt(
     is_flag=True,
     help="Show internal messages.",
 )
-def clu_cli(
+def cli(
     actors: tuple[str, ...] = (),
     url: str | None = None,
     user: str = "guest",
@@ -286,6 +297,50 @@ def clu_cli(
         )
     )
     asyncio.get_event_loop().run_until_complete(shell_task)
+
+
+@clu_cli.command()
+@click.option(
+    "--port",
+    "-p",
+    default=9876,
+    show_default=True,
+    type=int,
+    help="The port on which to serve the websocket",
+)
+@click.option(
+    "--rabbitmq-host",
+    "-H",
+    type=str,
+    show_default=True,
+    default="localhost",
+    help="The host running the AMQP server.",
+)
+@click.option(
+    "--rabbitmq-port",
+    "-P",
+    type=int,
+    show_default=True,
+    default=5672,
+    help="The port on which the AMQP server is running.",
+)
+def websocket(port=9876, rabbitmq_host="localhost", rabbitmq_port=5672):
+    """Launches a websocket server connected to a RabbitMQ exchange."""
+
+    try:
+        from clu.websocket import WebsocketServer
+    except ImportError:
+        click.echo("websockets package is needed. Try pip install sdss-clu[websocket].")
+        return
+
+    async def _async_helper():
+        ws = WebsocketServer(wport=port, host=rabbitmq_host, port=rabbitmq_port)
+        await ws.start()
+
+        # Run forever.
+        await asyncio.Future()
+
+    asyncio.run(_async_helper())
 
 
 def main():
