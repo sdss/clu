@@ -120,12 +120,3 @@ class WebsocketServer:
             body=reply.body,
         )
         broadcast(self.wclients, json.dumps(data))
-
-
-async def main():
-    ws = await WebsocketServer().start()
-    await asyncio.Future()
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
