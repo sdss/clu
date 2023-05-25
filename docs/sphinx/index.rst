@@ -21,6 +21,7 @@ Contents
   parser
   communication
   client
+  websocket
   testing
   examples
 
