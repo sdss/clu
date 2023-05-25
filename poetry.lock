@@ -303,6 +303,19 @@ files = [
 colorama = {version = "*", markers = "platform_system == \"Windows\""}
 
 [[package]]
+name = "click-default-group"
+version = "1.2.2"
+description = "Extends click.Group to invoke a command without explicit subcommand name"
+optional = false
+python-versions = "*"
+files = [
+    {file = "click-default-group-1.2.2.tar.gz", hash = "sha256:d9560e8e8dfa44b3562fbc9425042a0fd6d21956fcc2db0077f63f34253ab904"},
+]
+
+[package.dependencies]
+click = "*"
+
+[[package]]
 name = "codecov"
 version = "2.1.13"
 description = "Hosted coverage reports for GitHub, Bitbucket and Gitlab"
@@ -2304,4 +2317,4 @@ websocket = ["websockets"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8,<4.0"
-content-hash = "2e2f957ea3acdd8bed1240754f54a1691098c92d083397516a46a9002da00c85"
+content-hash = "ca7176e4a5144977968d75c17aab33505cecf52a774fc5ceb900ab15be3c1e2c"
