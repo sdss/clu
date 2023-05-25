@@ -166,7 +166,7 @@ class AMQPClient(BaseClient):
 
     def __init__(
         self,
-        name: str,
+        name: str | None = None,
         url: Optional[str] = None,
         user: str = "guest",
         password: str = "guest",
@@ -181,6 +181,9 @@ class AMQPClient(BaseClient):
         models: List[str] = [],
         **kwargs,
     ):
+        if name is None:
+            name = "amqp-client-" + str(uuid.uuid4()).split("-")[-1]
+
         super().__init__(
             name,
             version=version,
