@@ -327,7 +327,11 @@ def cli(
 def websocket(port=9876, rabbitmq_host="localhost", rabbitmq_port=5672):
     """Launches a websocket server connected to a RabbitMQ exchange."""
 
-    from clu.websocket import WebsocketServer
+    try:
+        from clu.websocket import WebsocketServer
+    except ImportError:
+        click.echo("websockets package is needed. Try pip install sdss-clu[websocket].")
+        return
 
     async def _async_helper():
         ws = WebsocketServer(wport=port, host=rabbitmq_host, port=rabbitmq_port)
