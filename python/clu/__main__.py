@@ -34,6 +34,7 @@ class ShellClient(clu.AMQPClient):
     show_time = True
     ignore_broadcasts = False
     internal = False
+    all_ = False
 
     async def handle_reply(self, message: aio_pika.IncomingMessage):
         """Prints the formatted reply."""
@@ -61,7 +62,12 @@ class ShellClient(clu.AMQPClient):
         routing_key = message.routing_key
         is_broadcast = routing_key == "reply.broadcast" or reply.command_id is None
 
-        if commander_id and commander_id != self.name and not is_broadcast:
+        if (
+            commander_id
+            and commander_id != self.name
+            and not is_broadcast
+            and not self.all_
+        ):
             return
 
         if self.ignore_broadcasts and is_broadcast:
@@ -126,6 +132,7 @@ async def shell_client_prompt(
     password: str = "guest",
     host: str = "127.0.0.1",
     port: int = 5672,
+    all_: bool = False,
     indent=True,
     show_time=True,
     ignore_broadcasts=False,
@@ -156,6 +163,7 @@ async def shell_client_prompt(
     client.show_time = show_time
     client.ignore_broadcasts = ignore_broadcasts
     client.internal = internal
+    client.all_ = all_
 
     history = FileHistory(os.path.expanduser("~/.clu_history"))
 
@@ -243,6 +251,13 @@ def clu_cli():
     help="The port on which the server is running",
 )
 @click.option(
+    "--all",
+    "-a",
+    "all_",
+    is_flag=True,
+    help="Print all messages, not only those replying to commands sent from this CLI.",
+)
+@click.option(
     "--no-indent",
     "-n",
     is_flag=True,
@@ -275,6 +290,7 @@ def cli(
     password: str = "guest",
     host: str = "localhost",
     port: int = 5672,
+    all_: bool = False,
     no_indent=False,
     no_time=False,
     ignore_broadcasts=False,
@@ -290,6 +306,7 @@ def cli(
             password=password,
             host=host,
             port=port,
+            all_=all_,
             indent=not no_indent,
             show_time=not no_time,
             ignore_broadcasts=ignore_broadcasts,
