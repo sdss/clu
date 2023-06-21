@@ -1,10 +1,14 @@
 # Changelog
 
-## Next version
+## 2.1.0 - June 21
 
 ### 🚀 New
 
 * [#117](https://github.com/sdss/clu/issues/117) Added a ``WebsocketServer`` class to implement a pass-through websocket client-server connection to the AMQP exchange.
+
+### ✨ Improved
+
+* `AMQPClient` can be called without a `name`, in which case a unique random one will be generated.
 
 
 ## 2.0.2 - May 24, 2023
