@@ -368,35 +368,40 @@ class ModelSet(dict):
         self.__get_schema_command = get_schema_command
         self.__kwargs = kwargs
 
+    async def add_schema(self, actor: str):
+        """Adds an actor schema."""
+
+        schema = None
+
+        try:
+            cmd = await self.client.send_command(
+                actor,
+                self.__get_schema_command,
+                internal=True,
+            )
+            await cmd
+
+            if cmd.status.did_fail:
+                raise CluError(f"Failed getting schema for {actor}.")
+            else:
+                for reply in cmd.replies:
+                    if "schema" in reply.message:
+                        schema = json.loads(reply.message["schema"])
+                        break
+                if schema is None:
+                    raise CluError(f"{actor} did not reply with a model.")
+
+            self[actor] = Model(actor, schema, **self.__kwargs)
+
+        except Exception as err:
+            if not self.__raise_exception:
+                warnings.warn(f"Cannot load model {actor!r}. {err}", CluWarning)
+                return
+            raise
+
     async def load_schemas(self, actors: Optional[List[str]] = None):
         """Loads the actor schames."""
 
         actors = actors or self.actors or []
-        schema = None
-
         for actor in actors:
-            try:
-                cmd = await self.client.send_command(
-                    actor,
-                    self.__get_schema_command,
-                    internal=True,
-                )
-                await cmd
-
-                if cmd.status.did_fail:
-                    raise CluError(f"Failed getting schema for {actor}.")
-                else:
-                    for reply in cmd.replies:
-                        if "schema" in reply.message:
-                            schema = json.loads(reply.message["schema"])
-                            break
-                    if schema is None:
-                        raise CluError(f"{actor} did not reply with a model.")
-
-                self[actor] = Model(actor, schema, **self.__kwargs)
-
-            except Exception as err:
-                if not self.__raise_exception:
-                    warnings.warn(f"Cannot load model {actor!r}. {err}", CluWarning)
-                    continue
-                raise
+            await self.add_schema(actor)

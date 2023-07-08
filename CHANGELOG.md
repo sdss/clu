@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### ✨ Improved
+
+* Allow to add a model to a `ModelSet` after initialisation.
+
+
 ## 2.1.0 - June 21
 
 ### 🚀 New
