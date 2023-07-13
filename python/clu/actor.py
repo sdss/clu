@@ -80,7 +80,7 @@ class AMQPBaseActor(AMQPClient, BaseActor):
             bindings=[f"command.{self.name}.#"],
         )
 
-        self.log.info(
+        self.log.debug(
             f"commands queue {self.commands_queue.name!r} "
             f"bound to {self.connection.connection.url!s}"
         )
