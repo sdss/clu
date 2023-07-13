@@ -122,7 +122,7 @@ class ShellClient(clu.AMQPClient):
             print_chunks.append(PygmentsTokens(body_tokens))
             print(*print_chunks, style=style, end="")
         else:
-            print(*print_chunks)  # Newline
+            print(*print_chunks, flush=True)  # Newline
 
 
 async def shell_client_prompt(

@@ -5,6 +5,7 @@
 ### ✨ Improved
 
 * Allow to add a model to a `ModelSet` after initialisation.
+* Flush messages after printing them to the CLU CLI.
 
 
 ## 2.1.0 - June 21
