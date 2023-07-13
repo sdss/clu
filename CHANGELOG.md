@@ -1,6 +1,6 @@
 # Changelog
 
-## Next version
+## 2.1.1 - July 13, 2023
 
 ### ✨ Improved
 
@@ -8,7 +8,7 @@
 * Flush messages after printing them to the CLU CLI.
 
 
-## 2.1.0 - June 21
+## 2.1.0 - June 21, 2023
 
 ### 🚀 New
 
