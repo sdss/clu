@@ -368,7 +368,7 @@ class ModelSet(dict):
         self.__get_schema_command = get_schema_command
         self.__kwargs = kwargs
 
-    async def add_schema(self, actor: str):
+    async def add_actor(self, actor: str):
         """Adds an actor schema."""
 
         schema = None
@@ -404,4 +404,4 @@ class ModelSet(dict):
 
         actors = actors or self.actors or []
         for actor in actors:
-            await self.add_schema(actor)
+            await self.add_actor(actor)
