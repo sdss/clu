@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### ⚙️ Engineering
+
+* Updated `unclick` to 0.1.0b5.
+
+
 ## 2.1.1 - July 13, 2023
 
 ### ✨ Improved
