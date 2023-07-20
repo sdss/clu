@@ -241,7 +241,7 @@ class AMQPClient(BaseClient):
         else:
             url = "???"
 
-        self.log.debug(f"replies queue {self.replies_queue.name!r} bound to {url!s}")
+        self.log.debug(f"Replies queue {self.replies_queue.name!r} bound to {url!s}")
 
         # Initialises the models.
         await self.models.load_schemas()
