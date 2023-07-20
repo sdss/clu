@@ -1,6 +1,6 @@
 # Changelog
 
-## Next version
+## 2.1.2 - July 20, 2023
 
 ### ⚙️ Engineering
 
