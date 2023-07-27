@@ -107,6 +107,8 @@ class CommandStatus(Maskbit):
     def is_combination(self) -> bool:
         """Returns True if a flag is a combination."""
 
+        assert isinstance(self.value, int)
+
         if bin(self.value).count("1") > 1:
             return True
         return False
