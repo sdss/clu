@@ -432,12 +432,23 @@ class BaseActor(BaseClient):
         pass
 
     @abc.abstractmethod
-    def _write_internal(self, reply: Reply):
+    def _write_internal(self, reply: Reply, write_to_log: bool = True):
         """Internally handle the reply and output it to the users.
 
         Must handle converting the general `.Reply` to the specific format of the
         actor transport. Must also handle logging the reply.
+
+        Parameters
+        ----------
+        reply
+            The reply object to output to users.
+        write_to_log
+            Whether to write the reply to the log. Defaults to yes but
+            it may be useful to prevent large repetitive replies cluttering
+            the log.
+
         """
+
         pass
 
     def write(
@@ -451,6 +462,7 @@ class BaseActor(BaseClient):
         silent: bool = False,
         internal: bool = False,
         emit: bool = True,
+        write_to_log: bool = True,
         **kwargs,
     ) -> Reply:
         """Writes a message to user(s).
@@ -516,6 +528,10 @@ class BaseActor(BaseClient):
             one is overriding the method and wants to control when to call the
             internal method. In that case, a `.Reply` object is returned but nothing
             is output to the users.
+        write_to_log
+            Whether to write the reply to the log. Defaults to yes but
+            it may be useful to prevent large repetitive replies cluttering
+            the log.
         kwargs
             Keyword arguments that will used to update the message.
         """
@@ -579,7 +595,7 @@ class BaseActor(BaseClient):
             if asyncio.iscoroutinefunction(self._write_internal):
                 asyncio.create_task(self._write_internal(reply))  # type: ignore
             else:
-                self._write_internal(reply)
+                self._write_internal(reply, write_to_log=write_to_log)
 
         if self.store is not None:
             self.store.add_reply(reply)

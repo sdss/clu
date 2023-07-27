@@ -478,10 +478,10 @@ def help_(ctx, *args, parser_command):
         message.append(line)
 
     if isinstance(command.actor, (actor.AMQPActor, actor.JSONActor)):
-        return command.finish(help=message)
+        return command.finish(help=message, write_to_log=False)
     else:
         for line in message:
-            command.warning(help=line)
+            command.warning(help=line, write_to_log=False)
         return command.finish()
 
 
@@ -510,9 +510,9 @@ def get_command_model(
     model_dict = json.loads(model_str)
 
     if isinstance(command.actor, LegacyActor):
-        return command.finish(command_model=model_str)
+        return command.finish(command_model=model_str, write_to_log=False)
 
-    return command.finish(command_model=model_dict)
+    return command.finish(command_model=model_dict, write_to_log=False)
 
 
 @command_parser.command(name="keyword")
@@ -532,9 +532,12 @@ def keyword(command, *args, keyword):
     lines = json.dumps(schema, indent=2).splitlines()[1:]
     max_length = max([len(line) for line in lines])
 
-    command.info(text=f"{keyword} = {{".ljust(max_length, " "))
+    command.info(text=f"{keyword} = {{".ljust(max_length, " "), write_to_log=False)
     for line in lines:
-        command.info(text=line.replace('"', "").ljust(max_length, " "))
+        command.info(
+            text=line.replace('"', "").ljust(max_length, " "),
+            write_to_log=False,
+        )
 
     command.finish()
 

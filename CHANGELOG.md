@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### ✨ Improved
+
+* Added `write_to_log` argument to `BaseClient.write()` to decide whether a reply should be written to the log. Changed several commands (`get-command-model`, `help`) to emit replies without logging them.
+
+
 ## 2.1.2 - July 20, 2023
 
 ### ⚙️ Engineering

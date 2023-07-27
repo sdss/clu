@@ -436,6 +436,7 @@ class BaseLegacyActor(BaseActor):
         concatenate: bool = True,
         broadcast: bool = False,
         validate: bool = True,
+        write_to_log: bool = True,
         **kwargs,
     ):
         """Writes a message to user(s).
@@ -465,6 +466,10 @@ class BaseLegacyActor(BaseActor):
         validate
             Validate the reply against the actor model. This is ignored if the actor
             was not started with knowledge of its own schema.
+        write_to_log
+            Whether to write the reply to the log. Defaults to yes but
+            it may be useful to prevent large repetitive replies cluttering
+            the log.
         kwargs
             Keyword arguments that will be added to the message. If a keyword
             is both in ``message`` and in ``kwargs``, the value in ``kwargs``
@@ -491,10 +496,33 @@ class BaseLegacyActor(BaseActor):
                 user_id=user_id,
                 command_id=command_id,
                 concatenate=concatenate,
+                write_to_log=write_to_log,
             )
 
-    def _write_internal(self, reply: Reply, user_id=0, command_id=0, concatenate=True):
-        """Writes reply to users."""
+    def _write_internal(
+        self,
+        reply: Reply,
+        user_id=0,
+        command_id=0,
+        concatenate=True,
+        write_to_log: bool = True,
+    ):
+        """Writes reply to users.
+
+        Parameters
+        ----------
+        reply
+            The reply object to output to users.
+        user_id
+            The user to which we are replying.
+        command_id
+            The command emitting this message.
+        write_to_log
+            Whether to write the reply to the log. Defaults to yes but
+            it may be useful to prevent large repetitive replies cluttering
+            the log.
+
+        """
 
         command = cast(Command, reply.command)
         message = reply.message
@@ -546,7 +574,7 @@ class BaseLegacyActor(BaseActor):
                 if global_transport is not None and global_transport == transport:
                     transport.write(msg)
 
-            if self.log:
+            if self.log and write_to_log:
                 log_reply(self.log, reply.message_code, full_msg_str)
 
 

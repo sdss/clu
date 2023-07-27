@@ -129,8 +129,19 @@ class AMQPBaseActor(AMQPClient, BaseActor):
 
         return self.parse_command(command)
 
-    async def _write_internal(self, reply: Reply):
-        """Writes a message to user(s)."""
+    async def _write_internal(self, reply: Reply, write_to_log: bool = True):
+        """Writes a message to user(s).
+
+        Parameters
+        ----------
+        reply
+            The reply object to output to users.
+        write_to_log
+            Whether to write the reply to the log. Defaults to yes but
+            it may be useful to prevent large repetitive replies cluttering
+            the log.
+
+        """
 
         assert self.connection
 
@@ -166,7 +177,7 @@ class AMQPBaseActor(AMQPClient, BaseActor):
             routing_key=routing_key,
         )
 
-        if self.log:
+        if self.log and write_to_log:
             log_reply(self.log, reply.message_code, message_json)
 
 
@@ -361,8 +372,19 @@ class TCPBaseActor(BaseActor):
 
         BaseActor.write(self, *args, **kwargs)
 
-    def _write_internal(self, reply: Reply):
-        """Write a reply to the users."""
+    def _write_internal(self, reply: Reply, write_to_log: bool = True):
+        """Write a reply to the users.
+
+        Parameters
+        ----------
+        reply
+            The reply object to output to users.
+        write_to_log
+            Whether to write the reply to the log. Defaults to yes but
+            it may be useful to prevent large repetitive replies cluttering
+            the log.
+
+        """
 
         def send_to_transport(transport, message):
             if getattr(transport, "multiline", False):
@@ -400,7 +422,7 @@ class TCPBaseActor(BaseActor):
 
         message_json = json.dumps(message_full, sort_keys=False) + "\n"
 
-        if self.log:
+        if self.log and write_to_log:
             log_reply(self.log, reply.message_code, message_json.strip())
 
 

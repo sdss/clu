@@ -165,3 +165,17 @@ async def test_json_write_store(json_actor):
 
     assert last_issued[0].value == "hello!"
     assert last_issued[0].message_code.value == "i"
+
+
+@pytest.mark.parametrize("write_to_log", [True, False])
+async def test_write_no_log(json_actor, write_to_log: bool, caplog):
+    command = Command(
+        command_string="ping",
+        actor=json_actor,
+    )
+
+    command.set_status("RUNNING")
+    command.info("Test", write_to_log=write_to_log)
+
+    assert len(command.replies) == 2
+    assert len(caplog.records) == 2 if write_to_log else 1
