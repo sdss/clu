@@ -119,6 +119,9 @@ class BaseCommand(
         A silent command will call the actor ``write`` method with ``internal=True``,
         which will instruct the actor to add the internal flag to the header of the
         reply.
+    write_to_log
+        Whether to write replies to the log. Defaults to yes but it may be useful
+        to prevent large repetitive replies cluttering the log.
     time_limit
         Time out the command if it has been running for this long.
     loop
@@ -139,6 +142,7 @@ class BaseCommand(
         default_keyword: str = "text",
         silent: bool = False,
         internal: bool = False,
+        write_to_log: bool = True,
         time_limit: float | None = None,
         loop: Optional[asyncio.AbstractEventLoop] = None,
     ):
@@ -153,6 +157,7 @@ class BaseCommand(
 
         self.silent = silent
         self.internal = internal
+        self.write_to_log = write_to_log
 
         self._reply_callback = reply_callback
 
@@ -375,6 +380,7 @@ class BaseCommand(
                 message_code = clu.base.MessageCode.ERROR
 
         internal = kwargs.pop("internal", self.internal)
+        write_to_log = kwargs.pop("write_to_log", self.write_to_log)
 
         self.actor.write(
             message_code,
@@ -383,6 +389,7 @@ class BaseCommand(
             broadcast=broadcast,
             silent=self.silent,
             internal=internal,
+            write_to_log=write_to_log,
             **kwargs,
         )
 

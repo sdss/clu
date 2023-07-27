@@ -593,7 +593,12 @@ class BaseActor(BaseClient):
 
         if emit and silent is False:
             if asyncio.iscoroutinefunction(self._write_internal):
-                asyncio.create_task(self._write_internal(reply))  # type: ignore
+                asyncio.create_task(
+                    self._write_internal(
+                        reply,
+                        write_to_log=write_to_log,
+                    )
+                )
             else:
                 self._write_internal(reply, write_to_log=write_to_log)
 
