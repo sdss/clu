@@ -400,7 +400,7 @@ class ModelSet(dict):
             raise
 
     async def load_schemas(self, actors: Optional[List[str]] = None):
-        """Loads the actor schames."""
+        """Loads the actor schemas."""
 
         actors = actors or self.actors or []
         for actor in actors:
