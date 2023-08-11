@@ -211,6 +211,30 @@ When ``MyActor`` receives a new command via its communication channel, it will w
 
 Of course, this is a *very* minimal example and things are more complicated in reality. For a relatively minimal but complete example of implementing a new actor with a parser, see the source code for `ClickParser <https://github.com/sdss/clu/blob/81f8a8bee783b15658a5a7348fad41b590698938/python/clu/parser.py#L256>`__ and `JSONActor <https://github.com/sdss/clu/blob/81f8a8bee783b15658a5a7348fad41b590698938/python/clu/actor.py#L147>`__.
 
+Tasks
+-----
+
+`.AMQPActor` accepts a special type of callback called *tasks*.  Tasks are simple coroutines that receive a Python dictionary as a payload and execute some code internally. They don't provide command tracking or replies to clients (although they can broadcast messages). The advantage of tasks is that they are programmatically simple to define and command as they don't require formatting the arguments as a command string. In that sense they behave a bit like `.JSONActor` commands.
+
+To define a task, we simply write a coroutine that accepts a single argument, a dictionary payload ::
+
+    async def my_task(payload: dict[str, Any]):
+        actor = payload['__actor__']
+        actor.write('w', text="Executing my-task.")
+        ...
+
+and then add it as a `task handler <.AMQPActor.add_task_handler>` to the actor ::
+
+    amqp_actor.add_task_handler('my-task', my_task)
+
+Note that the actor itself is added to the payload as ``__actor__`` and can be retrived by the task callback to broadcast messages or otherwise access actor attributes.
+
+Now we can execute the task, from an AMQP client ::
+
+    amqp_client.send_task('remote-actor', 'my-task', {'value': 1})
+
+Tasks as scheduled to run in the background, and errors are not retrived or otherwise communicated to the user (except via broadcasts, if the task handler does so).
+
 API
 ---
 

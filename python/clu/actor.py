@@ -15,7 +15,7 @@ import re
 import uuid
 from datetime import datetime
 
-from typing import Any, Dict, Optional, TypeVar, Union, cast
+from typing import Any, Awaitable, Callable, Dict, Optional, TypeVar, Union, cast
 
 import aio_pika as apika
 import click
@@ -35,6 +35,7 @@ __all__ = ["AMQPActor", "JSONActor", "AMQPBaseActor", "TCPBaseActor"]
 T = TypeVar("T")
 PathLike = Union[str, pathlib.Path]
 SchemaType = Union[Dict[str, Any], PathLike]
+TaskCallbackType = Callable[[dict], Awaitable[Command | None]]
 
 
 class CustomTransportType(asyncio.Transport):
@@ -100,10 +101,10 @@ class AMQPBaseActor(AMQPClient, BaseActor):
             headers = message.info().get("headers", {})
             command_body = json.loads(message.body.decode())
 
-        commander_id = headers["commander_id"]
-        command_id = headers["command_id"]
+        commander_id = headers.get("commander_id", None)
+        command_id = headers.get("command_id", None)
         internal = headers.get("internal", False)
-        command_string = command_body["command_string"]
+        command_string = command_body.get("command_string", "")
 
         try:
             command = Command(
@@ -120,8 +121,7 @@ class AMQPBaseActor(AMQPClient, BaseActor):
             self.write(
                 MessageCode.ERROR,
                 {
-                    "error": "Could not parse the "
-                    "following as a command: "
+                    "error": "Could not parse the following as a command: "
                     f"{command_string!r}. {ee!r}"
                 },
             )
@@ -184,7 +184,45 @@ class AMQPBaseActor(AMQPClient, BaseActor):
 class AMQPActor(ClickParser, AMQPBaseActor):
     """An `AMQP actor <.AMQPBaseActor>` that uses a `click parser <.ClickParser>`."""
 
-    pass
+    def __init__(self, *args, **kwargs):
+        AMQPBaseActor.__init__(self, *args, **kwargs)
+
+        self.task_handlers: dict[str, TaskCallbackType] = {}
+
+    def add_task_handler(self, name: str, callback: TaskCallbackType):
+        """Adds a task handler.
+
+        Parameters
+        ----------
+        name
+            The name of the task handler.
+        callback
+            A coroutine to call with the task payload as the only argument.
+
+        """
+
+        self.task_handlers[name] = callback
+
+    async def new_command(self, message: apika.abc.AbstractIncomingMessage, ack=True):
+        """Handles a new command received by the actor."""
+
+        headers = message.info().get("headers", {})
+
+        is_task = headers.get("task", False)
+        if not is_task:
+            return await AMQPBaseActor.new_command(self, message, ack=ack)
+
+        body = json.loads(message.body.decode())
+        task_name = body.pop("task", None)
+
+        if task_name not in self.task_handlers:
+            self.write(MessageCode.ERROR, {"error": f"Unknown task {task_name!r}"})
+            return
+
+        # Add actor to payload.
+        body["__actor__"] = self
+
+        asyncio.gather(self.task_handlers[task_name](body))
 
 
 TCPBaseActor_co = TypeVar("TCPBaseActor_co", bound="TCPBaseActor")

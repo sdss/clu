@@ -13,8 +13,9 @@ import json
 import logging
 import pathlib
 import uuid
+from copy import deepcopy
 
-from typing import TYPE_CHECKING, Awaitable, Callable, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Awaitable, Callable, Dict, List, Optional, Union
 
 import aio_pika as apika
 
@@ -373,8 +374,6 @@ class AMQPClient(BaseClient):
 
         """
 
-        assert self.replies_queue
-
         if command and command.command_id:
             command_id = str(command.command_id)
         else:
@@ -405,25 +404,47 @@ class AMQPClient(BaseClient):
 
         self.running_commands[command_id] = command
 
-        headers: HeadersType = {
+        headers = {
             "command_id": command_id,
             "commander_id": commander_id,
             "internal": internal,
         }
 
-        # The routing key has the topic command and the name of
-        # the commanded actor.
-        routing_key = f"command.{consumer}"
-
         message_body = {"command_string": command_string}
+
+        await self._publish_message(
+            consumer,
+            headers=headers,
+            body=message_body,
+            correlation_id=command_id,
+        )
+
+        if await_command:
+            await command
+
+        return command
+
+    async def _publish_message(
+        self,
+        consumer: str,
+        headers: HeadersType = {},
+        body: dict[str, Any] = {},
+        correlation_id: str | None = None,
+    ):
+        """Publishes a message to an exchange."""
+
+        assert self.replies_queue
+
+        # The routing key has the topic command and the name of the commanded actor.
+        routing_key = f"command.{consumer}"
 
         try:
             await self.connection.exchange.publish(
                 apika.Message(
-                    json.dumps(message_body).encode(),
+                    json.dumps(body).encode(),
                     content_type="text/json",
                     headers=headers,
-                    correlation_id=command_id,
+                    correlation_id=correlation_id,
                     reply_to=self.replies_queue.name,
                 ),
                 routing_key=routing_key,
@@ -439,15 +460,51 @@ class AMQPClient(BaseClient):
                     json.dumps(error_msg).encode(),
                     content_type="text/json",
                     headers=headers,
-                    correlation_id=command_id,
+                    correlation_id=correlation_id,
                 ),
                 routing_key=f"reply.{self.name}",
             )
 
-        if await_command:
-            await command
+    async def send_task(
+        self,
+        consumer: str,
+        task_name: str,
+        payload: dict[str, Any] = {},
+        **kwargs,
+    ):
+        """
 
-        return command
+        Parameters
+        ----------
+        consumer
+            The actor we are commanding.
+        task_name
+            The task to execute in the remote actor
+        payload
+            A serialisable dictionary with the payload to pass to the task.
+        kwargs
+            Additional arguments used to update the payload dictionary.
+
+        """
+
+        assert self.replies_queue
+
+        payload = deepcopy(payload)
+        payload.update(kwargs)
+
+        headers = {"commander_id": f"{self.name}.{consumer}", "task": True}
+
+        message_body = {"task": task_name}
+        message_body.update(payload)
+
+        correlation_id = str(uuid.uuid4())
+
+        await self._publish_message(
+            consumer,
+            headers=headers,
+            body=message_body,
+            correlation_id=correlation_id,
+        )
 
     def add_reply_callback(self, callback_func: ReplyCallbackType):
         """Adds a callback that is called when a new reply is received."""

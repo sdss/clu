@@ -211,6 +211,7 @@ async def test_write_silent(amqp_actor, mocker):
 
 async def test_new_command_fails(amqp_actor, mocker):
     message = AsyncMock(spec=aio_pika.IncomingMessage)
+    message.info = lambda: {"headers": {}}
 
     mocker.patch("clu.actor.Command", side_effect=CommandError)
     mocker.patch("json.loads")
@@ -389,3 +390,31 @@ async def test_reply_callback(amqp_client, amqp_actor, mocker):
 
     amqp_client.remove_reply_callback(callback_mock)
     assert len(amqp_client._callbacks) == 0
+
+
+async def test_task_handler(amqp_actor, amqp_client, mocker):
+    task_handler = mocker.AsyncMock()
+
+    amqp_actor.add_task_handler("my-task", task_handler)
+
+    await amqp_client.send_task("amqp_actor", "my-task", {"value": 1})
+
+    await asyncio.sleep(0.1)
+
+    task_handler.assert_called()
+    task_handler.assert_called_with({"value": 1, "__actor__": amqp_actor})
+
+
+async def test_unknown_task(amqp_actor, amqp_client, mocker):
+    actor_write = mocker.patch.object(
+        amqp_actor,
+        "_write_internal",
+        new_callable=AsyncMock,
+    )
+
+    await amqp_client.send_task("amqp_actor", "invalid-task")
+
+    await asyncio.sleep(0.1)
+
+    actor_write.assert_called()
+    assert "Unknown task" in actor_write.call_args[0][0].message["error"]

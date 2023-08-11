@@ -2,6 +2,10 @@
 
 ## Next version
 
+### 🚀 New
+
+* Added support for *tasks*. Tasks are coroutines that can be commanded remotely and receive a simple dictionary payload. They don't provide command completion tracking or replies to users. See more [here](https://clu.readthedocs.io/en/latest/parser.html#tasks)
+
 ### ⚙️ Engineering
 
 * Use `ruff` for linting.
