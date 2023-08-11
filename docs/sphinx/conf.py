@@ -24,6 +24,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
     "sphinx.ext.autosummary",
+    "sphinx_autodoc_typehints",
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
     "sphinx.ext.mathjax",
@@ -35,6 +36,9 @@ extensions = [
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
+
+pygments_style = "lovelace"
+pygments_dark_style = "one-dark"
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
@@ -111,10 +115,13 @@ intersphinx_mapping = {
 autodoc_mock_imports = ["_tkinter", "asynctest"]
 autodoc_member_order = "groupwise"
 autodoc_default_options = {"members": None, "show-inheritance": None}
-autodoc_typehints = "description"
+# autodoc_typehints = "description"
 
-napoleon_use_rtype = False
-napoleon_use_ivar = True
+simplify_optional_unions = True
+typehints_use_signature_return = True
+
+# napoleon_use_rtype = False
+# napoleon_use_ivar = True
 
 copybutton_prompt_text = r">>> |\$ "
 copybutton_prompt_is_regexp = True
