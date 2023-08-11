@@ -9,6 +9,7 @@
 ### ⚙️ Engineering
 
 * Use `ruff` for linting.
+* Use `sphinx_autodoc_typehints` and updated pygments in documentation.
 
 
 ## 2.1.3 - July 27, 2023
