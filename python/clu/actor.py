@@ -35,7 +35,7 @@ __all__ = ["AMQPActor", "JSONActor", "AMQPBaseActor", "TCPBaseActor"]
 T = TypeVar("T")
 PathLike = Union[str, pathlib.Path]
 SchemaType = Union[Dict[str, Any], PathLike]
-TaskCallbackType = Callable[[dict], Awaitable[Command | None]]
+TaskCallbackType = Callable[[dict], Awaitable[Union[Command, None]]]
 
 
 class CustomTransportType(asyncio.Transport):
