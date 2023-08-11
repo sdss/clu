@@ -96,7 +96,7 @@ Say whatever you want about it, the `current SDSS message passing protocol <http
     :alt: Coverage Status
     :target: https://codecov.io/gh/sdss/clu
 
-.. |py| image:: https://img.shields.io/badge/python-3.7%20|%203.8%20|%203.9-blue
+.. |py| image:: https://img.shields.io/badge/python-%3E=3.8-blue
     :alt: Python Versions
     :target: https://docs.python.org/3/
 
