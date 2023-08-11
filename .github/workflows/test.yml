@@ -48,21 +48,16 @@ jobs:
           pip install --upgrade wheel pip setuptools
           pip install .[websocket]
 
-      - name: Lint with flake8
+      - name: Lint with ruff
         run: |
-          pip install flake8
-          flake8 python/clu --count --show-source --statistics
+          pip install ruff
+          ruff python/clu
 
       - name: Lint with black
         run: |
           pip install black
           black --check python/clu
           black --check tests/
-
-      - name: Lint with isort
-        run: |
-          pip install isort
-          isort -c python/clu
 
       - name: Test with pytest
         run: |

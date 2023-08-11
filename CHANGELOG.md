@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### ⚙️ Engineering
+
+* Use `ruff` for linting.
+
+
 ## 2.1.3 - July 27, 2023
 
 ### ✨ Improved

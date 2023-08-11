@@ -38,7 +38,7 @@ unclick = "^0.1.0b5"
 websockets = {version = "^11.0.3", optional = true}
 click-default-group = "^1.2.2"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 ipython = ">=8.0.0"
 flake8 = ">=3.7.9"
 doc8 = ">=0.8.0"
@@ -61,6 +61,7 @@ sphinx-copybutton = ">=0.3.3"
 nox = ">=2021.6.12"
 sphinx-autobuild = ">=2021.3.14"
 furo = ">=2021.6.18"
+ruff = ">=0.0.284"
 
 [tool.poetry.extras]
 websocket = ["websockets"]
@@ -71,19 +72,23 @@ target-version = ['py311']
 fast = true
 extend-exclude = 'docs/sphinx/examples/.+\.py'
 
-[tool.isort]
-profile = "black"
-sections = ["FUTURE", "STDLIB", "TYPING", "THIRDPARTY", "SDSS", "FIRSTPARTY", "LOCALFOLDER"]
-default_section = "THIRDPARTY"
-known_first_party = "clu"
-known_typing = ["typing"]
-known_sdss = ["sdsstools"]
-lines_after_imports = 2
-skip_glob = [
-    "setup.py",
-    "*/__init__.py",
-    "docs/sphinx/examples/*.py"
-]
+[tool.ruff]
+line-length = 88
+target-version = 'py311'
+select = ["E", "F", "I"]
+exclude = ["docs/sphinx/examples", "python/clu/legacy/types"]
+
+[tool.ruff.per-file-ignores]
+"__init__.py" = ["F401", "F403", "E402"]
+
+[tool.ruff.isort]
+known-first-party = ["clu"]
+lines-after-imports = 2
+section-order = ["future", "standard-library", "typing", "third-party", "sdss", "first-party", "local-folder"]
+
+[tool.ruff.isort.sections]
+typing = ["typing"]
+sdss = ["sdsstools"]
 
 [tool.pytest.ini_options]
 addopts = "--cov clu --cov-report xml --cov-report html --cov-report term -p no:warnings"

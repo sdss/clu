@@ -9,7 +9,6 @@
 import asyncio
 import json
 import logging
-import sys
 import warnings
 from unittest import mock
 
