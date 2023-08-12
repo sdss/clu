@@ -542,6 +542,7 @@ class ActorHandler(logging.Handler):
     filter_warnings
         A list of warning classes that will be issued to the actor. Subclasses
         of the filter warning are accepted, any other warnings will be ignored.
+
     """
 
     def __init__(
@@ -559,7 +560,7 @@ class ActorHandler(logging.Handler):
             logging.DEBUG: "d",
             logging.INFO: "i",
             logging.WARNING: "w",
-            logging.ERROR: "f",
+            logging.ERROR: "e",
         }
 
         if code_mapping:
