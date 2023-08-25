@@ -236,8 +236,6 @@ class BaseClient(metaclass=abc.ABCMeta):
             log = get_logger("clu:" + self.name)
         else:
             assert isinstance(log, SDSSLogger), "Logger must be sdsstools.SDSSLogger"
-            self.log = log
-            return log
 
         log.setLevel(REPLY)
 
@@ -251,7 +249,8 @@ class BaseClient(metaclass=abc.ABCMeta):
             )
 
             if log.fh:  # In case starting the file logger fails.
-                log.fh.formatter.converter = time.gmtime
+                if log.fh.formatter:
+                    log.fh.formatter.converter = time.gmtime
                 log.fh.setLevel(REPLY)
 
         log.sh.setLevel(logging.WARNING)
