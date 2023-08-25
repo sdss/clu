@@ -116,7 +116,7 @@ async def test_actorhandler(json_client, json_actor, level):
         logging.DEBUG: "d",
         logging.INFO: "i",
         logging.WARNING: "w",
-        logging.ERROR: "f",
+        logging.ERROR: "e",
     }
 
     data = await json_client.reader.readline()
