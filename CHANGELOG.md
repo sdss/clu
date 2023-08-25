@@ -1,6 +1,6 @@
 # Changelog
 
-## Next version
+## 2.2.0 - August 25, 2023
 
 ### 🚀 New
 
@@ -9,6 +9,7 @@
 ### 🔧 Fixed
 
 * In `ActorHandler`, error messages are output as ``"e"`` instead of as ``"f"``.
+* Start the file logging even if a custom log instance is provided to `BaseClient`.
 
 ### ⚙️ Engineering
 
