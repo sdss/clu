@@ -239,7 +239,7 @@ class BaseClient(metaclass=abc.ABCMeta):
 
         log.setLevel(REPLY)
 
-        if log is not False and log_dir:
+        if log_dir:
             log_dir = pathlib.Path(log_dir).expanduser()
 
             log.start_file_logger(
