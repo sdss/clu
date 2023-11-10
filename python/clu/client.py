@@ -221,7 +221,7 @@ class AMQPClient(BaseClient):
             assert isinstance(self.connection.connection, apika.Connection)
             url = str(self.connection.connection.url)
 
-        return f"<{str(self)} (name={self.name!r}, {url}>"
+        return f"<{str(self)} (name={self.name!r}, {url})>"
 
     async def start(self, exchange_name: str = __EXCHANGE_NAME__):
         """Starts the connection to the AMQP broker."""
