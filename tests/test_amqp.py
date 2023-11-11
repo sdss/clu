@@ -418,3 +418,21 @@ async def test_unknown_task(amqp_actor, amqp_client, mocker):
 
     actor_write.assert_called()
     assert "Unknown task" in actor_write.call_args[0][0].message["error"]
+
+
+async def test_amqp_context(amqp_client):
+    await amqp_client.stop()
+
+    assert amqp_client.connection.connection.is_closed is True
+
+    async with amqp_client:
+        assert amqp_client.connection.connection.is_closed is False
+
+
+async def test_amqp_context_fails(amqp_client, mocker):
+    await amqp_client.stop()
+
+    amqp_client.start = mocker.MagicMock(side_effect=ValueError)
+
+    async with amqp_client:
+        assert amqp_client.connection.connection.is_closed is True

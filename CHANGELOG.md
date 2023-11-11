@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### 🚀 New
+
+* `AMQPClient` now supports an asynchronous context manager that starts the client and closes the connection on exit.
+
+
 ## 2.2.0 - August 25, 2023
 
 ### 🚀 New

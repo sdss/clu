@@ -263,6 +263,19 @@ class AMQPClient(BaseClient):
         while not self.connection.connection.is_closed:
             await asyncio.sleep(1)
 
+    async def __aenter__(self):
+        """Starts the client inside a context manager."""
+
+        try:
+            await self.start()
+        except Exception:
+            await self.stop()
+
+    async def __aexit__(self, *_):
+        """Exits the context manager."""
+
+        await self.stop()
+
     async def handle_reply(
         self,
         message: apika.abc.AbstractIncomingMessage,
