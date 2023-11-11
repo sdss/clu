@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### ✨ Improved
+
+* Prevent multiple reconnections when using the `AMQPClient` context manager.
+
+
 ## 2.2.1 - November 10, 2023
 
 ### 🚀 New

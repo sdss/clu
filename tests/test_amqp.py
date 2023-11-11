@@ -423,10 +423,19 @@ async def test_unknown_task(amqp_actor, amqp_client, mocker):
 async def test_amqp_context(amqp_client):
     await amqp_client.stop()
 
-    assert amqp_client.connection.connection.is_closed is True
+    assert amqp_client.is_connected() is False
 
     async with amqp_client:
-        assert amqp_client.connection.connection.is_closed is False
+        assert amqp_client.is_connected() is True
+
+
+async def test_amqp_context_reconnect(amqp_client, mocker):
+    amqp_client.start = mocker.MagicMock()
+
+    async with amqp_client:
+        assert amqp_client.is_connected() is True
+
+    amqp_client.start.assert_not_called()
 
 
 async def test_amqp_context_fails(amqp_client, mocker):
@@ -435,4 +444,4 @@ async def test_amqp_context_fails(amqp_client, mocker):
     amqp_client.start = mocker.MagicMock(side_effect=ValueError)
 
     async with amqp_client:
-        assert amqp_client.connection.connection.is_closed is True
+        assert amqp_client.is_connected() is False

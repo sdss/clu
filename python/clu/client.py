@@ -255,6 +255,11 @@ class AMQPClient(BaseClient):
         if self.connection.connection and not self.connection.connection.is_closed:
             await self.connection.stop()
 
+    def is_connected(self):
+        """Is the client connected to the exchange?"""
+
+        return self.connection.connection and not self.connection.connection.is_closed
+
     async def run_forever(self):
         """Runs the event loop forever."""
 
@@ -267,7 +272,8 @@ class AMQPClient(BaseClient):
         """Starts the client inside a context manager."""
 
         try:
-            await self.start()
+            if not self.is_connected():
+                await self.start()
         except Exception:
             await self.stop()
 
