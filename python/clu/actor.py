@@ -13,6 +13,7 @@ import json
 import pathlib
 import re
 import uuid
+import warnings
 from datetime import datetime
 
 from typing import Any, Awaitable, Callable, Dict, Optional, TypeVar, Union, cast
@@ -23,7 +24,7 @@ import click
 from .base import BaseActor, MessageCode, Reply
 from .client import AMQPClient
 from .command import Command, TimedCommandList
-from .exceptions import CommandError
+from .exceptions import CluWarning, CommandError
 from .parsers import ClickParser, CluCommand
 from .protocol import TCPStreamServer
 from .tools import log_reply
@@ -166,19 +167,25 @@ class AMQPBaseActor(AMQPClient, BaseActor):
             "internal": reply.internal,
         }
 
-        await self.connection.exchange.publish(
-            apika.Message(
-                message_json.encode(),
-                content_type="text/json",
-                headers=headers,
-                correlation_id=str(command_id) if command_id is not None else None,
-                timestamp=datetime.utcnow(),
-            ),
-            routing_key=routing_key,
-        )
-
         if self.log and write_to_log:
             log_reply(self.log, reply.message_code, message_json)
+
+        if hasattr(self.connection, "exchange"):
+            await self.connection.exchange.publish(
+                apika.Message(
+                    message_json.encode(),
+                    content_type="text/json",
+                    headers=headers,
+                    correlation_id=str(command_id) if command_id is not None else None,
+                    timestamp=datetime.utcnow(),
+                ),
+                routing_key=routing_key,
+            )
+        else:
+            warnings.warn(
+                f"Exchange is not ready to output message: {message}",
+                CluWarning,
+            )
 
 
 class AMQPActor(ClickParser, AMQPBaseActor):

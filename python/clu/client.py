@@ -13,6 +13,7 @@ import json
 import logging
 import pathlib
 import uuid
+import warnings
 from copy import deepcopy
 
 from typing import TYPE_CHECKING, Any, Awaitable, Callable, Dict, List, Optional, Union
@@ -20,6 +21,8 @@ from typing import TYPE_CHECKING, Any, Awaitable, Callable, Dict, List, Optional
 import aio_pika as apika
 
 from sdsstools.logger import SDSSLogger
+
+from clu.exceptions import CluWarning
 
 from .base import BaseClient, Reply
 from .command import Command
@@ -451,6 +454,13 @@ class AMQPClient(BaseClient):
         correlation_id: str | None = None,
     ):
         """Publishes a message to an exchange."""
+
+        if not hasattr(self.connection, "exchange"):
+            warnings.warn(
+                f"Exchange is not ready to output message: {body}",
+                CluWarning,
+            )
+            return
 
         assert self.replies_queue
 

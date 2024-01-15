@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### 🔧 Fixed
+
+* Handle cases when a message tries to be pushed to an non-existing exchange.
+
+
 ## 2.2.2 - November 10, 2023
 
 ### ✨ Improved
