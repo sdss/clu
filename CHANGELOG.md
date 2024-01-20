@@ -1,6 +1,6 @@
 # Changelog
 
-## Next version
+## 2.2.3 - January 20, 2024
 
 ### ✨ Improved
 
@@ -9,6 +9,10 @@
 ### 🔧 Fixed
 
 * Handle cases when a message tries to be pushed to an non-existing exchange.
+
+### ⚙️ Engineering
+
+* Update workflows and docs building.
 
 
 ## 2.2.2 - November 10, 2023
