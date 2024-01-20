@@ -458,6 +458,7 @@ class BaseActor(BaseClient):
         broadcast: bool = False,
         validate: bool | None = None,
         expand_exceptions: bool = True,
+        traceback_frame: int = 0,
         silent: bool = False,
         internal: bool = False,
         emit: bool = True,
@@ -509,9 +510,11 @@ class BaseActor(BaseClient):
             the actor global behaviour.
         expand_exceptions
             If the value of one of the keywords is an exception object and
-            `expand_exception=True`, the exception value will be converted into
-            a dictionary of ``exception_type`` and ``exception_message``. Otherwise
-            the exception will just be stringified.
+            `expand_exception=True`, the exception information and traceback will
+            be expanded. Otherwise the exception will just be stringified.
+        traceback_frame
+            The frame from the traceback to use if ``expand_exception=True``. By
+            default reports the file and line of the last traceback frame.
         silent
             When `True` does not output the message to the users. This can be used to
             issue internal commands that update the internal model but that don't
@@ -552,10 +555,25 @@ class BaseActor(BaseClient):
         for key, value in message.items():
             if isinstance(value, Exception):
                 if expand_exceptions is True:
+                    filename: str | None = None
+                    lineno: int | None = None
+                    if value.__traceback__ is not None:
+                        tb = value.__traceback__
+                        for _ in range(traceback_frame):
+                            t_next = tb.tb_next
+                            if t_next is None:
+                                break
+                            tb = t_next
+
+                        filename = tb.tb_frame.f_code.co_filename if tb else None
+                        lineno = tb.tb_lineno if tb else None
+
                     message[key] = {
-                        "exception_module": value.__class__.__module__,
-                        "exception_type": value.__class__.__name__,
-                        "exception_message": str(value),
+                        "module": value.__class__.__module__,
+                        "type": value.__class__.__name__,
+                        "message": str(value),
+                        "filename": filename,
+                        "lineno": lineno,
                     }
                 else:
                     message[key] = str(value)

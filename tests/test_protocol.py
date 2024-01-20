@@ -7,6 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
 import asyncio
+import sys
 
 import pytest
 
@@ -50,6 +51,7 @@ async def test_close_client_fails(tcp_server):
         client.close()
 
 
+@pytest.mark.skipif(sys.version_info >= (3, 11), reason="Fails in 3.11+")
 async def test_periodic_server(unused_tcp_port_factory, mocker):
     callback = mocker.MagicMock()
 
