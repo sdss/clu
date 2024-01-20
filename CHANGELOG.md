@@ -2,6 +2,10 @@
 
 ## Next version
 
+### ✨ Improved
+
+* [#119](https://github.com/sdss/clu/pull/119) If an exception object is passed to `BaseActor.write()`, the filename and line number where the exception where raised are included in the output. The user can choose what traceback frame to output by passing `traceback_frame` to `write()`.
+
 ### 🔧 Fixed
 
 * Handle cases when a message tries to be pushed to an non-existing exchange.
