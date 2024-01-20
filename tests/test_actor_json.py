@@ -138,21 +138,34 @@ async def test_actor_no_schema(json_actor):
 
 
 async def test_write_exception(json_actor):
+    def _raise_exception():
+        raise ValueError("Error message")
+
     command = Command(
         command_string="ping",
         actor=json_actor,
     )
 
     command.set_status("RUNNING")
-    command.write("e", error=ValueError("Error message"))
+
+    try:
+        _raise_exception()
+    except Exception as err:
+        # NOTE: the frame we want is 1, not 2, but we use 2 to test that the
+        # code can handle a missing frame and return the last one.
+        command.write("e", error=err, traceback_frame=2)
 
     assert len(command.replies) == 2
     assert command.replies[1].message_code.value == "e"
-    assert command.replies[1].message["error"] == {
-        "exception_module": "builtins",
-        "exception_type": "ValueError",
-        "exception_message": "Error message",
-    }
+
+    error_kwd = command.replies[1].message["error"]
+    assert error_kwd["type"] == "ValueError"
+    assert error_kwd["lineno"] is not None
+    assert error_kwd["filename"] is not None
+
+    # Now output the exception just as a string
+    command.write("e", error=ValueError("A simple exception"), expand_exceptions=False)
+    assert command.replies[-1].message["error"] == "A simple exception"
 
 
 async def test_json_write_store(json_actor):

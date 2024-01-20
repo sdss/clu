@@ -50,9 +50,11 @@ DEFAULT_SCHEMA = {
             {
                 "type": "object",
                 "properties": {
-                    "exception_module": {"type": "string"},
-                    "exception_type": {"type": "string"},
-                    "exception_message": {"type": "string"},
+                    "module": {"type": "string"},
+                    "type": {"type": "string"},
+                    "message": {"type": "string"},
+                    "filename": {"oneOf": [{"type": "string"}, {"type": "null"}]},
+                    "lineno": {"oneOf": [{"type": "integer"}, {"type": "null"}]},
                 },
             },
         ]
