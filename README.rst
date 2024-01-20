@@ -92,7 +92,7 @@ Say whatever you want about it, the `current SDSS message passing protocol <http
     :alt: Build Status
     :target: https://github.com/sdss/clu/actions
 
-.. |Coverage Status| image:: https://codecov.io/gh/sdss/clu/branch/main/graph/badge.svg
+.. |Coverage Status| image:: https://codecov.io/gh/sdss/clu/graph/badge.svg?token=HMjFocCIql
     :alt: Coverage Status
     :target: https://codecov.io/gh/sdss/clu
 
