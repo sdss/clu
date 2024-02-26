@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "sdss-clu"
-version = "2.2.4a0"
+version = "2.2.4"
 description = "A new protocol for SDSS actors."
 authors = ["José Sánchez-Gallego <gallegoj@uw.edu>"]
 license = "BSD-3-Clause"

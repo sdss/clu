@@ -1,6 +1,6 @@
 # Changelog
 
-## Next version
+## 2.2.4 - February 26, 2024
 
 ### ✨ Improved
 
