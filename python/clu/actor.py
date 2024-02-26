@@ -105,7 +105,9 @@ class AMQPBaseActor(AMQPClient, BaseActor):
         commander_id = headers.get("commander_id", None)
         command_id = headers.get("command_id", None)
         internal = headers.get("internal", False)
+
         command_string = command_body.get("command_string", "")
+        full_command_string = f"{self.name} {command_string}"
 
         try:
             command = Command(
@@ -120,13 +122,18 @@ class AMQPBaseActor(AMQPClient, BaseActor):
             command.actor = self  # Assign the actor
         except CommandError as ee:
             self.write(
-                MessageCode.ERROR,
+                "f",
                 {
                     "error": "Could not parse the following as a command: "
-                    f"{command_string!r}. {ee!r}"
+                    f"{full_command_string!r}: {ee}"
                 },
             )
             return
+
+        self.log.info(
+            f"New command received: {full_command_string!r} "
+            f"(commander_id={commander_id!r}, command_id={command_id!r})"
+        )
 
         return self.parse_command(command)
 
@@ -337,7 +344,7 @@ class TCPBaseActor(BaseActor):
 
     def new_command(self, transport: CustomTransportType, command_str: bytes):
         """Handles a new command received by the actor."""
-
+        print("hellow")
         commander_id: Optional[int] = getattr(transport, "user_id", None)
         message: str = command_str.decode().strip()
 
@@ -357,6 +364,7 @@ class TCPBaseActor(BaseActor):
             command_id = int(command_id)
 
         command_string = command_string.strip()
+        full_command_string = f"{self.name} {command_string}"
 
         if not command_string:
             return
@@ -372,9 +380,18 @@ class TCPBaseActor(BaseActor):
             )
         except CommandError as ee:
             self.write(
-                "f", {"error": f"Could not parse the following as a command: {ee!r}"}
+                "f",
+                {
+                    "error": "Could not parse the following as a command: "
+                    f"{full_command_string!r}: {ee}"
+                },
             )
             return
+
+        self.log.info(
+            f"New command received: {full_command_string!r} "
+            f"(commander_id={commander_id!r}, command_id={command_id!r})"
+        )
 
         return self.parse_command(command)
 

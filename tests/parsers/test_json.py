@@ -50,7 +50,7 @@ async def test_amqp_json_actor(json_parser_actor):
     assert json_parser_actor.name == "amqp_json_actor"
 
 
-async def test_command(json_parser_actor, amqp_client):
+async def test_command(json_parser_actor, amqp_client, caplog):
     command_data = json.dumps({"command": "command1", "text": "Some value"})
 
     command = await amqp_client.send_command("amqp_json_actor", command_data)
@@ -58,6 +58,8 @@ async def test_command(json_parser_actor, amqp_client):
 
     assert command.status.did_succeed
     assert command.replies[-1].message["text"] == "Some value"
+
+    assert "New command received: 'amqp_json_actor" in caplog.record_tuples[0][2]
 
 
 async def test_bad_command_string(json_parser_actor, amqp_client):

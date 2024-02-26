@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### ✨ Improved
+
+* Log the command string when a new command is received by an actor.
+
+
 ## 2.2.3 - January 20, 2024
 
 ### ✨ Improved

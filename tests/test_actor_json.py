@@ -11,7 +11,8 @@ import json
 
 import pytest
 
-from clu.command import Command
+from clu.actor import TCPBaseActor
+from clu.command import Command, CommandError
 
 
 pytestmark = [pytest.mark.asyncio]
@@ -38,7 +39,7 @@ async def test_json_actor_command_write(json_actor, json_client):
     assert command.replies[0].message_code.value == ">"
 
 
-async def test_json_actor_pong(json_client):
+async def test_json_actor_pong(json_client, caplog):
     json_client.writer.write(b"0 ping\n")
 
     data = await json_client.reader.readline()
@@ -51,6 +52,21 @@ async def test_json_actor_pong(json_client):
     data_json = json.loads(data.decode())
     assert data_json["header"]["message_code"] == ":"
     assert data_json["data"] == {"text": "Pong."}
+
+    assert "New command received: 'json_actor ping'" in caplog.record_tuples[0][2]
+
+
+async def test_json_actor_command_fails(json_client, mocker):
+    mocker.patch("clu.actor.Command", side_effect=CommandError)
+    actor_write = mocker.patch.object(TCPBaseActor, "_write_internal")
+
+    json_client.writer.write(b"10 bad-command\n")
+    await asyncio.sleep(0.01)
+
+    actor_write.assert_called()
+
+    error = actor_write.call_args[0][0].message["error"]
+    assert "Could not parse the following as a command: " in error
 
 
 async def test_json_actor_broadcast(json_actor, json_client):

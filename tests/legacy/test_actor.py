@@ -87,7 +87,7 @@ async def test_get_version(actor, actor_client):
     assert lines[1] == "1 0 : version=0.1.0"
 
 
-async def test_new_command(actor, actor_client):
+async def test_new_command(actor, actor_client, caplog):
     assert actor == actor_client.actor
 
     # This is the transport that correspond to actor_client. Note that
@@ -110,6 +110,8 @@ async def test_new_command(actor, actor_client):
     assert lines[0] == "1 0 > "
     assert lines[1] == "1 0 : text=Pong."
 
+    assert "New command received: 'ping'" in caplog.record_tuples[0][2]
+
 
 async def test_bad_command(actor, actor_client):
     actor_client.writer.write("0X bad_command argument\n".encode())
@@ -122,7 +124,7 @@ async def test_bad_command(actor, actor_client):
 
     lines = data.decode().splitlines()
 
-    assert '1 0 f text="Could not parse the command string' in lines[0]
+    assert "error=\"Could not parse command '0X bad_command argument'\"" in lines[0]
 
 
 async def test_help_command(actor, actor_client):

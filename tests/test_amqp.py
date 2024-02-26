@@ -42,13 +42,15 @@ async def test_actor(amqp_actor):
     assert amqp_actor.name == "amqp_actor"
 
 
-async def test_client_send_command(amqp_client, amqp_actor):
+async def test_client_send_command(amqp_client, amqp_actor, caplog):
     cmd = await amqp_client.send_command("amqp_actor", "ping")
     await cmd
 
     assert len(cmd.replies) == 2
     assert cmd.replies[-1].message_code == ":"
     assert cmd.replies[-1].message["text"] == "Pong."
+
+    assert "New command received: 'amqp_actor ping'" in caplog.record_tuples[0][2]
 
 
 async def test_client_send_command_args(amqp_client, amqp_actor):
@@ -212,9 +214,9 @@ async def test_write_silent(amqp_actor, mocker):
 async def test_new_command_fails(amqp_actor, mocker):
     message = AsyncMock(spec=aio_pika.IncomingMessage)
     message.info = lambda: {"headers": {}}
+    message.body = b'{"command_string": "bad-command"}'
 
     mocker.patch("clu.actor.Command", side_effect=CommandError)
-    mocker.patch("json.loads")
 
     actor_write = mocker.patch.object(
         amqp_actor,
@@ -225,9 +227,12 @@ async def test_new_command_fails(amqp_actor, mocker):
     await amqp_actor.new_command(message)
 
     actor_write.assert_called()
-    assert (
-        "Could not parse the following" in actor_write.call_args[0][0].message["error"]
+
+    expected_error = (
+        "Could not parse the following as a command: "
+        "'amqp_actor bad-command': There has been an error"
     )
+    assert actor_write.call_args[0][0].message["error"] == expected_error
 
 
 class TestHandleReply:

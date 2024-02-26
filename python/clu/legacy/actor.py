@@ -272,13 +272,17 @@ class BaseLegacyActor(BaseActor):
                 loop=self.loop,
                 transport=transport,
             )
-        except clu.CommandError as ee:
+        except clu.CommandError:
             self.write(
                 "f",
-                {"text": f"Could not parse the command string: {ee!r}"},
-                user_id=user_id,
+                {"error": f"Could not parse command {command_str_s!r}"},
             )
             return
+
+        self.log.info(
+            f"New command received: {command_body   !r} "
+            f"(commander_id={commander_id!r}, command_id={command_id!r})"
+        )
 
         return self.parse_command(command)
 
