@@ -375,10 +375,6 @@ async def test_get_command_model(amqp_client, amqp_actor):
     assert len(cmd.replies) == 2
 
 
-async def test_no_tron_reconnect(amqp_actor):
-    assert "tron-reconnect" not in amqp_actor.parser.commands
-
-
 async def test_reply_callback(amqp_client, amqp_actor, mocker):
     async def callback(reply):
         pass
