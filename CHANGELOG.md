@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### 🏷️ Changed
+
+* [#120](https://github.com/sdss/clu/pull/120) Callbacks that are synchronous functions are now called immediately instead of being scheduled with `call_soon()`.
+
+
 ## 2.2.4 - February 26, 2024
 
 ### ✨ Improved

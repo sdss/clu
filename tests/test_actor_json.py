@@ -89,6 +89,7 @@ async def test_multiline_on(json_actor, json_client):
 
 async def test_multiline_off(json_actor, json_client):
     json_client.writer.write(b"multiline\n")
+    await asyncio.sleep(0.1)
     json_client.writer.write(b"multiline --off\n")
     await asyncio.sleep(0.01)
 
