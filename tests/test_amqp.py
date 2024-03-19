@@ -156,6 +156,17 @@ async def test_client_get_schema_fails(amqp_actor, amqp_client, caplog):
     assert "Cannot load model" in log_msg[2]
 
 
+async def test_write_log(amqp_actor, caplog):
+    with caplog.at_level(REPLY, logger=f"clu:{amqp_actor.name}"):
+        amqp_actor.write("i", {"text": "A test"}, internal=True)
+
+    await asyncio.sleep(0.01)
+
+    message = caplog.record_tuples[-1][2]
+    assert "A test" in message
+    assert '"message_code": "i"' in message
+
+
 async def test_bad_keyword(amqp_actor, caplog):
     schema = """{
     "type": "object",

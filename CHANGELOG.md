@@ -2,6 +2,10 @@
 
 ## Next version
 
+### ✨ Improved
+
+* AMQP `REPLY` log messages now include the header of the message.
+
 ### 🏷️ Changed
 
 * [#120](https://github.com/sdss/clu/pull/120) Callbacks that are synchronous functions are now called immediately instead of being scheduled with `call_soon()`.

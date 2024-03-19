@@ -175,7 +175,8 @@ class AMQPBaseActor(AMQPClient, BaseActor):
         }
 
         if self.log and write_to_log:
-            log_reply(self.log, reply.message_code, message_json)
+            log_dict = {"headers": headers, "message": message}
+            log_reply(self.log, reply.message_code, json.dumps(log_dict))
 
         if hasattr(self.connection, "exchange"):
             await self.connection.exchange.publish(
