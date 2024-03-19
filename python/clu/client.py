@@ -345,7 +345,7 @@ class AMQPClient(BaseClient):
             if asyncio.iscoroutinefunction(cb):
                 asyncio.create_task(cb(reply))
             else:
-                asyncio.get_running_loop().call_soon(cb, reply)
+                cb(reply)
 
         return reply
 

@@ -218,7 +218,8 @@ class StatusMixIn(Generic[MaskbitType]):
         loop = asyncio.get_event_loop()
 
         for func in self.callbacks:
-            loop.call_soon(func, self.status)
+            if self.status:
+                loop.call_soon(func, self.status)
 
     @property
     def status(self):
@@ -303,7 +304,7 @@ class CallbackMixIn(object):
         """Calls the callback functions with some arguments.
 
         Coroutine callbacks are scheduled as a task. Synchronous callbacks
-        are scheduled with ``call_soon``.
+        are called immediately.
 
         """
 
@@ -318,10 +319,7 @@ class CallbackMixIn(object):
                 # Auto-dispose of the task once it completes
                 task.add_done_callback(self._running.remove)
             else:
-                # Check that the loop is running. There is a problem in which
-                # self.loop may be set before there is a running loop so we
-                # replace it with a properly running loop.
-                task = asyncio.get_event_loop().call_soon(cb, *args[:n_args])
+                cb(*args[:n_args])
 
 
 def dict_depth(d: dict) -> int:
