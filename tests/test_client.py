@@ -47,7 +47,6 @@ def test_client(caplog):
 
     assert client.name == "test_client"
     assert client.version == "0.1.0"
-    assert client.loop is not None
 
     assert client.log is not None
     assert client.log.sh is not None
@@ -95,11 +94,10 @@ async def test_client_stop(caplog):
 
     client = SimpleClientTester("test_client", version="0.1.0")
 
-    task = client.loop.create_task(test_task())
+    task = asyncio.create_task(test_task())
 
     await client.stop()
 
-    assert client.loop.is_closed
     assert task.cancelled
 
 

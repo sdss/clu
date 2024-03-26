@@ -112,8 +112,6 @@ class BaseClient(metaclass=abc.ABCMeta):
         validate: bool = True,
         config: dict = {},
     ):
-        self.loop = loop or asyncio.get_event_loop()
-
         self.name = name
         assert self.name, "name cannot be empty."
 
@@ -146,15 +144,13 @@ class BaseClient(metaclass=abc.ABCMeta):
         self.log.info("cancelling all pending tasks and shutting down.")
 
         tasks = [
-            task
-            for task in asyncio.all_tasks(loop=self.loop)
-            if task is not asyncio.current_task(loop=self.loop)
+            task for task in asyncio.all_tasks() if task is not asyncio.current_task()
         ]
         list(map(lambda task: task.cancel(), tasks))
 
         await asyncio.gather(*tasks, return_exceptions=True)
 
-        self.loop.stop()
+        asyncio.get_running_loop().stop()
 
     @staticmethod
     def _parse_config(
@@ -262,10 +258,15 @@ class BaseClient(metaclass=abc.ABCMeta):
         self.log = log
         self.log.debug(f"{self.name}: logging system initiated.")
 
-        # Set the loop exception handler to be handled by the logger.
-        self.loop.set_exception_handler(self.log.asyncio_exception_handler)
-
         return log
+
+    def set_loop_exception_handler(self):
+        """Sets the lopp exception handler to be handled by the logger."""
+
+        if self.log:
+            # Set the loop exception handler to be handled by the logger.
+            loop = asyncio.get_running_loop()
+            loop.set_exception_handler(self.log.asyncio_exception_handler)
 
     async def send_command(self, actor: str, *args, **kwargs) -> Command:
         """Sends a command to an actor and returns a `.Command` instance."""

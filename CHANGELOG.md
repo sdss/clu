@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### ✨ Improved
+
+* Removed use/setting of the event loop in `BaseClient.__init__()`.
+
+
 ## 2.2.5 - March 19, 2024
 
 ### ✨ Improved

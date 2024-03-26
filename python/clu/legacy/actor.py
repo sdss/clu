@@ -145,7 +145,6 @@ class BaseLegacyActor(BaseActor):
         self._server = TCPStreamServer(
             host,
             port,
-            loop=self.loop,
             connection_callback=self.new_user,
             data_received_callback=self.new_command,
         )
@@ -186,6 +185,8 @@ class BaseLegacyActor(BaseActor):
             actor to attempt to automatically connect it to the hub.
 
         """
+
+        self.set_loop_exception_handler()
 
         await self._server.start()
         self.log.info(f"running TCP server on {self.host}:{self.port}")
@@ -269,7 +270,6 @@ class BaseLegacyActor(BaseActor):
                 command_id=command_id,
                 consumer_id=self.name,
                 actor=self,
-                loop=self.loop,
                 transport=transport,
             )
         except clu.CommandError:

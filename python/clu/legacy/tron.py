@@ -232,6 +232,8 @@ class TronConnection(clu.base.BaseClient):
             If `True`, gets all the keys in the models.
         """
 
+        self.set_loop_exception_handler()
+
         self.protocol = TronClientProtocol(
             self._handle_reply,
             self.host,

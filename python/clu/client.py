@@ -229,6 +229,8 @@ class AMQPClient(BaseClient):
     async def start(self, exchange_name: str = __EXCHANGE_NAME__):
         """Starts the connection to the AMQP broker."""
 
+        self.set_loop_exception_handler()
+
         # Starts the connection and creates the exchange
         await self.connection.connect(exchange_name)
 
@@ -419,7 +421,6 @@ class AMQPClient(BaseClient):
             consumer_id=consumer,
             internal=internal,
             actor=None,
-            loop=self.loop,
             reply_callback=callback,
             time_limit=time_limit,
         )

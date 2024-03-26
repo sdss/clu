@@ -69,6 +69,8 @@ class AMQPBaseActor(AMQPClient, BaseActor):
     async def start(self, **kwargs):
         """Starts the connection to the AMQP broker."""
 
+        self.set_loop_exception_handler()
+
         # This sets the replies queue but not a commands one.
         await AMQPClient.start(self, **kwargs)
 
@@ -116,7 +118,6 @@ class AMQPBaseActor(AMQPClient, BaseActor):
                 commander_id=commander_id,
                 consumer_id=self.name,
                 actor=self,
-                loop=self.loop,
                 internal=internal,
             )
             command.actor = self  # Assign the actor
@@ -295,7 +296,6 @@ class TCPBaseActor(BaseActor):
         self.server = TCPStreamServer(
             self.host,
             self.port,
-            loop=self.loop,
             connection_callback=self.new_user,
             data_received_callback=self.new_command,
         )
@@ -304,6 +304,11 @@ class TCPBaseActor(BaseActor):
 
     async def start(self: TCPBaseActor_co) -> TCPBaseActor_co:
         """Starts the TCP server."""
+
+        if self.log:
+            # Set the loop exception handler to be handled by the logger.
+            loop = asyncio.get_running_loop()
+            loop.set_exception_handler(self.log.asyncio_exception_handler)
 
         await self.server.start()
         self.log.info(f"running TCP server on {self.host}:{self.port}")
@@ -376,7 +381,6 @@ class TCPBaseActor(BaseActor):
                 command_id=command_id,
                 consumer_id=self.name,
                 actor=self,
-                loop=self.loop,
                 transport=transport,
             )
         except CommandError as ee:
