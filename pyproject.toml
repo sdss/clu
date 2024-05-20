@@ -76,18 +76,20 @@ extend-exclude = 'docs/sphinx/examples/.+\.py'
 [tool.ruff]
 line-length = 88
 target-version = 'py311'
-select = ["E", "F", "I"]
-exclude = ["docs/sphinx/examples", "python/clu/legacy/types"]
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+exclude = ["docs/sphinx/examples/*.py", "python/clu/legacy/types/*.py"]
+
+[tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401", "F403", "E402"]
 
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 known-first-party = ["clu"]
 lines-after-imports = 2
 section-order = ["future", "standard-library", "typing", "third-party", "sdss", "first-party", "local-folder"]
 
-[tool.ruff.isort.sections]
+[tool.ruff.lint.isort.sections]
 typing = ["typing"]
 sdss = ["sdsstools"]
 

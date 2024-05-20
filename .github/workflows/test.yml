@@ -47,7 +47,7 @@ jobs:
       - name: Lint with ruff
         run: |
           pip install ruff
-          ruff python/clu
+          ruff check python/clu
 
       - name: Lint with black
         run: |
