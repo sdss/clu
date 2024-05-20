@@ -38,7 +38,7 @@ async def command_exit(command, object, finish):
     raise click.exceptions.Exit()
 
 
-@command_parser.command()
+@command_parser.command(aliases=["command-stop"])
 async def command_abort(command, object):
     raise click.exceptions.Abort()
 
@@ -137,13 +137,16 @@ async def test_exit_finish(json_actor, click_parser):
     assert cmd.status.is_done
 
 
-async def test_abort(json_actor, click_parser):
-    cmd = Command(command_string="command-abort", actor=json_actor)
+@pytest.mark.parametrize("command_string", ["command-stop", "command-abort"])
+async def test_abort(json_actor, click_parser, command_string: str):
+    cmd = Command(command_string=command_string, actor=json_actor)
     click_parser.parse_command(cmd)
     await cmd
 
     assert cmd.status.did_fail
-    assert "Command 'command-abort' was aborted" in json_actor.mock_replies[-1]["error"]
+
+    error = json_actor.mock_replies[-1]["error"]
+    assert f"Command '{command_string}' was aborted" in error
 
 
 async def test_uncaught_exception(json_actor, click_parser, caplog):

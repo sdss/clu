@@ -451,6 +451,20 @@ files = [
 colorama = {version = "*", markers = "platform_system == \"Windows\""}
 
 [[package]]
+name = "click-aliases"
+version = "1.0.4"
+description = "Add (mutiple) aliases to a click group or command"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "click_aliases-1.0.4-py3-none-any.whl", hash = "sha256:27b416fd9117c05a744459ea13d01db8fa489e6efbc7e23a8ef5a744b7afbfb9"},
+    {file = "click_aliases-1.0.4.tar.gz", hash = "sha256:384313c5dc4c4bd64d9eadaff39ad91352747e8cdfd2f95d504d914c01eb4eda"},
+]
+
+[package.dependencies]
+click = ">=8.1.7,<9.0.0"
+
+[[package]]
 name = "click-default-group"
 version = "1.2.4"
 description = "click_default_group"
@@ -2886,4 +2900,4 @@ websocket = ["websockets"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8,<4.0"
-content-hash = "e336489f2a6a628bf9b562a594c18df05556c5aa3ed4af111f6f977b4cabbff4"
+content-hash = "7f2b1eb6cd6c3aed12714c8fe506b4afd2a57950362fb9fa866be6ff3467b1ea"

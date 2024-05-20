@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.2.7 - May 20, 2024
+
+### ✨ Improved
+
+* `CluGroup` now inherits from `ClickAliasGroup` to allow for aliases in the CLI.
+
+
 ## 2.2.6 - March 26, 2024
 
 ### ✨ Improved

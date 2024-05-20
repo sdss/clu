@@ -20,6 +20,7 @@ from typing import Any, List, TypeVar
 
 import click
 from click.decorators import group, pass_obj
+from click_aliases import ClickAliasedGroup
 from unclick.core import command_to_json
 
 from sdsstools.logger import SDSSLogger
@@ -279,7 +280,7 @@ class CluCommand(click.Command):
             return True
 
 
-class CluGroup(click.Group):
+class CluGroup(ClickAliasedGroup):
     """Override :py:class:`click.Group`.
 
     Makes all child commands instances of `.CluCommand`.
@@ -295,7 +296,7 @@ class CluGroup(click.Group):
             kwargs["cls"] = CluCommand
 
         def decorator(f):
-            cmd = click.decorators.command(*args, **kwargs)(f)
+            cmd = ClickAliasedGroup.command(self, *args, **kwargs)(f)
             self.add_command(cmd)
             return cmd
 
