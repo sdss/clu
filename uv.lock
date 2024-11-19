@@ -1835,7 +1835,7 @@ wheels = [
 
 [[package]]
 name = "sdss-clu"
-version = "2.3.0a0"
+version = "2.3.0"
 source = { editable = "." }
 dependencies = [
     { name = "aio-pika" },
