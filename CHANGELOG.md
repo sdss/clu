@@ -2,6 +2,10 @@
 
 ## Next version
 
+### ✨ Improved
+
+* Add the option to raise the error when a command fails in `ClickParser` instead of only logging it.
+
 ### ⚙️ Engineering
 
 * Use `uv` for packaging and update workflows.

@@ -1847,7 +1847,6 @@ dependencies = [
     { name = "prompt-toolkit" },
     { name = "sdsstools" },
     { name = "unclick" },
-    { name = "websockets" },
 ]
 
 [package.optional-dependencies]
@@ -1894,7 +1893,6 @@ requires-dist = [
     { name = "prompt-toolkit", specifier = ">=3.0.6" },
     { name = "sdsstools", specifier = ">=1.0.0" },
     { name = "unclick", specifier = ">=0.1.0b5" },
-    { name = "websockets" },
     { name = "websockets", marker = "extra == 'websockets'", specifier = ">=11.0.3" },
 ]
 

@@ -230,7 +230,8 @@ class CluCommand(click.Command):
                 # Defines the done callback function.
                 exception_handler = ctx.obj.pop("exception_handler", None)
                 done_callback = functools.partial(
-                    self.done_callback, exception_handler=exception_handler
+                    self.done_callback,
+                    exception_handler=exception_handler,
                 )
 
                 # Launches callback scheduler and adds the done callback
@@ -553,6 +554,7 @@ class ClickParser:
     #: Note that the command is always passed first.
     parser_args: List[Any] = []
     parser = command_parser
+    parser_raise_on_error: bool = False
 
     #: dict: Parameters to be set in the context object.
     context_obj = {}
@@ -663,6 +665,9 @@ class ClickParser:
                 command.write("i", text=msg)
             else:
                 command.fail(error=msg)
+
+            if self.parser_raise_on_error:
+                raise err
 
             log = self.log or command.ctx.obj.get("log", None)
             if log:
