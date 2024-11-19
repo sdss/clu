@@ -49,6 +49,9 @@ jobs:
         run: |
           uv pip install pytest pytest-mock pytest-asyncio pytest-cov mirakuru
           uv run pytest
+        env:
+          PYTEST_RABBITMQ_CTL: '/usr/lib/rabbitmq/bin/rabbitmqctl'
+          PYTEST_RABBITMQ_SERVER: '/usr/lib/rabbitmq/bin/rabbitmq-server'
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
