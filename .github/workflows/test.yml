@@ -2,18 +2,16 @@ name: Test
 
 on:
   push:
-    branches: [main]
     paths-ignore:
-      - '*.md'
-      - '*.rst'
+      - 'docs/**'
   pull_request:
-    branches: [main]
     paths-ignore:
-      - '*.md'
-      - '*.rst'
+      - 'docs/**'
 
 jobs:
-  build:
+  test:
+    name: Test
+
     runs-on: ubuntu-latest
 
     strategy:
@@ -28,7 +26,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-          cache: 'pip'
 
       - name: Setup RabbitMQ
         continue-on-error: true
@@ -39,29 +36,19 @@ jobs:
         run: |
           sudo service rabbitmq-server restart
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
       - name: Install dependencies
         run: |
-          pip install --upgrade wheel pip setuptools
-          pip install .[websocket]
-
-      - name: Lint with ruff
-        run: |
-          pip install ruff
-          ruff check python/clu
-
-      - name: Lint with black
-        run: |
-          pip install black
-          black --check python/clu
-          black --check tests/
+          uv sync --no-dev --frozen --extra websockets
 
       - name: Test with pytest
         run: |
-          pip install pytest pytest-mock pytest-asyncio pytest-cov mirakuru
-          pytest
-        env:
-          PYTEST_RABBITMQ_CTL: '/usr/lib/rabbitmq/bin/rabbitmqctl'
-          PYTEST_RABBITMQ_SERVER: '/usr/lib/rabbitmq/bin/rabbitmq-server'
+          uv pip install pytest pytest-mock pytest-asyncio pytest-cov mirakuru
+          uv run pytest
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
