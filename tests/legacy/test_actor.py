@@ -159,7 +159,7 @@ async def test_command_failed_to_parse(actor, actor_client):
     assert command.status.did_fail
 
     assert b"UsageError" in data
-    assert b"Command 'badcommand' failed" in data
+    assert b"Command 'badcommand' does not exist or cannot be parsed" in data
 
 
 async def test_write_update_model_fails(actor, actor_client, mocker):

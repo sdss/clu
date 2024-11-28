@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### 🏷️ Changed
+
+* Change the error message when a command does not exist or cannot be parsed by `ClickParser`.
+
+
 ## 2.3.0 - November 19, 2024
 
 ### ✨ Improved

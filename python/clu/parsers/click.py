@@ -643,7 +643,7 @@ class ClickParser:
                 for line in lines:
                     command.warning(help=line)
 
-            msg = f"Command {command.body!r} failed."
+            msg = f"Command {command.body!r} does not exist or cannot be parsed."
 
             if not command.status.is_done:
                 command.fail(error=msg)
