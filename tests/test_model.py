@@ -98,7 +98,7 @@ def test_schema_pydantic():
         B = "b"
 
     class TestSchema(BaseModel):
-        key1: Annotated[int, Field(description="key1 description")]
+        key1: int
         key2: TestEnum
 
     schema = Model("test_model", TestSchema)
