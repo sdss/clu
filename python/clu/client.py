@@ -191,7 +191,6 @@ class AMQPClient(BaseClient):
         super().__init__(
             name,
             version=version,
-            loop=loop,
             log_dir=log_dir,
             log=log,
             **kwargs,

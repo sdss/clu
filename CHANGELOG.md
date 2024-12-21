@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### 💥 Breaking changes
+
+* Removed the `loop` argument from `BaseClient`.
+
+
 ## 2.3.1 - November 27, 2024
 
 ### 🏷️ Changed

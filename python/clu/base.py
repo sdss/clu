@@ -79,8 +79,6 @@ class BaseClient(metaclass=abc.ABCMeta):
         The name of the client.
     version
         The version of the client.
-    loop
-        The event loop. If `None`, the current event loop will be used.
     log_dir
         The directory where to store the file logs.
     log
@@ -105,7 +103,6 @@ class BaseClient(metaclass=abc.ABCMeta):
         self,
         name: str,
         version: Optional[str] = None,
-        loop: Optional[asyncio.AbstractEventLoop] = None,
         log_dir: Optional[Union[pathlib.Path, str]] = None,
         log: Optional[SDSSLogger] = None,
         verbose: Union[bool, int] = False,

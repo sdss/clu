@@ -302,7 +302,7 @@ The name of the file must be ``<actor>.json`` with ``<actor>`` being the name of
 
     my_actor = await AMQPActor('my_actor', 'guest', 'localhost',
                                schema='my_actor.json', models=['sop', 'guider'],
-                               version='0.1.0', loop=loop).start()
+                               version='0.1.0').start()
 
 This will load and keep track of the models for the ``sop`` and ``guider`` actors. The model for the own actor, ``my_actor``, is loaded from the JSON Schema ``my_actor.json``. If one or more of the model schemas cannot be found, a warning will be issued.
 

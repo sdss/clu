@@ -125,7 +125,6 @@ class BaseLegacyActor(BaseActor):
         super().__init__(
             name,
             version=version,
-            loop=loop,
             log_dir=log_dir,
             log=log,
             verbose=verbose,

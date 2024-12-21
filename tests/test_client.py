@@ -19,7 +19,6 @@ class SimpleClientTester(BaseClient):
         self,
         name,
         version=None,
-        loop=None,
         log_dir=None,
         log=None,
         verbose=False,
@@ -29,7 +28,6 @@ class SimpleClientTester(BaseClient):
         super().__init__(
             name,
             version=version,
-            loop=loop,
             log_dir=log_dir,
             log=log,
             verbose=verbose,

@@ -249,4 +249,4 @@ class TestCommand(Command):  # pragma: no cover
             self.watcher.clear()
         self.watcher = None
 
-        asyncio.Future.__init__(self, loop=self.loop)
+        asyncio.Future.__init__(self)
