@@ -114,8 +114,8 @@ def get_rabbitmq_proc_fixture(
     def rabbitmq_proc_fixture(request):
         """Fixture for RabbitMQ process."""
 
-        DEFAULT_CTL = "/usr/local/sbin/rabbitmqctl"
-        DEFAULT_SERVER = "/usr/local/sbin/rabbitmq-server"
+        DEFAULT_CTL = "/opt/homebrew/opt/rabbitmq/sbin/rabbitmqctl"
+        DEFAULT_SERVER = "/opt/homebrew/opt/rabbitmq/sbin/rabbitmq-server"
 
         env_ctl = os.environ.get("PYTEST_RABBITMQ_CTL", DEFAULT_CTL)
         env_server = os.environ.get("PYTEST_RABBITMQ_SERVER", DEFAULT_SERVER)
