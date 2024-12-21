@@ -98,7 +98,7 @@ class AMQPBaseActor(AMQPClient, BaseActor):
 
         if ack:
             async with message.process():
-                headers = message.info()["headers"]
+                headers = message.info().get("headers", {})
                 command_body = json.loads(message.body.decode())
         else:
             headers = message.info().get("headers", {})

@@ -14,6 +14,7 @@
 ### 🔧 Fixed
 
 * Use `datetime.datetime.now()` instead of `utcnow()`.
+* Prevent case when incoming message headers may not be present.
 
 
 ## 2.3.1 - November 27, 2024
