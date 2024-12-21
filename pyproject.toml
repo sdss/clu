@@ -18,6 +18,7 @@ dependencies = [
     "unclick>=0.1.0b5",
     "click-default-group>=1.2.2",
     "click-aliases>=1.0.4",
+    "pydantic>=2.10.2",
 ]
 
 [project.optional-dependencies]
