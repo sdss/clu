@@ -7,6 +7,10 @@
 * Removed the `loop` argument from `BaseClient`.
 * Renamed `clu.model.BaseModel` to `CluModel` to avoid confusion with `pydantic.BaseModel`.
 
+### 🚀 New
+
+* [#121](https://vscode.dev/github/sdss/clu/pull/121) Support passing a `pydantic.BaseModel` subclass to `Model`.
+
 
 ## 2.3.1 - November 27, 2024
 
