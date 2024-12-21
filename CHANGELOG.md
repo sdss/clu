@@ -11,6 +11,10 @@
 
 * [#121](https://vscode.dev/github/sdss/clu/pull/121) Support passing a `pydantic.BaseModel` subclass to `Model`.
 
+### 🔧 Fixed
+
+* Use `datetime.datetime.now()` instead of `utcnow()`.
+
 
 ## 2.3.1 - November 27, 2024
 

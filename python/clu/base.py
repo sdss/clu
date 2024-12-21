@@ -15,7 +15,7 @@ import inspect
 import logging
 import pathlib
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 
 from typing import TYPE_CHECKING, Any, Callable, Dict, Optional, TypeVar, Union, cast
 
@@ -644,7 +644,7 @@ class Reply:
         internal: bool = False,
         keywords: Optional[Keywords] = None,
     ):
-        self.date = datetime.utcnow()
+        self.date = datetime.now(timezone.utc)
         self.message_code = MessageCode(message_code)
         self.message = message
         self.command = command

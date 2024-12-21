@@ -41,6 +41,7 @@ class ShellClient(clu.AMQPClient):
 
         import datetime
         import json
+        from datetime import timezone
 
         import prompt_toolkit
         import pygments.lexers
@@ -99,7 +100,7 @@ class ShellClient(clu.AMQPClient):
         print_chunks = []
 
         if self.show_time:
-            time = datetime.datetime.utcnow().isoformat().split("T")[1]
+            time = datetime.datetime.now(timezone.utc).isoformat().split("T")[1]
             time = time[0:12]  # Milliseconds
             print_chunks.append(
                 prompt_toolkit.formatted_text.HTML(f'<style fg="Gray">{time}</style>'),

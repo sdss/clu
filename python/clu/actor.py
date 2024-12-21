@@ -14,7 +14,7 @@ import pathlib
 import re
 import uuid
 import warnings
-from datetime import datetime
+from datetime import datetime, timezone
 
 from typing import Any, Awaitable, Callable, Dict, Optional, TypeVar, Union, cast
 
@@ -186,7 +186,7 @@ class AMQPBaseActor(AMQPClient, BaseActor):
                     content_type="text/json",
                     headers=headers,
                     correlation_id=str(command_id) if command_id is not None else None,
-                    timestamp=datetime.utcnow(),
+                    timestamp=datetime.now(timezone.utc),
                 ),
                 routing_key=routing_key,
             )
