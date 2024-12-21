@@ -10,10 +10,8 @@ import asyncio
 import enum
 import pathlib
 
-from typing import Annotated
-
 import pytest
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from clu.model import Model
 
