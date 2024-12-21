@@ -28,7 +28,7 @@ from .exceptions import CluError, CluWarning
 from .tools import CallbackMixIn, CaseInsensitiveDict
 
 
-__all__ = ["Property", "BaseModel", "Model", "ModelSet"]
+__all__ = ["Property", "CluModel", "Model", "ModelSet"]
 
 
 SchemaType = Union[Dict[str, Any], PathLike, str]
@@ -137,7 +137,9 @@ class Property(CallbackMixIn):
 T = TypeVar("T", bound=Property)
 
 
+class CluModel(CaseInsensitiveDict[T], CallbackMixIn):
 class BaseModel(CaseInsensitiveDict[T], CallbackMixIn):
+class CluModel(CaseInsensitiveDict[T], CallbackMixIn):
     """A JSON-compliant model.
 
     Parameters
@@ -146,7 +148,9 @@ class BaseModel(CaseInsensitiveDict[T], CallbackMixIn):
         The name of the model.
     callback
         A function or coroutine to call when the datamodel changes. The
+        function is called with the flattened instance of `.CluModel`
         function is called with the flattened instance of `.BaseModel`
+        function is called with the flattened instance of `.CluModel`
         and the key that changed.
 
     """
@@ -175,14 +179,18 @@ class BaseModel(CaseInsensitiveDict[T], CallbackMixIn):
 
     def jsonify(self) -> str:
         """Returns a JSON string with the model."""
-
+class Model(CluModel[Property]):
         return json.dumps(self.flatten())
 
 
+class Model(CluModel[Property]):
+
+class Model(BaseModel[Property]):
+    In addition to the parameters in `.CluModel`, the following parameters
 class Model(BaseModel[Property]):
     """A model with JSON validation.
 
-    In addition to the parameters in `.BaseModel`, the following parameters
+    In addition to the parameters in `.CluModel`, the following parameters
     are accepted:
 
     Parameters
@@ -193,11 +201,11 @@ class Model(BaseModel[Property]):
         Whether the input schema is a filepath or a dictionary.
     additional_properties
         Whether to allow additional properties in the schema, other than the
-        ones defined by the schema. This parameter only is used if
+        Additional parameters to pass to `.CluModel` on initialisation.
         ``schema=None`` or if ``additionalProperties`` is not defined in
         the schema.
     kwargs
-        Additional parameters to pass to `.BaseModel` on initialisation.
+        Additional parameters to pass to `.CluModel` on initialisation.
 
     """
 

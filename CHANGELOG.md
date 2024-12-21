@@ -5,6 +5,7 @@
 ### 💥 Breaking changes
 
 * Removed the `loop` argument from `BaseClient`.
+* Renamed `clu.model.BaseModel` to `CluModel` to avoid confusion with `pydantic.BaseModel`.
 
 
 ## 2.3.1 - November 27, 2024
