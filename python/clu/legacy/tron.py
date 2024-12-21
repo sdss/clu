@@ -20,7 +20,7 @@ from typing import Any, Callable, List, Optional
 import clu.base
 from clu.command import Command, CommandStatus
 from clu.exceptions import CluWarning
-from clu.model import BaseModel, Property
+from clu.model import CluModel, Property
 from clu.protocol import ReconnectingTCPClientProtocol
 
 from .types.keys import Key, KeysDictionary
@@ -70,7 +70,7 @@ class TronKey(Property):
         return len(self.value)
 
 
-class TronModel(BaseModel[TronKey]):
+class TronModel(CluModel[TronKey]):
     """A JSON-compliant model for actor keywords.
 
     Parameters

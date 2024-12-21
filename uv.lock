@@ -1855,6 +1855,7 @@ dependencies = [
     { name = "click-default-group" },
     { name = "jsonschema" },
     { name = "prompt-toolkit" },
+    { name = "pydantic" },
     { name = "sdsstools" },
     { name = "unclick" },
 ]
@@ -1901,6 +1902,7 @@ requires-dist = [
     { name = "click-default-group", specifier = ">=1.2.2" },
     { name = "jsonschema", specifier = ">=4.0.1" },
     { name = "prompt-toolkit", specifier = ">=3.0.6" },
+    { name = "pydantic", specifier = ">=2.10.2" },
     { name = "sdsstools", specifier = ">=1.0.0" },
     { name = "unclick", specifier = ">=0.1.0b5" },
     { name = "websockets", marker = "extra == 'websockets'", specifier = ">=11.0.3" },

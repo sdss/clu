@@ -13,14 +13,16 @@ import json
 import pathlib
 import warnings
 from copy import copy
+from inspect import isclass
 from os import PathLike
 from time import time
 
-from typing import Any, Callable, Dict, List, Optional, TypeVar, Union, cast
+from typing import Any, Callable, Dict, List, Optional, Type, TypeVar, Union, cast
 
 import jsonschema
 import jsonschema.exceptions
 import jsonschema.validators
+from pydantic import BaseModel
 
 import clu.base
 
@@ -28,10 +30,10 @@ from .exceptions import CluError, CluWarning
 from .tools import CallbackMixIn, CaseInsensitiveDict
 
 
-__all__ = ["Property", "BaseModel", "Model", "ModelSet"]
+__all__ = ["Property", "CluModel", "Model", "ModelSet"]
 
 
-SchemaType = Union[Dict[str, Any], PathLike, str]
+SchemaType = Union[Type[BaseModel], Dict[str, Any], PathLike, str]
 
 DEFAULT_SCHEMA = {
     "text": {"type": "string"},
@@ -137,7 +139,7 @@ class Property(CallbackMixIn):
 T = TypeVar("T", bound=Property)
 
 
-class BaseModel(CaseInsensitiveDict[T], CallbackMixIn):
+class CluModel(CaseInsensitiveDict[T], CallbackMixIn):
     """A JSON-compliant model.
 
     Parameters
@@ -146,7 +148,7 @@ class BaseModel(CaseInsensitiveDict[T], CallbackMixIn):
         The name of the model.
     callback
         A function or coroutine to call when the datamodel changes. The
-        function is called with the flattened instance of `.BaseModel`
+        function is called with the flattened instance of `.CluModel`
         and the key that changed.
 
     """
@@ -179,10 +181,10 @@ class BaseModel(CaseInsensitiveDict[T], CallbackMixIn):
         return json.dumps(self.flatten())
 
 
-class Model(BaseModel[Property]):
+class Model(CluModel[Property]):
     """A model with JSON validation.
 
-    In addition to the parameters in `.BaseModel`, the following parameters
+    In addition to the parameters in `.CluModel`, the following parameters
     are accepted:
 
     Parameters
@@ -190,14 +192,15 @@ class Model(BaseModel[Property]):
     schema
         A valid JSON schema, to be used for validation.
     is_file
-        Whether the input schema is a filepath or a dictionary.
+        Whether the input schema is a filepath or a dictionary. If :obj:`None`,
+        tries to guess from the type of the input.
     additional_properties
         Whether to allow additional properties in the schema, other than the
         ones defined by the schema. This parameter only is used if
         ``schema=None`` or if ``additionalProperties`` is not defined in
         the schema.
     kwargs
-        Additional parameters to pass to `.BaseModel` on initialisation.
+        Additional parameters to pass to `.CluModel` on initialisation.
 
     """
 
@@ -207,10 +210,13 @@ class Model(BaseModel[Property]):
         self,
         name: str,
         schema: SchemaType,
-        is_file: bool = False,
+        is_file: bool | None = None,
         additional_properties: bool = False,
         **kwargs,
     ):
+        if is_file is None:
+            is_file = self.is_file(schema)
+
         if is_file:
             schema = cast(PathLike, schema)
             schema = open(pathlib.Path(schema).expanduser(), "r").read()
@@ -220,6 +226,9 @@ class Model(BaseModel[Property]):
                 schema = json.loads(schema)
             except json.JSONDecodeError:
                 raise ValueError("cannot parse input schema.")
+
+        elif isclass(schema) and issubclass(schema, BaseModel):
+            schema = schema.model_json_schema()
 
         self.schema = cast("Dict[str, Any]", schema)
 
@@ -256,6 +265,28 @@ class Model(BaseModel[Property]):
 
         for name in self.schema["properties"]:
             self[name] = Property(name, model=self)
+
+    @staticmethod
+    def is_file(schema: SchemaType) -> bool:
+        """Returns whether the schema is a file."""
+
+        if isinstance(schema, pathlib.Path):
+            return True
+
+        if isinstance(schema, dict):
+            return False
+
+        if isclass(schema) and issubclass(schema, BaseModel):
+            return False
+
+        if isinstance(schema, str):
+            try:
+                as_path = pathlib.Path(schema)
+                return as_path.is_file()
+            except Exception:
+                return False
+
+        return False
 
     @staticmethod
     def check_schema(schema: Dict[str, Any]) -> bool:

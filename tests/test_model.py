@@ -7,8 +7,11 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
 import asyncio
+import enum
+import pathlib
 
 import pytest
+from pydantic import BaseModel
 
 from clu.model import Model
 
@@ -83,8 +86,34 @@ def test_schema_array():
 
     model = Model("test_model", schema)
 
-    assert model.validator.validate({"myarray": [1, 2, 3]}) is None
-    assert model.validator.validate({"myarray": (1, 2, 3)}) is None
+    assert model.validate({"myarray": [1, 2, 3]})[0] is True
+    assert model.validate({"myarray": (1, 2, 3)})[0] is True
+
+
+def test_schema_pydantic():
+    class TestEnum(enum.Enum):
+        A = "a"
+        B = "b"
+
+    class TestSchema(BaseModel):
+        key1: int
+        key2: TestEnum
+
+    schema = Model("test_model", TestSchema)
+    assert isinstance(schema.schema, dict)
+
+    assert schema.validate({"key1": 1, "key2": "a"})[0] is True
+    assert schema.validate({"key1": 1, "key2": "c"})[0] is False
+
+
+def test_schema_file(tmp_path: pathlib.Path):
+    schema_path = tmp_path / "schema.json"
+    schema_path.write_text(
+        '{"type": "object", "properties": { "key": { "type": "number" } }}'
+    )
+
+    schema = Model("test_model", schema_path)
+    assert schema.validate({"key": 1})[0] is True
 
 
 @pytest.mark.asyncio
