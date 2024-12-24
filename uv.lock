@@ -2657,7 +2657,7 @@ wheels = [
 
 [[package]]
 name = "sdss-clu"
-version = "2.4.2"
+version = "2.4.3a0"
 source = { editable = "." }
 dependencies = [
     { name = "aio-pika", version = "9.5.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
