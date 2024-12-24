@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.4.1 - December 23, 2024
+
+### 🔧 Fixed
+
+* Do not hardcode `is_file=True` in `BaseActor.load_schema()`.
+
+
 ## 2.4.0 - December 22, 2024
 
 ### 💥 Breaking changes
