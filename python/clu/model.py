@@ -247,6 +247,12 @@ class Model(CluModel[Property]):
             if prop not in self.schema["properties"]:
                 self.schema["properties"][prop] = DEFAULT_SCHEMA[prop]
 
+        # If the schema has a "required" section, remove it. This happens when
+        # we pass a Pydantic model as the schema, but in CLU the model keys are
+        # all optional.
+        if "required" in self.schema:
+            del self.schema["required"]
+
         if "additionalProperties" not in self.schema:
             self.schema["additionalProperties"] = additional_properties
 

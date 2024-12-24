@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### 🔧 Fixed
+
+* Do not require keywords when the schema passed is a Pydantic model.
+
+
 ## 2.4.1 - December 23, 2024
 
 ### 🔧 Fixed
