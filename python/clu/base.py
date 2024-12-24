@@ -17,10 +17,21 @@ import pathlib
 import time
 from datetime import datetime, timezone
 
-from typing import TYPE_CHECKING, Any, Callable, Dict, Optional, TypeVar, Union, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Optional,
+    Type,
+    TypeVar,
+    Union,
+    cast,
+)
 
 import jsonschema.exceptions
 import yaml
+from pydantic import BaseModel
 
 from sdsstools import get_logger, read_yaml_file
 from sdsstools.logger import SDSSLogger
@@ -38,7 +49,7 @@ if TYPE_CHECKING:
 __all__ = ["BaseClient", "BaseActor", "Reply", "MessageCode"]
 
 
-SchemaType = Union[Dict[str, Any], pathlib.Path, str]
+SchemaType = Union[Type[BaseModel], Dict[str, Any], pathlib.Path, str]
 T = TypeVar("T", bound="BaseClient")
 
 
@@ -374,7 +385,7 @@ class BaseActor(BaseClient):
     def load_schema(
         self,
         schema: Union[SchemaType, None],
-        is_file=True,
+        is_file=None,
         additional_properties=False,
     ) -> Union[Model, None]:
         """Loads and validates the actor schema."""
@@ -386,9 +397,6 @@ class BaseActor(BaseClient):
                 "properties": {},
                 "additionalProperties": additional_properties,
             }
-            is_file = False
-
-        if isinstance(schema, dict):
             is_file = False
 
         self.model = Model(
