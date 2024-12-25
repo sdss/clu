@@ -5,6 +5,7 @@
 ### ✨ Improved
 
 * Add typing for the `CluGroup` decorator.
+* Update `sdsstools` to 1.9.1.
 
 
 ## 2.4.2 - December 23, 2024
