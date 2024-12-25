@@ -324,7 +324,7 @@ class CluGroup(ClickAliasedGroup):
         if "cls" not in kwargs:
             kwargs["cls"] = self.__class__
 
-        def decorator(f):
+        def decorator(f) -> CluGroup:
             assert not asyncio.iscoroutinefunction(f), "groups cannot be coroutines."
             cmd = group(*args, **kwargs)(f)
             self.add_command(cmd)

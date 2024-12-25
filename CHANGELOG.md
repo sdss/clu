@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### ✨ Improved
+
+* Add typing for the `CluGroup` decorator.
+
+
 ## 2.4.2 - December 23, 2024
 
 ### 🔧 Fixed
