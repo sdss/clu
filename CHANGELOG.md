@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### ✨ Improved
+
+* Added prompt symbol to CLU CLI and other small improvements.
+
+
 ## 2.4.3 - December 25, 2024
 
 ### ✨ Improved

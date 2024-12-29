@@ -7,10 +7,23 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
 import asyncio
+import datetime
+import json
+import os
+import uuid
+from datetime import timezone
 
 import aio_pika
 import click
+import prompt_toolkit
+import pygments.lexers
 from click_default_group import DefaultGroup
+from prompt_toolkit import print_formatted_text
+from prompt_toolkit.formatted_text import PygmentsTokens
+from prompt_toolkit.history import FileHistory
+from prompt_toolkit.patch_stdout import patch_stdout
+from prompt_toolkit.styles import style_from_pygments_cls
+from pygments.styles import STYLE_MAP, get_style_by_name
 
 import clu
 
@@ -35,20 +48,10 @@ class ShellClient(clu.AMQPClient):
     ignore_broadcasts = False
     internal = False
     all_ = False
+    prompt_toolkit_session: prompt_toolkit.PromptSession | None = None
 
     async def handle_reply(self, message: aio_pika.IncomingMessage):
         """Prints the formatted reply."""
-
-        import datetime
-        import json
-        from datetime import timezone
-
-        import prompt_toolkit
-        import pygments.lexers
-        from prompt_toolkit import print_formatted_text as print
-        from prompt_toolkit.formatted_text import PygmentsTokens
-        from prompt_toolkit.styles import style_from_pygments_cls
-        from pygments.styles import STYLE_MAP, get_style_by_name
 
         reply = await super().handle_reply(message)
 
@@ -121,9 +124,12 @@ class ShellClient(clu.AMQPClient):
 
         if body:
             print_chunks.append(PygmentsTokens(body_tokens))
-            print(*print_chunks, style=style, end="")
+            print_formatted_text(*print_chunks, style=style, end="", flush=True)
         else:
-            print(*print_chunks, flush=True)  # Newline
+            print_formatted_text(*print_chunks, flush=True)  # Newline
+
+        if self.prompt_toolkit_session:
+            self.prompt_toolkit_session.app.invalidate()
 
 
 async def shell_client_prompt(
@@ -139,13 +145,6 @@ async def shell_client_prompt(
     ignore_broadcasts=False,
     internal=False,
 ):
-    import os
-    import uuid
-
-    import prompt_toolkit
-    from prompt_toolkit.history import FileHistory
-    from prompt_toolkit.patch_stdout import patch_stdout
-
     # Give each client a unique name to ensure the queues are unique.
     uid = str(uuid.uuid4()).split("-")[0]
 
@@ -169,11 +168,12 @@ async def shell_client_prompt(
     history = FileHistory(os.path.expanduser("~/.clu_history"))
 
     session = prompt_toolkit.PromptSession("", history=history)
+    client.prompt_toolkit_session = session
 
     while True:
         with patch_stdout():
             try:
-                text = await session.prompt_async("")
+                text = await session.prompt_async("> ")
             except KeyboardInterrupt:
                 break
             except EOFError:
@@ -299,20 +299,18 @@ def cli(
 ):
     """Runs the AMQP command line interpreter."""
 
-    shell_task = asyncio.get_event_loop().create_task(
-        shell_client_prompt(
-            actors=actors,
-            url=url,
-            user=user,
-            password=password,
-            host=host,
-            port=port,
-            all_=all_,
-            indent=not no_indent,
-            show_time=not no_time,
-            ignore_broadcasts=ignore_broadcasts,
-            internal=internal,
-        )
+    shell_task = shell_client_prompt(
+        actors=actors,
+        url=url,
+        user=user,
+        password=password,
+        host=host,
+        port=port,
+        all_=all_,
+        indent=not no_indent,
+        show_time=not no_time,
+        ignore_broadcasts=ignore_broadcasts,
+        internal=internal,
     )
     asyncio.get_event_loop().run_until_complete(shell_task)
 
