@@ -6,6 +6,10 @@
 
 * Added prompt symbol to CLU CLI and other small improvements.
 
+### 🔧 Fixed
+
+* Do not cancel or timeout a command if already done.
+
 
 ## 2.4.3 - December 25, 2024
 

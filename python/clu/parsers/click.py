@@ -187,14 +187,14 @@ class CluCommand(click.Command):
         try:
             await asyncio.wait_for(callback_task, timeout=timeout)
         except asyncio.TimeoutError:
-            if command:
+            if command and not command.status.is_done:
                 command.set_status(
                     command.status.TIMEDOUT,
                     f"Command timed out after {timeout} seconds.",
                 )
             return False
         except asyncio.CancelledError:
-            if command:
+            if command and not command.status.is_done:
                 command.set_status(
                     command.status.CANCELLED,
                     "This command has been cancelled.",
