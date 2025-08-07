@@ -2,13 +2,19 @@
 
 ## Next version
 
+### 🔥 Breaking changes
+
+* Not a CLU breaking change, but when CLU is installed with `click>=8.2.0` (which should happen for Python 3.10+), the generated command name for decorated callback functions that end in `_command`, `_group`, and some other suffixes will trim those suffixes. See [pallets/click#2322](https://github.com/pallets/click/issues/2322).
+
 ### ✨ Improved
 
 * Added prompt symbol to CLU CLI and other small improvements.
 
 ### 🔧 Fixed
 
+* Fixed a change a deprecation in `click` introduced in 8.2.0 which affected our customised `Command.parse_args()` function. See [pallets/click#2205](https://github.com/pallets/click/issues/2205).
 * Do not cancel or timeout a command if already done.
+* Removed the use of the `event_loop` fixture from `pytest-asyncio` which has been deprecated and was making most tests fail.
 
 
 ## 2.4.3 - December 25, 2024
