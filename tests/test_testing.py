@@ -38,7 +38,7 @@ async def command2(command):
     command.fail(error="This command failed")
 
 
-@command_parser.command()
+@command_parser.command(name="slow-command")
 @timeout(0.1)
 async def slow_command(command):
     await asyncio.sleep(1)
