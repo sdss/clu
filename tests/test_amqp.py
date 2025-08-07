@@ -340,7 +340,7 @@ async def test_child_command(amqp_actor, mocker):
 
 
 async def test_send_command_time_limit(amqp_actor):
-    @amqp_actor.parser.command()
+    @amqp_actor.parser.command(name="timeout-command")
     async def timeout_command(command):
         await asyncio.sleep(1)
 
