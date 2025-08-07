@@ -30,10 +30,40 @@ from .exceptions import CluError, CluWarning
 from .tools import CallbackMixIn, CaseInsensitiveDict
 
 
-__all__ = ["Property", "CluModel", "Model", "ModelSet"]
+__all__ = [
+    "Property",
+    "CluModel",
+    "Model",
+    "ModelSet",
+    "EXCEPTION_SCHEMA",
+    "DEFAULT_SCHEMA",
+]
 
 
 SchemaType = Union[Type[BaseModel], Dict[str, Any], PathLike, str]
+
+EXCEPTION_SCHEMA = {
+    "oneOf": [
+        {"type": "array", "items": {"type": "string"}},
+        {"type": "string"},
+        {
+            "type": "object",
+            "properties": {
+                "module": {"type": "string"},
+                "type": {"type": "string"},
+                "message": {"type": "string"},
+                "filename": {"oneOf": [{"type": "string"}, {"type": "null"}]},
+                "lineno": {"oneOf": [{"type": "integer"}, {"type": "null"}]},
+                "traceback": {
+                    "oneOf": [
+                        {"type": "array", "items": {"type": "string"}},
+                        {"type": "string"},
+                    ]
+                },
+            },
+        },
+    ]
+}
 
 DEFAULT_SCHEMA = {
     "text": {"type": "string"},
@@ -45,22 +75,9 @@ DEFAULT_SCHEMA = {
             {"type": "string"},
         ]
     },
-    "error": {
-        "oneOf": [
-            {"type": "array", "items": {"type": "string"}},
-            {"type": "string"},
-            {
-                "type": "object",
-                "properties": {
-                    "module": {"type": "string"},
-                    "type": {"type": "string"},
-                    "message": {"type": "string"},
-                    "filename": {"oneOf": [{"type": "string"}, {"type": "null"}]},
-                    "lineno": {"oneOf": [{"type": "integer"}, {"type": "null"}]},
-                },
-            },
-        ]
-    },
+    "error": EXCEPTION_SCHEMA,
+    "exception": EXCEPTION_SCHEMA,
+    "exception_info": EXCEPTION_SCHEMA,
     "yourUserID": {"type": "integer"},
     "UserInfo": {
         "type": "array",

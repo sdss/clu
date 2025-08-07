@@ -15,6 +15,7 @@ import inspect
 import logging
 import pathlib
 import time
+import traceback
 from datetime import datetime, timezone
 
 from typing import (
@@ -575,11 +576,16 @@ class BaseActor(BaseClient):
                         lineno = tb.tb_lineno if tb else None
 
                     message[key] = {
+                        "message": str(value),
                         "module": value.__class__.__module__,
                         "type": value.__class__.__name__,
-                        "message": str(value),
                         "filename": filename,
                         "lineno": lineno,
+                        "traceback": traceback.format_exception(
+                            value.__class__,
+                            value,
+                            value.__traceback__,
+                        ),
                     }
                 else:
                     message[key] = str(value)

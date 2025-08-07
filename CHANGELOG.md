@@ -9,6 +9,7 @@
 ### ✨ Improved
 
 * Added prompt symbol to CLU CLI and other small improvements.
+* When a keyword is written that contains an `Exception` object (and `expand_exceptions=True`), the traceback is now included in the payload. By default the keywords `error`, `exception`, and `exception_info` support this output in the default data model. For the legacy actor, the output is always written as an `exception_info` keyword. The actorkeys for that actor must include a line `Key("exception_info", String() * (0,), help="Exception information")`.
 
 ### 🔧 Fixed
 

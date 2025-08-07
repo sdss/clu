@@ -272,11 +272,25 @@ async def test_write_exception(actor):
     )
 
     command.set_status("RUNNING")
-    command.write("e", error=ValueError("Error message"))
+
+    try:
+        1 / 0
+    except Exception as err:
+        command.write("e", error=err)
 
     assert len(command.replies) == 2
     assert command.replies[1].message_code == "e"
-    assert command.replies[1].message["error"] == "Error message"
+
+    error_kw = command.replies.get("error")
+    assert error_kw == "division by zero"
+
+    exc_info_kw = command.replies.get("exception_info")
+    assert exc_info_kw["module"] == "builtins"
+    assert exc_info_kw["type"] == "ZeroDivisionError"
+    assert exc_info_kw["message"] == "division by zero"
+
+    assert isinstance(exc_info_kw["traceback"], list)
+    assert exc_info_kw["traceback"][-1] == "ZeroDivisionError: division by zero\n"
 
 
 async def test_write_empty_keyword(actor, actor_client):

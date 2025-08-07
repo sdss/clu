@@ -489,7 +489,6 @@ class BaseLegacyActor(BaseActor):
             broadcast=broadcast,
             validate=validate,
             emit=False,
-            expand_exceptions=False,
             **kwargs,
         )
 
@@ -544,6 +543,17 @@ class BaseLegacyActor(BaseActor):
             user_id=user_id,
             command_id=command_id,
         )
+
+        # To prevent potential issues with how the actorkeys are defined, if the
+        # error or exception keywords are a dictionary (this means that they have
+        # information about the traceback, line number, etc.) we move that information
+        # to the "exception_info" keyword and leave the error/exception as just the
+        # error message. In the actorkeys for the actor there should be a keyword like
+        # Key("exception_info", String() * (0,), help="Exception information").
+        for keyword in ["error", "exception"]:
+            if keyword in message and isinstance(message[keyword], dict):
+                message["exception_info"] = message[keyword].copy()
+                message[keyword] = message[keyword].get("message", "")
 
         lines = []
         for keyword in message:

@@ -124,6 +124,8 @@ async def test_model_callback(amqp_client, amqp_actor, mocker):
     assert amqp_client.models["amqp_actor"].flatten() == {
         "text": "Pong.",
         "error": None,
+        "exception": None,
+        "exception_info": None,
         "schema": None,
         "fwhm": None,
         "info": None,
@@ -138,9 +140,9 @@ async def test_model_callback(amqp_client, amqp_actor, mocker):
 
     json = (
         '{"fwhm": null, "text": "Pong.", "info": null, "test1": null, "schema": null, '
-        '"version": null, "help": null, "error": null, '
-        '"yourUserID": null, "UserInfo": null, "num_users": null, '
-        '"command_model": null}'
+        '"version": null, "help": null, "error": null, "exception": null, '
+        '"exception_info": null, "yourUserID": null, "UserInfo": null, '
+        '"num_users": null, "command_model": null}'
     )
     assert amqp_client.models["amqp_actor"].jsonify() == json
 
@@ -298,17 +300,23 @@ async def test_write_exception(amqp_actor):
     )
 
     command.set_status("RUNNING")
-    command.write("e", error=ValueError("Error message"))
+
+    try:
+        1 / 0
+    except Exception as err:
+        command.write("e", error=err)
 
     assert len(command.replies) == 2
     assert command.replies[1].message_code == "e"
-    assert command.replies.get("error") == {
-        "module": "builtins",
-        "type": "ValueError",
-        "message": "Error message",
-        "filename": None,
-        "lineno": None,
-    }
+
+    error_keyword = command.replies.get("error")
+
+    assert error_keyword["module"] == "builtins"
+    assert error_keyword["type"] == "ZeroDivisionError"
+    assert error_keyword["message"] == "division by zero"
+
+    assert isinstance(error_keyword["traceback"], list)
+    assert error_keyword["traceback"][-1] == "ZeroDivisionError: division by zero\n"
 
 
 async def test_send_command_from_command(amqp_actor, mocker):
