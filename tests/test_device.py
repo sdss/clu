@@ -18,7 +18,7 @@ pytestmark = [pytest.mark.asyncio]
 
 
 @pytest.fixture
-async def device(unused_tcp_port_factory, event_loop):
+async def device(unused_tcp_port_factory):
     async def emit_number(transport):
         transport.write(f"Writing to transport {str(transport)}\n".encode())
 

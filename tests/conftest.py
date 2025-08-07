@@ -26,7 +26,7 @@ rabbitmq = get_rabbitmq_client_fixture("rabbitmq_proc")
 
 
 @pytest.fixture
-async def amqp_actor(rabbitmq, event_loop):
+async def amqp_actor(rabbitmq):
     port = rabbitmq.url.port
 
     actor = AMQPActor(name="amqp_actor", schema=DATA_DIR / "schema.json", port=port)
@@ -38,7 +38,7 @@ async def amqp_actor(rabbitmq, event_loop):
 
 
 @pytest.fixture
-async def amqp_client(rabbitmq, amqp_actor, event_loop):
+async def amqp_client(rabbitmq, amqp_actor):
     port = rabbitmq.url.port
 
     client = AMQPClient(name="amqp_client", models=["amqp_actor"], port=port)
@@ -50,7 +50,7 @@ async def amqp_client(rabbitmq, amqp_actor, event_loop):
 
 
 @pytest.fixture
-async def json_actor(unused_tcp_port_factory, event_loop, tmpdir):
+async def json_actor(unused_tcp_port_factory, tmpdir):
     actor = JSONActor(
         "json_actor",
         host="localhost",

@@ -171,12 +171,12 @@ def test_write_no_actor(command):
 
 
 @pytest.mark.asyncio
-async def test_wait_for_status(command, event_loop):
+async def test_wait_for_status(command):
     async def mark_cancelled():
         await asyncio.sleep(0.01)
         command.set_status(CommandStatus.CANCELLED)
 
-    event_loop.create_task(mark_cancelled())
+    asyncio.create_task(mark_cancelled())
 
     await command.wait_for_status(CommandStatus.CANCELLED)
 
@@ -201,7 +201,7 @@ async def test_status_callback(command):
 
 
 @pytest.mark.asyncio
-async def test_time_limit(event_loop):
+async def test_time_limit():
     command = Command(command_string="new-command", time_limit=0.5)
     await asyncio.sleep(0.6)
 

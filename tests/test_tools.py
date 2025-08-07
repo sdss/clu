@@ -226,13 +226,13 @@ class TestStatusMixIn:
         s.status = CommandStatus.RUNNING
         assert s.status == CommandStatus.RUNNING
 
-    async def test_wait_for_status(self, event_loop):
+    async def test_wait_for_status(self):
         def set_status(mixin, status):
             mixin.status = status
 
         s = StatusMixIn(CommandStatus, CommandStatus.READY)
 
-        event_loop.call_later(0.01, set_status, s, CommandStatus.DONE)
+        asyncio.get_event_loop().call_later(0.01, set_status, s, CommandStatus.DONE)
 
         await s.wait_for_status(CommandStatus.DONE)
 

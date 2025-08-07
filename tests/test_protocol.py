@@ -24,10 +24,10 @@ pytestmark = [pytest.mark.asyncio]
 
 
 @pytest.fixture
-async def tcp_server(event_loop, unused_tcp_port_factory):
+async def tcp_server(unused_tcp_port_factory):
     tcp = TCPStreamServer("localhost", unused_tcp_port_factory(), max_connections=1)
     await tcp.start()
-    event_loop.call_soon(tcp.serve_forever)
+    asyncio.get_event_loop().call_soon(tcp.serve_forever)
 
     yield tcp
 
