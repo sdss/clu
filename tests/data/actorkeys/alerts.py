@@ -53,8 +53,7 @@ KeysDictionary(
     Key(
         "downInstruments",
         String() * (0, None),
-        help="A list of instruments that are down "
-        "(and whose alerts are thus ignored)",
+        help="A list of instruments that are down (and whose alerts are thus ignored)",
     ),
     Key(
         "instrumentNames",

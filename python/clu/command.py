@@ -344,8 +344,7 @@ class BaseCommand(
 
         if not self.actor:
             raise clu.CommandError(
-                "An actor has not been defined for "
-                "this command. Cannot write to users."
+                "An actor has not been defined for this command. Cannot write to users."
             )
 
         command = self if not self.parent else self.parent

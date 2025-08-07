@@ -279,7 +279,7 @@ class BaseLegacyActor(BaseActor):
             return
 
         self.log.info(
-            f"New command received: {command_body   !r} "
+            f"New command received: {command_body!r} "
             f"(commander_id={commander_id!r}, command_id={command_id!r})"
         )
 

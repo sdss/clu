@@ -295,9 +295,9 @@ class CallbackMixIn(object):
     def remove_callback(self, callback_func: Callable[..., Any]):
         """Removes a callback function."""
 
-        assert (
-            callback_func in self._callbacks
-        ), "callback_func is not in the list of callbacks."
+        assert callback_func in self._callbacks, (
+            "callback_func is not in the list of callbacks."
+        )
         self._callbacks.remove(callback_func)
 
     def notify(self, *args):
@@ -382,9 +382,9 @@ class CaseInsensitiveDict(Dict[str, T]):
         dict.__init__(self, values)
 
         self._lc = [key.lower() for key in values]
-        assert len(set(self._lc)) == len(
-            self._lc
-        ), "the are duplicated items in the dict."
+        assert len(set(self._lc)) == len(self._lc), (
+            "the are duplicated items in the dict."
+        )
 
     def __get_key__(self, key):
         """Returns the correct value of the key, regardless of its case."""
