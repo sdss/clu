@@ -19,6 +19,7 @@ import time
 from typing import Any, List, TypeVar
 
 import click
+from click.core import Context
 from click.decorators import group, pass_obj
 from click_aliases import ClickAliasedGroup
 from unclick.core import command_to_json
@@ -303,18 +304,37 @@ class CluGroup(ClickAliasedGroup):
 
         return decorator
 
-    def parse_args(self, ctx, args):  # pragma: no cover
+    def parse_args(self, ctx: Context, args: list[str]) -> list[str]:
         # Copy this method so that we can turn off the printing of the
         # usage before ctx.exit()
+
         if not args and self.no_args_is_help and not ctx.resilient_parsing:
             ctx.exit()
 
         rest = click.Command.parse_args(self, ctx, args)
+
+        # The behaviour of this function changed in click 8.2.0. See
+        # https://github.com/pallets/click/issues/2205. Python 3.8 does
+        # not support click 8.2+ so we adjust the implementation depending
+        # on the click version.
+
+        click_version = click.__version__
+        assert isinstance(click_version, str), "click.__version__ must be a string."
+
+        major, minor, *_ = map(int, click_version.split("."))
+        click_8_2 = major == 8 and minor >= 2
+
         if self.chain:
-            ctx.protected_args = rest
+            if click_8_2:
+                ctx._protected_args = rest
+            else:
+                ctx.protected_args = rest  # type: ignore
             ctx.args = []
         elif rest:
-            ctx.protected_args, ctx.args = rest[:1], rest[1:]
+            if click_8_2:
+                ctx._protected_args, ctx.args = rest[:1], rest[1:]
+            else:
+                ctx.protected_args, ctx.args = rest[:1], rest[1:]  # type: ignore
 
         return ctx.args
 
