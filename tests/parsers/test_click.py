@@ -43,7 +43,7 @@ async def command_abort(command, object):
     raise click.exceptions.Abort()
 
 
-@command_parser.command()
+@command_parser.command(name="bad-command")
 async def bad_command(command, object):
     raise ValueError("This is an exception in the command.")
 
@@ -54,7 +54,7 @@ def mygroup(command, object):
     command.replies.append({"object": object})
 
 
-@mygroup.command()
+@mygroup.command(name="neg-number-command")
 @click.argument("NEGNUMBER", type=int)
 @click.option("-r", "--recursive", is_flag=True)
 @click.option("--text", type=str)
@@ -64,20 +64,20 @@ async def neg_number_command(command, object, negnumber, recursive, text):
     command.finish()
 
 
-@command_parser.command()
+@command_parser.command(name="unique-command")
 @unique()
 async def unique_command(command, object):
     await asyncio.sleep(0.5)
     return command.finish()
 
 
-@command_parser.command(cancellable=True)
+@command_parser.command(name="cancellable-command", cancellable=True)
 async def cancellable_command(command, object):
     await asyncio.sleep(0.5)
     return command.finish()
 
 
-@command_parser.command()
+@command_parser.command(name="self-cancellable-command")
 async def self_cancellable_command(command, object):
     cancel_command(keep_last=True, ok_no_exists=True)
     await asyncio.sleep(0.5)
