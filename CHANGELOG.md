@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.5.0 - August 07, 2025
+## 2.5.0 - August 7, 2025
 
 ### 🔥 Breaking changes
 
