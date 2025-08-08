@@ -350,7 +350,7 @@ class TCPBaseActor(BaseActor):
 
     def new_command(self, transport: CustomTransportType, command_str: bytes):
         """Handles a new command received by the actor."""
-        print("hellow")
+
         commander_id: Optional[int] = getattr(transport, "user_id", None)
         message: str = command_str.decode().strip()
 
