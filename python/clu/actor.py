@@ -107,6 +107,7 @@ class AMQPBaseActor(AMQPClient, BaseActor):
         commander_id = headers.get("commander_id", None)
         command_id = headers.get("command_id", None)
         internal = headers.get("internal", False)
+        write_to_log = headers.get("write_to_log", True)
 
         command_string = command_body.get("command_string", "")
         full_command_string = f"{self.name} {command_string}"
@@ -119,6 +120,7 @@ class AMQPBaseActor(AMQPClient, BaseActor):
                 consumer_id=self.name,
                 actor=self,
                 internal=internal,
+                write_to_log=write_to_log,
             )
             command.actor = self  # Assign the actor
         except CommandError as ee:
@@ -131,10 +133,11 @@ class AMQPBaseActor(AMQPClient, BaseActor):
             )
             return
 
-        self.log.info(
-            f"New command received: {full_command_string!r} "
-            f"(commander_id={commander_id!r}, command_id={command_id!r})"
-        )
+        if write_to_log and self.log:
+            self.log.info(
+                f"New command received: {full_command_string!r} "
+                f"(commander_id={commander_id!r}, command_id={command_id!r})"
+            )
 
         return self.parse_command(command)
 

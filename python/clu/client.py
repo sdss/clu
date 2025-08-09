@@ -436,6 +436,7 @@ class AMQPClient(BaseClient):
             "command_id": command_id,
             "commander_id": commander_id,
             "internal": internal,
+            "write_to_log": command_kwargs.get("write_to_log", True),
         }
 
         message_body = {"command_string": command_string}

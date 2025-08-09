@@ -1,5 +1,12 @@
 # Changelog
 
+## Next release
+
+### 🔧 Fixed
+
+* Actually pass `write_to_log` to the transport in `send_command()` in AMQP.
+
+
 ## 2.5.1 - August 9, 2025
 
 ### ✨ Improved
