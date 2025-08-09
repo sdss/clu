@@ -1,5 +1,12 @@
 # Changelog
 
+## Next release
+
+### ✨ Improved
+
+* Allow to pass arbitrary keyword arguments to the command in `send_command()` in AMQP and Tron.
+
+
 ## 2.5.0 - August 7, 2025
 
 ### 🔥 Breaking changes

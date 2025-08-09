@@ -13,7 +13,7 @@ import logging
 import pathlib
 import warnings
 
-from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar, Union, cast
+from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union, cast
 
 import click
 
@@ -27,7 +27,6 @@ from ..parsers import ClickParser
 from ..protocol import TCPStreamServer
 from ..tools import log_reply
 from .tron import TronConnection
-from .types.messages import Reply as OpsReply
 
 
 __all__ = ["LegacyActor", "BaseLegacyActor"]
@@ -375,8 +374,7 @@ class BaseLegacyActor(BaseActor):
         commander: Optional[str] = None,
         command_id: Optional[int] = None,
         command: Optional[Command] = None,
-        callback: Optional[Callable[[OpsReply], None]] = None,
-        time_limit: Optional[float] = None,
+        **command_kwargs,
     ):
         """Sends a command through the hub.
 
@@ -395,10 +393,10 @@ class BaseLegacyActor(BaseActor):
             The command id. If `None`, a sequentially increasing value will
             be used. You should not specify a ``command_id`` unless you really
             know what you're doing.
-        callback
-            A callback to invoke with each reply received from the actor.
-        time_limit
-            A delay after which the command is marked as timed out and done.
+        command
+            A command from which to derive the commander ID.
+        command_kwargs
+            Additional keyword arguments to pass to the command.
 
         Examples
         --------
@@ -421,8 +419,7 @@ class BaseLegacyActor(BaseActor):
                 *args,
                 commander=commander,
                 mid=command_id,
-                callback=callback,
-                time_limit=time_limit,
+                **command_kwargs,
             )
             return command
 

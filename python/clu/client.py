@@ -356,11 +356,10 @@ class AMQPClient(BaseClient):
         command_string: str,
         *args,
         command_id: str | None = None,
-        callback: Optional[Callable[[AMQPReply], None]] = None,
         internal: bool = False,
         command: Optional[Command] = None,
-        time_limit: Optional[float] = None,
         await_command: bool = True,
+        **command_kwargs,
     ):
         """Commands another actor over its RCP queue.
 
@@ -375,18 +374,16 @@ class AMQPClient(BaseClient):
         command_id
             The command ID associated with this command. If empty, an unique
             identifier will be attached.
-        callback
-            A callback to invoke with each reply received from the actor.
         internal
             Whether to mark the command as internal, in which case replies will
             also be considered internal.
         command
             The `.Command` that initiated the new command. Only relevant for
             actors.
-        time_limit
-            A delay after which the command is marked as timed out and done.
         await_command
             If `True`, awaits the command until it finishes.
+        command_kwargs
+            Additional keyword arguments to pass to the command.
 
         Examples
         --------
@@ -412,6 +409,16 @@ class AMQPClient(BaseClient):
 
         internal = command.internal if command else internal
 
+        if "callback" in command_kwargs:
+            warnings.warn(
+                "The 'callback' argument is deprecated and will be "
+                "removed in a future version. Please use 'reply_callback' instead.",
+                DeprecationWarning,
+            )
+            callback = command_kwargs.pop("callback")
+            if "reply_callback" not in command_kwargs:
+                command_kwargs["reply_callback"] = callback
+
         # Creates and registers a command.
         command = Command(
             command_string=command_string,
@@ -420,8 +427,7 @@ class AMQPClient(BaseClient):
             consumer_id=consumer,
             internal=internal,
             actor=None,
-            reply_callback=callback,
-            time_limit=time_limit,
+            **command_kwargs,
         )
 
         self.running_commands[command_id] = command

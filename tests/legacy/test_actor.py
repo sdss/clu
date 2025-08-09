@@ -249,8 +249,6 @@ async def test_send_command_from_command(actor, mocker, new_command: bool):
         "command1 --option",
         commander="APO.Jose" if new_command is False else None,
         mid=None,
-        callback=None,
-        time_limit=None,
     )
 
 

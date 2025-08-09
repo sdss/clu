@@ -279,14 +279,7 @@ class TronConnection(clu.base.BaseClient):
                 return
 
     def send_command(
-        self,
-        target,
-        command_string,
-        *args,
-        commander=None,
-        mid=None,
-        callback: Optional[Callable[[Reply], None]] = None,
-        time_limit: Optional[float] = None,
+        self, target, command_string, *args, commander=None, mid=None, **command_kwargs
     ):
         """Sends a command through the hub.
 
@@ -309,10 +302,8 @@ class TronConnection(clu.base.BaseClient):
             The message id. If `None`, a sequentially increasing value will
             be used. You should not specify a ``mid`` unless you really know
             what you're doing.
-        callback
-            A callback to invoke with each reply received from the actor.
-        time_limit
-            A delay after which the command is marked as timed out and done.
+        command_kwargs
+            Additional keyword arguments to pass to the command.
 
         Examples
         --------
@@ -338,11 +329,20 @@ class TronConnection(clu.base.BaseClient):
 
         command_string = f"{commander} {mid} {target} {command_string}\n"
 
+        if "callback" in command_kwargs:
+            warnings.warn(
+                "The 'callback' argument is deprecated and will be "
+                "removed in a future version. Please use 'reply_callback' instead.",
+                DeprecationWarning,
+            )
+            callback = command_kwargs.pop("callback")
+            if "reply_callback" not in command_kwargs:
+                command_kwargs["reply_callback"] = callback
+
         command = Command(
             command_string=command_string,
-            reply_callback=callback,
-            time_limit=time_limit,
             commander_id=commander,
+            **command_kwargs,
         )
         self.running_commands[mid] = command
 

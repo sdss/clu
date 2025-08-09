@@ -6,14 +6,24 @@
 # @Filename: test_tron.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
+from __future__ import annotations
+
 import asyncio
 import logging
+
+from typing import TYPE_CHECKING
 
 import pytest
 
 from clu.legacy import TronConnection, TronKey
 from clu.legacy.types.messages import Reply
 from clu.legacy.types.parser import ParseError
+
+
+if TYPE_CHECKING:
+    from pytest_mock import MockerFixture
+
+    from clu.legacy.actor import LegacyActor
 
 
 pytestmark = [pytest.mark.asyncio]
@@ -152,11 +162,25 @@ async def test_tron_connected(actor, tron_server):
 async def test_reply_callback(actor, tron_server, mocker):
     callback_mock = mocker.MagicMock()
 
-    command = actor.send_command("alerts", "ping", callback=callback_mock)
+    command = actor.send_command("alerts", "ping", reply_callback=callback_mock)
     await command
 
     callback_mock.assert_called()
     assert isinstance(callback_mock.mock_calls[0].args[0], Reply)
+
+
+async def test_send_command_callback_deprecated(
+    actor: LegacyActor,
+    tron_server,
+    mocker: MockerFixture,
+):
+    callback_mock = mocker.MagicMock()
+
+    with pytest.deprecated_call():
+        command = actor.send_command("alerts", "ping", callback=callback_mock)
+        await command
+
+    callback_mock.assert_called()
 
 
 async def test_client_send_command_args(tron_server, actor):

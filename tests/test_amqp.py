@@ -6,9 +6,13 @@
 # @Filename: test_actor.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
+from __future__ import annotations
+
 import asyncio
 import logging
 from unittest.mock import AsyncMock
+
+from typing import TYPE_CHECKING
 
 import aio_pika
 import pytest
@@ -18,6 +22,12 @@ from clu.client import AMQPReply
 from clu.command import Command
 from clu.model import Model
 from clu.tools import CommandStatus
+
+
+if TYPE_CHECKING:
+    from pytest_mock import MockerFixture
+
+    from clu.amqp import AMQPClient
 
 
 pytestmark = [pytest.mark.asyncio]
@@ -286,11 +296,32 @@ class TestHandleReply:
 async def test_client_send_command_callback(amqp_client, amqp_actor, mocker):
     callback_mock = mocker.MagicMock()
 
-    cmd = await amqp_client.send_command("amqp_actor", "ping", callback=callback_mock)
+    cmd = await amqp_client.send_command(
+        "amqp_actor",
+        "ping",
+        reply_callback=callback_mock,
+    )
     await cmd
 
     callback_mock.assert_called()
     assert isinstance(callback_mock.mock_calls[0].args[0], AMQPReply)
+
+
+async def test_client_send_command_callback_deprecated(
+    amqp_client: AMQPClient,
+    amqp_actor: AMQPActor,
+    mocker: MockerFixture,
+):
+    callback_mock = mocker.MagicMock()
+
+    with pytest.deprecated_call():
+        await amqp_client.send_command(
+            "amqp_actor",
+            "ping",
+            callback=callback_mock,
+        )
+
+    callback_mock.assert_called()
 
 
 async def test_write_exception(amqp_actor):
