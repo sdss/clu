@@ -1,6 +1,6 @@
 [project]
 name = "sdss-clu"
-version = "2.5.3a1"
+version = "2.5.3"
 description = "A new protocol for SDSS actors."
 authors = [ { name = "José Sánchez-Gallego", email = "gallegoj@uw.edu" } ]
 license = { text = "BSD-3-Clause" }
