@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import functools
+import importlib.metadata
 import inspect
 import json
 import re
@@ -318,7 +319,7 @@ class CluGroup(ClickAliasedGroup):
         # not support click 8.2+ so we adjust the implementation depending
         # on the click version.
 
-        click_version = click.__version__
+        click_version = importlib.metadata.version("click")
         assert isinstance(click_version, str), "click.__version__ must be a string."
 
         major, minor, *_ = map(int, click_version.split("."))

@@ -1,5 +1,12 @@
 # Changelog
 
+## Next release
+
+### ✨ Improved
+
+* Use `importlib.metadata.version()` to get the version of `click` instead of accessing `click.__version__` directly.
+
+
 ## 2.5.2 - August 9, 2025
 
 ### 🔧 Fixed
