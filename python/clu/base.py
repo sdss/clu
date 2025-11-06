@@ -37,9 +37,9 @@ from pydantic import BaseModel
 from sdsstools import get_logger, read_yaml_file
 from sdsstools.logger import SDSSLogger
 
-from .model import Model
-from .store import KeywordStore
-from .tools import REPLY
+from clu.model import Model
+from clu.store import KeywordStore
+from clu.tools import REPLY, get_event_loop
 
 
 if TYPE_CHECKING:
@@ -274,7 +274,7 @@ class BaseClient(metaclass=abc.ABCMeta):
 
         if self.log:
             # Set the loop exception handler to be handled by the logger.
-            loop = asyncio.get_running_loop()
+            loop = get_event_loop()
             loop.set_exception_handler(self.log.asyncio_exception_handler)
 
     async def send_command(self, actor: str, *args, **kwargs) -> Command:

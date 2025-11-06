@@ -46,6 +46,7 @@ __all__ = [
     "as_complete_failer",
     "log_reply",
     "ActorHandler",
+    "get_event_loop",
 ]
 
 REPLY = 5  # REPLY logging level
@@ -203,7 +204,7 @@ class StatusMixIn(Generic[MaskbitType]):
 
         if callback_func is not None:
             if isinstance(callback_func, (list, tuple)):
-                self.callbacks = callback_func
+                self.callbacks = callback_func  # type: ignore
             else:
                 self.callbacks.append(callback_func)
 
@@ -215,7 +216,7 @@ class StatusMixIn(Generic[MaskbitType]):
 
         assert hasattr(self, "callbacks"), "missing callbacks attribute."
 
-        loop = asyncio.get_event_loop()
+        loop = get_event_loop()
 
         for func in self.callbacks:
             if self.status:
@@ -453,7 +454,7 @@ async def as_complete_failer(
     if not isinstance(aws, (list, tuple)):
         aws = [aws]
 
-    loop = kwargs.get("loop", asyncio.get_event_loop())
+    loop = kwargs.get("loop", get_event_loop())
 
     tasks = [loop.create_task(aw) for aw in aws]
 
@@ -609,3 +610,15 @@ class ActorHandler(logging.Handler):
             return []
         except NameError:
             return message_lines
+
+
+def get_event_loop() -> asyncio.AbstractEventLoop:
+    """Gets the current event loop, or creates a new one if none exists."""
+
+    try:
+        return asyncio.get_event_loop()
+    except RuntimeError:
+        # "There is no current event loop in thread %r"
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        return loop

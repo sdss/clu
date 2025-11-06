@@ -21,6 +21,7 @@ from clu.tools import (
     StatusMixIn,
     as_complete_failer,
     format_value,
+    get_event_loop,
 )
 
 
@@ -232,7 +233,7 @@ class TestStatusMixIn:
 
         s = StatusMixIn(CommandStatus, CommandStatus.READY)
 
-        asyncio.get_event_loop().call_later(0.01, set_status, s, CommandStatus.DONE)
+        get_event_loop().call_later(0.01, set_status, s, CommandStatus.DONE)
 
         await s.wait_for_status(CommandStatus.DONE)
 

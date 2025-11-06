@@ -6,7 +6,7 @@ authors = [ { name = "José Sánchez-Gallego", email = "gallegoj@uw.edu" } ]
 license = { text = "BSD-3-Clause" }
 readme = "README.rst"
 
-requires-python = ">=3.8,<4.0"
+requires-python = ">=3.9,<4.0"
 
 dependencies = [
     "click>=8.0",

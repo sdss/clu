@@ -18,6 +18,7 @@ from clu.protocol import (
     TopicListener,
     open_connection,
 )
+from clu.tools import get_event_loop
 
 
 pytestmark = [pytest.mark.asyncio]
@@ -27,7 +28,7 @@ pytestmark = [pytest.mark.asyncio]
 async def tcp_server(unused_tcp_port_factory):
     tcp = TCPStreamServer("localhost", unused_tcp_port_factory(), max_connections=1)
     await tcp.start()
-    asyncio.get_event_loop().call_soon(tcp.serve_forever)
+    get_event_loop().call_soon(tcp.serve_forever)
 
     yield tcp
 
