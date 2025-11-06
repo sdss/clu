@@ -17,6 +17,8 @@ from typing import Any, Callable, Dict, List, Optional, TypeVar, Union
 import aio_pika as apika
 import aiormq
 
+from clu.tools import get_event_loop
+
 from .exceptions import CluError
 
 
@@ -69,13 +71,13 @@ class TCPProtocol(asyncio.Protocol):
         self.transports = []
         self.max_connections = max_connections
 
-        self.loop = loop or asyncio.get_event_loop()
+        self.loop = loop or get_event_loop()
 
     @classmethod
     async def create_server(cls, host: str, port: int, **kwargs):
         """Returns a `~asyncio.Server` connection."""
 
-        loop = kwargs.get("loop", asyncio.get_event_loop())
+        loop = kwargs.get("loop", get_event_loop())
 
         new_tcp = cls(**kwargs)
 
@@ -92,7 +94,7 @@ class TCPProtocol(asyncio.Protocol):
         if "connection_callback" in kwargs:
             raise KeyError("connection_callback not allowed when creating a client.")
 
-        loop = kwargs.get("loop", asyncio.get_event_loop())
+        loop = kwargs.get("loop", get_event_loop())
 
         new_tcp = cls.__new__(cls, **kwargs)
         transport, protocol = await loop.create_connection(lambda: new_tcp, host, port)
@@ -162,7 +164,7 @@ class PeriodicTCPServer(TCPProtocol):
     async def create_server(cls, host: str, port: int, *args, **kwargs):
         """Returns a `~asyncio.Server` connection."""
 
-        loop = kwargs.get("loop", asyncio.get_event_loop())
+        loop = kwargs.get("loop", get_event_loop())
 
         new_tcp = cls(*args, **kwargs)
 
@@ -235,7 +237,7 @@ class TCPStreamServer(object):
         self.port = port
 
         self.transports = {}
-        self.loop = loop or asyncio.get_event_loop()
+        self.loop = loop or get_event_loop()
 
         self.max_connections = max_connections
 
@@ -518,9 +520,9 @@ class TopicListener(object):
 
         try:
             if self.url:
-                self.connection = await apika.connect(self.url)
+                self.connection = await apika.connect_robust(self.url)
             else:
-                self.connection = await apika.connect(
+                self.connection = await apika.connect_robust(
                     login=self.user,
                     host=self.host,
                     port=self.port,
@@ -643,9 +645,7 @@ class ReconnectingTCPClientProtocol(asyncio.Protocol):
         self._delay = min(self._delay * self.factor, self.max_delay)
         if self.jitter:
             self._delay = random.normalvariate(self._delay, self._delay * self.jitter)
-        self._call_handle = asyncio.get_event_loop().call_later(
-            self._delay, self.connect
-        )
+        self._call_handle = get_event_loop().call_later(self._delay, self.connect)
 
     def connect(self):
         if self._connector is None:
@@ -653,14 +653,14 @@ class ReconnectingTCPClientProtocol(asyncio.Protocol):
 
     async def _connect(self):
         try:
-            await asyncio.get_event_loop().create_connection(
+            await get_event_loop().create_connection(
                 lambda: self,
                 *self._args,
                 **self._kwargs,
             )
             self.connected = True
         except Exception as exc:
-            asyncio.get_event_loop().call_soon(self.connection_failed, exc)
+            get_event_loop().call_soon(self.connection_failed, exc)
         finally:
             self._connector = None
 

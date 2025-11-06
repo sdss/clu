@@ -27,7 +27,7 @@ from .command import Command, TimedCommandList
 from .exceptions import CluWarning, CommandError
 from .parsers import ClickParser, CluCommand
 from .protocol import TCPStreamServer
-from .tools import log_reply
+from .tools import get_event_loop, log_reply
 
 
 __all__ = ["AMQPActor", "JSONActor", "AMQPBaseActor", "TCPBaseActor"]
@@ -310,7 +310,7 @@ class TCPBaseActor(BaseActor):
 
         if self.log:
             # Set the loop exception handler to be handled by the logger.
-            loop = asyncio.get_running_loop()
+            loop = get_event_loop()
             loop.set_exception_handler(self.log.asyncio_exception_handler)
 
         await self.server.start()

@@ -26,6 +26,7 @@ from prompt_toolkit.styles import style_from_pygments_cls
 from pygments.styles import STYLE_MAP, get_style_by_name
 
 import clu
+from clu.tools import get_event_loop
 
 
 color_codes = {
@@ -312,7 +313,9 @@ def cli(
         ignore_broadcasts=ignore_broadcasts,
         internal=internal,
     )
-    asyncio.get_event_loop().run_until_complete(shell_task)
+
+    loop = get_event_loop()
+    loop.run_until_complete(shell_task)
 
 
 @clu_cli.command()

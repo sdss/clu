@@ -35,7 +35,7 @@ import click
 import clu
 import clu.base
 from clu.exceptions import CluWarning, CommandError
-from clu.tools import CommandStatus, StatusMixIn
+from clu.tools import CommandStatus, StatusMixIn, get_event_loop
 
 
 __all__ = [
@@ -162,7 +162,7 @@ class BaseCommand(
         self._reply_callback = reply_callback
 
         self.default_keyword = default_keyword
-        self.loop = loop or asyncio.get_event_loop()
+        self.loop = loop or get_event_loop()
 
         #: The click context, if the click parser is used.
         self.context: click.Context | None = None
@@ -541,7 +541,7 @@ class TimedCommandList(list):
     ):
         self.resolution = resolution
         self.actor = actor
-        self.loop = loop or asyncio.get_event_loop()
+        self.loop = loop or get_event_loop()
 
         self._task: Optional[asyncio.Task] = None
 

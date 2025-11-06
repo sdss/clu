@@ -1,7 +1,7 @@
 `CLU <https://tron.fandom.com/wiki/Clu>`__
 ==========================================
 
-|py| |pypi| |black| |Build Status| |docs| |Coverage Status| |zenodo|
+|py| |pypi| |Build Status| |docs| |Coverage Status| |zenodo|
 
 
 `CLU <https://tron.fandom.com/wiki/Clu>`_ implements a new protocol for SDSS actor while providing support for legacy-style actor.
@@ -15,7 +15,7 @@ Features
 - Legacy-style actor for TCP socket communication via `tron <https://github.com/sdss/tron>`__.
 - Tools for device handling.
 - Messages are validated JSON strings.
-- `click <https://click.palletsprojects.com/en/7.x/>`__-enabled command parser.
+- `click <https://click.palletsprojects.com/en/stable/>`__-enabled command parser.
 
 
 Installation
@@ -39,21 +39,24 @@ or from source
 Development
 ^^^^^^^^^^^
 
-``clu`` uses `poetry <http://poetry.eustace.io/>`__ for dependency management and packaging. To work with an editable install it's recommended that you setup ``poetry`` and install ``clu`` in a virtual environment by doing
+``clu`` uses `uv <https://docs.astral.sh/uv/>`__ for dependency management and packaging. To work with an editable install it's recommended that you setup ``uv`` and install ``clu`` in a virtual environment by doing
 
 .. code-block:: console
 
-    poetry install
+    uv sync --all-groups --all-extras
 
-Pip does not support editable installs with PEP-517 yet. That means that running ``pip install -e .`` will fail because ``poetry`` doesn't use a ``setup.py`` file. As a workaround, you can use the ``create_setup.py`` file to generate a temporary ``setup.py`` file. To install ``clu`` in editable mode without ``poetry``, do
+although it is also possible to install it using ``pip`` in editable mode
 
 .. code-block:: console
 
-    pip install --pre poetry
-    pip install -U setuptools
-    python create_setup.py
     pip install -e .
 
+We use `ruff <https://ruff.rs>`__ for linting and formatting. To check that your code conforms to the style guide run
+
+.. code-block:: console
+
+    ruff check python tests
+    ruff format --check python tests
 
 Quick start
 -----------
@@ -85,7 +88,7 @@ Say whatever you want about it, the `current SDSS message passing protocol <http
 - While there is some documentation for ``Tron`` and ``opscore``, and the code is well written, it's also cumbersome and difficult to modify by people that didn't write it. It's ultimately non-maintainable.
 - The ``opsctore``/``actorkeys`` datamodel is custom-built and extremely difficult to maintain. Standard solutions such as JSON with a `JSON schema <https://json-schema.org/>`__ validator should be preferred.
 - `asyncio <https://docs.python.org/3/library/asyncio.html>`__ provides an asynchronous API that is cleaner and easier to code than using threads. It is also more readable and less convoluted than `twisted <https://twistedmatrix.com/trac/>`__ and it's a Python core library with very active development.
-- CLU uses `click <https://click.palletsprojects.com/en/7.x>`__ for parsing commands, providing a well-defined, easy to use parser.
+- CLU uses `click <https://click.palletsprojects.com/en/stable/>`__ for parsing commands, providing a well-defined, easy to use parser.
 
 
 .. |Build Status| image:: https://github.com/sdss/clu/actions/workflows/test.yml/badge.svg
@@ -107,9 +110,6 @@ Say whatever you want about it, the `current SDSS message passing protocol <http
 .. |pypi| image:: https://badge.fury.io/py/sdss-clu.svg
     :alt: PyPI version
     :target: https://badge.fury.io/py/sdss-clu
-
-.. |black| image:: https://img.shields.io/badge/code%20style-black-000000.svg
-    :target: https://github.com/psf/black
 
 .. |zenodo| image:: https://zenodo.org/badge/183817446.svg
    :target: https://zenodo.org/badge/latestdoi/183817446

@@ -1,5 +1,16 @@
 # Changelog
 
+## Next release
+
+### 🔥 Breaking changes
+
+* [#122](https://github.com/sdss/clu/pull/122) Deprecated support for Python 3.8.
+
+### 🚀 New
+
+* [#122](https://github.com/sdss/clu/pull/122) Added support for Python 3.14.
+
+
 ## 2.5.3 - August 10, 2025
 
 ### ✨ Improved

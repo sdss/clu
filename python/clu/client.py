@@ -22,13 +22,12 @@ import aio_pika as apika
 
 from sdsstools.logger import SDSSLogger
 
+from clu.base import BaseClient, Reply
+from clu.command import Command
 from clu.exceptions import CluWarning
-
-from .base import BaseClient, Reply
-from .command import Command
-from .model import ModelSet
-from .protocol import TopicListener
-from .tools import CommandStatus
+from clu.model import ModelSet
+from clu.protocol import TopicListener
+from clu.tools import CommandStatus, get_event_loop
 
 
 if TYPE_CHECKING:
@@ -227,6 +226,9 @@ class AMQPClient(BaseClient):
 
     async def start(self, exchange_name: str = __EXCHANGE_NAME__):
         """Starts the connection to the AMQP broker."""
+
+        loop = get_event_loop()
+        asyncio.set_event_loop(loop)
 
         self.set_loop_exception_handler()
 

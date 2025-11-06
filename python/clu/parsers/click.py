@@ -210,8 +210,6 @@ class CluCommand(click.Command):
 
         if self.callback is not None:
             with ctx:
-                loop = asyncio.get_event_loop()
-
                 ctx.obj["parser_args"][0].context = ctx
 
                 self.full_path = ctx.command_path.replace(" ", "_")
@@ -237,7 +235,7 @@ class CluCommand(click.Command):
                 )
 
                 # Launches callback scheduler and adds the done callback
-                ctx.task = loop.create_task(  # type: ignore
+                ctx.task = asyncio.create_task(  # type: ignore
                     self._schedule_callback(ctx, timeout=timeout)
                 )
 

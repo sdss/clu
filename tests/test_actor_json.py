@@ -53,7 +53,12 @@ async def test_json_actor_pong(json_client, caplog):
     assert data_json["header"]["message_code"] == ":"
     assert data_json["data"] == {"text": "Pong."}
 
-    assert "New command received: 'json_actor ping'" in caplog.record_tuples[0][2]
+    found = False
+    for record in caplog.records:
+        if "New command received: 'json_actor ping'" in record.message:
+            found = True
+            break
+    assert found
 
 
 async def test_json_actor_command_fails(json_client, mocker):

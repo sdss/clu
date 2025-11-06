@@ -22,6 +22,7 @@ from clu.command import Command, CommandStatus
 from clu.exceptions import CluWarning
 from clu.model import CluModel, Property
 from clu.protocol import ReconnectingTCPClientProtocol
+from clu.tools import get_event_loop
 
 from .types.keys import Key, KeysDictionary
 from .types.messages import Keyword, Reply
@@ -159,7 +160,7 @@ class TronClientProtocol(ReconnectingTCPClientProtocol):
         self.transport: asyncio.Transport | None = None
 
     def data_received(self, data):
-        asyncio.get_event_loop().call_soon(self._on_received, data)
+        get_event_loop().call_soon(self._on_received, data)
 
     def connection_made(self, transport: asyncio.Transport):
         self.transport = transport
