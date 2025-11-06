@@ -2894,7 +2894,7 @@ dev = [
 
 [[package]]
 name = "sdsstools"
-version = "1.9.4"
+version = "1.9.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "daemonocle" },
@@ -2909,9 +2909,9 @@ dependencies = [
     { name = "rich" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/92/ed/461c07265ba46d76f98c00e94624af3a04f1b5088c52c73f94d73dd0e24a/sdsstools-1.9.4.tar.gz", hash = "sha256:8ce112478a47159ff262849e264d2c5af8e5cb569924685d873874b616da2b1e", size = 49828, upload-time = "2025-10-23T14:58:24.228Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/bd/96/ffe26ab1260f6560f13886166255a02c4f3a30003543c4caa357b843200a/sdsstools-1.9.5.tar.gz", hash = "sha256:bd6d9036a8f1e45dca057fceefd6e9f9dcfdbdc5d2154b00ffb8125cfb92438b", size = 49917, upload-time = "2025-11-06T21:25:17.786Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/68/a3/75d0e361032a7f8cced85c3ec1566eead9292b460a4cacab20f5e9a7604f/sdsstools-1.9.4-py3-none-any.whl", hash = "sha256:dcd17bbbbcc537aae7b7c8475cc0e4d64af37bc30e168d316feb32a9a13aff16", size = 56507, upload-time = "2025-10-23T14:58:23.035Z" },
+    { url = "https://files.pythonhosted.org/packages/34/df/2e4796f2f2941a34cb7dfd31e75515bfd055670ca578335412491ae10792/sdsstools-1.9.5-py3-none-any.whl", hash = "sha256:ff505fc2c51a8343bfbd0f51b626a41e789b82b8666a34ef4392b286f1560be8", size = 56632, upload-time = "2025-11-06T21:25:16.117Z" },
 ]
 
 [[package]]
