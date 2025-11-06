@@ -60,7 +60,7 @@ async def test_actor_write(actor, actor_client):
 async def test_new_command_client(actor, actor_client):
     actor_client.writer.write(b"2 ping\n")
 
-    await asyncio.sleep(0.01)
+    await asyncio.sleep(0.05)
 
     data = await actor_client.reader.read(100)
 
