@@ -150,8 +150,6 @@ class AMQPClient(BaseClient):
         Whether to use TLS/SSL connection.
     version
         The version of the client.
-    loop
-        The event loop. If `None`, the current event loop will be used.
     log_dir
         The directory where to store the logs. Defaults to
         ``$HOME/logs/<name>`` where ``<name>`` is the name of the actor.
@@ -178,7 +176,6 @@ class AMQPClient(BaseClient):
         virtualhost: str = "/",
         ssl: bool = False,
         version: Optional[str] = None,
-        loop: Optional[asyncio.AbstractEventLoop] = None,
         log_dir: Optional[PathLike] = None,
         log: Optional[SDSSLogger] = None,
         models: List[str] = [],
