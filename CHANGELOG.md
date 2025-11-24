@@ -1,5 +1,12 @@
 # Changelog
 
+## Next release
+
+### 🔧 Fixed
+
+* Fix broadcast `user_id` in legacy actor `_write_internal()`.
+
+
 ## 2.6.0 - November 6, 2025
 
 ### 🔥 Breaking changes

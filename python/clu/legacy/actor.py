@@ -332,8 +332,8 @@ class BaseLegacyActor(BaseActor):
     @staticmethod
     def get_user_command_id(
         command: Optional[Command] = None,
-        user_id: int = 0,
-        command_id: int = 0,
+        user_id: int | None = None,
+        command_id: int | None = None,
     ) -> Tuple[int, int]:
         """Returns commander_id, command_id based on user-supplied information.
 
@@ -354,10 +354,12 @@ class BaseLegacyActor(BaseActor):
             they cannot be determined, returns zeros.
         """
 
-        cid = cast(int, command.command_id) if command else 0
-        user_id = user_id or cid
-        command_id = command_id or cid
-        return (user_id, command_id)
+        user_id = user_id if user_id is not None else 0
+
+        command_command_id = cast(int, command.command_id) if command else 0
+        command_id = command_id if command_id is not None else command_command_id
+
+        return (user_id, command_id or 0)
 
     def show_version(self, user_id: int = 0):
         """Shows actor version."""
@@ -431,8 +433,8 @@ class BaseLegacyActor(BaseActor):
         message_code: MessageCode | str = "i",
         message: Optional[Dict[str, Any]] = None,
         command: Optional[Command] = None,
-        user_id: int = 0,
-        command_id: int = 0,
+        user_id: int | None = None,
+        command_id: int | None = None,
         concatenate: bool = True,
         broadcast: bool = False,
         validate: bool = True,
@@ -501,9 +503,9 @@ class BaseLegacyActor(BaseActor):
     def _write_internal(
         self,
         reply: Reply,
-        user_id=0,
-        command_id=0,
-        concatenate=True,
+        user_id: int | None = None,
+        command_id: int | None = None,
+        concatenate: bool = True,
         write_to_log: bool = True,
     ):
         """Writes reply to users.
@@ -520,6 +522,10 @@ class BaseLegacyActor(BaseActor):
             Whether to write the reply to the log. Defaults to yes but
             it may be useful to prevent large repetitive replies cluttering
             the log.
+        concatenate
+            Concatenates all the keywords to be output in a single
+            reply with the keyword-values joined with semicolons. Otherwise
+            each keyword will be output as a different message.
 
         """
 
@@ -533,7 +539,6 @@ class BaseLegacyActor(BaseActor):
 
         if reply.broadcast:
             user_id = 0
-            command_id = 0
 
         user_id, command_id = self.get_user_command_id(
             command=command,
