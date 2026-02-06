@@ -5,6 +5,7 @@
 ### 🔧 Fixed
 
 * Fix broadcast `user_id` in legacy actor `_write_internal()`.
+* Use `inspect.iscoroutinefunction` instead of `asyncio.iscoroutinefunction` to check if Click group callbacks are asynchronous.
 
 
 ## 2.6.0 - November 6, 2025
