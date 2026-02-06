@@ -1,6 +1,6 @@
 # Changelog
 
-## Next release
+## 2.6.1 - February 6, 2026
 
 ### 🔧 Fixed
 
